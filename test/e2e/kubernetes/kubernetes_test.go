@@ -1625,19 +1625,24 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
 
 				sgx_device_plugin := ""
+				sgx_device_plugin_name := "sgx-device-plugin"
+				sgx_device_plugin_namespace := "kube-system"
+
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 					sgx_device_plugin = "sgx-device-plugin.yaml"
 				} else {
 					sgx_device_plugin = "sgx-device-plugin-before-k8s-1-17.yaml"
 				}
 
-				p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, sgx_device_plugin), "sgx-device-plugin", "default", 1*time.Second, cfg.Timeout)
+				_, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, sgx_device_plugin), sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
 
-				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "sgx-test-with-plugin.yaml"), "sgx-test-with-plugin", "default", 3*time.Second, cfg.Timeout)
+				pods, err := pod.GetAllRunningByPrefixWithRetry(sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pods).NotTo(BeEmpty())
+
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "sgx-test-with-plugin.yaml"), "sgx-test-with-plugin", "default", 1*time.Second, cfg.Timeout)
+
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 				delErr := j.Delete(util.DefaultDeleteRetries)

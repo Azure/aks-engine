@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: sgx-device-plugin
+  namespace: kube-system
   labels:
     app: sgx-device-plugin
 spec:
@@ -52,3 +53,4 @@ spec:
       - name: dev-sgx
         hostPath:
           path: /dev/sgx
+          
