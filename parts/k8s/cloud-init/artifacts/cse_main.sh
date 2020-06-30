@@ -46,13 +46,6 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
 
-if [ -f /var/run/reboot-required ]; then
-  REBOOTREQUIRED=true
-  trace_info "RebootRequired" "reboot=true"
-else
-  REBOOTREQUIRED=false
-fi
-
 time_metric "ConfigureAdminUser" configureAdminUser
 
 {{- if HasVHDDistroNodes}}
@@ -155,6 +148,7 @@ time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
 
 if [[ $OS != $FLATCAR_OS_NAME ]]; then
     time_metric "EnsureRPC" ensureRPC
+    time_metric "EnsureCron" ensureCron
 fi
 
 time_metric "CreateKubeManifestDir" createKubeManifestDir
@@ -299,8 +293,8 @@ fi
 
 {{end}}
 
-if $REBOOTREQUIRED; then
-  echo 'reboot required, rebooting node in 1 minute'
+if [ -f /var/run/reboot-required ]; then
+  trace_info "RebootRequired" "reboot=true"
   /bin/bash -c "shutdown -r 1 &"
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
     aptmarkWALinuxAgent unhold &

@@ -178,7 +178,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.3",
+					OrchestratorVersion: "1.18.5",
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerSku:             BasicLoadBalancerSku,
 						ExcludeMasterFromStandardLB: to.BoolPtr(true),
@@ -192,7 +192,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.3",
+					OrchestratorVersion: "1.18.5",
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerOutboundIPs: to.IntPtr(17),
 					},
@@ -730,20 +730,28 @@ func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {
 
 	p.OrchestratorProfile.OrchestratorVersion = "1.16.0"
 	err = p.validateCustomKubeComponent()
-	expectedMsg = "customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier"
+	expectedMsg = "customKubeAPIServerImage, customKubeControllerManagerImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier"
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
 	}
 
+	p.OrchestratorProfile.OrchestratorVersion = "1.15.0"
 	p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "example.azurecr.io/hyperkube-amd64:tag"
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeAPIServerImage = ""
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = ""
-	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = ""
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = "example.azurecr.io/kube-proxy-amd64:tag"
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = ""
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeBinaryURL = ""
 	err = p.validateCustomKubeComponent()
+	expectedMsg = "customKubeProxyImage has no effect in Kubernetes version 1.15 or earlier"
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.16.0"
+	err = p.validateCustomKubeComponent()
 	if err != nil {
-		t.Errorf("should not error because custom hyperkube image can be used in 1.16, got error : %s", err.Error())
+		t.Errorf("should not error because custom kube-proxy and hyperkube components can be used in 1.16, got error : %s", err.Error())
 	}
 }
 
@@ -4129,6 +4137,21 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		}
 	})
 
+	t.Run("Should fail for invalid LB + Enable VMSS node public IP config", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			LoadBalancerSku: StandardLoadBalancerSku,
+		}
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+		agentPoolProfiles[0].EnableVMSSNodePublicIP = to.BoolPtr(true)
+		expectedMsg := fmt.Sprintf("You have enabled VMSS node public IP in agent pool %s, but you did not specify Basic Load Balancer SKU", agentPoolProfiles[0].Name)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
 	t.Run("Should fail for invalid VMSS + VnetSubnetID + FirstConsecutiveStaticIP config", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
@@ -5217,6 +5240,7 @@ func TestValidateAzureStackSupport(t *testing.T) {
 					break
 				}
 			}
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.11"
 			if err := cs.Validate(false); !helpers.EqualError(err, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, err)

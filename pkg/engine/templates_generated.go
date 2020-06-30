@@ -7629,7 +7629,7 @@ spec:
       containers:
       - name: aci-connector
         image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: KUBELET_PORT
           value: "10250"
@@ -9372,7 +9372,7 @@ spec:
           limits:
             cpu: {{ContainerCPULimits "gatekeeper"}}
             memory: {{ContainerMemLimits "gatekeeper"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz
@@ -9683,7 +9683,7 @@ spec:
           limits:
             cpu: {{ContainerCPULimits "azure-policy"}}
             memory: {{ContainerMemLimits "azure-policy"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: K8S_POLICY_PREFIX
           value: azurepolicy
@@ -12998,7 +12998,7 @@ spec:
               name: cilium-config
               optional: true
         image: {{ContainerImage "cilium-agent"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
             exec:
@@ -13233,7 +13233,7 @@ spec:
               name: cilium-aws
               optional: true
         image: {{ContainerImage "cilium-operator"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: cilium-operator
         volumeMounts:
         - mountPath: /var/lib/etcd-config
@@ -14465,7 +14465,7 @@ spec:
       containers:
         - name: omsagent
           image: {{ContainerImage "omsagent"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             limits:
               cpu: {{ContainerCPULimits "omsagent"}}
@@ -15902,7 +15902,7 @@ spec:
         operator: Exists
       containers:
       - command:
-{{- if not (IsKubernetesVersionGe "1.17.0")}}
+{{- if not (IsKubernetesVersionGe "1.16.0")}}
         - /hyperkube
 {{- end}}
         - kube-proxy
@@ -16213,7 +16213,7 @@ spec:
       containers:
         - name: kubernetes-dashboard
           image: {{ContainerImage "kubernetes-dashboard"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8443
               protocol: TCP
@@ -17404,7 +17404,7 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
@@ -17432,7 +17432,7 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
           ports:
@@ -17464,7 +17464,7 @@ spec:
               memory: {{ContainerMemReqs "secrets-store"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           args:
           - --csi-address=/csi/csi.sock
           - --probe-timeout=3s
@@ -17522,7 +17522,7 @@ spec:
       containers:
         - name: provider-azure-installer
           image: {{ContainerImage "provider-azure-installer"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: TARGET_DIR
               value: "/etc/kubernetes/secrets-store-csi-providers"
@@ -17593,7 +17593,7 @@ spec:
                 - flatcar
       - name: smb-flexvol-installer
         image: {{ContainerImage "smb-flexvolume"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: {{ContainerCPUReqs "smb-flexvolume"}}
@@ -18144,6 +18144,15 @@ ensureAuditD() {
     apt_get_purge auditd mlocate &
   fi
 }
+ensureCron() {
+  local CRON_SERVICE=/lib/systemd/system/cron.service
+  if [[ -f ${CRON_SERVICE} ]]; then
+    if ! grep -q 'Restart=' ${CRON_SERVICE}; then
+      sed -i 's/\[Service\]/[Service]\nRestart=always/' ${CRON_SERVICE}
+      systemctlEnableAndStart cron
+    fi
+  fi
+}
 generateAggregatedAPICerts() {
   AGGREGATED_API_CERTS_SETUP_FILE=/etc/kubernetes/generate-proxy-certs.sh
   wait_for_file 1200 1 $AGGREGATED_API_CERTS_SETUP_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
@@ -18267,7 +18276,7 @@ configureCNI() {
   {{if HasCiliumNetworkPlugin}}
   systemctl enable sys-fs-bpf.mount
   systemctl restart sys-fs-bpf.mount
-  REBOOTREQUIRED=true
+  touch /var/run/reboot-required
   {{end}}
 {{- if IsAzureStackCloud}}
   if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
@@ -18467,7 +18476,7 @@ installKubeletAndKubectl() {
   rm -rf ${binPath}/kubelet-* ${binPath}/kubectl-* /home/hyperkube-downloads &
 }
 ensureK8sControlPlane() {
-  if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
+  if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
   retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
@@ -19236,7 +19245,7 @@ installEtcd() {
   fi
 }
 installDeps() {
-  packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+  packages="apache2-utils apt-transport-https blobfuse=1.1.1 ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
     retrycmd_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
@@ -19501,13 +19510,6 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
 
-if [ -f /var/run/reboot-required ]; then
-  REBOOTREQUIRED=true
-  trace_info "RebootRequired" "reboot=true"
-else
-  REBOOTREQUIRED=false
-fi
-
 time_metric "ConfigureAdminUser" configureAdminUser
 
 {{- if HasVHDDistroNodes}}
@@ -19610,6 +19612,7 @@ time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
 
 if [[ $OS != $FLATCAR_OS_NAME ]]; then
     time_metric "EnsureRPC" ensureRPC
+    time_metric "EnsureCron" ensureCron
 fi
 
 time_metric "CreateKubeManifestDir" createKubeManifestDir
@@ -19754,8 +19757,8 @@ fi
 
 {{end}}
 
-if $REBOOTREQUIRED; then
-  echo 'reboot required, rebooting node in 1 minute'
+if [ -f /var/run/reboot-required ]; then
+  trace_info "RebootRequired" "reboot=true"
   /bin/bash -c "shutdown -r 1 &"
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
     aptmarkWALinuxAgent unhold &
@@ -22890,7 +22893,7 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       }
     },
     "mobyVersion": {
-      "defaultValue": "3.0.12",
+      "defaultValue": "3.0.13",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -22905,7 +22908,8 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
          "3.0.8",
          "3.0.10",
          "3.0.11",
-         "3.0.12"
+         "3.0.12",
+         "3.0.13"
        ],
       "type": "string"
     },

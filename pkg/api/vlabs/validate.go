@@ -521,7 +521,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if to.Bool(agentPoolProfile.VMSSOverProvisioningEnabled) {
-			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
+			if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
 				return errors.Errorf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
 			}
 		}
@@ -533,8 +533,11 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if to.Bool(agentPoolProfile.EnableVMSSNodePublicIP) {
-			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
+			if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
 				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
+			}
+			if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != BasicLoadBalancerSku {
+				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify Basic Load Balancer SKU", agentPoolProfile.Name)
 			}
 		}
 
@@ -562,7 +565,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
-		if agentPoolProfile.AvailabilityProfile == VirtualMachineScaleSets {
+		if agentPoolProfile.AvailabilityProfile != AvailabilitySet {
 			e := validateVMSS(a.OrchestratorProfile, isUpdate, agentPoolProfile.StorageProfile)
 			if e != nil {
 				return e
@@ -1264,7 +1267,7 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 		if e := validate.Var(a.AvailabilityProfile, "eq=VirtualMachineScaleSets|eq=AvailabilitySet"); e != nil {
 			return errors.Errorf("property 'AvailabilityProfile' must be set to either '%s' or '%s' when attaching disks", VirtualMachineScaleSets, AvailabilitySet)
 		}
-		if a.StorageProfile == StorageAccount && (a.AvailabilityProfile == VirtualMachineScaleSets) {
+		if a.StorageProfile == StorageAccount && (a.AvailabilityProfile != AvailabilitySet) {
 			return errors.Errorf("VirtualMachineScaleSets does not support storage account attached disks.  Instead specify 'StorageAccount': '%s' or specify AvailabilityProfile '%s'", ManagedDisks, AvailabilitySet)
 		}
 	}
@@ -1758,7 +1761,7 @@ func (k *KubernetesConfig) validateKubernetesImageBaseType() error {
 }
 
 func (k *KubernetesConfig) isUsingCustomKubeComponent() bool {
-	return k.CustomKubeAPIServerImage != "" || k.CustomKubeControllerManagerImage != "" || k.CustomKubeProxyImage != "" || k.CustomKubeSchedulerImage != "" || k.CustomKubeBinaryURL != ""
+	return k.CustomKubeAPIServerImage != "" || k.CustomKubeControllerManagerImage != "" || k.CustomKubeSchedulerImage != "" || k.CustomKubeBinaryURL != ""
 }
 
 func (a *Properties) validateContainerRuntime(isUpdate bool) error {
@@ -1818,7 +1821,12 @@ func (a *Properties) validateCustomKubeComponent() error {
 		}
 	} else {
 		if k.isUsingCustomKubeComponent() {
-			return errors.New("customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier")
+			return errors.New("customKubeAPIServerImage, customKubeControllerManagerImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier")
+		}
+	}
+	if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+		if k.CustomKubeProxyImage != "" {
+			return errors.New("customKubeProxyImage has no effect in Kubernetes version 1.15 or earlier")
 		}
 	}
 

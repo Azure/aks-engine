@@ -166,7 +166,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1604-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.02",
+		ImageVersion:   "2020.06.25",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -174,7 +174,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.02",
+		ImageVersion:   "2020.06.25",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
@@ -182,7 +182,7 @@ var (
 		ImageOffer:     "aks-windows",
 		ImageSku:       "2019-datacenter-core-smalldisk-2006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.1282.200610",
+		ImageVersion:   "17763.1282.200625",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -190,7 +190,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.1217.2005081535",
+		ImageVersion:   "17763.1282.2006061953",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.

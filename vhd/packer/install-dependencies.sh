@@ -68,7 +68,7 @@ echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="3.0.12"
+MOBY_VERSION="3.0.13"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 downloadGPUDrivers
@@ -349,15 +349,13 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.19.0-beta.2
+1.18.5
 1.18.4
-1.18.3
+1.17.8
 1.17.7
-1.17.7-azs
-1.17.6
-1.17.6-azs
+1.16.12
 1.16.11
-1.16.10
-1.16.10-azs
+1.16.11-azs
 1.15.12
 1.15.12-azs
 1.15.11
@@ -382,6 +380,17 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
   fi
+done
+
+# Use kube-proxy image instead of hyperkube for kube-proxy container. Fixes #3529.
+KUBE_PROXY_VERSIONS="
+1.16.12
+1.16.11
+"
+for KUBE_PROXY_VERSION in ${KUBE_PROXY_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kube-proxy:v${KUBE_PROXY_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
 # Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager

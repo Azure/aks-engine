@@ -332,7 +332,7 @@ spec:
       containers:
         - name: omsagent
           image: {{ContainerImage "omsagent"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             limits:
               cpu: {{ContainerCPULimits "omsagent"}}

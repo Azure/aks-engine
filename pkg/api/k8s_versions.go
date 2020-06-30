@@ -350,11 +350,17 @@ func GetK8sComponentsByVersionMap(k *KubernetesConfig) map[string]map[string]str
 func getVersionOverridesMCR(v string) map[string]string {
 	switch v {
 	case "1.18.4":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200617/windowszip/v1.18.4-hotfix.20200617-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200624/windowszip/v1.18.4-hotfix.20200624-1int.zip"}
+	case "1.18.2":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.2-hotfix.20200624/windowszip/v1.18.2-hotfix.20200624-1int.zip"}
 	case "1.17.7":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200617/windowszip/v1.17.7-hotfix.20200617-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200624/windowszip/v1.17.7-hotfix.20200624-1int.zip"}
 	case "1.16.11":
 		return map[string]string{common.WindowsArtifactComponentName: "v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip"}
+	case "1.16.10":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.16.10-hotfix.20200623/windowszip/v1.16.10-hotfix.20200623-1int.zip"}
+	case "1.15.12":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.15.12-hotfix.20200623/windowszip/v1.15.12-hotfix.20200623-1int.zip"}
 	default:
 		return nil
 	}
@@ -363,11 +369,17 @@ func getVersionOverridesMCR(v string) map[string]string {
 func getVersionOverridesGCR(v string) map[string]string {
 	switch v {
 	case "1.18.4":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200617/windowszip/v1.18.4-hotfix.20200617-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200624/windowszip/v1.18.4-hotfix.20200624-1int.zip"}
+	case "1.18.2":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.2-hotfix.20200624/windowszip/v1.18.2-hotfix.20200624-1int.zip"}
 	case "1.17.7":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200617/windowszip/v1.17.7-hotfix.20200617-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200624/windowszip/v1.17.7-hotfix.20200624-1int.zip"}
 	case "1.16.11":
 		return map[string]string{common.WindowsArtifactComponentName: "v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip"}
+	case "1.16.10":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.16.10-hotfix.20200623/windowszip/v1.16.10-hotfix.20200623-1int.zip"}
+	case "1.15.12":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.15.12-hotfix.20200623/windowszip/v1.15.12-hotfix.20200623-1int.zip"}
 	case "1.8.11":
 		return map[string]string{common.KubeDNSAddonName: "k8s-dns-kube-dns-amd64:1.14.9"}
 	case "1.8.9":
@@ -663,7 +675,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 	case "1.16":
 		ret = map[string]string{
 			common.Hyperkube:                                  getDefaultImage(common.Hyperkube, kubernetesImageBaseType) + ":v" + version,
-			common.KubeProxyAddonName:                         getDefaultImage(common.Hyperkube, kubernetesImageBaseType) + ":v" + version,
+			common.KubeProxyAddonName:                         getDefaultImage(common.KubeProxyAddonName, kubernetesImageBaseType) + ":v" + version,
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",

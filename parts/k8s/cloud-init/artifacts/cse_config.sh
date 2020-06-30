@@ -127,6 +127,15 @@ ensureAuditD() {
     apt_get_purge auditd mlocate &
   fi
 }
+ensureCron() {
+  local CRON_SERVICE=/lib/systemd/system/cron.service
+  if [[ -f ${CRON_SERVICE} ]]; then
+    if ! grep -q 'Restart=' ${CRON_SERVICE}; then
+      sed -i 's/\[Service\]/[Service]\nRestart=always/' ${CRON_SERVICE}
+      systemctlEnableAndStart cron
+    fi
+  fi
+}
 generateAggregatedAPICerts() {
   AGGREGATED_API_CERTS_SETUP_FILE=/etc/kubernetes/generate-proxy-certs.sh
   wait_for_file 1200 1 $AGGREGATED_API_CERTS_SETUP_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
@@ -250,7 +259,7 @@ configureCNI() {
   {{if HasCiliumNetworkPlugin}}
   systemctl enable sys-fs-bpf.mount
   systemctl restart sys-fs-bpf.mount
-  REBOOTREQUIRED=true
+  touch /var/run/reboot-required
   {{end}}
 {{- if IsAzureStackCloud}}
   if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
@@ -450,7 +459,7 @@ installKubeletAndKubectl() {
   rm -rf ${binPath}/kubelet-* ${binPath}/kubectl-* /home/hyperkube-downloads &
 }
 ensureK8sControlPlane() {
-  if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
+  if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
   retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
