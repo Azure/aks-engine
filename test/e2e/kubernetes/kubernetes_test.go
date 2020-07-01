@@ -28,6 +28,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/daemonset"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/event"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
@@ -1607,6 +1608,43 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to run an SGX job", func() {
 			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
 				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "sgx-test.yaml"), "sgx-test", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				delErr := j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			} else {
+				Skip("This cluster does not have a DC-series SKU agent pool")
+			}
+		})
+
+		It("should be able to run an SGX job with sgx-device-plugin", func() {
+			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
+
+				sgx_device_plugin := ""
+				sgx_device_plugin_name := "sgx-device-plugin"
+				sgx_device_plugin_namespace := "kube-system"
+				sgx_device_plugin_label_key := "app"
+				sgx_device_plugin_label_value := "sgx-device-plugin"
+
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+					sgx_device_plugin = "sgx-device-plugin.yaml"
+				} else {
+					sgx_device_plugin = "sgx-device-plugin-before-k8s-1-17.yaml"
+				}
+
+				_, err := daemonset.CreateDaemonsetFromFile(filepath.Join(WorkloadDir, sgx_device_plugin), sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
+				pods, err := pod.GetAllRunningByLabelWithRetry(sgx_device_plugin_label_key, sgx_device_plugin_label_value, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pods).NotTo(BeEmpty())
+
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "sgx-test-with-plugin.yaml"), "sgx-test-with-plugin", "default", 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 				delErr := j.Delete(util.DefaultDeleteRetries)

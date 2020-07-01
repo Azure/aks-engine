@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: sgx-device-plugin
+  namespace: kube-system
+  labels:
+    app: sgx-device-plugin
+spec:
+  selector:
+    matchLabels:
+      app: sgx-device-plugin
+  template:
+    metadata:
+      labels:
+        app: sgx-device-plugin
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/instance-type
+                operator: In
+                values:
+                - Standard_DC2s
+                - Standard_DC4s
+                - Standard_DC1s_v2
+                - Standard_DC2s_v2
+                - Standard_DC4s_v2
+                - Standard_DC8_v2
+              - key: beta.kubernetes.io/os
+                operator: In
+                values:
+                - linux 
+      containers:
+      - name: sgx-device-plugin
+        image: mcr.microsoft.com/aks/acc/sgx-device-plugin:1.0
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: device-plugin
+          mountPath: /var/lib/kubelet/device-plugins
+        - name: dev-sgx
+          mountPath: /dev/sgx
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      volumes:
+      - name: device-plugin
+        hostPath:
+          path: /var/lib/kubelet/device-plugins
+      - name: dev-sgx
+        hostPath:
+          path: /dev/sgx
