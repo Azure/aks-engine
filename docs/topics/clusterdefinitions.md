@@ -268,7 +268,7 @@ The `coredns` addon includes integration with the `cluster-proportional-autoscal
 }
 ```
 
-#### coredns
+#### calico
 
 The `calico` addon includes configurable verbosity via the `logSeverityScreen` configuration property. The default is "info". To override that default, (e.g., to "error"), see this example:
 
