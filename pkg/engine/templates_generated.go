@@ -13322,6 +13322,8 @@ spec:
       labels:
         k8s-app: cilium
     spec:
+      nodeSelector:
+        kubernetes.io/os: linux
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -13501,7 +13503,8 @@ spec:
       serviceAccountName: cilium
       terminationGracePeriodSeconds: 1
       tolerations:
-      - operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
       volumes:
         # To keep state between restarts / upgrades
       - hostPath:
@@ -13573,7 +13576,8 @@ spec:
         app: cilium-node-init
     spec:
       tolerations:
-      - operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
       hostPID: true
       hostNetwork: true
       containers:
@@ -13682,6 +13686,11 @@ spec:
         io.cilium/app: operator
         name: cilium-operator
     spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
       containers:
       - args:
         - --config-dir=/tmp/cilium/config-map
