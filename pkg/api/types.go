@@ -93,8 +93,40 @@ type Properties struct {
 
 // CustomCloudEnv represents the custom cloud env info of the AKS cluster.
 type CustomCloudEnv struct {
-	Name   string `json:"Name,omitempty"`
-	McrURL string `json:"mcrURL,omitempty"`
+	Name                         string              `json:"Name,omitempty"`
+	McrURL                       string              `json:"mcrURL,omitempty"`
+	RepoDepotEndpoint            string              `json:"repoDepotEndpoint,omitempty"`
+	ManagementPortalURL          string              `json:"managementPortalURL,omitempty"`
+	PublishSettingsURL           string              `json:"publishSettingsURL,omitempty"`
+	ServiceManagementEndpoint    string              `json:"serviceManagementEndpoint,omitempty"`
+	ResourceManagerEndpoint      string              `json:"resourceManagerEndpoint,omitempty"`
+	ActiveDirectoryEndpoint      string              `json:"activeDirectoryEndpoint,omitempty"`
+	GalleryEndpoint              string              `json:"galleryEndpoint,omitempty"`
+	KeyVaultEndpoint             string              `json:"keyVaultEndpoint,omitempty"`
+	GraphEndpoint                string              `json:"graphEndpoint,omitempty"`
+	ServiceBusEndpoint           string              `json:"serviceBusEndpoint,omitempty"`
+	BatchManagementEndpoint      string              `json:"batchManagementEndpoint,omitempty"`
+	StorageEndpointSuffix        string              `json:"storageEndpointSuffix,omitempty"`
+	SQLDatabaseDNSSuffix         string              `json:"sqlDatabaseDNSSuffix,omitempty"`
+	TrafficManagerDNSSuffix      string              `json:"trafficManagerDNSSuffix,omitempty"`
+	KeyVaultDNSSuffix            string              `json:"keyVaultDNSSuffix,omitempty"`
+	ServiceBusEndpointSuffix     string              `json:"serviceBusEndpointSuffix,omitempty"`
+	ServiceManagementVMDNSSuffix string              `json:"serviceManagementVMDNSSuffix,omitempty"`
+	ResourceManagerVMDNSSuffix   string              `json:"resourceManagerVMDNSSuffix,omitempty"`
+	ContainerRegistryDNSSuffix   string              `json:"containerRegistryDNSSuffix,omitempty"`
+	CosmosDBDNSSuffix            string              `json:"cosmosDBDNSSuffix,omitempty"`
+	TokenAudience                string              `json:"tokenAudience,omitempty"`
+	ResourceIdentifiers          ResourceIdentifiers `json:"resourceIdentifiers,omitempty"`
+}
+
+// ResourceIdentifiers represents resource ids
+type ResourceIdentifiers struct {
+	Graph               string `json:"graph,omitempty"`
+	KeyVault            string `json:"keyVault,omitempty"`
+	Datalake            string `json:"datalake,omitempty"`
+	Batch               string `json:"batch,omitempty"`
+	OperationalInsights string `json:"operationalInsights,omitempty"`
+	Storage             string `json:"storage,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
