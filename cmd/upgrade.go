@@ -43,6 +43,7 @@ type upgradeCmd struct {
 	resourceGroupName                        string
 	apiModelPath                             string
 	deploymentDirectory                      string
+	currentVersion                           string
 	upgradeVersion                           string
 	location                                 string
 	kubeconfigPath                           string
@@ -246,6 +247,7 @@ func (uc *upgradeCmd) initialize() error {
 			return errors.Wrap(err, "Invalid upgrade target version. Consider using --force if you really want to proceed")
 		}
 	}
+	uc.currentVersion = uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion
 	uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 
 	//allows to identify VMs in the resource group that belong to this cluster.
@@ -312,6 +314,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	upgradeCluster.IsVMSSToBeUpgraded = isVMSSNameInAgentPoolsArray
+	upgradeCluster.CurrentVersion = uc.currentVersion
 
 	if err = upgradeCluster.UpgradeCluster(uc.client, kubeConfig, BuildTag); err != nil {
 		return errors.Wrap(err, "upgrading cluster")

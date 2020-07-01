@@ -28,6 +28,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/daemonset"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/event"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
@@ -700,6 +701,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			}
+		})
+
+		It("should have core kube-system addons running the correct version", func() {
+			By(fmt.Sprintf("Ensuring that the %s addon image matches orchestrator version", common.KubeProxyAddonName))
+			ds, err := daemonset.Get(common.KubeProxyAddonName, "kube-system", 3)
+			Expect(err).NotTo(HaveOccurred())
+			log.Printf("Image: %s", ds.Spec.Template.TemplateSpec.Containers[0].Image)
+			log.Printf("OrchestratorVersion: %s", eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion)
+			version := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
+			Expect(strings.HasSuffix(ds.Spec.Template.TemplateSpec.Containers[0].Image, version)).To(Equal(true))
 		})
 
 		It("Should not have any unready or crashing pods right after deployment", func() {

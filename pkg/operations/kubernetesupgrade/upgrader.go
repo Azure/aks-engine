@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
@@ -35,6 +36,7 @@ type Upgrader struct {
 	stepTimeout        *time.Duration
 	cordonDrainTimeout *time.Duration
 	AKSEngineVersion   string
+	CurrentVersion     string
 	ControlPlaneOnly   bool
 }
 
@@ -44,6 +46,7 @@ const (
 	defaultTimeout                     = time.Minute * 20
 	defaultCordonDrainTimeout          = time.Minute * 20
 	nodePropertiesCopyTimeout          = time.Minute * 5
+	getResourceTimeout                 = time.Minute * 1
 	clusterUpgradeTimeout              = time.Minute * 180
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
@@ -76,6 +79,8 @@ func (ku *Upgrader) RunUpgrade() error {
 		return err
 	}
 
+	ku.handleUnreconcilableAddons(ctx)
+
 	if ku.ControlPlaneOnly {
 		return nil
 	}
@@ -86,6 +91,33 @@ func (ku *Upgrader) RunUpgrade() error {
 
 	//This is handling VMAS VMs only, not VMSS
 	return ku.upgradeAgentPools(ctx)
+}
+
+// handleUnreconcilableAddons ensures addon upgrades that addon-manager cannot handle by itself.
+// This method fails silently otherwide it would break test "Should not fail if a Kubernetes client cannot be created" (upgradecluster_test.go)
+func (ku *Upgrader) handleUnreconcilableAddons(ctx context.Context) {
+	// kube-proxy upgrade fails from v1.15 to 1.16: https://github.com/Azure/aks-engine/issues/3557
+	// deleting daemonset so addon-manager recreates instead of patching
+	upgradeVersion := ku.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
+	if !common.IsKubernetesVersionGe(ku.CurrentVersion, "1.16.0") && common.IsKubernetesVersionGe(upgradeVersion, "1.16.0") {
+		ku.logger.Errorf("Attempting to delete kube-proxy daemonset.")
+		client, err := ku.getKubernetesClient(getResourceTimeout)
+		if err != nil {
+			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
+			return
+		}
+		ds, err := client.GetDaemonSet("kube-system", "kube-proxy")
+		if err != nil {
+			ku.logger.Errorf("Error getting kube-proxy daemonset: %v", err)
+			return
+		}
+		err = client.DeleteDaemonSet(ds)
+		if err != nil {
+			ku.logger.Errorf("Error deleting kube-proxy daemonset: %v", err)
+			return
+		}
+		ku.logger.Errorf("Deleted kube-proxy daemonset. Addon-manager will recreate it.")
+	}
 }
 
 // Validate will run validation post upgrade

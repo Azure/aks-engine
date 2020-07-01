@@ -78,6 +78,7 @@ type UpgradeCluster struct {
 	UpgradeWorkFlow    UpgradeWorkFlow
 	Force              bool
 	ControlPlaneOnly   bool
+	CurrentVersion     string
 }
 
 // MasterPoolName pool name
@@ -179,6 +180,7 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 	}
 	u := &Upgrader{}
 	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion, uc.ControlPlaneOnly)
+	u.CurrentVersion = uc.CurrentVersion
 	return u
 }
 

@@ -85,6 +85,7 @@ type MockKubernetesClient struct {
 	FailDeleteServiceAccount  bool
 	FailSupportEviction       bool
 	FailDeletePod             bool
+	FailDeleteDaemonSet       bool
 	FailEvictPod              bool
 	FailWaitForDelete         bool
 	ShouldSupportEviction     bool
@@ -394,6 +395,14 @@ func (mkc *MockKubernetesClient) SupportEviction() (string, error) {
 	return "", nil
 }
 
+//DeleteDaemonSet deletes the passed in daemonset
+func (mkc *MockKubernetesClient) DeleteDaemonSet(pod *appsv1.DaemonSet) error {
+	if mkc.FailDeleteDaemonSet {
+		return errors.New("DaemonSet failed")
+	}
+	return nil
+}
+
 //DeletePod deletes the passed in pod
 func (mkc *MockKubernetesClient) DeletePod(pod *v1.Pod) error {
 	if mkc.FailDeletePod {
@@ -416,6 +425,13 @@ func (mkc *MockKubernetesClient) WaitForDelete(logger *log.Entry, pods []v1.Pod,
 		return nil, errors.New("WaitForDelete failed")
 	}
 	return []v1.Pod{}, nil
+}
+
+// DaemonSet returns a given daemonset in a namespace.
+func (mkc *MockKubernetesClient) GetDaemonSet(namespace, name string) (*appsv1.DaemonSet, error) {
+	return &appsv1.DaemonSet{
+		Spec: appsv1.DaemonSetSpec{},
+	}, nil
 }
 
 // GetDeployment returns a given deployment in a namespace.
