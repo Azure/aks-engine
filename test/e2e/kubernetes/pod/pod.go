@@ -176,6 +176,49 @@ func CreatePodFromFile(filename, name, namespace string, sleep, timeout time.Dur
 	return p, nil
 }
 
+// CreatePodFromFileAsync wraps CreatePodFromFile with a struct response for goroutine + channel usage
+func CreatePodFromFileAsync(filename, name, namespace string, sleep, timeout time.Duration) GetResult {
+	p, err := CreatePodFromFile(filename, name, namespace, sleep, timeout)
+	return GetResult{
+		pod: p,
+		err: err,
+	}
+}
+
+// CreatePodFromFileWithRetry will kubectl apply a Pod from file with a name with retry toleration
+func CreatePodFromFileWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreatePodFromFileWithRetryError error
+	var p *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreatePodFromFileAsync(filename, name, namespace, sleep, timeout)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreatePodFromFileWithRetryError = result.err
+			p = result.pod
+			if mostRecentCreatePodFromFileWithRetryError == nil {
+				if p != nil {
+					return p, nil
+				}
+			}
+		case <-ctx.Done():
+			return p, errors.Errorf("CreatePodFromFileWithRetry timed out: %s\n", mostRecentCreatePodFromFileWithRetryError)
+		}
+	}
+}
+
 // CreatePodFromFileIfNotExist will create a Pod from file with a name
 func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, timeout time.Duration) (*Pod, error) {
 	p, err := Get(name, namespace, validatePodNotExistRetries)
@@ -599,17 +642,17 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 	return pods, nil
 }
 
-// GetAllByLabelAsync wraps GetAllByLabel with a struct response for goroutine + channel usage
-func GetAllByLabelAsync(labelKey, labelVal, namespace string) GetAllByPrefixResult {
-	pods, err := GetAllByLabel(labelKey, labelVal, namespace)
+// GetAllRunningByLabelAsync wraps GetAllRunningByLabel with a struct response for goroutine + channel usage
+func GetAllRunningByLabelAsync(labelKey, labelVal, namespace string) GetAllByPrefixResult {
+	pods, err := GetAllRunningByLabel(labelKey, labelVal, namespace)
 	return GetAllByPrefixResult{
 		Pods: pods,
 		Err:  err,
 	}
 }
 
-// GetAllByLabelWithRetry will return all pods in a given namespace that match a prefix, retrying if error up to a timeout
-func GetAllByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+// GetAllRunningByLabelWithRetry will return all pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllRunningByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetAllByPrefixResult)
@@ -621,7 +664,7 @@ func GetAllByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout
 			case <-ctx.Done():
 				return
 			default:
-				ch <- GetAllByLabelAsync(labelKey, labelVal, namespace)
+				ch <- GetAllRunningByLabelAsync(labelKey, labelVal, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -635,13 +678,13 @@ func GetAllByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout
 				return pods, nil
 			}
 		case <-ctx.Done():
-			return pods, errors.Errorf("GetAllByLabelWithRetry timed out: %s\n", mostRecentGetAllByLabelWithRetryError)
+			return pods, errors.Errorf("GetAllRunningByLabelWithRetry timed out: %s\n", mostRecentGetAllByLabelWithRetryError)
 		}
 	}
 }
 
-// GetAllByLabel will return all pods in a given namespace that match a label
-func GetAllByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
+// GetAllRunningByLabel will return all pods in a given namespace that match a label
+func GetAllRunningByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
 	cmd := exec.Command("k", "get", "pods", "-n", namespace, "-l", fmt.Sprintf("%s=%s", labelKey, labelVal), "-o", "json")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -656,7 +699,11 @@ func GetAllByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
 		return nil, err
 	}
 	pods := []Pod{}
-	pods = append(pods, pl.Pods...)
+	for _, p := range pl.Pods {
+		if p.Status.Phase == "Running" {
+			pods = append(pods, p)
+		}
+	}
 	return pods, nil
 }
 

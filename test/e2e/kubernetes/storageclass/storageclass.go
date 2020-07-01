@@ -64,6 +64,49 @@ func CreateStorageClassFromFile(filename, name string) (*StorageClass, error) {
 	return sc, nil
 }
 
+// CreateStorageClassFromFileAsync wraps CreateStorageClassFromFile with a struct response for goroutine + channel usage
+func CreateStorageClassFromFileAsync(filename, name string) GetResult {
+	sc, err := CreateStorageClassFromFile(filename, name)
+	return GetResult{
+		storageClass: sc,
+		err: err,
+	}
+}
+
+// CreateStorageClassFromFileWithRetry will kubectl apply a StorageClass from file with a name with retry toleration
+func CreateStorageClassFromFileWithRetry(filename, name string, sleep, timeout time.Duration) (*StorageClass, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateStorageClassFromFileWithRetryError error
+	var sc *StorageClass
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateStorageClassFromFileAsync(filename, name)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateStorageClassFromFileWithRetryError = result.err
+			sc = result.storageClass
+			if mostRecentCreateStorageClassFromFileWithRetryError == nil {
+				if sc != nil {
+					return sc, nil
+				}
+			}
+		case <-ctx.Done():
+			return sc, errors.Errorf("CreateStorageClassFromFileWithRetry timed out: %s\n", mostRecentCreateStorageClassFromFileWithRetryError)
+		}
+	}
+}
+
 // GetResult is a return struct for GetAsync
 type GetResult struct {
 	storageClass *StorageClass
