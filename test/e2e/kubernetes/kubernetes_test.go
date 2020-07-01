@@ -744,7 +744,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have functional DNS resolution from a linux container")
 			validateDNSLinuxName := "validate-dns-linux"
 			validateDNSLinuxNamespace := "default"
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
+			j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			if err != nil {
@@ -803,7 +803,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
 			By("Creating a php-apache deployment")
-			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Ensuring that php-apache pod is running")
@@ -828,7 +828,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to schedule a pod to a control plane node", func() {
 			By("Creating a Job with control plane nodeSelector")
 			for i := 1; i <= 3; i++ {
-				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, 3*time.Minute)
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, 3*time.Minute)
 				if err != nil {
 					fmt.Printf("unable to create job: %s\n", err)
 					continue
@@ -848,7 +848,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.AnyAgentIsLinux() {
 				By("Creating a Job with agent nodeSelector")
 				for i := 1; i <= 3; i++ {
-					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, 3*time.Minute)
+					j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, 3*time.Minute)
 					if err != nil {
 						fmt.Printf("unable to create job: %s\n", err)
 						continue
@@ -912,7 +912,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have stable pod-to-pod networking", func() {
 			if eng.AnyAgentIsLinux() {
 				By("Creating a php-apache deployment")
-				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that php-apache pod is running")
 				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
@@ -1515,7 +1515,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cfg.TestPVC {
 				By("Creating a persistent volume claim")
 				pvcName := "azure-disk" // should be the same as in pvc-azuredisk.yaml
-				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default")
+				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFileWithRetry(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				// Azure Disk CSI driver in zone-enabled clusters uses 'WaitForFirstConsumer' volume binding mode
 				// thus, pvc won't be available until a pod consumes it
@@ -1528,7 +1528,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Launching a pod using the volume claim")
 				podName := "pv-pod" // should be the same as in pod-pvc.yaml
-				testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+				testPod, err := pod.CreatePodFromFileWithRetry(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
@@ -1587,7 +1587,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with a GPU-enabled agent pool", func() {
 		It("should be able to run a nvidia-gpu job", func() {
 			if eng.ExpandedDefinition.Properties.HasNSeriesSKU() {
-				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 				delErr := j.Delete(util.DefaultDeleteRetries)
@@ -1606,7 +1606,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with a DC-series SKU agent pool", func() {
 		It("should be able to run an SGX job", func() {
 			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
-				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "sgx-test.yaml"), "sgx-test", "default", 3*time.Second, cfg.Timeout)
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "sgx-test.yaml"), "sgx-test", "default", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 				delErr := j.Delete(util.DefaultDeleteRetries)
@@ -1693,16 +1693,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				randInt := r.Intn(99999)
 				frontendProdDeploymentName := fmt.Sprintf("frontend-prod-%s-%v", cfg.Name, randInt)
-				frontendProdDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendProdDeploymentName, nsProd, "webapp", "frontend")
+				frontendProdDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendProdDeploymentName, nsProd, "webapp", "frontend", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				frontendDevDeploymentName := fmt.Sprintf("frontend-dev-%s-%v", cfg.Name, randInt+100000)
-				frontendDevDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendDevDeploymentName, nsDev, "webapp", "frontend")
+				frontendDevDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendDevDeploymentName, nsDev, "webapp", "frontend", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt+200000)
-				backendDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", backendDeploymentName, nsDev, "webapp", "backend")
+				backendDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", backendDeploymentName, nsDev, "webapp", "backend", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+300000)
-				nwpolicyDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", nwpolicyDeploymentName, nsDev, "", "")
+				nwpolicyDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", nwpolicyDeploymentName, nsDev, "", "", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a running frontend-prod pod")
@@ -2077,7 +2077,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if useCloudControllerManager && common.IsKubernetesVersionGe(orchestratorVersion, "1.16.0") {
 						scFilename = "storageclass-azurefile-external.yaml"
 					}
-					sc, err := storageclass.CreateStorageClassFromFile(filepath.Join(WorkloadDir, scFilename), storageclassName)
+					sc, err := storageclass.CreateStorageClassFromFileWithRetry(filepath.Join(WorkloadDir, scFilename), storageclassName, 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err := sc.WaitOnReady(5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2085,7 +2085,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Creating a persistent volume claim")
 					pvcName := "pvc-azurefile" // should be the same as in pvc-azurefile.yaml
-					pvc, err := persistentvolumeclaims.CreatePVCFromFileDeleteIfExist(filepath.Join(WorkloadDir, "pvc-azurefile.yaml"), pvcName, "default")
+					pvc, err := persistentvolumeclaims.CreatePVCFromFileDeleteIfExist(filepath.Join(WorkloadDir, "pvc-azurefile.yaml"), pvcName, "default", 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err = pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2093,7 +2093,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Launching an IIS pod using the volume claim")
 					podName := "iis-azurefile" // should be the same as in iis-azurefile.yaml
-					iisPod, err := pod.CreatePodFromFile(iisAzurefileYaml, podName, "default", 1*time.Second, cfg.Timeout)
+					iisPod, err := pod.CreatePodFromFileWithRetry(iisAzurefileYaml, podName, "default", 1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err = iisPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2275,7 +2275,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
-				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring that the php-apache pod is running")
