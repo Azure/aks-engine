@@ -180,12 +180,55 @@ func CreateLinuxDeploy(image, name, namespace, app, role string) (*Deployment, e
 	return d, nil
 }
 
+// CreateDeployFromImageAsync wraps CreateLinuxDeploy with a struct response for goroutine + channel usage
+func CreateDeployFromImageAsync(image, name, namespace, app, role string) GetResult {
+	d, err := CreateLinuxDeploy(image, name, namespace, app, role)
+	return GetResult{
+		deployment: d,
+		err: err,
+	}
+}
+
+// CreateDeploymentFromImageWithRetry will kubectl apply a Deployment from file with a name with retry toleration
+func CreateDeploymentFromImageWithRetry(image, name, namespace, app, role string, sleep, timeout time.Duration) (*Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateDeploymentFromImageWithRetryError error
+	var d *Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateDeployFromImageAsync(image, name, namespace, app, role)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateDeploymentFromImageWithRetryError = result.err
+			d = result.deployment
+			if mostRecentCreateDeploymentFromImageWithRetryError == nil {
+				if d != nil {
+					return d, nil
+				}
+			}
+		case <-ctx.Done():
+			return d, errors.Errorf("CreateDeploymentFromImageWithRetry timed out: %s\n", mostRecentCreateDeploymentFromImageWithRetryError)
+		}
+	}
+}
+
 // CreateLinuxDeployIfNotExist first checks if a deployment already exists, and return it if so
 // If not, we call CreateLinuxDeploy
-func CreateLinuxDeployIfNotExist(image, name, namespace, app, role string) (*Deployment, error) {
+func CreateLinuxDeployIfNotExist(image, name, namespace, app, role string, sleep, timeout time.Duration) (*Deployment, error) {
 	deployment, err := Get(name, namespace, validateDeploymentNotExistRetries)
 	if err != nil {
-		return CreateLinuxDeploy(image, name, namespace, app, role)
+		return CreateDeploymentFromImageWithRetry(image, name, namespace, app, role, sleep, timeout)
 	}
 	return deployment, nil
 }

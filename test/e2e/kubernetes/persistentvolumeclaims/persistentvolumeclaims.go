@@ -62,8 +62,51 @@ func CreatePersistentVolumeClaimsFromFile(filename, name, namespace string) (*Pe
 	return pvc, nil
 }
 
+// CreatePersistentVolumeClaimsFromFileAsync wraps CreatePersistentVolumeClaimsFromFile with a struct response for goroutine + channel usage
+func CreatePersistentVolumeClaimsFromFileAsync(filename, name, namespace string) GetResult {
+	pvc, err := CreatePersistentVolumeClaimsFromFile(filename, name, namespace)
+	return GetResult{
+		pvc: pvc,
+		err: err,
+	}
+}
+
+// CreatePersistentVolumeClaimsFromFileWithRetry will kubectl apply a Pod from file with a name with retry toleration
+func CreatePersistentVolumeClaimsFromFileWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*PersistentVolumeClaim, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreatePersistentVolumeClaimsFromFileWithRetryError error
+	var pvc *PersistentVolumeClaim
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreatePersistentVolumeClaimsFromFileAsync(filename, name, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreatePersistentVolumeClaimsFromFileWithRetryError = result.err
+			pvc = result.pvc
+			if mostRecentCreatePersistentVolumeClaimsFromFileWithRetryError == nil {
+				if pvc != nil {
+					return pvc, nil
+				}
+			}
+		case <-ctx.Done():
+			return pvc, errors.Errorf("CreatePersistentVolumeClaimsFromFileWithRetry timed out: %s\n", mostRecentCreatePersistentVolumeClaimsFromFileWithRetryError)
+		}
+	}
+}
+
 // CreatePVCFromFileDeleteIfExist will create a PVC from file with a name
-func CreatePVCFromFileDeleteIfExist(filename, name, namespace string) (*PersistentVolumeClaim, error) {
+func CreatePVCFromFileDeleteIfExist(filename, name, namespace string, sleep, timeout time.Duration) (*PersistentVolumeClaim, error) {
 	pvc, _ := Get(name, namespace)
 	if pvc != nil {
 		err := pvc.Delete(util.DefaultDeleteRetries)
@@ -75,7 +118,7 @@ func CreatePVCFromFileDeleteIfExist(filename, name, namespace string) (*Persiste
 			return nil, err
 		}
 	}
-	return CreatePersistentVolumeClaimsFromFile(filename, name, namespace)
+	return CreatePersistentVolumeClaimsFromFileWithRetry(filename, name, namespace, sleep, timeout)
 }
 
 // GetResult is a return struct for GetAsync

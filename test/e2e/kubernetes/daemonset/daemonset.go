@@ -59,10 +59,53 @@ func CreateDaemonsetFromFile(filename, name, namespace string, sleep, timeout ti
 	}
 	d, err := GetWithRetry(name, namespace, sleep, timeout)
 	if err != nil {
-		log.Printf("Error while trying to fetch Pod %s:%s\n", name, err)
+		log.Printf("Error while trying to fetch Daemonset %s:%s\n", name, err)
 		return nil, err
 	}
 	return d, nil
+}
+
+// CreateDaemonsetFromFileAsync wraps CreateDaemonsetFromFile with a struct response for goroutine + channel usage
+func CreateDaemonsetFromFileAsync(filename, name, namespace string, sleep, timeout time.Duration) GetResult {
+	ds, err := CreateDaemonsetFromFile(filename, name, namespace, sleep, timeout)
+	return GetResult{
+		ds:  ds,
+		err: err,
+	}
+}
+
+// CreateDaemonsetFromFileWithRetry will kubectl apply a Daemonset from file with a name with retry toleration
+func CreateDaemonsetFromFileWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*Daemonset, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateDaemonsetFromFileWithRetryError error
+	var ds *Daemonset
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateDaemonsetFromFileAsync(filename, name, namespace, sleep, timeout)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateDaemonsetFromFileWithRetryError = result.err
+			ds = result.ds
+			if mostRecentCreateDaemonsetFromFileWithRetryError == nil {
+				if ds != nil {
+					return ds, nil
+				}
+			}
+		case <-ctx.Done():
+			return ds, errors.Errorf("CreateDaemonsetFromFileWithRetry timed out: %s\n", mostRecentCreateDaemonsetFromFileWithRetryError)
+		}
+	}
 }
 
 // Get will return a daemonset with a given name and namespace
