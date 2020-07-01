@@ -79,7 +79,7 @@ func (ku *Upgrader) RunUpgrade() error {
 		return err
 	}
 
-	ku.handleUnreconcilableAddons(ctx)
+	ku.handleUnreconcilableAddons()
 
 	if ku.ControlPlaneOnly {
 		return nil
@@ -95,7 +95,7 @@ func (ku *Upgrader) RunUpgrade() error {
 
 // handleUnreconcilableAddons ensures addon upgrades that addon-manager cannot handle by itself.
 // This method fails silently otherwide it would break test "Should not fail if a Kubernetes client cannot be created" (upgradecluster_test.go)
-func (ku *Upgrader) handleUnreconcilableAddons(ctx context.Context) {
+func (ku *Upgrader) handleUnreconcilableAddons() {
 	// kube-proxy upgrade fails from v1.15 to 1.16: https://github.com/Azure/aks-engine/issues/3557
 	// deleting daemonset so addon-manager recreates instead of patching
 	upgradeVersion := ku.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
