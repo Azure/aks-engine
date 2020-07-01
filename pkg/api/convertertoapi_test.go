@@ -130,6 +130,14 @@ func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 				WindowsNodeBinariesURL: "http://test/test.tar.gz",
 			},
 		},
+		"KubeReservedCgroup": {
+			props: &vlabs.KubernetesConfig{
+				KubeReservedCgroup: "kubesystem.slice",
+			},
+			expect: &KubernetesConfig{
+				KubeReservedCgroup: "kubesystem.slice",
+			},
+		},
 	}
 
 	for name, test := range tests {
