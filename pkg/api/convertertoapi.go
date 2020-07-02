@@ -488,6 +488,7 @@ func convertPrivateClusterToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) 
 	if v.PrivateCluster != nil {
 		a.PrivateCluster = &PrivateCluster{}
 		a.PrivateCluster.Enabled = v.PrivateCluster.Enabled
+		a.PrivateCluster.EnableHostsConfigAgent = v.PrivateCluster.EnableHostsConfigAgent
 		if v.PrivateCluster.JumpboxProfile != nil {
 			a.PrivateCluster.JumpboxProfile = &PrivateJumpboxProfile{}
 			convertPrivateJumpboxProfileToAPI(v.PrivateCluster.JumpboxProfile, a.PrivateCluster.JumpboxProfile)

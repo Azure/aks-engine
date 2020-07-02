@@ -512,6 +512,7 @@ Custom YAML specifications can be configured for kube-scheduler, kube-controller
 | -------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | enabled        | no       | Enable [Private Cluster](./features.md#feat-private-cluster) (boolean - default == false)                                                            |
 | jumpboxProfile | no       | Configure and auto-provision a jumpbox to access your private cluster. `jumpboxProfile` is ignored if enabled is `false`. See `jumpboxProfile` below |
+| enableHostsConfigAgent    | no       | Enable config agent to config /etc/hosts file for AKS private clusters  |
 
 #### jumpboxProfile
 

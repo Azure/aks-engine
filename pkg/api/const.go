@@ -194,6 +194,8 @@ const (
 	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
+	// DefaultPrivateClusterHostsConfigAgentEnabled enables the hosts config agent for private cluster
+	DefaultPrivateClusterHostsConfigAgentEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
 	NetworkPolicyAzure = "azure"
 	// NetworkPolicyNone is the string expression for the deprecated NetworkPolicy usage pattern "none"

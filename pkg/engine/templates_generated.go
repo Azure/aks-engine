@@ -36414,6 +36414,10 @@ configureEtcd() {
     retrycmd_if_failure 120 5 25 sudo etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
+configPrivateClusterHosts() {
+  systemctlEnableAndStart reconcile-private-hosts || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureRPC() {
     systemctlEnableAndStart rpcbind || exit $ERR_SYSTEMCTL_START_FAIL
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
@@ -37866,6 +37870,10 @@ fi
 
 {{- if NeedsContainerd}}
 ensureContainerd
+{{end}}
+
+{{- if and IsHostedMaster EnableHostsConfigAgent}}
+configPrivateClusterHosts
 {{end}}
 
 {{- if EnableEncryptionWithExternalKms}}
@@ -40185,6 +40193,71 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
+{{end}}
+
+{{if and IsHostedMaster EnableHostsConfigAgent}}
+- path: /opt/azure/containers/reconcilePrivateHosts.sh
+  permissions: "0744"
+  owner: root
+  content: |
+    #!/usr/bin/env bash
+    set -o nounset
+    set -o pipefail
+
+    SLEEP_SECONDS=15
+    clusterFQDN={{WrapAsVariable "kubernetesAPIServerIP"}}
+    if [[ $clusterFQDN != *.privatelink.* ]]; then
+      echo "skip reconcile hosts for $clusterFQDN since it's not AKS private cluster"
+      exit 0
+    fi
+    echo "clusterFQDN: $clusterFQDN"
+
+    function get-apiserver-ip-from-tags() {
+      tags=$(curl -sSL -H "Metadata: true" "http://169.254.169.254/metadata/instance/compute/tags?api-version=2019-03-11&format=text")
+      if [ "$?" == "0" ]; then
+        IFS=";" read -ra tagList <<< "$tags"
+        for i in "${tagList[@]}"; do
+          tagKey=$(cut -d":" -f1 <<<$i)
+          tagValue=$(cut -d":" -f2 <<<$i)
+          if [ "$tagKey" == "aksAPIServerIPAddress" ]; then
+            echo -n "$tagValue"
+            return
+          fi
+        done
+      fi
+
+      echo -n ""
+    }
+
+    while true; do
+      clusterIP=$(get-apiserver-ip-from-tags)
+      if [ -z $clusterIP ]; then
+        sleep "${SLEEP_SECONDS}"
+        continue
+      fi
+
+      if grep "$clusterIP $clusterFQDN" /etc/hosts; then
+        echo "$clusterFQDN has already been set to $clusterIP"
+      else
+        sudo sed -i "/$clusterFQDN/d" /etc/hosts
+        sudo sed -i "\$a$clusterIP $clusterFQDN" /etc/hosts
+        echo "Updated $clusterFQDN to $clusterIP"
+      fi
+      sleep "${SLEEP_SECONDS}"
+    done
+
+- path: /etc/systemd/system/reconcile-private-hosts.service
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Reconcile /etc/hosts file for private cluster
+    [Service]
+    Type=simple
+    Restart=on-failure
+    ExecStart=/bin/bash /opt/azure/containers/reconcilePrivateHosts.sh
+    [Install]
+    WantedBy=multi-user.target
 {{end}}
 
 - path: /var/lib/kubelet/kubeconfig

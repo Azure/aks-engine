@@ -301,6 +301,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.PrivateCluster.Enabled = to.BoolPtr(DefaultPrivateClusterEnabled)
 		}
 
+		if o.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent == nil {
+			o.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent = to.BoolPtr(DefaultPrivateClusterHostsConfigAgentEnabled)
+		}
+
 		if "" == a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB {
 			switch {
 			case a.TotalNodes() > 20:
