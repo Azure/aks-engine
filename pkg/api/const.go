@@ -487,6 +487,12 @@ const (
 	DefaultWindowsSSHEnabled = true
 )
 
+// WindowsProfile defaults
+// TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
+const (
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.1"
+)
+
 const (
 	//DefaultExtensionsRootURL  Root URL for extensions
 	DefaultExtensionsRootURL = "https://raw.githubusercontent.com/Azure/aks-engine/master/"

@@ -79,11 +79,13 @@ function Get-FilesToCacheOnVHD
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/debug/VFP.psm1",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1",
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1",
-            "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg"
+            "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg",
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.1.zip"
         );
         "c:\akse-cache\containerd\" = @(
             $global:containerdPackageUrl
         );
+
         "c:\akse-cache\win-k8s\" = @(
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.10-azs/windowszip/v1.15.10-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-azs/windowszip/v1.15.11-azs-1int.zip",

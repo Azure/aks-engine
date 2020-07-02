@@ -196,6 +196,7 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 		vlabsProfile.ImageRef.Version = api.ImageRef.Version
 	}
 	vlabsProfile.ImageVersion = api.ImageVersion
+	vlabsProfile.ProvisioningScriptsPackageURL = api.ProvisioningScriptsPackageURL
 	vlabsProfile.WindowsImageSourceURL = api.WindowsImageSourceURL
 	vlabsProfile.WindowsPublisher = api.WindowsPublisher
 	vlabsProfile.WindowsOffer = api.WindowsOffer
@@ -743,22 +744,23 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	vlabses.KubernetesSpecConfig = vlabs.KubernetesSpecConfig{
-		AzureTelemetryPID:                api.KubernetesSpecConfig.AzureTelemetryPID,
-		KubernetesImageBase:              api.KubernetesSpecConfig.KubernetesImageBase,
-		MCRKubernetesImageBase:           api.KubernetesSpecConfig.MCRKubernetesImageBase,
-		TillerImageBase:                  api.KubernetesSpecConfig.TillerImageBase,
-		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,
-		NVIDIAImageBase:                  api.KubernetesSpecConfig.NVIDIAImageBase,
-		AzureCNIImageBase:                api.KubernetesSpecConfig.AzureCNIImageBase,
-		CalicoImageBase:                  api.KubernetesSpecConfig.CalicoImageBase,
-		EtcdDownloadURLBase:              api.KubernetesSpecConfig.EtcdDownloadURLBase,
-		KubeBinariesSASURLBase:           api.KubernetesSpecConfig.KubeBinariesSASURLBase,
-		WindowsTelemetryGUID:             api.KubernetesSpecConfig.WindowsTelemetryGUID,
-		CNIPluginsDownloadURL:            api.KubernetesSpecConfig.CNIPluginsDownloadURL,
-		VnetCNILinuxPluginsDownloadURL:   api.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
-		VnetCNIWindowsPluginsDownloadURL: api.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
-		ContainerdDownloadURLBase:        api.KubernetesSpecConfig.ContainerdDownloadURLBase,
-		CSIProxyDownloadURL:              api.KubernetesSpecConfig.CSIProxyDownloadURL,
+		AzureTelemetryPID:                    api.KubernetesSpecConfig.AzureTelemetryPID,
+		KubernetesImageBase:                  api.KubernetesSpecConfig.KubernetesImageBase,
+		MCRKubernetesImageBase:               api.KubernetesSpecConfig.MCRKubernetesImageBase,
+		TillerImageBase:                      api.KubernetesSpecConfig.TillerImageBase,
+		ACIConnectorImageBase:                api.KubernetesSpecConfig.ACIConnectorImageBase,
+		NVIDIAImageBase:                      api.KubernetesSpecConfig.NVIDIAImageBase,
+		AzureCNIImageBase:                    api.KubernetesSpecConfig.AzureCNIImageBase,
+		CalicoImageBase:                      api.KubernetesSpecConfig.CalicoImageBase,
+		EtcdDownloadURLBase:                  api.KubernetesSpecConfig.EtcdDownloadURLBase,
+		KubeBinariesSASURLBase:               api.KubernetesSpecConfig.KubeBinariesSASURLBase,
+		WindowsTelemetryGUID:                 api.KubernetesSpecConfig.WindowsTelemetryGUID,
+		CNIPluginsDownloadURL:                api.KubernetesSpecConfig.CNIPluginsDownloadURL,
+		VnetCNILinuxPluginsDownloadURL:       api.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
+		VnetCNIWindowsPluginsDownloadURL:     api.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
+		ContainerdDownloadURLBase:            api.KubernetesSpecConfig.ContainerdDownloadURLBase,
+		CSIProxyDownloadURL:                  api.KubernetesSpecConfig.CSIProxyDownloadURL,
+		WindowsProvisioningScriptsPackageURL: api.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 	}
 	vlabses.OSImageConfig = map[vlabs.Distro]vlabs.AzureOSImageConfig{}
 	for k, v := range api.OSImageConfig {

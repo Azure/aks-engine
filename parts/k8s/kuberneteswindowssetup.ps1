@@ -143,6 +143,8 @@ $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 $global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
 $global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
 
+$global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningScriptsPackageURL" }}";
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -239,6 +241,9 @@ try
 
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
+
+        New-Item -ItemType Directory -Path "c:\k" -Force | Out-Null
+        Get-ProvisioningScripts
 
         Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
 
@@ -407,12 +412,6 @@ try
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
         Update-DefenderPreferences
-
-        # Output kubelet and kube-proxy scripts
-        (Get-Content "c:\AzureData\k8s\kubeletstart.ps1") |
-        Out-File "c:\k\kubeletstart.ps1"
-        (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
-        Out-File "c:\k\kubeproxystart.ps1"
 
         if (Test-Path $CacheDir)
         {
