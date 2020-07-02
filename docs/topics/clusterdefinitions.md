@@ -731,6 +731,7 @@ Below is a list of sysctl configuration that AKS Engine will configure by defaul
 | -------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | enabled        | no       | Enable [Private Cluster](./features.md#feat-private-cluster) (boolean - default == false)                                                            |
 | jumpboxProfile | no       | Configure and auto-provision a jumpbox to access your private cluster. `jumpboxProfile` is ignored if enabled is `false`. See `jumpboxProfile` below |
+| enableHostsConfigAgent    | no       | Enable config agent to config /etc/hosts file for AKS private clusters  |
 
 #### jumpboxProfile
 

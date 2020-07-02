@@ -116,6 +116,10 @@ configureEtcd() {
 ensureNTP() {
   systemctlEnableAndStart ntp || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
+configPrivateClusterHosts() {
+  systemctlEnableAndStart reconcile-private-hosts || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+}
+
 ensureRPC() {
   systemctlEnableAndStart rpcbind || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
   systemctlEnableAndStart rpc-statd || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
