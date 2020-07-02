@@ -8792,6 +8792,8 @@ spec:
   selector:
     matchLabels:
       k8s-app: azure-cnms
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -8939,6 +8941,8 @@ spec:
   selector:
     matchLabels:
       k8s-app: azure-npm
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
