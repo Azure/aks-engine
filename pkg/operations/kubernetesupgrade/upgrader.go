@@ -100,13 +100,13 @@ func (ku *Upgrader) handleUnreconcilableAddons() {
 	// deleting daemonset so addon-manager recreates instead of patching
 	upgradeVersion := ku.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 	if !common.IsKubernetesVersionGe(ku.CurrentVersion, "1.16.0") && common.IsKubernetesVersionGe(upgradeVersion, "1.16.0") {
-		ku.logger.Errorf("Attempting to delete kube-proxy daemonset.")
+		ku.logger.Infof("Attempting to delete kube-proxy daemonset.")
 		client, err := ku.getKubernetesClient(getResourceTimeout)
 		if err != nil {
 			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 			return
 		}
-		ds, err := client.GetDaemonSet("kube-system", "kube-proxy")
+		ds, err := client.GetDaemonSet("kube-system", common.KubeProxyAddonName)
 		if err != nil {
 			ku.logger.Errorf("Error getting kube-proxy daemonset: %v", err)
 			return
@@ -116,7 +116,7 @@ func (ku *Upgrader) handleUnreconcilableAddons() {
 			ku.logger.Errorf("Error deleting kube-proxy daemonset: %v", err)
 			return
 		}
-		ku.logger.Errorf("Deleted kube-proxy daemonset. Addon-manager will recreate it.")
+		ku.logger.Infof("Deleted kube-proxy daemonset. Addon-manager will recreate it.")
 	}
 }
 
