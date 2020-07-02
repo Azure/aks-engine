@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
@@ -22,8 +20,11 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Upgrader holds information on upgrading an AKS cluster
@@ -106,10 +107,11 @@ func (ku *Upgrader) handleUnreconcilableAddons() {
 			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 			return
 		}
-		ds, err := client.GetDaemonSet("kube-system", common.KubeProxyAddonName)
-		if err != nil {
-			ku.logger.Errorf("Error getting kube-proxy daemonset: %v", err)
-			return
+		ds := &appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "kube-system",
+				Name:      common.KubeProxyAddonName,
+			},
 		}
 		err = client.DeleteDaemonSet(ds)
 		if err != nil {
