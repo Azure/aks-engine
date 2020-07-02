@@ -703,6 +703,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should have core kube-system addons running the correct version", func() {
+			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage == "" {
+				By(fmt.Sprintf("Ensuring that the %s addon image matches orchestrator version", common.KubeProxyAddonName))
+				ds, err := daemonset.Get(common.KubeProxyAddonName, "kube-system", 3)
+				Expect(err).NotTo(HaveOccurred())
+				log.Printf("Image: %s", ds.Spec.Template.TemplateSpec.Containers[0].Image)
+				log.Printf("OrchestratorVersion: %s", eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion)
+				version := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
+				Expect(strings.HasSuffix(ds.Spec.Template.TemplateSpec.Containers[0].Image, version)).To(Equal(true))
+			} else {
+				Skip("Skipping as testing custom kube-proxy image")
+			}
+		})
+
 		It("Should not have any unready or crashing pods right after deployment", func() {
 			if eng.Config.DebugCrashingPods {
 				By("Checking ready status of each pod in kube-system")

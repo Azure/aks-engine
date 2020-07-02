@@ -117,6 +117,11 @@ func (c *KubernetesClientSetClient) SupportEviction() (string, error) {
 	return "", nil
 }
 
+// DeleteDaemonSet deletes the passed in daemonset.
+func (c *KubernetesClientSetClient) DeleteDaemonSet(daemonset *appsv1.DaemonSet) error {
+	return c.clientset.AppsV1().DaemonSets(daemonset.Namespace).Delete(daemonset.Name, &metav1.DeleteOptions{})
+}
+
 // DeletePod deletes the passed in pod.
 func (c *KubernetesClientSetClient) DeletePod(pod *v1.Pod) error {
 	return c.clientset.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{})
@@ -170,6 +175,11 @@ func (c *KubernetesClientSetClient) WaitForDelete(logger *log.Entry, pods []v1.P
 		return true, nil
 	})
 	return pods, err
+}
+
+// GetDaemonSet returns a given daemonset in a namespace.
+func (c *KubernetesClientSetClient) GetDaemonSet(namespace, name string) (*appsv1.DaemonSet, error) {
+	return c.clientset.AppsV1().DaemonSets(namespace).Get(name, metav1.GetOptions{})
 }
 
 // GetDeployment returns a given deployment in a namespace.
