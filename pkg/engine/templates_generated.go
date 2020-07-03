@@ -22536,7 +22536,7 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       }
     },
     "mobyVersion": {
-      "defaultValue": "19.03.11",
+      "defaultValue": "19.03.12",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -22553,7 +22553,8 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
          "3.0.11",
          "3.0.12",
          "3.0.13",
-         "19.03.11"
+         "19.03.11",
+         "19.03.12"
        ],
       "type": "string"
     },
