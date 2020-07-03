@@ -322,6 +322,9 @@ New-NSSMService {
     if ($global:EnableCsiProxy) {
         $kubeletDependOnServices += " csi-proxy"
     }
+    if ($global:EnableHostsConfigAgent) {
+        $kubeletDependOnServices += " hosts-config-agent"
+    }
 
     # setup kubelet
     & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
