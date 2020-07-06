@@ -516,6 +516,7 @@ func getDefaultContainerService() *ContainerService {
 					ContainerRuntimeConfig: map[string]string{
 						common.ContainerDataDirKey: "/mnt/docker",
 					},
+					KubeReservedCgroup:              "kubesystem.slice",
 					MaxPods:                         3,
 					DockerBridgeSubnet:              "sampleDockerSubnet",
 					DNSServiceIP:                    "172.0.0.1",

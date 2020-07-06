@@ -295,6 +295,18 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return kc.GetOrderedKubeletConfigStringForPowershell()
 		},
+		"HasKubeReservedCgroup": func() bool {
+			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
+			return kc != nil && kc.KubeReservedCgroup != ""
+		},
+
+		"GetKubeReservedCgroup": func() string {
+			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
+			if kc == nil {
+				return ""
+			}
+			return kc.KubeReservedCgroup
+		},
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
 			return common.GetOrderedEscapedKeyValsString(config)
 		},
