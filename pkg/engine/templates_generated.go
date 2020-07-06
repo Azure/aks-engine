@@ -36553,6 +36553,9 @@ configureCNIIPTables() {
 
 {{if NeedsContainerd}}
 ensureContainerd() {
+    {{- if HasKubeReservedCgroup}}
+    wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/kubereserved-slice.conf|| exit $ERR_FILE_WATCH_TIMEOUT
+    {{- end}}
     echo "Starting cri-containerd service..."
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
@@ -36563,19 +36566,20 @@ ensureDocker() {
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     usermod -aG docker ${ADMINUSER}
     DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
-    if [[ $OS != $COREOS_OS_NAME ]]; then
-        wait_for_file 1200 1 $DOCKER_MOUNT_FLAGS_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    fi
+    {{- if HasKubeReservedCgroup}}
+    DOCKER_SLICE_FILE=/etc/systemd/system/docker.service.d/kubereserved-slice.conf
+    wait_for_file 1200 1 $DOCKER_SLICE_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    {{- end}}
     DOCKER_JSON_FILE=/etc/docker/daemon.json
     for i in $(seq 1 1200); do
-        if [ -s $DOCKER_JSON_FILE ]; then
-            jq '.' < $DOCKER_JSON_FILE && break
-        fi
-        if [ $i -eq 1200 ]; then
-            exit $ERR_FILE_WATCH_TIMEOUT
-        else
-            sleep 1
-        fi
+      if [ -s $DOCKER_JSON_FILE ]; then
+          jq '.' < $DOCKER_JSON_FILE && break
+      fi
+      if [ $i -eq 1200 ]; then
+          exit $ERR_FILE_WATCH_TIMEOUT
+      else
+          sleep 1
+      fi
     done
     systemctlEnableAndStart docker || exit $ERR_DOCKER_START_FAIL
     {{/* Delay start of docker-monitor for 30 mins after booting */}}
@@ -36608,6 +36612,12 @@ ensureKubelet() {
     wait_for_file 1200 1 $KUBECONFIG_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
+    {{- if HasKubeReservedCgroup}}
+    KUBERESERVED_SLICE_FILE=/etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
+    wait_for_file 1200 1 $KUBERESERVED_SLICE_FILE || exit $ERR_KUBERESERVED_SLICE_SETUP_FAIL
+    KUBELET_SLICE_FILE=/etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+    wait_for_file 1200 1 $KUBELET_SLICE_FILE || exit $ERR_KUBELET_SLICE_SETUP_FAIL
+    {{- end}}
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
     {{if HasCiliumNetworkPolicy}}
     while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
@@ -39411,6 +39421,47 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
+{{- if HasKubeReservedCgroup}}
+- path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Limited resources slice for Kubernetes services
+    Documentation=man:systemd.special(7)
+    DefaultDependencies=no
+    Before=slices.target
+    Requires=-.slice
+    After=-.slice
+    #EOF
+
+- path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+
+  {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+  {{else}}
+- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+  {{end}}
+{{end}}
+
 - path: /etc/systemd/system/kubelet.service
   permissions: "0644"
   encoding: gzip
@@ -39989,6 +40040,47 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "initAKSCustomCloud"}}
+{{end}}
+
+{{- if HasKubeReservedCgroup}}
+- path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Limited resources slice for Kubernetes services
+    Documentation=man:systemd.special(7)
+    DefaultDependencies=no
+    Before=slices.target
+    Requires=-.slice
+    After=-.slice
+    #EOF
+    
+- path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+
+  {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+  {{else}}
+- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+  {{end}}
 {{end}}
 
 - path: /etc/systemd/system/kubelet.service

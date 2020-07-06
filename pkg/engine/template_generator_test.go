@@ -174,6 +174,15 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedIsDockerContainerRuntime      bool
 		expectedHasPrivateAzureRegistryServer bool
 		expectedGetPrivateAzureRegistryServer string
+		expectedGetSysctlDConfigKeyVals       string
+		expectedGetCSEErrorCodeVals           []int
+		expectedHasVHDDistroNodes             bool
+		expectedIsVHDDistroForAllNodes        bool
+		expectedHasClusterInitComponent       bool
+		expectedIsVirtualMachineScaleSets     bool
+		expectedUseManagedIdentity            bool
+		expectedHasKubeReservedCgroup         bool
+		expectedGetKubeReservedCgroup         string
 	}{
 		{
 			name: "1.15 release",
@@ -667,6 +676,45 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasPrivateAzureRegistryServer: true,
 			expectedGetPrivateAzureRegistryServer: "my-server",
 		},
+		{
+			name: "1.17 release w/ kube-reserved cgroup",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubeReservedCgroup:      "kubereserved",
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							Distro:              api.AKSUbuntu1604,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedHasVHDDistroNodes:            true,
+			expectedIsVHDDistroForAllNodes:       true,
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedHasKubeReservedCgroup:        true,
+			expectedGetKubeReservedCgroup:        "kubereserved",
+		},
 	}
 
 	for _, c := range cases {
@@ -777,6 +825,54 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetPrivateAzureRegistryServer {
 				t.Errorf("expected funcMap invocation of GetPrivateAzureRegistryServer to return %s, instead got %s", c.expectedGetPrivateAzureRegistryServer, ret[0].Interface())
+			}
+			if c.cs.Properties.MasterProfile != nil {
+				v = reflect.ValueOf(funcMap["GetSysctlDConfigKeyVals"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.MasterProfile.SysctlDConfig)})
+				if ret[0].Interface() != c.expectedGetSysctlDConfigKeyVals {
+					t.Errorf("expected funcMap invocation of expectedGetSysctlDConfigKeyVals to return %s, instead got %s", c.expectedGetSysctlDConfigKeyVals, ret[0].Interface())
+				}
+			}
+			for _, pool := range c.cs.Properties.AgentPoolProfiles {
+				v = reflect.ValueOf(funcMap["GetSysctlDConfigKeyVals"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(pool.SysctlDConfig)})
+				if ret[0].Interface() != c.expectedGetSysctlDConfigKeyVals {
+					t.Errorf("expected funcMap invocation of expectedGetSysctlDConfigKeyVals to return %s, instead got %s", c.expectedGetSysctlDConfigKeyVals, ret[0].Interface())
+				}
+			}
+			for i, errorCodeString := range errorCodeStrings {
+				v = reflect.ValueOf(funcMap["GetCSEErrorCode"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(errorCodeString)})
+				if ret[0].Interface() != errorCodes[i] {
+					t.Errorf("expected funcMap invocation of GetCSEErrorCode to return %d, instead got %d", errorCodes[i], ret[0].Interface())
+				}
+			}
+			v = reflect.ValueOf(funcMap["HasClusterInitComponent"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasClusterInitComponent {
+				t.Errorf("expected funcMap invocation of HasClusterInitComponent to return %t, instead got %t", c.expectedHasClusterInitComponent, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["UseManagedIdentity"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedUseManagedIdentity {
+				t.Errorf("expected funcMap invocation of UseManagedIdentity to return %t, instead got %t", c.expectedUseManagedIdentity, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasKubeReservedCgroup"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasKubeReservedCgroup {
+				t.Errorf("expected funcMap invocation of HasKubeReservedCgroup to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetKubeReservedCgroup"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetKubeReservedCgroup {
+				t.Errorf("expected funcMap invocation of GetKubeReservedCgroup to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
+			}
+			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
+				v = reflect.ValueOf(funcMap["IsVirtualMachineScaleSets"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0])})
+				if ret[0].Interface() != c.expectedIsVirtualMachineScaleSets {
+					t.Errorf("expected funcMap invocation of IsVirtualMachineScaleSets to return %t, instead got %t", c.expectedIsVirtualMachineScaleSets, ret[0].Interface())
+				}
 			}
 		})
 	}
