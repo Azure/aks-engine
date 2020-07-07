@@ -358,6 +358,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if a.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB == 0 {
+			a.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB = DefaultEtcdStorageLimitGB
+		}
+
 		if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) {
 			if "" == a.OrchestratorProfile.KubernetesConfig.EtcdEncryptionKey {
 				a.OrchestratorProfile.KubernetesConfig.EtcdEncryptionKey = generateEtcdEncryptionKey()

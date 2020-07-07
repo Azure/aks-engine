@@ -437,6 +437,8 @@ const (
 	DefaultEtcdDiskSizeGT10Nodes = "1024"
 	// DefaultEtcdDiskSizeGT20Nodes = size for Kubernetes master etcd disk volumes in GB if > 20 nodes
 	DefaultEtcdDiskSizeGT20Nodes = "2048"
+	// DefaultEtcdStorageLimitGB specifies the default size for etcd data storage limit
+	DefaultEtcdStorageLimitGB = 2
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes
 	DefaultMasterEtcdClientPort = 2379
 	// DefaultKubeletEventQPS is 0, see --event-qps at https://kubernetes.io/docs/reference/generated/kubelet/
