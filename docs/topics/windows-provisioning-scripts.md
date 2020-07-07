@@ -20,7 +20,7 @@ Changes to the provisioning scripts packaged in the .zip can be tested by:
 - Check in script updates to [staging/provisioning/windows](../../staging/provisioning/windows).
 - Create a new **versioned** zip with the contents of [staging/provisioning/windows](../../staging/provisioning/windows) and upload it to a storage account. (Versioning ensues compatability with file caching mecanisms used by aks-engine VHD backed installs)
   - Optional - First sign the powershell scripts (out-of-scope for this documentation).
-- Update `DefaultWindowsProvisioningScriptsPackageURL` in [pkg/api/const.go](../../pkg/api/const.go) with new URL.
+- Update `DefaultWindowsProvisioningScriptsPackageVersion` in [pkg/api/const.go](../../pkg/api/const.go) with new URL.
 - Add new URL to [/vhd/packer/configure-windows-vhd.ps1::Get-FilesToCacheOnVHD](../../vhd/packer/configure-windows-vhd.ps1).
 
 ## Validation
