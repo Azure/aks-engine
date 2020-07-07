@@ -13133,6 +13133,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 rules:
 - apiGroups:
   - networking.k8s.io
