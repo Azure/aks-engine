@@ -13319,6 +13319,7 @@ spec:
         # gets priority scheduling.
         # https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
         scheduler.alpha.kubernetes.io/critical-pod: ""
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
       labels:
         k8s-app: cilium
     spec:
@@ -13504,7 +13505,12 @@ spec:
       terminationGracePeriodSeconds: 1
       tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
         effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        effect: NoSchedule
+        operator: Exists
       volumes:
         # To keep state between restarts / upgrades
       - hostPath:
@@ -13574,10 +13580,17 @@ spec:
     metadata:
       labels:
         app: cilium-node-init
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
         effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        effect: NoSchedule
+        operator: Exists
       hostPID: true
       hostNetwork: true
       containers:
