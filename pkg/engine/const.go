@@ -77,15 +77,16 @@ const (
 const (
 	kubeConfigJSON = "k8s/kubeconfig.json"
 	// Windows custom scripts. These should all be listed in template_generator.go:func GetKubernetesWindowsAgentFunctions
-	kubernetesWindowsAgentCustomDataPS1     = "k8s/kuberneteswindowssetup.ps1"
-	kubernetesWindowsAgentFunctionsPS1      = "k8s/kuberneteswindowsfunctions.ps1"
-	kubernetesWindowsConfigFunctionsPS1     = "k8s/windowsconfigfunc.ps1"
-	kubernetesWindowsContainerdFunctionsPS1 = "k8s/windowscontainerdfunc.ps1"
-	kubernetesWindowsCsiProxyFunctionsPS1   = "k8s/windowscsiproxyfunc.ps1"
-	kubernetesWindowsKubeletFunctionsPS1    = "k8s/windowskubeletfunc.ps1"
-	kubernetesWindowsCniFunctionsPS1        = "k8s/windowscnifunc.ps1"
-	kubernetesWindowsAzureCniFunctionsPS1   = "k8s/windowsazurecnifunc.ps1"
-	kubernetesWindowsOpenSSHFunctionPS1     = "k8s/windowsinstallopensshfunc.ps1"
+	kubernetesWindowsAgentCustomDataPS1           = "k8s/kuberneteswindowssetup.ps1"
+	kubernetesWindowsAgentFunctionsPS1            = "k8s/kuberneteswindowsfunctions.ps1"
+	kubernetesWindowsConfigFunctionsPS1           = "k8s/windowsconfigfunc.ps1"
+	kubernetesWindowsContainerdFunctionsPS1       = "k8s/windowscontainerdfunc.ps1"
+	kubernetesWindowsCsiProxyFunctionsPS1         = "k8s/windowscsiproxyfunc.ps1"
+	kubernetesWindowsKubeletFunctionsPS1          = "k8s/windowskubeletfunc.ps1"
+	kubernetesWindowsCniFunctionsPS1              = "k8s/windowscnifunc.ps1"
+	kubernetesWindowsAzureCniFunctionsPS1         = "k8s/windowsazurecnifunc.ps1"
+	kubernetesWindowsHostsConfigAgentFunctionsPS1 = "k8s/windowshostsconfigagentfunc.ps1"
+	kubernetesWindowsOpenSSHFunctionPS1           = "k8s/windowsinstallopensshfunc.ps1"
 )
 
 // cloud-init (i.e. ARM customData) source file references

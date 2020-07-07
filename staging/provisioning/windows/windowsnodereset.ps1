@@ -40,6 +40,11 @@ if ($global:CsiProxyEnabled) {
     Stop-Service csi-proxy
 }
 
+if ($global:EnableHostsConfigAgent) {
+    Write-Log "Stopping hosts-config-agent service"
+    Stop-Service hosts-config-agent
+}
+
 #
 # Perform cleanup
 #
