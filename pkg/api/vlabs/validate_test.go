@@ -365,9 +365,6 @@ func ExampleProperties_validateOrchestratorProfile() {
 	if err := cs.Properties.ValidateOrchestratorProfile(false); err != nil {
 		log.Error(err)
 	}
-	// Should yield:
-	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
-	// The ordered collection of all output is validated below:
 
 	// Output:
 	// level=warning msg="EtcdStorageLimitGB of 9 is larger than the recommended maximum of 8"
