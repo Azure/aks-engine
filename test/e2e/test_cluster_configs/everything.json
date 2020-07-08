@@ -20,6 +20,7 @@
 					},
 					"kubeReservedCgroup": "kubesystem",
 					"etcdVersion": "3.3.19",
+					"etcdStorageLimitGB": 8,
 					"clusterSubnet": "10.239.0.0/16",
 					"addons": [
 						{

@@ -830,6 +830,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetCSEErrorCode": func(errorType string) int {
 			return GetCSEErrorCode(errorType)
 		},
+		"GetEtcdStorageLimitGB": func() int {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB * 1024 * 1024 * 1024
+		},
 		"GetApplicationInsightsTelemetryKeys": func() string {
 			userSuppliedAIKey := ""
 			if cs.Properties.TelemetryProfile != nil {

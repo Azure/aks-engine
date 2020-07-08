@@ -890,6 +890,30 @@ func TestEtcdDiskSize(t *testing.T) {
 	}
 }
 
+func TestEtcdStorageLimitGB(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.18.5")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.MasterProfile.Count = 1
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB != DefaultEtcdStorageLimitGB {
+		t.Fatalf("EtcdStorageLimitGB did not have the expected size, got %d, expected %d",
+			properties.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB, DefaultEtcdStorageLimitGB)
+	}
+
+	// validate defaults doesn't override valid value
+	mockCS = getMockBaseContainerService("1.18.5")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.MasterProfile.Count = 1
+	properties.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB = 3
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB != 3 {
+		t.Fatalf("EtcdStorageLimitGB did not have the expected size, got %d, expected 3",
+			properties.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB)
+	}
+}
+
 func TestGenerateEtcdEncryptionKey(t *testing.T) {
 	key1 := generateEtcdEncryptionKey()
 	key2 := generateEtcdEncryptionKey()

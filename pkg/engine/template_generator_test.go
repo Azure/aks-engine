@@ -194,6 +194,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedGetKubeReservedCgroup         string
 		expectedHasCustomPodSecurityPolicy    bool
 		expectedIsDashboardAddonEnabled       bool
+		expectedGetEtcdStorageLimitGB         int
 	}{
 		{
 			name: "1.15 release",
@@ -987,6 +988,41 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedHasCustomPodSecurityPolicy:   true,
 		},
+		{
+			name: "1.17 release",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							EtcdStorageLimitGB:      8,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetEtcdStorageLimitGB:        8589934592,
+		},
 	}
 
 	for _, c := range cases {
@@ -1148,6 +1184,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedIsDashboardAddonEnabled {
 				t.Errorf("expected funcMap invocation of HasCustomPodSecurityPolicy to return %t, instead got %t", c.expectedIsDashboardAddonEnabled, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetEtcdStorageLimitGB"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetEtcdStorageLimitGB {
+				t.Errorf("expected funcMap invocation of GetEtcdStorageLimitGB to return %d, instead got %d", c.expectedGetEtcdStorageLimitGB, ret[0].Interface())
 			}
 		})
 	}

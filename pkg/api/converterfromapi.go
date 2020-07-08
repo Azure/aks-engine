@@ -322,6 +322,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.GCLowThreshold = apiCfg.GCLowThreshold
 	vlabsCfg.EtcdVersion = apiCfg.EtcdVersion
 	vlabsCfg.EtcdDiskSizeGB = apiCfg.EtcdDiskSizeGB
+	vlabsCfg.EtcdStorageLimitGB = apiCfg.EtcdStorageLimitGB
 	vlabsCfg.EtcdEncryptionKey = apiCfg.EtcdEncryptionKey
 	vlabsCfg.AzureCNIVersion = apiCfg.AzureCNIVersion
 	vlabsCfg.AzureCNIURLLinux = apiCfg.AzureCNIURLLinux

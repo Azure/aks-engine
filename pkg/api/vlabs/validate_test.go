@@ -315,6 +315,17 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120",
 		},
+		"should error when EtcdStorageLimitGB is too low": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						EtcdStorageLimitGB: 1,
+					},
+				},
+			},
+			expectedError: "EtcdStorageLimitGB value of 1 is too small, the minimum allowed is 2",
+		},
 	}
 
 	for testName, test := range tests {
@@ -339,6 +350,24 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleProperties_validateOrchestratorProfile() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		EtcdStorageLimitGB: 9,
+	}
+	if err := cs.Properties.ValidateOrchestratorProfile(false); err != nil {
+		log.Error(err)
+	}
+
+	// Output:
+	// level=warning msg="EtcdStorageLimitGB of 9 is larger than the recommended maximum of 8"
 }
 
 func Test_KubernetesConfig_Validate(t *testing.T) {

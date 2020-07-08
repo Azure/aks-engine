@@ -371,6 +371,15 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 						}
 					}
 				}
+
+				if o.KubernetesConfig.EtcdStorageLimitGB != 0 {
+					if o.KubernetesConfig.EtcdStorageLimitGB > 8 {
+						log.Warnf("EtcdStorageLimitGB of %d is larger than the recommended maximum of 8", o.KubernetesConfig.EtcdStorageLimitGB)
+					}
+					if o.KubernetesConfig.EtcdStorageLimitGB < 2 {
+						return errors.Errorf("EtcdStorageLimitGB value of %d is too small, the minimum allowed is 2", o.KubernetesConfig.EtcdStorageLimitGB)
+					}
+				}
 			}
 		default:
 			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
