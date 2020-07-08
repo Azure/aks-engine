@@ -1657,11 +1657,6 @@ func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
 		return errors.Errorf("unknown networkPlugin '%s' specified", networkPlugin)
 	}
 
-	// Temporary safety check, to be removed when Windows support is added.
-	if (networkPlugin == NetworkPluginAntrea) && hasWindows {
-		return errors.Errorf("networkPlugin '%s' is not supporting windows agents", networkPlugin)
-	}
-
 	if networkPlugin == NetworkPluginKubenet && hasWindows {
 		log.Warnf("Windows + Kubenet is for development and testing only, not recommended for production")
 	}
@@ -1690,9 +1685,12 @@ func (k *KubernetesConfig) validateNetworkPolicy(k8sVersion string, hasWindows b
 		return errors.New("networkPolicy azure requires kubernetes version of 1.8 or higher")
 	}
 
+	if networkPolicy == NetworkPolicyAntrea && hasWindows && !common.IsKubernetesVersionGe(k8sVersion, "1.18.0") {
+		return errors.New("networkPolicy antrea for windows requires kubernetes version of 1.18 or higher")
+	}
+
 	// Temporary safety check, to be removed when Windows support is added.
-	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium ||
-		networkPolicy == NetworkPolicyAntrea) && hasWindows {
+	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium) && hasWindows {
 		return errors.Errorf("networkPolicy '%s' is not supporting windows agents", networkPolicy)
 	}
 
@@ -1795,6 +1793,10 @@ func (a *Properties) validateContainerRuntime(isUpdate bool) error {
 			if a.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
 				return errors.Errorf("WindowsSdnPluginURL must be provided when using Windows with ContainerRuntime=containerd and networkPlugin=kubenet")
 			}
+		}
+
+		if a.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginAntrea {
+			return errors.Errorf("networkPlugin antrea for windows is not supported with ContainerRuntime=containerd")
 		}
 	}
 

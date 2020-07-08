@@ -119,6 +119,7 @@
 // ../../parts/k8s/manifests/kubernetesmaster-kube-apiserver.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-scheduler.yaml
+// ../../parts/k8s/windowsantreacnifunc.ps1
 // ../../parts/k8s/windowsazurecnifunc.ps1
 // ../../parts/k8s/windowsazurecnifunc.tests.ps1
 // ../../parts/k8s/windowscnifunc.ps1
@@ -6929,6 +6930,317 @@ spec:
     served: true
     storage: true
 ---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: clusternetworkpolicies.security.antrea.tanzu.vmware.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.tier
+    description: The Tier to which this ClusterNetworkPolicy belongs to.
+    name: Tier
+    type: string
+  - JSONPath: .spec.priority
+    description: The Priority of this ClusterNetworkPolicy relative to other policies.
+    format: float
+    name: Priority
+    type: number
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: security.antrea.tanzu.vmware.com
+  names:
+    kind: ClusterNetworkPolicy
+    plural: clusternetworkpolicies
+    shortNames:
+    - cnp
+    singular: clusternetworkpolicy
+  preserveUnknownFields: false
+  scope: Cluster
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            appliedTo:
+              items:
+                properties:
+                  namespaceSelector:
+                    x-kubernetes-preserve-unknown-fields: true
+                  podSelector:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              type: array
+            egress:
+              items:
+                properties:
+                  action:
+                    pattern: \bAllow|\bDrop
+                    type: string
+                  ports:
+                    items:
+                      properties:
+                        port:
+                          x-kubernetes-int-or-string: true
+                        protocol:
+                          type: string
+                      type: object
+                    type: array
+                  to:
+                    items:
+                      properties:
+                        ipBlock:
+                          properties:
+                            cidr:
+                              format: cidr
+                              type: string
+                          type: object
+                        namespaceSelector:
+                          x-kubernetes-preserve-unknown-fields: true
+                        podSelector:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                    type: array
+                required:
+                - action
+                type: object
+              type: array
+            ingress:
+              items:
+                properties:
+                  action:
+                    pattern: \bAllow|\bDrop
+                    type: string
+                  from:
+                    items:
+                      properties:
+                        ipBlock:
+                          properties:
+                            cidr:
+                              format: cidr
+                              type: string
+                          type: object
+                        namespaceSelector:
+                          x-kubernetes-preserve-unknown-fields: true
+                        podSelector:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                    type: array
+                  ports:
+                    items:
+                      properties:
+                        port:
+                          x-kubernetes-int-or-string: true
+                        protocol:
+                          type: string
+                      type: object
+                    type: array
+                required:
+                - action
+                type: object
+              type: array
+            priority:
+              format: float
+              maximum: 10000
+              minimum: 1
+              type: number
+            tier:
+              enum:
+              - Emergency
+              - SecurityOps
+              - NetworkOps
+              - Platform
+              - Application
+              type: string
+          required:
+          - appliedTo
+          - priority
+          type: object
+      type: object
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: traceflows.ops.antrea.tanzu.vmware.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The phase of the Traceflow.
+    name: Phase
+    type: string
+  - JSONPath: .spec.source.pod
+    description: The name of the source Pod.
+    name: Source-Pod
+    priority: 10
+    type: string
+  - JSONPath: .spec.destination.pod
+    description: The name of the destination Pod.
+    name: Destination-Pod
+    priority: 10
+    type: string
+  - JSONPath: .spec.destination.ip
+    description: The IP address of the destination.
+    name: Destination-IP
+    priority: 10
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: ops.antrea.tanzu.vmware.com
+  names:
+    kind: Traceflow
+    plural: traceflows
+    shortNames:
+    - tf
+    singular: traceflow
+  preserveUnknownFields: false
+  scope: Cluster
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            destination:
+              oneOf:
+              - required:
+                - pod
+                - namespace
+              - required:
+                - service
+                - namespace
+              - required:
+                - ip
+              properties:
+                ip:
+                  format: ipv4
+                  type: string
+                namespace:
+                  type: string
+                pod:
+                  type: string
+                service:
+                  type: string
+              type: object
+            packet:
+              properties:
+                ipHeader:
+                  properties:
+                    flags:
+                      type: integer
+                    protocol:
+                      type: integer
+                    srcIP:
+                      format: ipv4
+                      type: string
+                    ttl:
+                      type: integer
+                  type: object
+                transportHeader:
+                  properties:
+                    icmp:
+                      properties:
+                        id:
+                          type: integer
+                        sequence:
+                          type: integer
+                      type: object
+                    tcp:
+                      properties:
+                        dstPort:
+                          type: integer
+                        flags:
+                          type: integer
+                        srcPort:
+                          type: integer
+                      type: object
+                    udp:
+                      properties:
+                        dstPort:
+                          type: integer
+                        srcPort:
+                          type: integer
+                      type: object
+                  type: object
+              type: object
+            source:
+              properties:
+                namespace:
+                  type: string
+                pod:
+                  type: string
+              required:
+              - pod
+              - namespace
+              type: object
+          required:
+          - source
+          - destination
+          type: object
+        status:
+          properties:
+            dataplaneTag:
+              type: integer
+            phase:
+              type: string
+            reason:
+              type: string
+            results:
+              items:
+                properties:
+                  node:
+                    type: string
+                  observations:
+                    items:
+                      properties:
+                        action:
+                          type: string
+                        component:
+                          type: string
+                        componentInfo:
+                          type: string
+                        dstMAC:
+                          type: string
+                        networkPolicy:
+                          type: string
+                        pod:
+                          type: string
+                        translatedDstIP:
+                          type: string
+                        translatedSrcIP:
+                          type: string
+                        ttl:
+                          type: integer
+                        tunnelDstIP:
+                          type: string
+                      type: object
+                    type: array
+                  role:
+                    type: string
+                  timestamp:
+                    type: integer
+                type: object
+              type: array
+          type: object
+      required:
+      - spec
+      type: object
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -6965,7 +7277,7 @@ metadata:
   name: antctl
 rules:
 - apiGroups:
-  - networking.antrea.tanzu.vmware.com
+  - controlplane.antrea.tanzu.vmware.com
   resources:
   - networkpolicies
   - appliedtogroups
@@ -6980,12 +7292,26 @@ rules:
   - agentinfos
   verbs:
   - get
+- apiGroups:
+  - system.antrea.tanzu.vmware.com
+  resources:
+  - supportbundles
+  verbs:
+  - get
+  - post
+- apiGroups:
+  - system.antrea.tanzu.vmware.com
+  resources:
+  - supportbundles/download
+  verbs:
+  - get
 - nonResourceURLs:
   - /agentinfo
   - /addressgroups
   - /appliedtogroups
   - /networkpolicies
   - /ovsflows
+  - /ovstracing
   - /podinterfaces
   verbs:
   - get
@@ -7002,7 +7328,16 @@ rules:
   - ""
   resources:
   - nodes
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ""
+  resources:
   - pods
+  - endpoints
+  - services
   verbs:
   - get
   - watch
@@ -7017,7 +7352,7 @@ rules:
   - update
   - delete
 - apiGroups:
-  - networking.antrea.tanzu.vmware.com
+  - controlplane.antrea.tanzu.vmware.com
   resources:
   - networkpolicies
   - appliedtogroups
@@ -7038,6 +7373,39 @@ rules:
   - subjectaccessreviews
   verbs:
   - create
+- apiGroups:
+  - ""
+  resourceNames:
+  - extension-apiserver-authentication
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resourceNames:
+  - antrea-ca
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  resources:
+  - traceflows
+  - traceflows/status
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -7093,40 +7461,64 @@ rules:
   - subjectaccessreviews
   verbs:
   - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-agent-authentication-reader
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: extension-apiserver-authentication-reader
-subjects:
-- kind: ServiceAccount
-  name: antrea-agent
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller-authentication-reader
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: extension-apiserver-authentication-reader
-subjects:
-- kind: ServiceAccount
-  name: antrea-controller
-  namespace: kube-system
+- apiGroups:
+  - ""
+  resourceNames:
+  - extension-apiserver-authentication
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resourceNames:
+  - antrea-ca
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - apiregistration.k8s.io
+  resourceNames:
+  - v1beta1.system.antrea.tanzu.vmware.com
+  - v1beta1.controlplane.antrea.tanzu.vmware.com
+  resources:
+  - apiservices
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - apiregistration.k8s.io
+  resourceNames:
+  - v1beta1.networking.antrea.tanzu.vmware.com
+  resources:
+  - apiservices
+  verbs:
+  - delete
+- apiGroups:
+  - security.antrea.tanzu.vmware.com
+  resources:
+  - clusternetworkpolicies
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  resources:
+  - traceflows
+  - traceflows/status
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -7178,8 +7570,33 @@ subjects:
   namespace: kube-system
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: antrea-ca
+  namespace: kube-system
+---
+apiVersion: v1
 data:
   antrea-agent.conf: |
+    # FeatureGates is a map of feature names to bools that enable or disable experimental features.
+    featureGates:
+    # Enable antrea proxy which provides ServiceLB for in-cluster services in antrea agent.
+    # It should be enabled on Windows, otherwise NetworkPolicy will not take effect on
+    # Service traffic.
+      AntreaProxy: {{ContainerConfig "antreaProxy"}}
+    # Enable traceflow which provides packet tracing feature to diagnose network issue.
+    #  Traceflow: false
+
+    # Enable ClusterNetworkPolicy feature to complement K8s NetworkPolicy for cluster admins
+    # to define security policies which apply to the entire cluster.
+    #  ClusterNetworkPolicy: false
+
+    # Enable flowexporter which exports polled conntrack connections as IPFIX flow records from each agent to a configured collector.
+    #  FlowExporter: false
+
     # Name of the OpenVSwitch bridge antrea-agent will create and use.
     # Make sure it doesn't conflict with your existing OpenVSwitch bridges.
     #ovsBridge: br-int
@@ -7193,23 +7610,24 @@ data:
 
     # Name of the interface antrea-agent will create and use for host <--> pod communication.
     # Make sure it doesn't conflict with your existing interfaces.
-    #hostGateway: gw0
+    #hostGateway: antrea-gw0
 
     # Encapsulation mode for communication between Pods across Nodes, supported values:
-    # - vxlan (default)
-    # - geneve
+    # - geneve (default)
+    # - vxlan
     # - gre
     # - stt
-    #tunnelType: vxlan
+    #tunnelType: geneve
 
-    # Default MTU to use for the host gateway interface and the network interface of each Pod. If
-    # omitted, antrea-agent will default this value to 1450 to accommodate for tunnel encapsulate
-    # overhead.
+    # Default MTU to use for the host gateway interface and the network interface of each Pod.
+    # If omitted, antrea-agent will discover the MTU of the Node's primary interface and
+    # also adjust MTU to accommodate for tunnel encapsulation overhead (if applicable).
     #defaultMTU: 1450
 
     # Whether or not to enable IPsec encryption of tunnel traffic. IPsec encryption is only supported
     # for the GRE tunnel type.
     #enableIPSecTunnel: false
+
     # CIDR Range for services in cluster. It's required to support egress network policy, should
     # be set to the same value as the one specified by --service-cluster-ip-range for kube-apiserver.
     serviceCIDR: {{ContainerConfig "serviceCidr"}}
@@ -7230,6 +7648,21 @@ data:
 
     # Enable metrics exposure via Prometheus. Initializes Prometheus metrics listener.
     #enablePrometheusMetrics: false
+
+    # Provide flow collector address as string with format <IP>:<port>[:<proto>], where proto is tcp or udp. This also enables
+    # the flow exporter that sends IPFIX flow records of conntrack flows on OVS bridge. If no L4 transport proto is given,
+    # we consider tcp as default.
+    #flowCollectorAddr: ""
+
+    # Provide flow poll interval as a duration string. This determines how often the flow exporter dumps connections from the conntrack module.
+    # Flow poll interval should be greater than or equal to 1s (one second).
+    # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+    #flowPollInterval: "5s"
+
+    # Provide flow export frequency, which is the number of poll cycles elapsed before flow exporter exports flow records to
+    # the flow collector.
+    # Flow export frequency should be greater than or equal to 1.
+    #flowExportFrequency: 12
   antrea-cni.conflist: |
     {
         "cniVersion":"0.3.0",
@@ -7248,6 +7681,15 @@ data:
         ]
     }
   antrea-controller.conf: |
+    # FeatureGates is a map of feature names to bools that enable or disable experimental features.
+    featureGates:
+    # Enable traceflow which provides packet tracing feature to diagnose network issue.
+    #  Traceflow: false
+
+    # Enable ClusterNetworkPolicy feature to complement K8s NetworkPolicy for cluster admins
+    # to define security policies which apply to the entire cluster.
+    # ClusterNetworkPolicy: false
+
     # The port for the antrea-controller APIServer to serve on.
     # Note that if it's set to another value, the ` + "`" + `containerPort` + "`" + ` of the ` + "`" + `api` + "`" + ` port of the
     # ` + "`" + `antrea-controller` + "`" + ` container must be set to the same value.
@@ -7255,13 +7697,22 @@ data:
 
     # Enable metrics exposure via Prometheus. Initializes Prometheus metrics listener.
     #enablePrometheusMetrics: false
+
+    # Indicates whether to use auto-generated self-signed TLS certificate.
+    # If false, A Secret named "antrea-controller-tls" must be provided with the following keys:
+    #   ca.crt: <CA certificate>
+    #   tls.crt: <TLS certificate>
+    #   tls.key: <TLS private key>
+    # And the Secret must be mounted to directory "/var/run/antrea/antrea-controller-tls" of the
+    # antrea-controller container.
+    #selfSignedCert: true
 kind: ConfigMap
 metadata:
   annotations: {}
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "EnsureExists"
-  name: antrea-config-m8cb9g82tf
+  name: antrea-config-955ggkk72b
   namespace: kube-system
 ---
 apiVersion: v1
@@ -7309,9 +7760,10 @@ spec:
         - --config
         - /etc/antrea/antrea-controller.conf
         - --logtostderr=false
-        - --log_dir
-        - /var/log/antrea
+        - --log_dir=/var/log/antrea
         - --alsologtostderr
+        - --log_file_max_size=100
+        - --log_file_max_num=4
         command:
         - antrea-controller
         env:
@@ -7328,6 +7780,7 @@ spec:
             fieldRef:
               fieldPath: spec.nodeName
         image: {{ContainerImage "antrea-controller"}}
+        imagePullPolicy: IfNotPresent
         name: antrea-controller
         ports:
         - containerPort: 10349
@@ -7351,6 +7804,8 @@ spec:
           name: antrea-config
           readOnly: true
           subPath: antrea-controller.conf
+        - mountPath: /var/run/antrea/antrea-controller-tls
+          name: antrea-controller-tls
         - mountPath: /var/log/antrea
           name: host-var-log-antrea
       hostNetwork: true
@@ -7365,8 +7820,13 @@ spec:
         key: node-role.kubernetes.io/master
       volumes:
       - configMap:
-          name: antrea-config-m8cb9g82tf
+          name: antrea-config-955ggkk72b
         name: antrea-config
+      - name: antrea-controller-tls
+        secret:
+          defaultMode: 256
+          optional: true
+          secretName: antrea-controller-tls
       - hostPath:
           path: /var/log/antrea
           type: DirectoryOrCreate
@@ -7378,11 +7838,10 @@ metadata:
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "Reconcile"
-  name: v1beta1.networking.antrea.tanzu.vmware.com
+  name: v1beta1.controlplane.antrea.tanzu.vmware.com
 spec:
-  group: networking.antrea.tanzu.vmware.com
+  group: controlplane.antrea.tanzu.vmware.com
   groupPriorityMinimum: 100
-  insecureSkipTLSVerify: true
   service:
     name: antrea
     namespace: kube-system
@@ -7399,7 +7858,6 @@ metadata:
 spec:
   group: system.antrea.tanzu.vmware.com
   groupPriorityMinimum: 100
-  insecureSkipTLSVerify: true
   service:
     name: antrea
     namespace: kube-system
@@ -7431,9 +7889,10 @@ spec:
         - --config
         - /etc/antrea/antrea-agent.conf
         - --logtostderr=false
-        - --log_dir
-        - /var/log/antrea
+        - --log_dir=/var/log/antrea
         - --alsologtostderr
+        - --log_file_max_size=100
+        - --log_file_max_num=4
         command:
         - antrea-agent
         env:
@@ -7450,6 +7909,7 @@ spec:
             fieldRef:
               fieldPath: spec.nodeName
         image: {{ContainerImage "antrea-agent"}}
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
             command:
@@ -7507,14 +7967,17 @@ spec:
       - command:
         - start_ovs
         image: {{ContainerImage "antrea-ovs"}}
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
             command:
             - /bin/sh
             - -c
-            - timeout 5 container_liveness_probe ovs
+            - timeout 10 container_liveness_probe ovs
+          failureThreshold: 5
           initialDelaySeconds: 5
-          periodSeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 10
         name: antrea-ovs
         resources:
           requests:
@@ -7538,6 +8001,7 @@ spec:
       - command:
         - install_cni
         image: {{ContainerImage "install-cni"}}
+        imagePullPolicy: IfNotPresent
         name: install-cni
         command: [{{ContainerConfig "installCniCmd"}}]
         resources:
@@ -7571,9 +8035,11 @@ spec:
         operator: Exists
       - effect: NoSchedule
         operator: Exists
+      - effect: NoExecute
+        operator: Exists
       volumes:
       - configMap:
-          name: antrea-config-m8cb9g82tf
+          name: antrea-config-955ggkk72b
         name: antrea-config
       - hostPath:
           path: /etc/cni/net.d
@@ -22927,6 +23393,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 . c:\AzureData\k8s\windowscontainerdfunc.ps1
 . c:\AzureData\k8s\windowshostsconfigagentfunc.ps1
+. c:\AzureData\k8s\windowsantreacnifunc.ps1
 
 $useContainerD = ($global:ContainerRuntime -eq "containerd")
 $global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
@@ -23159,9 +23626,16 @@ try
             } else {
                 Update-WinCNI -CNIPath $global:CNIPath
             }
+        } elseif ($global:NetworkPlugin -eq "antrea") {
+            Install-OpenvSwitch -KubeDir $global:KubeDir
+            Install-Antrea -KubeDir $global:KubeDir
         }
 
-        New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
+        if ($global:NetworkPlugin -eq "antrea") {
+            Write-Log "Skip Creating External Host Network"
+        } else {
+            New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
+        }
 
         Install-KubernetesServices ` + "`" + `
             -KubeDir $global:KubeDir
@@ -23632,6 +24106,104 @@ func k8sManifestsKubernetesmasterKubeSchedulerYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/manifests/kubernetesmaster-kube-scheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sWindowsantreacnifuncPs1 = []byte(`function Install-OpenvSwitch
+{
+    Param(
+        [string]
+        $VCUrl = "https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x64.exe",
+        [string]
+        $OVSUrl = "https://raw.githubusercontent.com/vmware-tanzu/antrea/master/hack/windows/Install-OVS.ps1",
+        [Parameter(Mandatory = $true)][string]
+        $KubeDir
+    )
+
+    # TODO: Remove this with Antrea v0.10.0 release
+    Write-Log "Installing Microsoft VC 2010"
+    $VCPath = [Io.path]::Combine($KubeDir, "VC.exe")
+    DownloadFileOverHttp -Url $VCUrl -DestinationPath $VCPath
+    Start-Process -FilePath $VCPath -Args '/install /passive /norestart' -Verb RunAs -Wait
+
+    # Enable TESTSIGNING so that OVS datapath can be enabled. This settings is not recommended for production
+    & Bcdedit.exe -set TESTSIGNING ON
+
+    # TODO: Discuss with AKS Folks, how to install Upstream OVS on Windows Node
+    # and sign it.
+    Write-Log "Installating Openvswitch"
+    $OVSPsPath = [Io.path]::Combine($KubeDir, "Install-OVS.ps1")
+    DownloadFileOverHttp -Url $OVSUrl -DestinationPath $OVSPsPath
+    & $OVSPsPath
+
+    $OVSVersion = ovs-vswitchd.exe --version | %{ $_.Split(' ')[-1]; }
+    if ([string]::IsNullOrEmpty($OVSVersion)) {
+        Write-Log "Create ovsdb file failed due to OVS version not found, exit"
+        $OVSVersion = "2.13.1"
+    }
+    & ovs-vsctl.exe --no-wait set Open_vSwitch . ovs_version=$OVSVersion
+}
+
+$AntreaStartWrapper= '
+Param(
+    [string]
+    $KubeConfig="c:\k\config",
+    [string]
+    $AntreaStartPs="c:\k\AntreaStart.ps1"
+)
+try {
+   & $AntreaStartPs -KubeConfig $KubeConfig -StartKubeProxy $false
+   Wait-Process antrea-agent
+}
+finally {
+   Stop-Process -Name antrea-agent -Force
+}
+'
+
+function Install-Antrea
+{
+    Param(
+        [string]
+        $AntreaUrl = "https://github.com/vmware-tanzu/antrea/releases/download/v0.9.3/Start.ps1",
+        [Parameter(Mandatory = $true)][string]
+        $KubeDir
+    )
+
+    Write-Log "Downloading Antrea Start Powershell script"
+    $AntreaStartPs = [Io.path]::Combine($KubeDir, "AntreaStart.ps1")
+    $KubeConfig = [Io.path]::Combine($KubeDir, "config")
+    DownloadFileOverHttp -Url $AntreaUrl -DestinationPath $AntreaStartPs
+
+    # Write Antrea Start Wrapper Powershell file
+    Set-Content -Path $KubeDir\AntreaStartWrapper.ps1 -Value $AntreaStartWrapper
+
+    Write-Log "Register Antrea Start as a service"
+    mkdir $KubeDir\antrea
+    & "$KubeDir\nssm.exe" install antrea-agent C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppDirectory $KubeDir | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppParameters "$KubeDir\AntreaStartWrapper.ps1 -kubeconfig $KubeConfig " | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppStdout "$KubeDir\antrea\stdout.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppStderr "$KubeDir\antrea\stderr.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set antrea-agent AppRotateBytes 10485760 | RemoveNulls
+}
+`)
+
+func k8sWindowsantreacnifuncPs1Bytes() ([]byte, error) {
+	return _k8sWindowsantreacnifuncPs1, nil
+}
+
+func k8sWindowsantreacnifuncPs1() (*asset, error) {
+	bytes, err := k8sWindowsantreacnifuncPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/windowsantreacnifunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -28580,6 +29152,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                 k8sManifestsKubernetesmasterKubeApiserverYaml,
 	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":        k8sManifestsKubernetesmasterKubeControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                 k8sManifestsKubernetesmasterKubeSchedulerYaml,
+	"k8s/windowsantreacnifunc.ps1":                                       k8sWindowsantreacnifuncPs1,
 	"k8s/windowsazurecnifunc.ps1":                                        k8sWindowsazurecnifuncPs1,
 	"k8s/windowsazurecnifunc.tests.ps1":                                  k8sWindowsazurecnifuncTestsPs1,
 	"k8s/windowscnifunc.ps1":                                             k8sWindowscnifuncPs1,
@@ -28780,6 +29353,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmaster-kube-controller-manager.yaml":  {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-scheduler.yaml":           {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
 		}},
+		"windowsantreacnifunc.ps1":        {k8sWindowsantreacnifuncPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.ps1":         {k8sWindowsazurecnifuncPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.tests.ps1":   {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":              {k8sWindowscnifuncPs1, map[string]*bintree{}},

@@ -85,6 +85,7 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1          = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1              = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1         = "k8s/windowsazurecnifunc.ps1"
+	kubernetesWindowsAntreaCniFunctionsPS1        = "k8s/windowsantreacnifunc.ps1"
 	kubernetesWindowsHostsConfigAgentFunctionsPS1 = "k8s/windowshostsconfigagentfunc.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1           = "k8s/windowsinstallopensshfunc.ps1"
 	kubernetesWindowsHypervtemplatetoml           = "k8s/containerdtemplate.toml"

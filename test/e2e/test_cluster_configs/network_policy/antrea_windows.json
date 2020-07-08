@@ -1,8 +1,9 @@
 {
-	"env": {
-	},
+	"env": {},
 	"options": {
-		"allowedOrchestratorVersions": ["1.18"]
+		"allowedOrchestratorVersions": [
+			"1.18"
+		]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -21,7 +22,7 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
+					"name": "agentlin",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
@@ -31,10 +32,15 @@
 					"name": "agentwin",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
-					"availabilityProfile": "VirtualMachineScaleSets",
 					"osType": "Windows"
 				}
 			],
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
+			},
 			"linuxProfile": {
 				"adminUsername": "azureuser",
 				"ssh": {
@@ -44,12 +50,6 @@
 						}
 					]
 				}
-			},
-			"windowsProfile": {
-				"adminUsername": "azureuser",
-				"adminPassword": "replacepassword1234$",
-				"enableAutomaticUpdates": false,
-				"sshEnabled": true
 			},
 			"servicePrincipalProfile": {
 				"clientId": "",

@@ -88,6 +88,9 @@ The kubernetes-antrea deployment template enables Antrea networking and policies
       }
 ```
 
+In Kubernetes 1.18+, Antrea can be enabled on Windows nodes too. Antrea for Windows requires Open Source OVS for networking and enforcing network policies. For the initial implementation in aks-engine, Open Source OVS is not signed. See [this conversation](https://github.com/Azure/aks-engine/pull/3597/files#r458363545) to learn more about the requirements. TestSigning mode is enabled for Windows node to ensure OVS datapath can forward packets correctly.
+> Note: TestSigning mode is not recommended for production.
+
 Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antrea will enforce Network Policies using OVS and Azure CNI will take care of Networking. The kubernetes-antrea deployment template enables Azure Networking and Antrea Network Policies for the AKS Engine via `"networkPolicy": "antrea"` and optional `"networkPlugin": "azure"` being present inside the `kubernetesConfig`. For more details regarding Antrea NetworkPolicyOnly mode, please refer to [this](https://github.com/vmware-tanzu/antrea/blob/master/docs/policy-only.md).
 
 

@@ -422,6 +422,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"serviceCidr":      o.KubernetesConfig.ServiceCIDR,
 			"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
 			"installCniCmd":    common.AntreaDefaultInstallCniCmd,
+			"antreaProxy":      "false",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -451,6 +452,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	if o.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea && o.IsAzureCNI() {
 		defaultsAntreaDaemonSetAddonsConfig.Config["trafficEncapMode"] = common.AntreaNetworkPolicyOnlyMode
 		defaultsAntreaDaemonSetAddonsConfig.Config["installCniCmd"] = common.AntreaInstallCniChainCmd
+		defaultsAntreaDaemonSetAddonsConfig.Config["antreaProxy"] = "true"
 	}
 
 	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{

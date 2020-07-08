@@ -167,6 +167,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 . c:\AzureData\k8s\windowscontainerdfunc.ps1
 . c:\AzureData\k8s\windowshostsconfigagentfunc.ps1
+. c:\AzureData\k8s\windowsantreacnifunc.ps1
 
 $useContainerD = ($global:ContainerRuntime -eq "containerd")
 $global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
@@ -399,9 +400,16 @@ try
             } else {
                 Update-WinCNI -CNIPath $global:CNIPath
             }
+        } elseif ($global:NetworkPlugin -eq "antrea") {
+            Install-OpenvSwitch -KubeDir $global:KubeDir
+            Install-Antrea -KubeDir $global:KubeDir
         }
 
-        New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
+        if ($global:NetworkPlugin -eq "antrea") {
+            Write-Log "Skip Creating External Host Network"
+        } else {
+            New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
+        }
 
         Install-KubernetesServices `
             -KubeDir $global:KubeDir

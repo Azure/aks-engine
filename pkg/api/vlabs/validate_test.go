@@ -968,10 +968,11 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 		)
 	}
 
+	k8sVersion = "1.17"
 	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
 		t.Errorf(
-			"should error on antrea for windows clusters",
+			"should error on antrea for windows clusters with k8s version < 1.18",
 		)
 	}
 }
@@ -1014,13 +1015,6 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err == nil {
 		t.Errorf(
 			"should error on invalid networkPlugin",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true); err == nil {
-		t.Errorf(
-			"should error on antrea for windows clusters",
 		)
 	}
 }

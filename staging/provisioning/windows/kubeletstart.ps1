@@ -48,6 +48,9 @@ elseif ($NetworkPlugin -eq "kubenet") {
     # handle difference in naming between Linux & Windows reference plugin
     $KubeletArgList = $KubeletArgList -replace "kubenet", "cni"
 }
+elseif ($NetworkPlugin -eq "antrea") {
+    Write-Host "Antrea network plugin is enabled"
+}
 else {
     throw "Unknown network type $NetworkPlugin, can't configure kubelet"
 }
@@ -257,4 +260,60 @@ if ($global:NetworkPlugin -eq "kubenet") {
         Write-Error $_
     }
 
+}
+
+function Wait-Docker() {
+   while ($true) {
+      docker ps -q
+      if(-Not $LASTEXITCODE) {
+         break
+      }
+      Start-Sleep -Seconds 2
+   }
+}
+
+if ($global:NetworkPlugin -eq "antrea") {
+
+    # Try to cleanup ovsdb-server configurations if the antrea-hnsnetwork is not existing.
+    $antreaHNSNetwork = Get-HnsNetwork | ? Name -EQ "antrea-hnsnetwork"
+    if ($antreaHNSNetwork -eq $Nil) {
+        while ($true) {
+            & ovs-vsctl.exe --no-wait --if-exists del-br br-int
+            if (-Not $LASTEXITCODE) {
+                break
+            } else {
+                Write-Host "Waiting for ovsdb-server running"
+                Start-Sleep -Seconds 1
+            }
+        }
+        Wait-Docker
+        Write-Host "Creating Host Network"
+        & docker network create -d nat host
+    }
+
+    $InterfaceAlias = "HNS Internal NIC"
+    $INTERFACE_TO_ADD_SERVICE_IP = "vEthernet ($InterfaceAlias)"
+    Write-Host "Creating netadapter $INTERFACE_TO_ADD_SERVICE_IP for kube-proxy"
+    if (-Not (Get-NetAdapter -InterfaceAlias $INTERFACE_TO_ADD_SERVICE_IP -ErrorAction SilentlyContinue)) {
+        [Environment]::SetEnvironmentVariable("INTERFACE_TO_ADD_SERVICE_IP", $INTERFACE_TO_ADD_SERVICE_IP, [System.EnvironmentVariableTarget]::Machine)
+        while ($true) {
+            $hnsInternalSwitch = Get-VMSwitch -SwitchType Internal
+            if ($hnsInternalSwitch -ne $nil) {
+                $hnsSwitchName = $hnsInternalSwitch.Name
+                Add-VMNetworkAdapter -ManagementOS -Name "$InterfaceAlias" -SwitchName $hnsSwitchName
+                Set-NetIPInterface -ifAlias $INTERFACE_TO_ADD_SERVICE_IP -Forwarding Enabled
+                break
+            } else {
+                Write-Host "Waiting for the creation for the internal VMSwitch"
+                Start-Sleep -Seconds 1
+            }
+        }
+    }
+
+    # Start ovs-vswitchd to ensure Antrea could work correctly
+    Start-Service ovs-vswitchd
+
+    Restart-Service Kubeproxy
+
+    Invoke-Expression $KubeletCommandLine
 }
