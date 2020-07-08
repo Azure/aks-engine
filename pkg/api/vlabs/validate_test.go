@@ -326,17 +326,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "EtcdStorageLimitGB value of 1 is too small, the minimum allowed is 2",
 		},
-		"should error when EtcdStorageLimitGB is too high": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					KubernetesConfig: &KubernetesConfig{
-						EtcdStorageLimitGB: 9,
-					},
-				},
-			},
-			expectedError: "EtcdStorageLimitGB value of 9 is too large, the maximum allowed is 8",
-		},
 	}
 
 	for testName, test := range tests {
@@ -361,6 +350,27 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleProperties_validateOrchestratorProfile() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		EtcdStorageLimitGB: 9,
+	}
+	if err := cs.Properties.ValidateOrchestratorProfile(false); err != nil {
+		log.Error(err)
+	}
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
+	// The ordered collection of all output is validated below:
+
+	// Output:
+	// level=warning msg="EtcdStorageLimitGB of 9 is larger than the recommended maximum of 8"
 }
 
 func Test_KubernetesConfig_Validate(t *testing.T) {
