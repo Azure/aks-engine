@@ -674,7 +674,7 @@ func GetAllRunningByLabelWithRetry(labelKey, labelVal, namespace string, sleep, 
 		case result := <-ch:
 			mostRecentGetAllByLabelWithRetryError = result.Err
 			pods = result.Pods
-			if mostRecentGetAllByLabelWithRetryError == nil {
+			if mostRecentGetAllByLabelWithRetryError == nil && len(pods) > 0 {
 				return pods, nil
 			}
 		case <-ctx.Done():
