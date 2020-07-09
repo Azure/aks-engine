@@ -4775,12 +4775,12 @@ func TestImageReference(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro:   Ubuntu1804,
+				Distro:   AKSUbuntu1804,
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro:   Ubuntu1804,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -5004,11 +5004,11 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro: Ubuntu1804,
+				Distro: AKSUbuntu1804,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro: Ubuntu1804,
+					Distro: AKSUbuntu1804,
 				},
 			},
 		},
@@ -5064,14 +5064,14 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro: Ubuntu1804,
+				Distro: AKSUbuntu1804,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
 					Distro: Ubuntu,
 				},
 				{
-					Distro: Ubuntu1804,
+					Distro: AKSUbuntu1804,
 				},
 			},
 		},

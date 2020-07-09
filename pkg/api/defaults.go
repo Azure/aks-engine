@@ -497,11 +497,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			// Distro assignment for masterProfile
 			if cs.Properties.MasterProfile.ImageRef == nil {
 				if cs.Properties.MasterProfile.Distro == "" {
-					if o.KubernetesConfig.CustomHyperkubeImage == "" {
-						cs.Properties.MasterProfile.Distro = AKSUbuntu1804
-					} else {
-						cs.Properties.MasterProfile.Distro = Ubuntu1804
-					}
+					cs.Properties.MasterProfile.Distro = AKSUbuntu1804
 				} else if isUpgrade || isScale {
 					if cs.Properties.MasterProfile.Distro == AKSDockerEngine || cs.Properties.MasterProfile.Distro == AKS1604Deprecated {
 						cs.Properties.MasterProfile.Distro = AKSUbuntu1604
@@ -539,14 +535,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			if profile.OSType != Windows {
 				if profile.ImageRef == nil {
 					if profile.Distro == "" {
-						if o.KubernetesConfig.CustomHyperkubeImage == "" {
-							if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
-								profile.Distro = Ubuntu1804
-							} else {
-								profile.Distro = AKSUbuntu1804
-							}
-						} else {
+						if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 							profile.Distro = Ubuntu1804
+						} else {
+							profile.Distro = AKSUbuntu1804
 						}
 						// Ensure deprecated distros are overridden
 						// Previous versions of aks-engine required the docker-engine distro for N series vms,

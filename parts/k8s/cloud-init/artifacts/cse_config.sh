@@ -446,7 +446,7 @@ installKubeletAndKubectl() {
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     binPath=/opt/bin
   fi
-  if [[ ! -f "${binPath}/kubectl-${KUBERNETES_VERSION}" ]]; then
+  if [[ ! -f "${binPath}/kubectl-${KUBERNETES_VERSION}" ]] || [[ -n "${CUSTOM_HYPERKUBE_IMAGE}" ]] || [[ -n "${KUBE_BINARY_URL}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.17; then
       extractKubeBinaries
     else

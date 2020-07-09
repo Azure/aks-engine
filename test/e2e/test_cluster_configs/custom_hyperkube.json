@@ -1,0 +1,46 @@
+{
+    "options": {
+        "allowedOrchestratorVersions": [
+            "1.16"
+        ]
+    },
+    "apiModel": {
+        "apiVersion": "vlabs",
+        "properties": {
+            "orchestratorProfile": {
+                "orchestratorType": "Kubernetes",
+                "kubernetesConfig": {
+                    "customHyperkubeImage": "mcr.microsoft.com/oss/kubernetes/hyperkube:v1.16.0",
+                    "customKubeProxyImage": "mcr.microsoft.com/oss/kubernetes/hyperkube:v1.16.0"
+                }
+            },
+            "masterProfile": {
+                "count": 1,
+                "dnsPrefix": "",
+                "vmSize": "Standard_D2_v3"
+            },
+            "agentPoolProfiles": [
+                {
+                    "name": "agentpool1",
+                    "count": 2,
+                    "vmSize": "Standard_D2_v3",
+                    "availabilityProfile": "AvailabilitySet"
+                }
+            ],
+            "linuxProfile": {
+                "adminUsername": "azureuser",
+                "ssh": {
+                    "publicKeys": [
+                        {
+                            "keyData": ""
+                        }
+                    ]
+                }
+            },
+            "servicePrincipalProfile": {
+                "clientId": "",
+                "secret": ""
+            }
+        }
+    }
+}
