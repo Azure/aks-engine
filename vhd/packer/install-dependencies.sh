@@ -70,6 +70,7 @@ echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
 MOBY_VERSION="19.03.12"
 installMoby
+systemctl start docker
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 downloadGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
