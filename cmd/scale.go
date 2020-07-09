@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -391,9 +390,16 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			}
 			for _, vmss := range vmssListPage.Values() {
 				vmssName := *vmss.Name
-				if !sc.vmInAgentPool(vmssName, vmss.Tags) {
-					continue
+				if sc.agentPool.OSType == api.Windows {
+					if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, sc.agentPoolIndex) == vmssName) {
+						continue
+					}
+				} else {
+					if !sc.vmInAgentPool(vmssName, vmss.Tags) {
+						continue
+					}
 				}
+				log.Infof("found VMSS %s in resource group %s that correlates with node pool %s", vmssName, sc.resourceGroupName, sc.agentPoolToScale)
 
 				if vmss.Sku != nil {
 					currentNodeCount = int(*vmss.Sku.Capacity)
@@ -403,14 +409,11 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
 						log.Warnf("VMSS scale down is an alpha feature: VMSS VM nodes will not be cordoned and drained before scaling down!")
 					}
-				}
-
-				if sc.agentPool.OSType == api.Windows {
-					winPoolIndexStr := vmssName[len(vmssName)-2:]
-					var err error
-					winPoolIndex, err = strconv.Atoi(winPoolIndexStr)
-					if err != nil {
-						return errors.Wrap(err, "failed to get Windows pool index from VMSS name")
+				} else {
+					// Fall back to comparing against the known count value in the api model
+					if sc.agentPool.Count == sc.newDesiredAgentCount {
+						sc.printScaleTargetEqualsExisting(currentNodeCount)
+						return nil
 					}
 				}
 
@@ -571,7 +574,7 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 	}
 
 	// Fall back to checking the VM name to see if it fits the naming pattern
-	if sc.agentPool.OSType == api.Windows && strings.HasPrefix(vmName, sc.containerService.Properties.GetClusterID()[:4]) {
+	if sc.agentPool.OSType == api.Windows && sc.agentPool.AvailabilityProfile == api.AvailabilitySet && strings.HasPrefix(vmName, sc.containerService.Properties.GetClusterID()[:4]) {
 		_, _, winPoolIndex, _, err := utils.WindowsVMNameParts(vmName)
 		if err == nil {
 			return vmName[:9] == sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)[:9]
