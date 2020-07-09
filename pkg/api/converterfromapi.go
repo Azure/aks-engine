@@ -403,6 +403,7 @@ func convertPrivateClusterToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig
 	if a.PrivateCluster != nil {
 		v.PrivateCluster = &vlabs.PrivateCluster{}
 		v.PrivateCluster.Enabled = a.PrivateCluster.Enabled
+		v.PrivateCluster.EnableHostsConfigAgent = a.PrivateCluster.EnableHostsConfigAgent
 		if a.PrivateCluster.JumpboxProfile != nil {
 			v.PrivateCluster.JumpboxProfile = &vlabs.PrivateJumpboxProfile{}
 			convertPrivateJumpboxProfileToVlabs(a.PrivateCluster.JumpboxProfile, v.PrivateCluster.JumpboxProfile)

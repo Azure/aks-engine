@@ -328,6 +328,11 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsPrivateCluster": func() bool {
 			return cs.Properties.OrchestratorProfile.IsPrivateCluster()
 		},
+		"EnableHostsConfigAgent": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig != nil &&
+				cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
+				to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent)
+		},
 		"ProvisionJumpbox": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 		},

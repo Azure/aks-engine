@@ -1162,8 +1162,9 @@ func TestStorageProfile(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.MasterProfile.Count = 1
 	properties.OrchestratorProfile.KubernetesConfig.PrivateCluster = &PrivateCluster{
-		Enabled:        to.BoolPtr(true),
-		JumpboxProfile: &PrivateJumpboxProfile{},
+		Enabled:                to.BoolPtr(true),
+		EnableHostsConfigAgent: to.BoolPtr(true),
+		JumpboxProfile:         &PrivateJumpboxProfile{},
 	}
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,

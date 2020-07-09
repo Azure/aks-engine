@@ -664,7 +664,8 @@ func TestConvertVLabsContainerService(t *testing.T) {
 			"sampleSchedulerKey": "sampleSchedulerVal",
 		},
 		PrivateCluster: &vlabs.PrivateCluster{
-			Enabled: to.BoolPtr(true),
+			Enabled:                to.BoolPtr(true),
+			EnableHostsConfigAgent: to.BoolPtr(true),
 			JumpboxProfile: &vlabs.PrivateJumpboxProfile{
 				Name:           "sampleJumpboxProfile",
 				VMSize:         "Standard_DS1_v2",

@@ -185,6 +185,10 @@ fi
 ensureContainerd
 {{end}}
 
+{{- if and IsHostedMaster EnableHostsConfigAgent}}
+configPrivateClusterHosts
+{{end}}
+
 {{- if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
