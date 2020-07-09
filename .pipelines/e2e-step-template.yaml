@@ -28,4 +28,4 @@ steps:
     inputs:
       testResultsFormat: JUnit
       testResultsFiles: '**/junit.xml'
-    condition: false
+    condition: always()
