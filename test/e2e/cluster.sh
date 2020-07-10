@@ -8,6 +8,7 @@ GOPATH="/go"
 WORK_DIR="/aks-engine"
 MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
 AZURE_ENV="${AZURE_ENV:-AzurePublicCloud}"
+IDENTITY_SYSTEM="${IDENTITY_SYSTEM:-azure_ad}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
@@ -282,7 +283,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
       --node-pool $nodepool \
       --new-node-count 1 \
       --auth-method client_secret \
-      --identity-system ${IDENTITY_SYSTEM}\
+      --identity-system ${IDENTITY_SYSTEM} \
       --client-id ${AZURE_CLIENT_ID} \
       --client-secret ${AZURE_CLIENT_SECRET} || exit 1
   done
