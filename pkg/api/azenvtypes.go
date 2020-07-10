@@ -288,7 +288,7 @@ var (
 			TillerImageBase:        "mcr.microsoft.com/",
 			ACIConnectorImageBase:  "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:        "dockerhub.azk8s.cn/nvidia/",
-			AzureCNIImageBase:      "dockerhub.azk8s.cn/containernetworking/",
+			AzureCNIImageBase:      "mcr.azk8s.cn/containernetworking/",
 			MCRKubernetesImageBase: "mcr.microsoft.com/",
 			CalicoImageBase:        "dockerhub.azk8s.cn/calico/",
 			EtcdDownloadURLBase:    "mcr.microsoft.com/oss/etcd-io/",
