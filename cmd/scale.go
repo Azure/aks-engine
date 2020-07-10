@@ -391,7 +391,12 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			for _, vmss := range vmssListPage.Values() {
 				vmssName := *vmss.Name
 				if sc.agentPool.OSType == api.Windows {
-					if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, sc.agentPoolIndex) == vmssName) {
+					winPoolIndexStr := vmssName[len(vmssName)-2:]
+					var err error
+					winPoolIndex, err = strconv.Atoi(winPoolIndexStr)
+					if err != nil {
+						return errors.Wrap(err, "failed to get Windows pool index from VMSS name")
+					if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex) == vmssName) {
 						continue
 					}
 				} else {
