@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -396,6 +397,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 					winPoolIndex, err = strconv.Atoi(winPoolIndexStr)
 					if err != nil {
 						return errors.Wrap(err, "failed to get Windows pool index from VMSS name")
+					}
 					if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex) == vmssName) {
 						continue
 					}
