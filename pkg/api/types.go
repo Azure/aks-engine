@@ -2486,6 +2486,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_API_VERSION":                  APIVersionNetwork,
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
+		"CUSTOM_HYPERKUBE_IMAGE":               kubernetesConfig.CustomHyperkubeImage,
 	}
 
 	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {

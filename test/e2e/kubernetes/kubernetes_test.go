@@ -320,8 +320,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the expected k8s version", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" &&
-				eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL == "" {
+			customHyperkubeImage := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+			customWindowsPackageURL := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL
+			if customHyperkubeImage == "" && customWindowsPackageURL == "" {
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
@@ -331,6 +332,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(n.Version()))
 				}
+			} else if customHyperkubeImage != "" {
+				customHyperkubeValidateScript := "custom-hyperkube-validate.sh"
+				err := sshConn.CopyTo(customHyperkubeValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				envString := fmt.Sprintf("CUSTOM_HYPERKUBE_IMAGE=%s", customHyperkubeImage)
+				customHyperkubeValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, customHyperkubeValidateScript)
+				err = sshConn.Execute(customHyperkubeValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This is a cluster built from source")
 			}
@@ -700,6 +709,24 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
+			}
+
+			customHyperkubeImage := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+			if customHyperkubeImage != "" {
+				hyperkubeComponents := []string{
+					common.APIServerComponentName,
+					common.ControllerManagerComponentName,
+					common.KubeProxyAddonName,
+					common.SchedulerComponentName,
+				}
+
+				for _, hyperkubeComponent := range hyperkubeComponents {
+					pods, err := pod.GetAllByPrefixWithRetry(hyperkubeComponent, "kube-system", 3*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					for _, pod := range pods {
+						Expect(pod.Spec.Containers[0].Image).To(Equal(customHyperkubeImage))
+					}
+				}
 			}
 		})
 
