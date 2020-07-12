@@ -177,18 +177,18 @@ var (
 	// TODO: Update sku and version after GPU image is actually published
 	AKSUbuntuGPU1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-gpu-1804-202006",
+		ImageSku:       "aks-ubuntu-gpu-1804-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.30",
+		ImageVersion:   "2020.07.11",
 	}
 
 	// AKSUbuntuGPU1804Gen2OSImageConfig is the AKS gen2 image with GPU drivers and device plugin based on Ubuntu 18.04-LTS.
 	// TODO: Update sku and version after GPU image is actually published
 	AKSUbuntuGPU1804Gen2OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-gpu-1804-gen2-202006",
+		ImageSku:       "aks-ubuntu-gpu-1804-gen2-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.30",
+		ImageVersion:   "2020.07.11",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
