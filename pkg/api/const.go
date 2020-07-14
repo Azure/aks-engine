@@ -342,6 +342,10 @@ const (
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.8.6"
+	// WindowsPauseImageVersion specifies version of Windows pause image
+	WindowsPauseImageVersion = "1.4.0"
+	// DefaultAlwaysPullWindowsPauseImage is the default windowsProfile.AlwaysPullWindowsPauseImage value
+	DefaultAlwaysPullWindowsPauseImage = false
 )
 
 const (

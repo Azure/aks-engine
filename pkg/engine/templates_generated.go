@@ -23077,7 +23077,8 @@ function Write-KubeClusterConfig {
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
         Images = @{
-            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
+            # e.g. "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
+            "Pause" = $global:WindowsPauseImageURL
         }
     }
 
@@ -23307,6 +23308,10 @@ $global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
 $global:EnableHostsConfigAgent = [System.Convert]::ToBoolean("{{WrapAsVariable "enableHostsConfigAgent" }}");
 
 $global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningScriptsPackageURL" }}";
+
+# PauseImage
+$global:WindowsPauseImageURL = "{{WrapAsVariable "windowsPauseImageURL" }}";
+$global:AlwaysPullWindowsPauseImage = [System.Convert]::ToBoolean("{{WrapAsVariable "alwaysPullWindowsPauseImage" }}");
 
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
@@ -25134,14 +25139,14 @@ New-InfraContainer {
 
     if ($pauseImageVersions -icontains $windowsVersion) {
         if ($ContainerRuntime -eq "docker") {
-            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime) -or $global:AlwaysPullWindowsPauseImage) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
             Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
         else {
             # containerd
-            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime) -or $global:AlwaysPullWindowsPauseImage) {
                 Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
             Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "tag", "$defaultPauseImage", "$DestinationTag")

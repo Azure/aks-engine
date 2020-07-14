@@ -51,6 +51,8 @@ type KubernetesSpecConfig struct {
 	ContainerdDownloadURLBase            string `json:"containerdDownloadURLBase,omitempty"`
 	CSIProxyDownloadURL                  string `json:"csiProxyDownloadURL,omitempty"`
 	WindowsProvisioningScriptsPackageURL string `json:"windowsProvisioningScriptsPackageURL,omitempty"`
+	WindowsPauseImageURL                 string `json:"windowsPauseImageURL,omitempty"`
+	AlwaysPullWindowsPauseImage          bool   `json:"alwaysPullWindowsPauseImage,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint

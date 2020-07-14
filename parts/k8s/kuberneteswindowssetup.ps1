@@ -148,6 +148,10 @@ $global:EnableHostsConfigAgent = [System.Convert]::ToBoolean("{{WrapAsVariable "
 
 $global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningScriptsPackageURL" }}";
 
+# PauseImage
+$global:WindowsPauseImageURL = "{{WrapAsVariable "windowsPauseImageURL" }}";
+$global:AlwaysPullWindowsPauseImage = [System.Convert]::ToBoolean("{{WrapAsVariable "alwaysPullWindowsPauseImage" }}");
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 

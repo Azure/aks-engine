@@ -193,6 +193,8 @@ func TestK8sVars(t *testing.T) {
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
 		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
@@ -796,6 +798,8 @@ func TestK8sVars(t *testing.T) {
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
 		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -1051,6 +1055,8 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
 		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
@@ -1073,6 +1079,8 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 				"windowsEnableCSIProxy":                false,
 				"windowsCSIProxyURL":                   "",
 				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
 			},
 		},
 		{
@@ -1082,6 +1090,8 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 				"windowsEnableCSIProxy":                false,
 				"windowsCSIProxyURL":                   "",
 				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
 			},
 		},
 		{
@@ -1090,11 +1100,15 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 				EnableCSIProxy:                &trueVar,
 				CSIProxyURL:                   "http://some/package.tar",
 				ProvisioningScriptsPackageURL: "https://provisioning/package",
+				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
+				AlwaysPullWindowsPauseImage:   &trueVar,
 			},
 			expectedVars: map[string]interface{}{
 				"windowsEnableCSIProxy":                true,
 				"windowsCSIProxyURL":                   "http://some/package.tar",
 				"windowsProvisioningScriptsPackageURL": "https://provisioning/package",
+				"windowsPauseImageURL":                 "mcr.contoso.com/core/pause:",
+				"alwaysPullWindowsPauseImage":          "true",
 			},
 		},
 	}
