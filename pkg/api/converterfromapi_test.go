@@ -671,8 +671,7 @@ func TestTelemetryEnabledToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if !vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+	} else if !vlabsCS.Properties.FeatureFlags.EnableTelemetry {
 		t.Errorf("expected the EnableTelemetry feature flag to be true")
 	}
 }
@@ -682,8 +681,7 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+	} else if vlabsCS.Properties.FeatureFlags.EnableTelemetry {
 		t.Errorf("expected the EnableTelemetry feature flag to be false")
 	}
 }
@@ -697,12 +695,9 @@ func TestPPGToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if vlabsCS.Properties.MasterProfile.ProximityPlacementGroupID != ppgResourceID1 {
+	} else if vlabsCS.Properties.MasterProfile.ProximityPlacementGroupID != ppgResourceID1 {
 		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID1)
-	}
-
-	if vlabsCS.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID != ppgResourceID2 {
+	} else if vlabsCS.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID != ppgResourceID2 {
 		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID2)
 	}
 }
@@ -714,11 +709,9 @@ func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if *vlabsCS.Properties.MasterProfile.PlatformFaultDomainCount != 3 {
+	} else if *vlabsCS.Properties.MasterProfile.PlatformFaultDomainCount != 3 {
 		t.Errorf("expected the master profile platform FD to be 3")
-	}
-	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != 5 {
+	} else if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != 5 {
 		t.Errorf("expected the agent pool profile platform FD to be 5")
 	}
 }
@@ -730,11 +723,9 @@ func TestPlatformUpdateDomainCountToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if *vlabsCS.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
+	} else if *vlabsCS.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
 		t.Errorf("expected the master profile platform FD to be 3")
-	}
-	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
+	} else if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
 		t.Errorf("expected the agent pool profile platform FD to be 3")
 	}
 }

@@ -225,9 +225,7 @@ func TestConvertV20170831AgentPoolOnlyOrchestratorProfile_KubernetesConfig(t *te
 	op := convertV20170831AgentPoolOnlyOrchestratorProfile("1.8.9")
 	if op == nil {
 		t.Error("OrchestratorProfile expected not to be nil")
-	}
-
-	if op.KubernetesConfig == nil {
+	} else if op.KubernetesConfig == nil {
 		t.Error("OrchestratorProfile.KubernetesConfig expected not to be nil")
 	}
 
@@ -245,75 +243,45 @@ func TestConvertV20180331AgentPoolOnlyKubernetesConfig(t *testing.T) {
 	var kc = convertV20180331AgentPoolOnlyKubernetesConfig(to.BoolPtr(true))
 	if kc == nil {
 		t.Error("kubernetesConfig expected not to be nil")
-	}
-
-	if kc.EnableRbac == nil {
+	} else if kc.EnableRbac == nil {
 		t.Error("EnableRbac expected not to be nil")
-	}
-
-	if !*kc.EnableRbac {
+	} else if !*kc.EnableRbac {
 		t.Error("EnableRbac expected to be true")
-	}
-
-	if kc.EnableSecureKubelet == nil {
+	} else if kc.EnableSecureKubelet == nil {
 		t.Error("EnableSecureKubelet expected not to be nil")
-	}
-
-	if !*kc.EnableSecureKubelet {
+	} else if !*kc.EnableSecureKubelet {
 		t.Error("EnableSecureKubelet expected to be true")
-	}
-
-	if *kc.EnableSecureKubelet != *kc.EnableRbac {
+	} else if *kc.EnableSecureKubelet != *kc.EnableRbac {
 		t.Error("EnableSecureKubelet and EnableRbac expected to be same")
 	}
 
 	kc = convertV20180331AgentPoolOnlyKubernetesConfig(to.BoolPtr(false))
 	if kc == nil {
 		t.Error("kubernetesConfig expected not to be nil")
-	}
-
-	if kc.EnableRbac == nil {
+	} else if kc.EnableRbac == nil {
 		t.Error("EnableRbac expected not to be nil")
-	}
-
-	if to.Bool(kc.EnableRbac) {
+	} else if to.Bool(kc.EnableRbac) {
 		t.Error("EnableRbac expected to be false")
-	}
-
-	if kc.EnableSecureKubelet == nil {
+	} else if kc.EnableSecureKubelet == nil {
 		t.Error("EnableSecureKubelet expected not to be nil")
-	}
-
-	if to.Bool(kc.EnableSecureKubelet) {
+	} else if to.Bool(kc.EnableSecureKubelet) {
 		t.Error("EnableSecureKubelet expected to be false")
-	}
-
-	if *kc.EnableSecureKubelet != *kc.EnableRbac {
+	} else if *kc.EnableSecureKubelet != *kc.EnableRbac {
 		t.Error("EnableSecureKubelet and EnableRbac expected to be same")
 	}
 
 	kc = convertV20180331AgentPoolOnlyKubernetesConfig(nil)
 	if kc == nil {
 		t.Error("kubernetesConfig expected not to be nil")
-	}
-
-	if kc.EnableRbac == nil {
+	} else if kc.EnableRbac == nil {
 		t.Error("EnableRbac expected not to be nil")
-	}
-
-	if to.Bool(kc.EnableRbac) {
+	} else if to.Bool(kc.EnableRbac) {
 		t.Error("EnableRbac expected to be false")
-	}
-
-	if kc.EnableSecureKubelet == nil {
+	} else if kc.EnableSecureKubelet == nil {
 		t.Error("EnableSecureKubelet expected not to be nil")
-	}
-
-	if to.Bool(kc.EnableSecureKubelet) {
+	} else if to.Bool(kc.EnableSecureKubelet) {
 		t.Error("EnableSecureKubelet expected to be false")
-	}
-
-	if *kc.EnableSecureKubelet != *kc.EnableRbac {
+	} else if *kc.EnableSecureKubelet != *kc.EnableRbac {
 		t.Error("EnableSecureKubelet and EnableRbac expected to be same")
 	}
 

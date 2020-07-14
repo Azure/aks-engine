@@ -104,12 +104,16 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyVaultName"),
 	}
 
+	var loadBalancerSku string
+	if kubernetesConfig != nil {
+		loadBalancerSku = kubernetesConfig.LoadBalancerSku
+	}
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":                 100,
 		"useManagedIdentityExtension":   strconv.FormatBool(useManagedIdentity),
 		"userAssignedIDReference":       userAssignedIDReference,
 		"useInstanceMetadata":           strconv.FormatBool(to.Bool(useInstanceMetadata)),
-		"loadBalancerSku":               kubernetesConfig.LoadBalancerSku,
+		"loadBalancerSku":               loadBalancerSku,
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),
 		"maximumLoadBalancerRuleCount":  maxLoadBalancerCount,
 		"masterFqdnPrefix":              cs.Properties.GetDNSPrefix(),

@@ -5699,43 +5699,28 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 	}
 
 	metadata := p.GetClusterMetadata()
-
+	expectedSubnetName := "BazAgentSubnet"
+	expectedVNetResourceGroupName := "SAMPLE_RESOURCE_GROUP_NAME"
+	expectedVirtualNetworkName := "ExampleCustomVNET"
+	expectedRouteTableName := fmt.Sprintf("%s-28513887-routetable", common.LegacyControlPlaneVMPrefix)
+	expectedSecurityGroupName := fmt.Sprintf("%s-28513887-nsg", common.LegacyControlPlaneVMPrefix)
+	expectedPrimaryAvailabilitySetName := "agentpool-availabilitySet-28513887"
+	expectedPrimaryScaleSetName := ""
 	if metadata == nil {
 		t.Error("did not expect cluster metadata to be nil")
-	}
-
-	expectedSubnetName := "BazAgentSubnet"
-	if metadata.SubnetName != expectedSubnetName {
+	} else if metadata.SubnetName != expectedSubnetName {
 		t.Errorf("expected subnet name %s, but got %s", expectedSubnetName, metadata.SubnetName)
-	}
-
-	expectedVNetResourceGroupName := "SAMPLE_RESOURCE_GROUP_NAME"
-	if metadata.VNetResourceGroupName != expectedVNetResourceGroupName {
+	} else if metadata.VNetResourceGroupName != expectedVNetResourceGroupName {
 		t.Errorf("expected vNetResourceGroupName name %s, but got %s", expectedVNetResourceGroupName, metadata.VNetResourceGroupName)
-	}
-
-	expectedVirtualNetworkName := "ExampleCustomVNET"
-	if metadata.VirtualNetworkName != expectedVirtualNetworkName {
+	} else if metadata.VirtualNetworkName != expectedVirtualNetworkName {
 		t.Errorf("expected VirtualNetworkName name %s, but got %s", expectedVirtualNetworkName, metadata.VirtualNetworkName)
-	}
-
-	expectedRouteTableName := fmt.Sprintf("%s-28513887-routetable", common.LegacyControlPlaneVMPrefix)
-	if metadata.RouteTableName != expectedRouteTableName {
+	} else if metadata.RouteTableName != expectedRouteTableName {
 		t.Errorf("expected RouteTableName name %s, but got %s", expectedVirtualNetworkName, metadata.RouteTableName)
-	}
-
-	expectedSecurityGroupName := fmt.Sprintf("%s-28513887-nsg", common.LegacyControlPlaneVMPrefix)
-	if metadata.SecurityGroupName != expectedSecurityGroupName {
+	} else if metadata.SecurityGroupName != expectedSecurityGroupName {
 		t.Errorf("expected SecurityGroupName name %s, but got %s", expectedSecurityGroupName, metadata.SecurityGroupName)
-	}
-
-	expectedPrimaryAvailabilitySetName := "agentpool-availabilitySet-28513887"
-	if metadata.PrimaryAvailabilitySetName != expectedPrimaryAvailabilitySetName {
+	} else if metadata.PrimaryAvailabilitySetName != expectedPrimaryAvailabilitySetName {
 		t.Errorf("expected PrimaryAvailabilitySetName name %s, but got %s", expectedPrimaryAvailabilitySetName, metadata.PrimaryAvailabilitySetName)
-	}
-
-	expectedPrimaryScaleSetName := ""
-	if metadata.PrimaryScaleSetName != expectedPrimaryScaleSetName {
+	} else if metadata.PrimaryScaleSetName != expectedPrimaryScaleSetName {
 		t.Errorf("expected PrimaryScaleSetName name %s, but got %s", expectedPrimaryScaleSetName, metadata.PrimaryScaleSetName)
 	}
 }

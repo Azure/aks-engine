@@ -16,7 +16,10 @@ import (
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
-	o := cs.Properties.OrchestratorProfile
+	var o *OrchestratorProfile
+	if cs.Properties != nil {
+		o = cs.Properties.OrchestratorProfile
+	}
 	clusterDNSPrefix := "aks-engine-cluster"
 	if cs != nil && cs.Properties != nil && cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
