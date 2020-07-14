@@ -1174,11 +1174,9 @@ func TestConvertVlabsPlatformUpdateDomain(t *testing.T) {
 	}
 	if cs == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if *cs.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
+	} else if *cs.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
 		t.Errorf("expected the master profile platform FD to be 3")
-	}
-	if *cs.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
+	} else if *cs.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
 		t.Errorf("expected the agent pool profile platform FD to be 3")
 	}
 }

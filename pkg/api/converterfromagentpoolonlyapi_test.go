@@ -251,8 +251,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	enableRBAC := convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
 		t.Error("EnableRBAC expected not to be nil")
-	}
-	if *enableRBAC {
+	} else if *enableRBAC {
 		t.Error("EnableRBAC expected to be false")
 	}
 
@@ -263,8 +262,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
 		t.Error("EnableRBAC expected not to be nil")
-	}
-	if *enableRBAC {
+	} else if *enableRBAC {
 		t.Error("EnableRBAC expected to be false")
 	}
 
@@ -275,8 +273,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
 		t.Error("EnableRBAC expected not to be nil")
-	}
-	if *enableRBAC {
+	} else if *enableRBAC {
 		t.Error("EnableRBAC expected to be false")
 	}
 
@@ -287,8 +284,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
 		t.Error("EnableRBAC expected not to be nil")
-	}
-	if *enableRBAC {
+	} else if *enableRBAC {
 		t.Error("EnableRBAC expected to be false")
 	}
 
@@ -299,8 +295,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
 		t.Error("EnableRBAC expected not to be nil")
-	}
-	if !*enableRBAC {
+	} else if !*enableRBAC {
 		t.Error("EnableRBAC expected to be true")
 	}
 
@@ -311,8 +306,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
 		t.Error("EnableRBAC expected not to be nil")
-	}
-	if !*enableRBAC {
+	} else if !*enableRBAC {
 		t.Error("EnableRBAC expected to be true")
 	}
 
@@ -323,8 +317,7 @@ func TestConvertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(t *testing.T)
 	enableRBAC = convertKubernetesConfigToEnableRBACV20180331AgentPoolOnly(kc)
 	if enableRBAC == nil {
 		t.Error("EnableRBAC expected not to be nil")
-	}
-	if !*enableRBAC {
+	} else if !*enableRBAC {
 		t.Error("EnableRBAC expected to be true")
 	}
 }
