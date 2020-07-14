@@ -5,7 +5,7 @@ This guide explains how to set up your environment for development on AKS Engine
 ## Prerequisites
 
 - [`git`](https://git-scm.com/)
-- [`go`](https://golang.org/dl) 1.14.2 or later
+- [`go`](https://golang.org/dl) 1.14.4 or later
 - [`dep`](https://github.com/golang/dep) 0.5.1 or later
 - An [Azure](https://azure.microsoft.com/en-us/) subscription
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
