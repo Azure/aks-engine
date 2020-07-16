@@ -94,10 +94,6 @@ const (
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
-	kubernetesWindowsLogsCleanupPS1       = "k8s/windowslogscleanup.ps1"
-	kubernetesWindowsNodeResetPS1         = "k8s/windowsnodereset.ps1"
-	kubeletStartPS1                       = "k8s/kubeletstart.ps1"
-	kubeproxyStartPS1                     = "k8s/kubeproxystart.ps1"
 )
 
 // cloud-init (i.e. ARM customData) source file references

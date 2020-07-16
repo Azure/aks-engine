@@ -616,14 +616,17 @@ func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
 func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 	enableCSIProxy := common.DefaultEnableCSIProxyWindows
 	CSIProxyURL := ""
+	provisioningScriptsPackageURL := ""
 
 	if wp != nil {
 		enableCSIProxy = wp.IsCSIProxyEnabled()
 		CSIProxyURL = wp.CSIProxyURL
+		provisioningScriptsPackageURL = wp.ProvisioningScriptsPackageURL
 	}
 	vars := map[string]interface{}{
-		"windowsEnableCSIProxy": enableCSIProxy,
-		"windowsCSIProxyURL":    CSIProxyURL,
+		"windowsEnableCSIProxy":                enableCSIProxy,
+		"windowsCSIProxyURL":                   CSIProxyURL,
+		"windowsProvisioningScriptsPackageURL": provisioningScriptsPackageURL,
 	}
 	return vars
 }

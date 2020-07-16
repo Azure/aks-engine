@@ -190,6 +190,7 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 		api.ImageRef.Version = vlabs.ImageRef.Version
 	}
 	api.ImageVersion = vlabs.ImageVersion
+	api.ProvisioningScriptsPackageURL = vlabs.ProvisioningScriptsPackageURL
 	api.WindowsImageSourceURL = vlabs.WindowsImageSourceURL
 	api.WindowsPublisher = vlabs.WindowsPublisher
 	api.WindowsOffer = vlabs.WindowsOffer
@@ -772,20 +773,21 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	api.KubernetesSpecConfig = KubernetesSpecConfig{
-		AzureTelemetryPID:                vlabses.KubernetesSpecConfig.AzureTelemetryPID,
-		KubernetesImageBase:              vlabses.KubernetesSpecConfig.KubernetesImageBase,
-		TillerImageBase:                  vlabses.KubernetesSpecConfig.TillerImageBase,
-		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
-		NVIDIAImageBase:                  vlabses.KubernetesSpecConfig.NVIDIAImageBase,
-		AzureCNIImageBase:                vlabses.KubernetesSpecConfig.AzureCNIImageBase,
-		CalicoImageBase:                  vlabses.KubernetesSpecConfig.CalicoImageBase,
-		EtcdDownloadURLBase:              vlabses.KubernetesSpecConfig.EtcdDownloadURLBase,
-		KubeBinariesSASURLBase:           vlabses.KubernetesSpecConfig.KubeBinariesSASURLBase,
-		WindowsTelemetryGUID:             vlabses.KubernetesSpecConfig.WindowsTelemetryGUID,
-		CNIPluginsDownloadURL:            vlabses.KubernetesSpecConfig.CNIPluginsDownloadURL,
-		VnetCNILinuxPluginsDownloadURL:   vlabses.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
-		VnetCNIWindowsPluginsDownloadURL: vlabses.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
-		ContainerdDownloadURLBase:        vlabses.KubernetesSpecConfig.ContainerdDownloadURLBase,
+		AzureTelemetryPID:                    vlabses.KubernetesSpecConfig.AzureTelemetryPID,
+		KubernetesImageBase:                  vlabses.KubernetesSpecConfig.KubernetesImageBase,
+		TillerImageBase:                      vlabses.KubernetesSpecConfig.TillerImageBase,
+		ACIConnectorImageBase:                vlabses.KubernetesSpecConfig.ACIConnectorImageBase,
+		NVIDIAImageBase:                      vlabses.KubernetesSpecConfig.NVIDIAImageBase,
+		AzureCNIImageBase:                    vlabses.KubernetesSpecConfig.AzureCNIImageBase,
+		CalicoImageBase:                      vlabses.KubernetesSpecConfig.CalicoImageBase,
+		EtcdDownloadURLBase:                  vlabses.KubernetesSpecConfig.EtcdDownloadURLBase,
+		KubeBinariesSASURLBase:               vlabses.KubernetesSpecConfig.KubeBinariesSASURLBase,
+		WindowsTelemetryGUID:                 vlabses.KubernetesSpecConfig.WindowsTelemetryGUID,
+		CNIPluginsDownloadURL:                vlabses.KubernetesSpecConfig.CNIPluginsDownloadURL,
+		VnetCNILinuxPluginsDownloadURL:       vlabses.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
+		VnetCNIWindowsPluginsDownloadURL:     vlabses.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
+		ContainerdDownloadURLBase:            vlabses.KubernetesSpecConfig.ContainerdDownloadURLBase,
+		WindowsProvisioningScriptsPackageURL: vlabses.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 	}
 	api.OSImageConfig = map[Distro]AzureOSImageConfig{}
 	for k, v := range vlabses.OSImageConfig {
