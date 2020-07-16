@@ -374,6 +374,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 	}
 	masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
+	masterVars["enableHostsConfigAgent"] = cs.Properties.OrchestratorProfile.IsHostsConfigAgentEnabled()
 
 	if isHostedMaster {
 		masterVars["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"
