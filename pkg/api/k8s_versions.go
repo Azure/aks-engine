@@ -47,7 +47,7 @@ const (
 	csiAzureFileImageReference                        string = "k8s/csi/azurefile-csi:v0.6.0"
 	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.5.0"
 	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.5.0"
-	dashboardImageReference                           string = "mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.0"
+	dashboardImageReference                           string = "mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.3"
 	dashboardMetricsScraperImageReference             string = "mcr.microsoft.com/oss/kubernetes/metrics-scraper:v1.0.4"
 	kubeFlannelImageReference                         string = "quay.io/coreos/flannel:v0.8.0-amd64"
 	flannelInstallCNIImageReference                   string = "quay.io/coreos/flannel:v0.10.0-amd64"
@@ -80,7 +80,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.Hyperkube:                            "hyperkube-amd64",
 	},
 	common.KubernetesImageBaseTypeMCR: {
-		common.DashboardAddonName:                   "oss/kubernetes/dashboard:v2.0.1",
+		common.DashboardAddonName:                   "oss/kubernetes/dashboard:v2.0.3",
 		common.DashboardMetricsScraperContainerName: "oss/kubernetes/metrics-scraper:v1.0.4",
 		common.ExecHealthZComponentName:             "oss/kubernetes/exechealthz:1.2",
 		common.CoreDNSAddonName:                     "oss/kubernetes/coredns:1.6.9",
