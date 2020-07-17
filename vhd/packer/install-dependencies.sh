@@ -112,8 +112,7 @@ echo "  - img" >> ${VHD_LOGS_FILEPATH}
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
 DASHBOARD_VERSIONS="
-2.0.1
-2.0.0
+2.0.3
 "
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/dashboard:v${DASHBOARD_VERSION}"
