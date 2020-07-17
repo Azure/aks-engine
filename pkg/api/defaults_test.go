@@ -2712,7 +2712,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 		{
 			"aks-engine does not override WindowsPauseImageURL during create",
 			WindowsProfile{
-				WindowsPauseImageURL: "mcr.contoso.com/core/pause:",
+				WindowsPauseImageURL: "mcr.contoso.com/core/pause:1.2.3",
 			},
 			WindowsProfile{
 				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
@@ -2725,7 +2725,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsImageSourceURL:         "",
 				WindowsDockerVersion:          "",
 				SSHEnabled:                    &trueVar,
-				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
+				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:1.2.3",
 				AlwaysPullWindowsPauseImage:   &falseVar,
 			},
 			false,
@@ -2740,7 +2740,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    AKSWindowsServer2019OSImageConfig.ImageSku,
 				ImageVersion:                  AKSWindowsServer2019OSImageConfig.ImageVersion,
-				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
+				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:1.2.3",
 			},
 			WindowsProfile{
 				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
@@ -2753,7 +2753,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsImageSourceURL:         "",
 				WindowsDockerVersion:          "",
 				SSHEnabled:                    nil,
-				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
+				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:1.2.3",
 				AlwaysPullWindowsPauseImage:   &falseVar,
 			},
 			false,
