@@ -136,9 +136,9 @@ var (
 	//Ubuntu1804Gen2OSImageConfig is Gen2 flavor the Ubunutu 18.04-LTS Linux distribution.
 	Ubuntu1804Gen2OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-gen2-202006",
+		ImageSku:       "aks-ubuntu-1804-gen2-2020-q3",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.30",
+		ImageVersion:   "2020.07.16",
 	}
 
 	//RHELOSImageConfig is the RHEL Linux distribution.
@@ -160,35 +160,17 @@ var (
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-202006",
+		ImageSku:       "aks-ubuntu-1604-2020-q3",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.30",
+		ImageVersion:   "2020.07.16",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-202006",
+		ImageSku:       "aks-ubuntu-1804-2020-q3",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.30",
-	}
-
-	// AKSUbuntuGPU1804OSImageConfig is the AKS image with GPU drivers and device plugin based on Ubuntu 18.04-LTS.
-	// TODO: Update sku and version after GPU image is actually published
-	AKSUbuntuGPU1804OSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-gpu-1804-202006",
-		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.30",
-	}
-
-	// AKSUbuntuGPU1804Gen2OSImageConfig is the AKS gen2 image with GPU drivers and device plugin based on Ubuntu 18.04-LTS.
-	// TODO: Update sku and version after GPU image is actually published
-	AKSUbuntuGPU1804Gen2OSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-gpu-1804-gen2-202006",
-		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.30",
+		ImageVersion:   "2020.07.16",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
@@ -229,18 +211,16 @@ var (
 		},
 
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:               Ubuntu1604OSImageConfig,
-			Ubuntu1804:           Ubuntu1804OSImageConfig,
-			Ubuntu1804Gen2:       Ubuntu1804Gen2OSImageConfig,
-			RHEL:                 RHELOSImageConfig,
-			CoreOS:               CoreOSImageConfig,
-			AKSUbuntu1604:        AKSUbuntu1604OSImageConfig,
-			AKS1604Deprecated:    AKSUbuntu1604OSImageConfig, // for back-compat
-			AKSUbuntu1804:        AKSUbuntu1804OSImageConfig,
-			AKS1804Deprecated:    AKSUbuntu1804OSImageConfig, // for back-compat
-			ACC1604:              ACC1604OSImageConfig,
-			AKSUbuntuGPU1804:     AKSUbuntuGPU1804OSImageConfig,
-			AKSUbuntuGPU1804Gen2: AKSUbuntuGPU1804Gen2OSImageConfig,
+			Ubuntu:            Ubuntu1604OSImageConfig,
+			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
+			RHEL:              RHELOSImageConfig,
+			CoreOS:            CoreOSImageConfig,
+			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
+			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
+			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
+			ACC1604:           ACC1604OSImageConfig,
 		},
 	}
 
@@ -276,17 +256,15 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:               Ubuntu1604OSImageConfig,
-			Ubuntu1804:           Ubuntu1804OSImageConfig,
-			Ubuntu1804Gen2:       Ubuntu1804Gen2OSImageConfig,
-			RHEL:                 RHELOSImageConfig,
-			CoreOS:               CoreOSImageConfig,
-			AKSUbuntu1604:        AKSUbuntu1604OSImageConfig,
-			AKS1604Deprecated:    AKSUbuntu1604OSImageConfig, // for back-compat
-			AKSUbuntu1804:        AKSUbuntu1804OSImageConfig,
-			AKS1804Deprecated:    AKSUbuntu1804OSImageConfig, // for back-compat
-			AKSUbuntuGPU1804:     AKSUbuntuGPU1804OSImageConfig,
-			AKSUbuntuGPU1804Gen2: AKSUbuntuGPU1804Gen2OSImageConfig,
+			Ubuntu:            Ubuntu1604OSImageConfig,
+			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
+			RHEL:              RHELOSImageConfig,
+			CoreOS:            CoreOSImageConfig,
+			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
+			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
+			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
 		},
 	}
 
@@ -326,17 +304,15 @@ var (
 			ResourceManagerVMDNSSuffix: "cloudapp.chinacloudapi.cn",
 		},
 		OSImageConfig: map[Distro]AzureOSImageConfig{
-			Ubuntu:               Ubuntu1604OSImageConfig,
-			Ubuntu1804:           Ubuntu1804OSImageConfig,
-			Ubuntu1804Gen2:       Ubuntu1804Gen2OSImageConfig,
-			RHEL:                 RHELOSImageConfig,
-			CoreOS:               CoreOSImageConfig,
-			AKSUbuntu1604:        AKSUbuntu1604OSImageConfig,
-			AKS1604Deprecated:    AKSUbuntu1604OSImageConfig, // for back-compat
-			AKSUbuntu1804:        AKSUbuntu1804OSImageConfig,
-			AKS1804Deprecated:    AKSUbuntu1804OSImageConfig, // for back-compat
-			AKSUbuntuGPU1804:     AKSUbuntuGPU1804OSImageConfig,
-			AKSUbuntuGPU1804Gen2: AKSUbuntuGPU1804Gen2OSImageConfig,
+			Ubuntu:            Ubuntu1604OSImageConfig,
+			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
+			RHEL:              RHELOSImageConfig,
+			CoreOS:            CoreOSImageConfig,
+			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
+			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
+			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
+			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
 		},
 	}
 
