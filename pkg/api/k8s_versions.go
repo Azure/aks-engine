@@ -83,7 +83,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DashboardAddonName:                   "oss/kubernetes/dashboard:v2.0.3",
 		common.DashboardMetricsScraperContainerName: "oss/kubernetes/metrics-scraper:v1.0.4",
 		common.ExecHealthZComponentName:             "oss/kubernetes/exechealthz:1.2",
-		common.CoreDNSAddonName:                     "oss/kubernetes/coredns:1.6.9",
+		common.CoreDNSAddonName:                     "oss/kubernetes/coredns:1.7.0",
 		common.KubeDNSAddonName:                     "oss/kubernetes/k8s-dns-kube-dns:1.15.4",
 		common.DNSMasqComponentName:                 "oss/kubernetes/k8s-dns-dnsmasq-nanny:1.15.4",
 		common.DNSSidecarComponentName:              "oss/kubernetes/k8s-dns-sidecar:1.14.10",
