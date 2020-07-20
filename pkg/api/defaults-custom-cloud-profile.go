@@ -203,6 +203,8 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			azureCustomCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 			azureCustomCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = helpers.EnsureString(asccKubernetesSpecConfig.WindowsTelemetryGUID, azsKubernetesSpecConfig.WindowsTelemetryGUID)
 			azureCustomCloudSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, azsKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+			azureCustomCloudSpec.KubernetesSpecConfig.WindowsPauseImageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsPauseImageURL, azsKubernetesSpecConfig.WindowsPauseImageURL)
+			azureCustomCloudSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage = asccKubernetesSpecConfig.AlwaysPullWindowsPauseImage
 
 			//EndpointConfig
 			asccEndpointConfig := ascc.EndpointConfig

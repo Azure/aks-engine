@@ -348,6 +348,8 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 						ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
 						CSIProxyDownloadURL:                  "CSIProxyDownloadURL",
 						WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
+						WindowsPauseImageURL:                 "WindowsPauseImageURL",
+						AlwaysPullWindowsPauseImage:          true,
 					},
 					DCOSSpecConfig: vlabs.DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -439,6 +441,12 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 	}
 	if csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL != vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL {
 		t.Errorf("incorrect WindowsProvisioningScriptsPackageURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+	}
+	if csSpec.KubernetesSpecConfig.WindowsPauseImageURL != vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL {
+		t.Errorf("incorrect WindowsPauseImageURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL, csSpec.KubernetesSpecConfig.WindowsPauseImageURL)
+	}
+	if csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage != vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage {
+		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
 	}
 
 	//DockerSpecConfig

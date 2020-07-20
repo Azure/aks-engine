@@ -174,6 +174,8 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 						ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
 						CSIProxyDownloadURL:                  "CSIProxyDownloadURL",
 						WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
+						WindowsPauseImageURL:                 "WindowsPauseImageURL",
+						AlwaysPullWindowsPauseImage:          true,
 					},
 					DCOSSpecConfig: DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -260,7 +262,13 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 		t.Errorf("incorrect CSIProxyDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.CSIProxyDownloadURL, vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL)
 	}
 	if vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL != csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL {
-		t.Errorf("incorrect WindowsProvisioningScriptsPackageURL, expect: '%s', actual: '%x'", csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+		t.Errorf("incorrect WindowsProvisioningScriptsPackageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL != csSpec.KubernetesSpecConfig.WindowsPauseImageURL {
+		t.Errorf("incorrect WindowsPauseImageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsPauseImageURL, vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage != csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage {
+		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
 	}
 
 	//DockerSpecConfig

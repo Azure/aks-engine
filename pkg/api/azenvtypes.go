@@ -55,6 +55,8 @@ type KubernetesSpecConfig struct {
 	ContainerdDownloadURLBase            string `json:"containerdDownloadURLBase,omitempty"`
 	CSIProxyDownloadURL                  string `json:"csiProxyDownloadURL,omitempty"`
 	WindowsProvisioningScriptsPackageURL string `json:"windowsProvisioningScriptsPackageURL,omitempty"`
+	WindowsPauseImageURL                 string `json:"windowsPauseImageURL,omitempty"`
+	AlwaysPullWindowsPauseImage          bool   `json:"alwaysPullWindowsPauseImage,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint
@@ -103,6 +105,8 @@ var (
 		ContainerdDownloadURLBase:            "https://storage.googleapis.com/cri-containerd-release/",
 		CSIProxyDownloadURL:                  "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
 		WindowsProvisioningScriptsPackageURL: "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-" + DefaultWindowsProvisioningScriptsPackageVersion + ".zip",
+		WindowsPauseImageURL:                 "mcr.microsoft.com/oss/kubernetes/pause:" + WindowsPauseImageVersion,
+		AlwaysPullWindowsPauseImage:          DefaultAlwaysPullWindowsPauseImage,
 	}
 
 	//DefaultDCOSSpecConfig is the default DC/OS binary download URL.
@@ -301,6 +305,8 @@ var (
 			ContainerdDownloadURLBase:            "https://mirror.azk8s.cn/kubernetes/containerd/",
 			CSIProxyDownloadURL:                  "https://mirror.azk8s.cn/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
 			WindowsProvisioningScriptsPackageURL: "https://mirror.azk8s.cn/aks-engine/windows/provisioning/signedscripts-" + DefaultWindowsProvisioningScriptsPackageVersion + ".zip",
+			WindowsPauseImageURL:                 "mcr.microsoft.com/oss/kubernetes/pause:" + WindowsPauseImageVersion,
+			AlwaysPullWindowsPauseImage:          DefaultAlwaysPullWindowsPauseImage,
 		},
 		DCOSSpecConfig: DCOSSpecConfig{
 			DCOS188BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "5df43052907c021eeb5de145419a3da1898c58a5"),
