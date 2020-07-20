@@ -275,3 +275,8 @@ const (
 	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
 	clusterInitComponentDestinationFilename            string = "cluster-init.yaml"
 )
+
+const (
+	connectedClusterOnboardingSourceFilename      string = "arc-onboarding.yaml"
+	connectedClusterOnboardingDestinationFilename string = "arc-onboarding.yaml"
+)

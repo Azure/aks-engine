@@ -87,6 +87,7 @@ type Properties struct {
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 	TelemetryProfile        *TelemetryProfile        `json:"telemetryProfile,omitempty"`
+	ConnectedClusterProfile *ConnectedClusterProfile `json:"connectedClusterProfile,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
@@ -854,6 +855,17 @@ type CustomCloudProfile struct {
 // Note telemtry is currently enabled/disabled with the 'EnableTelemetry' feature flag.
 type TelemetryProfile struct {
 	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
+}
+
+// ConnectedClusterProfile represents the connected cluster profile (aka azure arc for kubernetes)
+type ConnectedClusterProfile struct {
+	Location       string `json:"location,omitempty"`
+	TenantID       string `json:"tenantID,omitempty"`
+	SubscriptionID string `json:"subscriptionID,omitempty"`
+	ResourceGroup  string `json:"resourceGroup,omitempty"`
+	ClusterName    string `json:"clusterName,omitempty"`
+	ClientID       string `json:"clientID,omitempty"`
+	ClientSecret   string `json:"clientSecret,omitempty"`
 }
 
 // HasFlatcar returns true if the cluster contains flatcar nodes
@@ -2409,6 +2421,11 @@ func (cs *ContainerService) IsAKSBillingEnabled() bool {
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
+}
+
+// IsConnectedCluster returns true if cluster should be connected to azure after deployment
+func (p *Properties) IsConnectedCluster() bool {
+	return p.ConnectedClusterProfile != nil
 }
 
 // ProvisionScriptParametersInput is the struct used to pass in Azure environment variables and secrets

@@ -176,6 +176,9 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateWindowsProfile(isUpdate); e != nil {
 		return e
 	}
+	if e := a.validateConnectedClusterProfile(); e != nil {
+		return e
+	}
 	return nil
 }
 
@@ -2044,6 +2047,33 @@ func (a *Properties) validateAzureStackSupport() error {
 			if pool.AvailabilityProfile != AvailabilitySet {
 				return errors.Errorf("agentPoolProfiles[%s].availabilityProfile should be set to '%s' on Azure Stack clouds", pool.Name, AvailabilitySet)
 			}
+		}
+	}
+	return nil
+}
+
+func (a *Properties) validateConnectedClusterProfile() error {
+	if a.OrchestratorProfile.OrchestratorType == Kubernetes && a.ConnectedClusterProfile != nil {
+		if a.ConnectedClusterProfile.Location == "" {
+			return errors.Errorf("connectedClusterProfile.location is required")
+		}
+		if a.ConnectedClusterProfile.TenantID == "" {
+			return errors.Errorf("connectedClusterProfile.tenantID is required")
+		}
+		if a.ConnectedClusterProfile.SubscriptionID == "" {
+			return errors.Errorf("connectedClusterProfile.subscriptionID is required")
+		}
+		if a.ConnectedClusterProfile.ResourceGroup == "" {
+			return errors.Errorf("connectedClusterProfile.resourceGroup is required")
+		}
+		if a.ConnectedClusterProfile.ClusterName == "" {
+			return errors.Errorf("connectedClusterProfile.clusterName is required")
+		}
+		if a.ConnectedClusterProfile.ClientID == "" {
+			return errors.Errorf("connectedClusterProfile.clientID is required")
+		}
+		if a.ConnectedClusterProfile.ClientSecret == "" {
+			return errors.Errorf("connectedClusterProfile.clientSecret is required")
 		}
 	}
 	return nil

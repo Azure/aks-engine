@@ -73,6 +73,10 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	properties.setTelemetryProfileDefaults()
 
+	if cs.Properties.ConnectedClusterProfile != nil {
+		cs.setConnectedClusterProfileDefaults()
+	}
+
 	certsGenerated, _, e := cs.SetDefaultCerts(DefaultCertParams{
 		PkiKeySize: params.PkiKeySize,
 	})
@@ -915,6 +919,25 @@ func (p *Properties) setTelemetryProfileDefaults() {
 	if len(p.TelemetryProfile.ApplicationInsightsKey) == 0 {
 		p.TelemetryProfile.ApplicationInsightsKey = ""
 	}
+}
+
+func (cs *ContainerService) setConnectedClusterProfileDefaults() {
+	p := cs.Properties
+	if p.ConnectedClusterProfile == nil {
+		p.ConnectedClusterProfile = &ConnectedClusterProfile{}
+	}
+	if p.ConnectedClusterProfile.Location == "" {
+		p.ConnectedClusterProfile.Location = cs.Location
+	}
+	if p.ConnectedClusterProfile.ClientID == "" {
+		p.ConnectedClusterProfile.ClientID = p.ServicePrincipalProfile.ClientID
+	}
+	if p.ConnectedClusterProfile.ClientSecret == "" {
+		p.ConnectedClusterProfile.ClientSecret = p.ServicePrincipalProfile.Secret
+	}
+	// p.ConnectedClusterProfile.ClusterName = default to resource group name?
+	// p.ConnectedClusterProfile.ResourceGroup = default to resource group name?
+	// p.ConnectedClusterProfile.SubscriptionID = default to subscription?
 }
 
 // DefaultCertParams is the params when we set the default certs.

@@ -51,6 +51,7 @@ type Properties struct {
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 	TelemetryProfile        *TelemetryProfile        `json:"telemetryProfile,omitempty"`
+	ConnectedClusterProfile *ConnectedClusterProfile `json:"connectedClusterProfile,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -615,6 +616,17 @@ type CustomCloudProfile struct {
 // Note telemtry is currently enabled/disabled with the 'EnableTelemetry' feature flag.
 type TelemetryProfile struct {
 	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
+}
+
+// ConnectedClusterProfile represents the connected cluster profile (aka azure arc for kubernetes)
+type ConnectedClusterProfile struct {
+	Location       string `json:"location,omitempty"`
+	TenantID       string `json:"tenantID,omitempty"`
+	SubscriptionID string `json:"subscriptionID,omitempty"`
+	ResourceGroup  string `json:"resourceGroup,omitempty"`
+	ClusterName    string `json:"clusterName,omitempty"`
+	ClientID       string `json:"clientID,omitempty"`
+	ClientSecret   string `json:"clientSecret,omitempty"`
 }
 
 // HasFlatcar returns true if the cluster contains Flatcar nodes

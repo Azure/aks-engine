@@ -191,6 +191,11 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 	if err != nil {
 		log.Fatalf("Could not read custom files: %s", err.Error())
 	}
+	ccoReader, err := connectedClusterOnboardingIntoReaders(profile)
+	if err != nil {
+		log.Fatalf("Error creating connected cluster onboarding manifest: %s", err.Error())
+	}
+	customFilesReader = append(customFilesReader, ccoReader...)
 	str = substituteConfigStringCustomFiles(str,
 		customFilesReader,
 		"MASTER_CUSTOM_FILES_PLACEHOLDER")
@@ -345,8 +350,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
 		"HasClusterInitComponent": func() bool {
-			_, enabled := cs.Properties.OrchestratorProfile.KubernetesConfig.IsComponentEnabled(common.ClusterInitComponentName)
-			return enabled
+			_, clusterInitEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.IsComponentEnabled(common.ClusterInitComponentName)
+			return clusterInitEnabled || cs.Properties.IsConnectedCluster()
 		},
 		"HasCosmosEtcd": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasCosmosEtcd()

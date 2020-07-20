@@ -67,6 +67,7 @@
 // ../../parts/k8s/addons/smb-flexvolume.yaml
 // ../../parts/k8s/addons/tiller.yaml
 // ../../parts/k8s/armparameters.t
+// ../../parts/k8s/cloud-init/arc-onboarding.yaml
 // ../../parts/k8s/cloud-init/artifacts/apt-preferences
 // ../../parts/k8s/cloud-init/artifacts/auditd-rules
 // ../../parts/k8s/cloud-init/artifacts/cis.sh
@@ -17779,6 +17780,115 @@ func k8sArmparametersT() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArcOnboardingYaml = []byte(`---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: azure-arc-onboarding
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+data:
+  TENANT_ID: "{{TenantID}}"
+  SUBSCRIPTION_ID: "{{SubscriptionID}}"
+  RESOURCE_GROUP: "{{ResourceGroup}}"
+  CONNECTED_CLUSTER: "{{ClusterName}}"
+  LOCATION: "{{Location}}"
+  CLIENT_ID: "{{ClientID}}"
+  CLIENT_SECRET: "{{ClientSecret}}"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: azure-arc-onboarding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: azure-arc-onboarding
+    namespace: azure-arc-onboarding
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+spec:
+  template:
+    spec:
+      serviceAccountName: azure-arc-onboarding
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
+      containers:
+      - name: azure-arc-onboarding
+        image: arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0
+        env:
+        - name: TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: TENANT_ID
+        - name: SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: SUBSCRIPTION_ID
+        - name: RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: RESOURCE_GROUP
+        - name: CONNECTED_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CONNECTED_CLUSTER
+        - name: LOCATION
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: LOCATION
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CLIENT_ID
+        - name: CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CLIENT_SECRET
+      restartPolicy: Never
+  backoffLimit: 4
+`)
+
+func k8sCloudInitArcOnboardingYamlBytes() ([]byte, error) {
+	return _k8sCloudInitArcOnboardingYaml, nil
+}
+
+func k8sCloudInitArcOnboardingYaml() (*asset, error) {
+	bytes, err := k8sCloudInitArcOnboardingYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/arc-onboarding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsAptPreferences = []byte(``)
 
 func k8sCloudInitArtifactsAptPreferencesBytes() ([]byte, error) {
@@ -19714,7 +19824,7 @@ if [[ -n ${MASTER_NODE} ]]; then
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
-    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/init || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
   fi
   {{end}}
 fi
@@ -28814,6 +28924,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/smb-flexvolume.yaml":                                     k8sAddonsSmbFlexvolumeYaml,
 	"k8s/addons/tiller.yaml":                                             k8sAddonsTillerYaml,
 	"k8s/armparameters.t":                                                k8sArmparametersT,
+	"k8s/cloud-init/arc-onboarding.yaml":                                 k8sCloudInitArcOnboardingYaml,
 	"k8s/cloud-init/artifacts/apt-preferences":                           k8sCloudInitArtifactsAptPreferences,
 	"k8s/cloud-init/artifacts/auditd-rules":                              k8sCloudInitArtifactsAuditdRules,
 	"k8s/cloud-init/artifacts/cis.sh":                                    k8sCloudInitArtifactsCisSh,
@@ -29010,6 +29121,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		}},
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{
+			"arc-onboarding.yaml": {k8sCloudInitArcOnboardingYaml, map[string]*bintree{}},
 			"artifacts": {nil, map[string]*bintree{
 				"apt-preferences":        {k8sCloudInitArtifactsAptPreferences, map[string]*bintree{}},
 				"auditd-rules":           {k8sCloudInitArtifactsAuditdRules, map[string]*bintree{}},

@@ -116,6 +116,11 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 		convertVLabsTelemetryProfile(vlabs.TelemetryProfile, api.TelemetryProfile)
 	}
 
+	if vlabs.ConnectedClusterProfile != nil {
+		api.ConnectedClusterProfile = &ConnectedClusterProfile{}
+		convertVLabsConnectedClusterProfile(vlabs.ConnectedClusterProfile, api.ConnectedClusterProfile)
+	}
+
 	return nil
 }
 
@@ -798,6 +803,16 @@ func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *Custom
 
 func convertVLabsTelemetryProfile(vlabs *vlabs.TelemetryProfile, api *TelemetryProfile) {
 	api.ApplicationInsightsKey = vlabs.ApplicationInsightsKey
+}
+
+func convertVLabsConnectedClusterProfile(vlabs *vlabs.ConnectedClusterProfile, api *ConnectedClusterProfile) {
+	api.TenantID = vlabs.TenantID
+	api.SubscriptionID = vlabs.SubscriptionID
+	api.ResourceGroup = vlabs.ResourceGroup
+	api.ClusterName = vlabs.ClusterName
+	api.ClientID = vlabs.ClientID
+	api.ClientSecret = vlabs.ClientSecret
+	api.Location = vlabs.Location
 }
 
 func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig, api *AzureEnvironmentSpecConfig) {

@@ -131,6 +131,10 @@ func convertPropertiesToVLabs(api *Properties, vlabsProps *vlabs.Properties) {
 		vlabsProps.TelemetryProfile = &vlabs.TelemetryProfile{}
 		convertTelemetryProfileToVLabs(api.TelemetryProfile, vlabsProps.TelemetryProfile)
 	}
+	if api.ConnectedClusterProfile != nil {
+		vlabsProps.ConnectedClusterProfile = &vlabs.ConnectedClusterProfile{}
+		convertConnectedClusterProfileToVLabs(api.ConnectedClusterProfile, vlabsProps.ConnectedClusterProfile)
+	}
 }
 
 func convertExtensionProfileToVLabs(api *ExtensionProfile, obj *vlabs.ExtensionProfile) {
@@ -721,6 +725,16 @@ func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomC
 
 func convertTelemetryProfileToVLabs(api *TelemetryProfile, vlabstp *vlabs.TelemetryProfile) {
 	vlabstp.ApplicationInsightsKey = api.ApplicationInsightsKey
+}
+
+func convertConnectedClusterProfileToVLabs(api *ConnectedClusterProfile, vlabstp *vlabs.ConnectedClusterProfile) {
+	vlabstp.TenantID = api.TenantID
+	vlabstp.SubscriptionID = api.SubscriptionID
+	vlabstp.ResourceGroup = api.ResourceGroup
+	vlabstp.ClusterName = api.ClusterName
+	vlabstp.ClientID = api.ClientID
+	vlabstp.ClientSecret = api.ClientSecret
+	vlabstp.Location = api.Location
 }
 
 func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, vlabses *vlabs.AzureEnvironmentSpecConfig) {

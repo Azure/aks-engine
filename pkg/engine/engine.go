@@ -886,6 +886,32 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 	}
 }
 
+func getConnectedClusterOnboardingFuncMap(ccp *api.ConnectedClusterProfile) template.FuncMap {
+	return template.FuncMap{
+		"Location": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(ccp.Location))
+		},
+		"TenantID": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(ccp.TenantID))
+		},
+		"SubscriptionID": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(ccp.SubscriptionID))
+		},
+		"ResourceGroup": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(ccp.ResourceGroup))
+		},
+		"ClusterName": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(ccp.ClusterName))
+		},
+		"ClientID": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(ccp.ClientID))
+		},
+		"ClientSecret": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(ccp.ClientSecret))
+		},
+	}
+}
+
 func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 	properties := cs.Properties
 	var result string
@@ -927,7 +953,7 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 				input = buffer.String()
 			}
 			if componentName == common.ClusterInitComponentName {
-				result += getComponentString(input, "/opt/azure/containers", setting.destinationFile)
+				result += getComponentString(input, "/opt/azure/containers/init", setting.destinationFile)
 			} else {
 				result += getComponentString(input, "/etc/kubernetes/manifests", setting.destinationFile)
 			}
