@@ -1152,6 +1152,52 @@ func TestConvertVLabsTelemetryProfile(t *testing.T) {
 	}
 }
 
+func TestConvertVLabsConnectedClusterProfile(t *testing.T) {
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{},
+	}
+
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Errorf("ConvertVLabsContainerService was not expected to return an error: %s", err)
+	}
+	if cs.Properties.ConnectedClusterProfile != nil {
+		t.Error("ConvertVLabsContainerService was not expected to set ConnectedClusterProfile")
+	}
+
+	vlabscs.Properties.ConnectedClusterProfile = &vlabs.ConnectedClusterProfile{
+		TenantID:       "TenantID",
+		SubscriptionID: "SubscriptionID",
+		ResourceGroup:  "ResourceGroup",
+		ClusterName:    "ClusterName",
+		ClientID:       "ClientID",
+		ClientSecret:   "ClientSecret",
+		Location:       "Location",
+	}
+
+	cs, err = ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Errorf("ConvertVLabsContainerService was not expected to return an error: %s", err)
+	}
+	if cs.Properties.ConnectedClusterProfile == nil {
+		t.Error("ConvertVLabsContainerService was expected to set ConnectedClusterProfile")
+	}
+
+	diff := cmp.Diff(cs.Properties.ConnectedClusterProfile, &ConnectedClusterProfile{
+		TenantID:       "TenantID",
+		SubscriptionID: "SubscriptionID",
+		ResourceGroup:  "ResourceGroup",
+		ClusterName:    "ClusterName",
+		ClientID:       "ClientID",
+		ClientSecret:   "ClientSecret",
+		Location:       "Location",
+	})
+
+	if diff != "" {
+		t.Errorf("unexpected diff testing convertConnectedClusterProfileToVLabs: %s", diff)
+	}
+}
+
 func TestConvertVlabsPlatformUpdateDomain(t *testing.T) {
 	vlabscs := &vlabs.ContainerService{
 		Properties: &vlabs.Properties{

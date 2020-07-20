@@ -3814,7 +3814,20 @@ func TestHasAadProfile(t *testing.T) {
 	if !p.HasAadProfile() {
 		t.Fatalf("Expected HasAadProfile() to return true")
 	}
+}
 
+func TestIsConnectedCluster(t *testing.T) {
+	p := Properties{}
+
+	if p.IsConnectedCluster() {
+		t.Fatalf("Expected HasIsConnectedCluster() to return false")
+	}
+
+	p.ConnectedClusterProfile = &ConnectedClusterProfile{}
+
+	if !p.IsConnectedCluster() {
+		t.Fatalf("Expected HasAadProfile() to return true")
+	}
 }
 
 func TestCustomHyperkubeImageField(t *testing.T) {

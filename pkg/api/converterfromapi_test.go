@@ -747,6 +747,44 @@ func TestConvertTelemetryProfileToVLabs(t *testing.T) {
 	}
 }
 
+func TestConvertConnectedClusterProfileToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS.Properties.ConnectedClusterProfile != nil {
+		t.Error("ConvertContainerServiceToVLabs was not expected to set ConnectedClusterProfile")
+	}
+
+	cs.Properties.ConnectedClusterProfile = &ConnectedClusterProfile{
+		TenantID:       "TenantID",
+		SubscriptionID: "SubscriptionID",
+		ResourceGroup:  "ResourceGroup",
+		ClusterName:    "ClusterName",
+		ClientID:       "ClientID",
+		ClientSecret:   "ClientSecret",
+		Location:       "Location",
+	}
+
+	vlabsCS = ConvertContainerServiceToVLabs(cs)
+	if vlabsCS.Properties.ConnectedClusterProfile == nil {
+		t.Error("ConvertContainerServiceToVLabs was expected to set ConnectedClusterProfile")
+	}
+
+	diff := cmp.Diff(vlabsCS.Properties.ConnectedClusterProfile, &vlabs.ConnectedClusterProfile{
+		TenantID:       "TenantID",
+		SubscriptionID: "SubscriptionID",
+		ResourceGroup:  "ResourceGroup",
+		ClusterName:    "ClusterName",
+		ClientID:       "ClientID",
+		ClientSecret:   "ClientSecret",
+		Location:       "Location",
+	})
+
+	if diff != "" {
+		t.Errorf("unexpected diff testing convertConnectedClusterProfileToVLabs: %s", diff)
+	}
+}
+
 func TestConvertWindowsProfileToVlabs(t *testing.T) {
 	falseVar := false
 
