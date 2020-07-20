@@ -158,20 +158,23 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
-						AzureTelemetryPID:                "AzureTelemetryPID",
-						KubernetesImageBase:              "KubernetesImageBase",
-						TillerImageBase:                  "TillerImageBase",
-						ACIConnectorImageBase:            "ACIConnectorImageBase",
-						NVIDIAImageBase:                  "NVIDIAImageBase",
-						AzureCNIImageBase:                "AzureCNIImageBase",
-						CalicoImageBase:                  "CalicoImageBase",
-						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
-						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
-						CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
-						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+						AzureTelemetryPID:                    "AzureTelemetryPID",
+						KubernetesImageBase:                  "KubernetesImageBase",
+						TillerImageBase:                      "TillerImageBase",
+						ACIConnectorImageBase:                "ACIConnectorImageBase",
+						NVIDIAImageBase:                      "NVIDIAImageBase",
+						AzureCNIImageBase:                    "AzureCNIImageBase",
+						CalicoImageBase:                      "CalicoImageBase",
+						EtcdDownloadURLBase:                  "EtcdDownloadURLBase",
+						KubeBinariesSASURLBase:               "KubeBinariesSASURLBase",
+						WindowsTelemetryGUID:                 "WindowsTelemetryGUID",
+						CNIPluginsDownloadURL:                "CNIPluginsDownloadURL",
+						VnetCNILinuxPluginsDownloadURL:       "VnetCNILinuxPluginsDownloadURL",
+						VnetCNIWindowsPluginsDownloadURL:     "VnetCNIWindowsPluginsDownloadURL",
+						ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
+						WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
+						WindowsPauseImageURL:                 "WindowsPauseImageURL",
+						AlwaysPullWindowsPauseImage:          true,
 					},
 					DCOSSpecConfig: DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -253,6 +256,15 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 	if vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase != csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase {
 		t.Errorf("incorrect ContainerdDownloadURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL != csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL {
+		t.Errorf("incorrect WindowsProvisioningScriptsPackageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL != csSpec.KubernetesSpecConfig.WindowsPauseImageURL {
+		t.Errorf("incorrect WindowsPauseImageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsPauseImageURL, vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage != csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage {
+		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
 	}
 
 	//DockerSpecConfig

@@ -743,6 +743,12 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
 			windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
 		}
+		if len(windowsProfile.WindowsPauseImageURL) == 0 {
+			windowsProfile.WindowsPauseImageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsPauseImageURL
+		}
+		if windowsProfile.AlwaysPullWindowsPauseImage == nil {
+			windowsProfile.AlwaysPullWindowsPauseImage = to.BoolPtr(cloudSpecConfig.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
+		}
 		if windowsProfile.SSHEnabled == nil {
 			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
 		}
@@ -795,6 +801,12 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		// Allow non-default values of windowsProfile.ProvisioningScriptsPackageURL to allow for custom clouds.
 		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
 			windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
+		}
+		if len(windowsProfile.WindowsPauseImageURL) == 0 {
+			windowsProfile.WindowsPauseImageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsPauseImageURL
+		}
+		if windowsProfile.AlwaysPullWindowsPauseImage == nil {
+			windowsProfile.AlwaysPullWindowsPauseImage = to.BoolPtr(cloudSpecConfig.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
 		}
 
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
