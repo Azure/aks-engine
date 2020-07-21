@@ -730,6 +730,63 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should be able to schedule a pod to a control plane node", func() {
+			By("Creating a Job with control plane nodeSelector")
+			for i := 1; i <= 3; i++ {
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, 3*time.Minute)
+				if err != nil {
+					fmt.Printf("unable to create job: %s\n", err)
+					continue
+				}
+				ready, err := j.WaitOnSucceeded(30*time.Second, 3*time.Minute)
+				if err != nil {
+					fmt.Printf("timed out waiting for pod success: %s\n", err)
+					continue
+				}
+				Expect(ready).To(Equal(true))
+				fmt.Printf("successfully scheduled a pod to the control plane in %d attempts\n", i)
+				break
+			}
+		})
+
+		It("should be able to schedule a pod to a Linux node", func() {
+			if eng.AnyAgentIsLinux() {
+				By("Creating a Job with agent nodeSelector")
+				for i := 1; i <= 3; i++ {
+					j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, 3*time.Minute)
+					if err != nil {
+						fmt.Printf("unable to create job: %s\n", err)
+						continue
+					}
+					ready, err := j.WaitOnSucceeded(30*time.Second, 3*time.Minute)
+					if err != nil {
+						fmt.Printf("timed out waiting for pod success: %s\n", err)
+						continue
+					}
+					Expect(ready).To(Equal(true))
+					fmt.Printf("successfully scheduled a pod to a Linux node in %d attempts\n", i)
+					break
+				}
+			} else {
+				Skip("agent nodeSelector test Job is currently Linux-only")
+			}
+		})
+
+		It("should be able to schedule a pod to a Windows node", func() {
+			if eng.HasWindowsAgents() {
+				windowsImages, err := eng.GetWindowsTestImages()
+				Expect(err).NotTo(HaveOccurred())
+				p, err := pod.RunWindowsWithRetry(windowsImages.ServerCore, "windows-schedule-test", "default", "powershell", true, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				succeeded, err := p.WaitOnSucceeded(10*time.Second, cfg.Timeout)
+				Expect(succeeded).To(Equal(true))
+				//err = pod.Delete(util.DefaultDeleteRetries)
+				//Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("no Windows nodes")
+			}
+		})
+
 		It("should have core kube-system addons running the correct version", func() {
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage == "" {
 				By(fmt.Sprintf("Ensuring that the %s addon image matches orchestrator version", common.KubeProxyAddonName))
@@ -865,48 +922,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Exposing TCP 80 internally on the php-apache deployment")
 			err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
 			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("should be able to schedule a pod to a control plane node", func() {
-			By("Creating a Job with control plane nodeSelector")
-			for i := 1; i <= 3; i++ {
-				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, 3*time.Minute)
-				if err != nil {
-					fmt.Printf("unable to create job: %s\n", err)
-					continue
-				}
-				ready, err := j.WaitOnSucceeded(30*time.Second, 3*time.Minute)
-				if err != nil {
-					fmt.Printf("timed out waiting for pod success: %s\n", err)
-					continue
-				}
-				Expect(ready).To(Equal(true))
-				fmt.Printf("successfully scheduled a pod to the control plane in %d attempts\n", i)
-				break
-			}
-		})
-
-		It("should be able to schedule a pod to a Linux node", func() {
-			if eng.AnyAgentIsLinux() {
-				By("Creating a Job with agent nodeSelector")
-				for i := 1; i <= 3; i++ {
-					j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, 3*time.Minute)
-					if err != nil {
-						fmt.Printf("unable to create job: %s\n", err)
-						continue
-					}
-					ready, err := j.WaitOnSucceeded(30*time.Second, 3*time.Minute)
-					if err != nil {
-						fmt.Printf("timed out waiting for pod success: %s\n", err)
-						continue
-					}
-					Expect(ready).To(Equal(true))
-					fmt.Printf("successfully scheduled a pod to a Linux node in %d attempts\n", i)
-					break
-				}
-			} else {
-				Skip("agent nodeSelector test Job is currently Linux-only")
-			}
 		})
 
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
