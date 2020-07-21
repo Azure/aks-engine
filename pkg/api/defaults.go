@@ -142,8 +142,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if isUpgrade {
-			if o.KubernetesConfig.KubernetesImageBase == cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase &&
-				o.KubernetesConfig.KubernetesImageBaseType == common.KubernetesImageBaseTypeGCR {
+			if (o.KubernetesConfig.KubernetesImageBase == "" || o.KubernetesConfig.KubernetesImageBase == cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase) &&
+				(o.KubernetesConfig.KubernetesImageBaseType == "" || o.KubernetesConfig.KubernetesImageBaseType == common.KubernetesImageBaseTypeGCR) {
 				o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
 				o.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
 			}
