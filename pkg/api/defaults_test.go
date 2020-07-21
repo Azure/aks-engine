@@ -1148,6 +1148,22 @@ func TestKubernetesImageBase(t *testing.T) {
 		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
 	}
 
+	// Upgrade scenario forces GCR to MCR - empty KubernetesImageBaseType
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = ""
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
 	// Upgrade scenario doesn't force user-customized GCR
 	mockCS = getMockBaseContainerService("1.17.4")
 	mockCS.Location = "westus2"
