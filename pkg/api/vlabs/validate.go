@@ -2054,26 +2054,30 @@ func (a *Properties) validateAzureStackSupport() error {
 
 func (a *Properties) validateConnectedClusterProfile() error {
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes && a.ConnectedClusterProfile != nil {
+		err := []string{}
 		if a.ConnectedClusterProfile.Location == "" {
-			return errors.Errorf("connectedClusterProfile.location is required")
+			err = append(err, fmt.Sprintf("connectedClusterProfile.location is required"))
 		}
 		if a.ConnectedClusterProfile.TenantID == "" {
-			return errors.Errorf("connectedClusterProfile.tenantID is required")
+			err = append(err, fmt.Sprintf("connectedClusterProfile.tenantID is required"))
 		}
 		if a.ConnectedClusterProfile.SubscriptionID == "" {
-			return errors.Errorf("connectedClusterProfile.subscriptionID is required")
+			err = append(err, fmt.Sprintf("connectedClusterProfile.subscriptionID is required"))
 		}
 		if a.ConnectedClusterProfile.ResourceGroup == "" {
-			return errors.Errorf("connectedClusterProfile.resourceGroup is required")
+			err = append(err, fmt.Sprintf("connectedClusterProfile.resourceGroup is required"))
 		}
 		if a.ConnectedClusterProfile.ClusterName == "" {
-			return errors.Errorf("connectedClusterProfile.clusterName is required")
+			err = append(err, fmt.Sprintf("connectedClusterProfile.clusterName is required"))
 		}
 		if a.ConnectedClusterProfile.ClientID == "" {
-			return errors.Errorf("connectedClusterProfile.clientID is required")
+			err = append(err, fmt.Sprintf("connectedClusterProfile.clientID is required"))
 		}
 		if a.ConnectedClusterProfile.ClientSecret == "" {
-			return errors.Errorf("connectedClusterProfile.clientSecret is required")
+			err = append(err, fmt.Sprintf("connectedClusterProfile.clientSecret is required"))
+		}
+		if len(err) > 0 {
+			return fmt.Errorf(strings.Join(err, "\n"))
 		}
 	}
 	return nil

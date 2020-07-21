@@ -5390,3 +5390,41 @@ func TestValidateContainerRuntimeConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateConnectedClusterProfile(t *testing.T) {
+	p := &Properties{
+		OrchestratorProfile:     &OrchestratorProfile{OrchestratorType: Kubernetes},
+		ConnectedClusterProfile: &ConnectedClusterProfile{},
+	}
+
+	t.Run("incomplete connected cluster profile", func(t *testing.T) {
+		err := p.validateConnectedClusterProfile()
+		expected := errors.New(`connectedClusterProfile.location is required
+connectedClusterProfile.tenantID is required
+connectedClusterProfile.subscriptionID is required
+connectedClusterProfile.resourceGroup is required
+connectedClusterProfile.clusterName is required
+connectedClusterProfile.clientID is required
+connectedClusterProfile.clientSecret is required`)
+		if !helpers.EqualError(err, expected) {
+			t.Errorf("expected error: %v, got: %v", expected, err)
+		}
+	})
+
+	p.ConnectedClusterProfile = &ConnectedClusterProfile{
+		TenantID:       "TenantID",
+		SubscriptionID: "SubscriptionID",
+		ResourceGroup:  "ResourceGroup",
+		ClusterName:    "ClusterName",
+		ClientID:       "ClientID",
+		ClientSecret:   "ClientSecret",
+		Location:       "Location",
+	}
+
+	t.Run("complete connected cluster profile", func(t *testing.T) {
+		err := p.validateConnectedClusterProfile()
+		if err != nil {
+			t.Errorf("error not expected, got: %v", err)
+		}
+	})
+}

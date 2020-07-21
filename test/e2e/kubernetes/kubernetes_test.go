@@ -2305,7 +2305,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 	})
 
-	Describe("after the cluster has been up for awhile", func() {
+	Describe("after the cluster has been up for a while", func() {
 		It("dns-liveness pod should not have any restarts", func() {
 			pod, err := pod.Get("dns-liveness", "default", podLookupRetries)
 			Expect(err).NotTo(HaveOccurred())
@@ -2570,10 +2570,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have arc agents running", func() {
 			if eng.IsConnectedCluster() {
-				By("Checking onboard job completes successfully")
-				ready, err := job.WaitOnSucceeded("azure-arc-onboarding", "azure-arc-onboarding", 30*time.Second, cfg.Timeout)
+				By("Checking the onboarding job succeeded")
+				succeeded, err := job.WaitOnSucceeded("azure-arc-onboarding", "azure-arc-onboarding", 30*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ready).To(Equal(true))
+				Expect(succeeded).To(Equal(true))
 
 				By("Checking ready status of each pod in namespace azure-arc")
 				pods, err := pod.GetAll("azure-arc")
