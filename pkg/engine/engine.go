@@ -953,7 +953,7 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 				input = buffer.String()
 			}
 			if componentName == common.ClusterInitComponentName {
-				result += getComponentString(input, "/opt/azure/containers/init", setting.destinationFile)
+				result += getComponentString(input, "/opt/azure/containers", setting.destinationFile)
 			} else {
 				result += getComponentString(input, "/etc/kubernetes/manifests", setting.destinationFile)
 			}
