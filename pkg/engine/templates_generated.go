@@ -19824,7 +19824,12 @@ if [[ -n ${MASTER_NODE} ]]; then
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
-    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/init || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+  fi
+  {{end}}
+  {{- if HasInitDirectory}}
+  if [[ $NODE_INDEX == 0 ]]; then
+    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/init || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_DIRECTORY_FAIL"}}
   fi
   {{end}}
 fi

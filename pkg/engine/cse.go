@@ -77,6 +77,7 @@ var cseErrorCodes = map[string]int{
 	"ERR_KUBERESERVED_SLICE_SETUP_FAIL":          181,
 	"ERR_KUBELET_SLICE_SETUP_FAIL":               182,
 	"ERR_CRI_SLICE_SETUP_FAIL":                   183,
+	"ERR_CLUSTER_INIT_DIRECTORY_FAIL":            184,
 }
 
 func GetCSEErrorCode(errorType string) int {

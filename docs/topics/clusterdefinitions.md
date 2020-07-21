@@ -1,7 +1,5 @@
 # Cluster Definitions
 
-
-
 ## Cluster Defintions for apiVersion "vlabs"
 
 Here are the cluster definitions for apiVersion "vlabs":
@@ -1022,3 +1020,18 @@ To use a pre-existing Azure Image specify `imageReference.name` and `imageRefere
 
 format for `keyvaultSecretRef.vaultId`, can be obtained in cli, or found in the portal:
 `/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.KeyVault/vaults/<KV_NAME>`. See [keyvault params](../../examples/keyvault-params/README.md#service-principal-profile) for an example.
+
+### connectedClusterProfile
+
+`connectedClusterProfile` provides the information required to attach the cluster to Azure Arc for Kubernetes.
+This process is only triggered as part of the cluster creation process.
+
+| Name             | Required | Description                                                                               |
+| ---------------- | -------- | ----------------------------------------------------------------------------------------- |
+| location         | yes      | Azure region where the `connectedCluster` Azure resource will be created                  |
+| subscriptionID   | yes      | Subscription ID where the `connectedCluster` Azure resource will be created               |
+| tenantID         | yes      | Tenant ID that owns the specified Subscription                                            |
+| resourceGroup    | yes      | Resource group name where the `connectedCluster` Azure resource will be created           |
+| clusterName      | yes      | Cluster friendly name                                                                     |
+| clientID         | yes      | Service principal ID with permissions to create resources in target subscription/group    |
+| clientSecret     | yes      | Service principal secret                                                                  |

@@ -54,14 +54,15 @@ type upgradeCmd struct {
 	disableClusterInitComponentDuringUpgrade bool
 
 	// derived
-	containerService    *api.ContainerService
-	apiVersion          string
-	client              armhelpers.AKSEngineClient
-	locale              *gotext.Locale
-	nameSuffix          string
-	agentPoolsToUpgrade map[string]bool
-	timeout             *time.Duration
-	cordonDrainTimeout  *time.Duration
+	containerService                 *api.ContainerService
+	apiVersion                       string
+	client                           armhelpers.AKSEngineClient
+	locale                           *gotext.Locale
+	nameSuffix                       string
+	agentPoolsToUpgrade              map[string]bool
+	timeout                          *time.Duration
+	cordonDrainTimeout               *time.Duration
+	connectedClusterProfileToRestore *api.ConnectedClusterProfile
 }
 
 func newUpgradeCmd() *cobra.Command {
@@ -174,6 +175,12 @@ func (uc *upgradeCmd) loadCluster() error {
 			uc.disableClusterInitComponentDuringUpgrade = true
 			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(false)
 		}
+	}
+
+	// Azure Arc for Kubernetes onboarding is a cluster create-only feature, temporarily remove if enabled
+	if uc.containerService.Properties.IsConnectedCluster() {
+		uc.connectedClusterProfileToRestore = uc.containerService.Properties.ConnectedClusterProfile
+		uc.containerService.Properties.ConnectedClusterProfile = nil
 	}
 
 	if uc.containerService.Properties.IsCustomCloudProfile() {
@@ -327,6 +334,8 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(true)
 		}
 	}
+	// Restore connectedClusterProfile, if it was removed during upgrade
+	uc.containerService.Properties.ConnectedClusterProfile = uc.connectedClusterProfileToRestore
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
 			Locale: uc.locale,
