@@ -763,41 +763,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
-			name: "connected cluster config",
-			cs: &api.ContainerService{
-				Properties: &api.Properties{
-					OrchestratorProfile: &api.OrchestratorProfile{
-						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.17.0-beta.1",
-						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime:        api.Docker,
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
-						},
-					},
-					AgentPoolProfiles: []*api.AgentPoolProfile{
-						{
-							Name:                "pool1",
-							Count:               1,
-							AvailabilityProfile: api.VirtualMachineScaleSets,
-						},
-					},
-					ConnectedClusterProfile: &api.ConnectedClusterProfile{},
-				},
-			},
-			expectedHasCustomSearchDomain:        false,
-			expectedGetSearchDomainName:          "",
-			expectedGetSearchDomainRealmUser:     "",
-			expectedGetSearchDomainRealmPassword: "",
-			expectedHasCustomNodesDNS:            false,
-			expectedGetHyperkubeImageReference:   "",
-			expectedGetTargetEnvironment:         "AzurePublicCloud",
-			expectedIsNSeriesSKU:                 false,
-			expectedIsDockerContainerRuntime:     true,
-			expectedGetSysctlDConfigKeyVals:      "",
-			expectedHasClusterInitComponent:      true,
-			expectedIsVirtualMachineScaleSets:    true,
-		},
-		{
 			name: "sysctl config",
 			cs: &api.ContainerService{
 				Properties: &api.Properties{
