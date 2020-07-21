@@ -424,6 +424,11 @@ func (e *Engine) HasNetworkPlugin(name string) bool {
 	return strings.Contains(e.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, name)
 }
 
+// IsConnectedCluster returns true if cluster should be connected to azure after deployment
+func (e *Engine) IsConnectedCluster() bool {
+	return e.ExpandedDefinition.Properties.IsConnectedCluster()
+}
+
 // Write will write the cluster definition to disk
 func (e *Engine) Write() error {
 	json, err := helpers.JSONMarshal(e.ClusterDefinition, false)

@@ -2469,6 +2469,70 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 	}
 }
 
+func TestGetConnectedClusterFuncMap(t *testing.T) {
+	ccp := &api.ConnectedClusterProfile{
+		TenantID:       "TenantID",
+		SubscriptionID: "SubscriptionID",
+		ResourceGroup:  "ResourceGroup",
+		ClusterName:    "ClusterName",
+		ClientID:       "ClientID",
+		ClientSecret:   "ClientSecret",
+		Location:       "Location",
+	}
+	expected := &api.ConnectedClusterProfile{
+		TenantID:       "VGVuYW50SUQ=",
+		Location:       "TG9jYXRpb24=",
+		SubscriptionID: "U3Vic2NyaXB0aW9uSUQ=",
+		ResourceGroup:  "UmVzb3VyY2VHcm91cA==",
+		ClusterName:    "Q2x1c3Rlck5hbWU=",
+		ClientID:       "Q2xpZW50SUQ=",
+		ClientSecret:   "Q2xpZW50U2VjcmV0",
+	}
+	funcMap := getConnectedClusterOnboardingFuncMap(ccp)
+
+	v := reflect.ValueOf(funcMap["TenantID"])
+	ret := v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected.TenantID {
+		t.Errorf("TenantID %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["Location"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected.Location {
+		t.Errorf("Location %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["SubscriptionID"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected.SubscriptionID {
+		t.Errorf("SubscriptionID %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ResourceGroup"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected.ResourceGroup {
+		t.Errorf("ResourceGroup %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ClusterName"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected.ClusterName {
+		t.Errorf("ClusterName %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ClientID"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected.ClientID {
+		t.Errorf("ClientID %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ClientSecret"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected.ClientSecret {
+		t.Errorf("ClientSecret %s", ret[0].Interface())
+	}
+}
+
 func TestGetAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})

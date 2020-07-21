@@ -2567,5 +2567,27 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			}
 		})
+
+		It("should have arc agents running", func() {
+			if eng.IsConnectedCluster() {
+				By("Checking onboard job completes successfully")
+				ready, err := job.WaitOnSucceeded("azure-arc-onboarding", "azure-arc-onboarding", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+
+				By("Checking ready status of each pod in namespace azure-arc")
+				pods, err := pod.GetAll("azure-arc")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Pods)).ToNot(BeZero())
+				for _, currentPod := range pods.Pods {
+					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
+					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+					tooManyRestarts := 5
+					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
+				}
+			} else {
+				Skip("Onboarding connected cluster was not requested")
+			}
+		})
 	})
 })
