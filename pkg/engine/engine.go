@@ -886,6 +886,32 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 	}
 }
 
+func getArcAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
+	return template.FuncMap{
+		"Location": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config["location"]))
+		},
+		"TenantID": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config["tenantID"]))
+		},
+		"SubscriptionID": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config["subscriptionID"]))
+		},
+		"ResourceGroup": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config["resourceGroup"]))
+		},
+		"ClusterName": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config["clusterName"]))
+		},
+		"ClientID": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config["clientID"]))
+		},
+		"ClientSecret": func() string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config["clientSecret"]))
+		},
+	}
+}
+
 func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 	properties := cs.Properties
 	var result string
@@ -967,6 +993,8 @@ func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 				switch addonName {
 				case "cluster-autoscaler":
 					templ = template.New("addon resolver template").Funcs(getClusterAutoscalerAddonFuncMap(addon, cs))
+				case "arc":
+					templ = template.New("addon resolver template").Funcs(getArcAddonFuncMap(addon))
 				default:
 					templ = template.New("addon resolver template").Funcs(getAddonFuncMap(addon, cs))
 				}

@@ -286,6 +286,8 @@ const (
 	CSISecretsStoreDriverContainerName = "secrets-store"
 	// CSISecretsStoreProviderAzureContainerName is the name of the provider-azure-installer container in csi-secrets-store addon
 	CSISecretsStoreProviderAzureContainerName = "provider-azure-installer"
+	// ArcAddonName is the name of the arc addon
+	ArcAddonName = "arc"
 )
 
 // Component name consts

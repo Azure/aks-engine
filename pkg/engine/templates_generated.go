@@ -37,6 +37,7 @@
 // ../../parts/k8s/addons/aad-pod-identity.yaml
 // ../../parts/k8s/addons/aci-connector.yaml
 // ../../parts/k8s/addons/antrea.yaml
+// ../../parts/k8s/addons/arc-onboarding.yaml
 // ../../parts/k8s/addons/audit-policy.yaml
 // ../../parts/k8s/addons/azure-cloud-provider.yaml
 // ../../parts/k8s/addons/azure-cni-networkmonitor.yaml
@@ -8412,6 +8413,125 @@ func k8sAddonsAntreaYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/antrea.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsArcOnboardingYaml = []byte(`---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  TENANT_ID: "{{TenantID}}"
+  SUBSCRIPTION_ID: "{{SubscriptionID}}"
+  RESOURCE_GROUP: "{{ResourceGroup}}"
+  CONNECTED_CLUSTER: "{{ClusterName}}"
+  LOCATION: "{{Location}}"
+  CLIENT_ID: "{{ClientID}}"
+  CLIENT_SECRET: "{{ClientSecret}}"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: azure-arc-onboarding
+    namespace: azure-arc-onboarding
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+spec:
+  template:
+    spec:
+      serviceAccountName: azure-arc-onboarding
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
+      containers:
+      - name: azure-arc-onboarding
+        image: arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0
+        env:
+        - name: TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: TENANT_ID
+        - name: SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: SUBSCRIPTION_ID
+        - name: RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: RESOURCE_GROUP
+        - name: CONNECTED_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CONNECTED_CLUSTER
+        - name: LOCATION
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: LOCATION
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CLIENT_ID
+        - name: CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CLIENT_SECRET
+      restartPolicy: Never
+  backoffLimit: 4
+`)
+
+func k8sAddonsArcOnboardingYamlBytes() ([]byte, error) {
+	return _k8sAddonsArcOnboardingYaml, nil
+}
+
+func k8sAddonsArcOnboardingYaml() (*asset, error) {
+	bytes, err := k8sAddonsArcOnboardingYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/arc-onboarding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -28789,6 +28909,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/aad-pod-identity.yaml":                                   k8sAddonsAadPodIdentityYaml,
 	"k8s/addons/aci-connector.yaml":                                      k8sAddonsAciConnectorYaml,
 	"k8s/addons/antrea.yaml":                                             k8sAddonsAntreaYaml,
+	"k8s/addons/arc-onboarding.yaml":                                     k8sAddonsArcOnboardingYaml,
 	"k8s/addons/audit-policy.yaml":                                       k8sAddonsAuditPolicyYaml,
 	"k8s/addons/azure-cloud-provider.yaml":                               k8sAddonsAzureCloudProviderYaml,
 	"k8s/addons/azure-cni-networkmonitor.yaml":                           k8sAddonsAzureCniNetworkmonitorYaml,
@@ -28983,6 +29104,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"aad-pod-identity.yaml":                 {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
 			"aci-connector.yaml":                    {k8sAddonsAciConnectorYaml, map[string]*bintree{}},
 			"antrea.yaml":                           {k8sAddonsAntreaYaml, map[string]*bintree{}},
+			"arc-onboarding.yaml":                   {k8sAddonsArcOnboardingYaml, map[string]*bintree{}},
 			"audit-policy.yaml":                     {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
 			"azure-cloud-provider.yaml":             {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
 			"azure-cni-networkmonitor.yaml":         {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},

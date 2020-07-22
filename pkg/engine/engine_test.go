@@ -2469,6 +2469,74 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 	}
 }
 
+func TestGetArcAddonFuncMap(t *testing.T) {
+	addon := api.KubernetesAddon{
+		Name:    common.ClusterAutoscalerAddonName,
+		Enabled: to.BoolPtr(true),
+		Config: map[string]string{
+			"location":       "location",
+			"tenantID":       "tenantID",
+			"subscriptionID": "subscriptionID",
+			"resourceGroup":  "resourceGroup",
+			"clusterName":    "clusterName",
+			"clientID":       "clientID",
+			"clientSecret":   "clientSecret",
+		},
+	}
+	expected := map[string]string{
+		"location":       "bG9jYXRpb24=",
+		"tenantID":       "dGVuYW50SUQ=",
+		"subscriptionID": "c3Vic2NyaXB0aW9uSUQ=",
+		"resourceGroup":  "cmVzb3VyY2VHcm91cA==",
+		"clusterName":    "Y2x1c3Rlck5hbWU=",
+		"clientID":       "Y2xpZW50SUQ=",
+		"clientSecret":   "Y2xpZW50U2VjcmV0",
+	}
+	funcMap := getArcAddonFuncMap(addon)
+
+	v := reflect.ValueOf(funcMap["TenantID"])
+	ret := v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected["tenantID"] {
+		t.Errorf("TenantID %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["Location"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected["location"] {
+		t.Errorf("Location %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["SubscriptionID"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected["subscriptionID"] {
+		t.Errorf("SubscriptionID %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ResourceGroup"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected["resourceGroup"] {
+		t.Errorf("ResourceGroup %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ClusterName"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected["clusterName"] {
+		t.Errorf("ClusterName %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ClientID"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected["clientID"] {
+		t.Errorf("ClientID %s", ret[0].Interface())
+	}
+
+	v = reflect.ValueOf(funcMap["ClientSecret"])
+	ret = v.Call([]reflect.Value{})
+	if ret[0].Interface() != expected["clientSecret"] {
+		t.Errorf("ClientSecret %s", ret[0].Interface())
+	}
+}
+
 func TestGetAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})

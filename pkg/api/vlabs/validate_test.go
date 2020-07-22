@@ -5390,3 +5390,31 @@ func TestValidateContainerRuntimeConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateConnectedClusterProfile(t *testing.T) {
+	addon := &KubernetesAddon{}
+
+	t.Run("incomplete connected cluster profile", func(t *testing.T) {
+		err := addon.validateArcAddonConfig()
+		expected := errors.New("arc addon configuration must have a 'location' property; arc addon configuration must have a 'tenantID' property; arc addon configuration must have a 'subscriptionID' property; arc addon configuration must have a 'resourceGroup' property; arc addon configuration must have a 'clusterName' property; arc addon configuration must have a 'clientID' property; arc addon configuration must have a 'clientSecret' property")
+		if !helpers.EqualError(err, expected) {
+			t.Errorf("expected error: %v, got: %v", expected, err)
+		}
+	})
+
+	addon.Config = make(map[string]string)
+	addon.Config["location"] = "location"
+	addon.Config["tenantID"] = "tenantID"
+	addon.Config["subscriptionID"] = "subscriptionID"
+	addon.Config["resourceGroup"] = "resourceGroup"
+	addon.Config["clusterName"] = "clusterName"
+	addon.Config["clientID"] = "clientID"
+	addon.Config["clientSecret"] = "clientSecret"
+
+	t.Run("complete connected cluster profile", func(t *testing.T) {
+		err := addon.validateArcAddonConfig()
+		if err != nil {
+			t.Errorf("error not expected, got: %v", err)
+		}
+	})
+}

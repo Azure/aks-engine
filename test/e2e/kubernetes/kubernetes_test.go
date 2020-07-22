@@ -2320,7 +2320,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 	})
 
-	Describe("after the cluster has been up for awhile", func() {
+	Describe("after the cluster has been up for a while", func() {
 		It("dns-liveness pod should not have any restarts", func() {
 			pod, err := pod.Get("dns-liveness", "default", podLookupRetries)
 			Expect(err).NotTo(HaveOccurred())
@@ -2580,6 +2580,28 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(labels).To(HaveKeyWithValue("beta.kubernetes.io/instance-type", instanceType))
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/instance-type", instanceType))
 				}
+			}
+		})
+
+		It("should have arc agents running", func() {
+			if hasArc, _ := eng.HasAddon("arc"); hasArc {
+				By("Checking the onboarding job succeeded")
+				succeeded, err := job.WaitOnSucceeded("azure-arc-onboarding", "azure-arc-onboarding", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(succeeded).To(Equal(true))
+
+				By("Checking ready status of each pod in namespace azure-arc")
+				pods, err := pod.GetAll("azure-arc")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Pods)).ToNot(BeZero())
+				for _, currentPod := range pods.Pods {
+					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
+					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+					tooManyRestarts := 5
+					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
+				}
+			} else {
+				Skip("Onboarding connected cluster was not requested")
 			}
 		})
 	})

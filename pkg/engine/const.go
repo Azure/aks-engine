@@ -259,6 +259,8 @@ const (
 	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
 	secretsStoreCSIDriverAddonSourceFileName       string = "secrets-store-csi-driver.yaml"
 	secretsStoreCSIDriverAddonDestinationFileName  string = "secrets-store-csi-driver.yaml"
+	connectedClusterAddonSourceFilename            string = "arc-onboarding.yaml"
+	connectedClusterAddonDestinationFilename       string = "arc-onboarding.yaml"
 )
 
 // components source and destination file references

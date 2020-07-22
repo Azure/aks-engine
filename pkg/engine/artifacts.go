@@ -235,6 +235,11 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.SecretsStoreCSIDriverAddonName),
 			destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 		},
+		common.ArcAddonName: {
+			sourceFile:      connectedClusterAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.ArcAddonName),
+			destinationFile: connectedClusterAddonDestinationFilename,
+		},
 	}
 }
 
