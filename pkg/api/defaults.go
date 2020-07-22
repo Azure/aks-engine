@@ -792,9 +792,10 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 			}
 		}
 	} else if isUpgrade {
-		// Always set windowsProfile.ProvisioningScriptsPackerURL to the default value during upgrade.
-		// The contents on this package must stay in sync with other powershell code in /parts/k8s and the best way to ensure that is to update the value here.
-		windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
+		// Allow non-default values of windowsProfile.ProvisioningScriptsPackageURL to allow for custom clouds.
+		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
+			windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
+		}
 
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
 		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
