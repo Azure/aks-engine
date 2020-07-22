@@ -107,10 +107,15 @@ var _ = BeforeSuite(func() {
 		deploymentReplicasCount += profile.Count
 	}
 
+	var getNodeByRegexError error
+	masterNodes, getNodeByRegexError = node.GetByRegexWithRetry(fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix), 3*time.Minute, cfg.Timeout)
+	Expect(getNodeByRegexError).NotTo(HaveOccurred())
+	var getKubeConfigError error
+	kubeConfig, getKubeConfigError = GetConfigWithRetry(3*time.Second, cfg.Timeout)
+	Expect(getKubeConfigError).NotTo(HaveOccurred())
+
 	if !cfg.BlockSSHPort {
 		var err error
-		masterNodes, err = node.GetByRegexWithRetry(fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix), 3*time.Minute, cfg.Timeout)
-		Expect(err).NotTo(HaveOccurred())
 		masterName := masterNodes[0].Metadata.Name
 		if strings.Contains(masterName, "vmss") {
 			masterSSHPort = "50001"
@@ -118,8 +123,6 @@ var _ = BeforeSuite(func() {
 			masterSSHPort = "22"
 		}
 		masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
-		kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
-		Expect(err).NotTo(HaveOccurred())
 		sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 		success := false
