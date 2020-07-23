@@ -181,6 +181,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	}
 
 	// Agent parameters
+	isSetVnetCidrs := false
 	for _, agentProfile := range properties.AgentPoolProfiles {
 		addValue(parametersMap, fmt.Sprintf("%sCount", agentProfile.Name), agentProfile.Count)
 		addValue(parametersMap, fmt.Sprintf("%sVMSize", agentProfile.Name), agentProfile.VMSize)
@@ -212,6 +213,15 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			addValue(parametersMap, fmt.Sprintf("%sosImageSKU", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImageSku)
 			addValue(parametersMap, fmt.Sprintf("%sosImagePublisher", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImagePublisher)
 			addValue(parametersMap, fmt.Sprintf("%sosImageVersion", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImageVersion)
+		}
+
+		if !isSetVnetCidrs && properties.HostedMasterProfile != nil && len(agentProfile.VnetCidrs) != 0 {
+			// For AKS (properties.HostedMasterProfile != nil), set vnetCidr if a custom vnet is used so the address space can be
+			// added into the ExceptionList of Windows nodes. Otherwise, the default value `10.0.0.0/8` will
+			// be added into the ExceptionList and it does not work if users use other ip address ranges.
+			// All agent pools in the same cluster share a same VnetCidrs so we only need to set the first non-empty VnetCidrs.
+			addValue(parametersMap, "vnetCidr", agentProfile.VnetCidrs[0])
+			isSetVnetCidrs = true
 		}
 	}
 
