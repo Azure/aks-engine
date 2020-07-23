@@ -5396,7 +5396,7 @@ func TestValidateConnectedClusterProfile(t *testing.T) {
 
 	t.Run("incomplete connected cluster profile", func(t *testing.T) {
 		err := addon.validateArcAddonConfig()
-		expected := errors.New("arc addon configuration must have a 'location' property; arc addon configuration must have a 'tenantID' property; arc addon configuration must have a 'subscriptionID' property; arc addon configuration must have a 'resourceGroup' property; arc addon configuration must have a 'clusterName' property; arc addon configuration must have a 'clientID' property; arc addon configuration must have a 'clientSecret' property")
+		expected := errors.New("azure-arc-onboarding addon configuration must have a 'location' property; azure-arc-onboarding addon configuration must have a 'tenantID' property; azure-arc-onboarding addon configuration must have a 'subscriptionID' property; azure-arc-onboarding addon configuration must have a 'resourceGroup' property; azure-arc-onboarding addon configuration must have a 'clusterName' property; azure-arc-onboarding addon configuration must have a 'clientID' property; azure-arc-onboarding addon configuration must have a 'clientSecret' property")
 		if !helpers.EqualError(err, expected) {
 			t.Errorf("expected error: %v, got: %v", expected, err)
 		}

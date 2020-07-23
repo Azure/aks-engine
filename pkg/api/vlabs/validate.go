@@ -851,7 +851,7 @@ func (a *Properties) validateAddons() error {
 					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						return errors.Errorf("%s add-on can only be used in 1.16+", addon.Name)
 					}
-				case "arc":
+				case "azure-arc-onboarding":
 					if err := addon.validateArcAddonConfig(); err != nil {
 						return err
 					}
@@ -2059,25 +2059,25 @@ func (a *KubernetesAddon) validateArcAddonConfig() error {
 	}
 	err := []string{}
 	if a.Config["location"] == "" {
-		err = append(err, "arc addon configuration must have a 'location' property")
+		err = append(err, "azure-arc-onboarding addon configuration must have a 'location' property")
 	}
 	if a.Config["tenantID"] == "" {
-		err = append(err, "arc addon configuration must have a 'tenantID' property")
+		err = append(err, "azure-arc-onboarding addon configuration must have a 'tenantID' property")
 	}
 	if a.Config["subscriptionID"] == "" {
-		err = append(err, "arc addon configuration must have a 'subscriptionID' property")
+		err = append(err, "azure-arc-onboarding addon configuration must have a 'subscriptionID' property")
 	}
 	if a.Config["resourceGroup"] == "" {
-		err = append(err, "arc addon configuration must have a 'resourceGroup' property")
+		err = append(err, "azure-arc-onboarding addon configuration must have a 'resourceGroup' property")
 	}
 	if a.Config["clusterName"] == "" {
-		err = append(err, "arc addon configuration must have a 'clusterName' property")
+		err = append(err, "azure-arc-onboarding addon configuration must have a 'clusterName' property")
 	}
 	if a.Config["clientID"] == "" {
-		err = append(err, "arc addon configuration must have a 'clientID' property")
+		err = append(err, "azure-arc-onboarding addon configuration must have a 'clientID' property")
 	}
 	if a.Config["clientSecret"] == "" {
-		err = append(err, "arc addon configuration must have a 'clientSecret' property")
+		err = append(err, "azure-arc-onboarding addon configuration must have a 'clientSecret' property")
 	}
 	if len(err) > 0 {
 		return fmt.Errorf(strings.Join(err, "; "))

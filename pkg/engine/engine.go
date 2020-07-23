@@ -993,7 +993,7 @@ func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 				switch addonName {
 				case "cluster-autoscaler":
 					templ = template.New("addon resolver template").Funcs(getClusterAutoscalerAddonFuncMap(addon, cs))
-				case "arc":
+				case "azure-arc-onboarding":
 					templ = template.New("addon resolver template").Funcs(getArcAddonFuncMap(addon))
 				default:
 					templ = template.New("addon resolver template").Funcs(getAddonFuncMap(addon, cs))

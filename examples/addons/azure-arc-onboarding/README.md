@@ -4,13 +4,13 @@ You can attach and configure Kubernetes clusters by using [Azure Arc for Kuberne
 When a Kubernetes cluster is attached to Azure Arc, it will appear in the Azure portal. It will have an Azure Resource Manager ID and a managed identity.
 Clusters are attached to standard Azure subscriptions, are located in a resource group, and can receive tags just like any other Azure resource.
 
-To connect a Kubernetes cluster to Azure, the cluster administrator needs to deploy agents. These agents run in a Kubernetes namespace named azure-arc and are standard Kubernetes deployments. The agents are responsible for connectivity to Azure, collecting Azure Arc logs and metrics, and watching for configuration requests.
+To connect a Kubernetes cluster to Azure, the cluster administrator needs to deploy agents. These agents run in a Kubernetes namespace named `azure-arc` and are standard Kubernetes deployments. The agents are responsible for connectivity to Azure, collecting Azure Arc logs and metrics, and watching for configuration requests.
 
-You can deploy the Azure Arc agents either as part of the cluster creation process (by including the `arc` addon spec in your input `apimodel.json`) or manually using [azure-cli](https://docs.microsoft.com/en-us/azure/azure-arc/kubernetes/connect-cluster).
+You can deploy the Azure Arc agents either as part of the cluster creation process (by including the `azure-arc-onboarding` addon spec in your input `apimodel.json`) or manually using [azure-cli](https://docs.microsoft.com/en-us/azure/azure-arc/kubernetes/connect-cluster).
 
 ## Azure Arc for Kubernetes Addon
 
-The `arc` addon creates a Kubernetes job (in namespace `azure-arc-onboarding`) in charge of deploying the Azure Arc agents.
+The `azure-arc-onboarding` addon creates a Kubernetes job (in namespace `azure-arc-onboarding`) in charge of deploying the Azure Arc agents.
 The following information is required in order to successfully onboard the new cluster.
 
 | Name             | Required | Description                                                                            |
@@ -27,7 +27,7 @@ Example:
 
 ```json
 {
-    "name": "arc",
+    "name": "azure-arc-onboarding",
     "enabled": true,
     "config": {
         "tenantID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
@@ -77,7 +77,7 @@ as `addon-manager` will re-create the resources in namespace `azure-arc-onboardi
 
 ### Addon Reconfiguration
 
-There are two different ways to reconfigure the `arc` addon the cluster is deployed.
+There are two different ways to reconfigure the `azure-arc-onboarding` addon the cluster is deployed.
 
 The safer and recommended approach is to update, on every control plane node,
 the secret resource declared in the addon manifest (`/etc/kubernetes/addons/arc-onboarding.yaml`)

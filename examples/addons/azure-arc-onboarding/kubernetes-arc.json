@@ -7,7 +7,7 @@
         "useManagedIdentity": true,
         "addons": [
           {
-            "name": "arc",
+            "name": "azure-arc-onboarding",
             "enabled": true,
             "config": {
               "tenantID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
