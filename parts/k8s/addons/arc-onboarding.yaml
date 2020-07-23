@@ -14,13 +14,13 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
-  TENANT_ID: "{{TenantID}}"
-  SUBSCRIPTION_ID: "{{SubscriptionID}}"
-  RESOURCE_GROUP: "{{ResourceGroup}}"
-  CONNECTED_CLUSTER: "{{ClusterName}}"
-  LOCATION: "{{Location}}"
-  CLIENT_ID: "{{ClientID}}"
-  CLIENT_SECRET: "{{ClientSecret}}"
+  TENANT_ID: {{ContainerConfigBase64 "tenantID"}}
+  SUBSCRIPTION_ID: {{ContainerConfigBase64 "subscriptionID"}}
+  RESOURCE_GROUP: {{ContainerConfigBase64 "resourceGroup"}}
+  CONNECTED_CLUSTER: {{ContainerConfigBase64 "clusterName"}}
+  LOCATION: {{ContainerConfigBase64 "location"}}
+  CLIENT_ID: {{ContainerConfigBase64 "clientID"}}
+  CLIENT_SECRET: {{ContainerConfigBase64 "clientSecret"}}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -61,7 +61,7 @@ spec:
         kubernetes.io/os: linux
       containers:
       - name: azure-arc-onboarding
-        image: arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0
+        image: {{ContainerImage "azure-arc-onboarding"}}
         env:
         - name: TENANT_ID
           valueFrom:
