@@ -1,41 +1,44 @@
 {
-    "apiVersion": "vlabs",
-    "properties": {
-      "orchestratorProfile": {
-        "orchestratorType": "Kubernetes",
-        "orchestratorRelease": "1.15",
-        "kubernetesConfig": {
-          "apiServerConfig": {
-            "--admission-control": "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,DenyEscalatingExec,AlwaysPullImages"
-          }
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes",
+      "orchestratorRelease": "1.17",
+      "kubernetesConfig": {
+        "apiServerConfig": {
+          "--feature-gates": "TokenRequestProjection=true",
+          "--service-account-api-audiences": "api,istio-ca",
+          "--service-account-issuer": "kubernetes.default.svc",
+          "--service-account-signing-key-file": "/etc/kubernetes/certs/apiserver.key"
         }
-      },
-      "masterProfile": {
-        "count": 1,
-        "dnsPrefix": "",
-        "vmSize": "Standard_DS2_v2"
-      },
-      "agentPoolProfiles": [
-        {
-          "name": "agentpool1",
-          "count": 2,
-          "vmSize": "Standard_DS2_v2",
-          "availabilityProfile": "AvailabilitySet"
-        }
-      ],
-      "linuxProfile": {
-        "adminUsername": "azureuser",
-        "ssh": {
-          "publicKeys": [
-            {
-              "keyData": ""
-            }
-          ]
-        }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
+    },
+    "masterProfile": {
+      "count": 1,
+      "dnsPrefix": "",
+      "vmSize": "Standard_DS2_v2"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentpool1",
+        "count": 2,
+        "vmSize": "Standard_DS2_v2",
+        "availabilityProfile": "AvailabilitySet"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": ""
+          }
+        ]
+      }
+    },
+    "servicePrincipalProfile": {
+      "clientId": "",
+      "secret": ""
     }
   }
+}
