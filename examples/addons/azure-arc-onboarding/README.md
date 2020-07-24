@@ -1,6 +1,6 @@
-# Azure Arc for Kubernetes
+# Azure Arc enabled Kubernetes
 
-You can attach and configure Kubernetes clusters by using [Azure Arc for Kubernetes](https://docs.microsoft.com/azure/azure-arc/kubernetes/overview).
+You can attach and configure Kubernetes clusters by using [Azure Arc enabled Kubernetes](https://docs.microsoft.com/azure/azure-arc/kubernetes/overview).
 When a Kubernetes cluster is attached to Azure Arc, it will appear in the Azure portal. It will have an Azure Resource Manager ID and a managed identity.
 Clusters are attached to standard Azure subscriptions, are located in a resource group, and can receive tags just like any other Azure resource.
 
@@ -8,7 +8,7 @@ To connect a Kubernetes cluster to Azure, the cluster administrator needs to dep
 
 You can deploy the Azure Arc agents either as part of the cluster creation process (by including the `azure-arc-onboarding` addon spec in your input `apimodel.json`) or manually using [azure-cli](https://docs.microsoft.com/en-us/azure/azure-arc/kubernetes/connect-cluster).
 
-## Azure Arc for Kubernetes Addon
+## Azure Arc enabled Kubernetes Addon
 
 The `azure-arc-onboarding` addon creates a Kubernetes job (in namespace `azure-arc-onboarding`) in charge of deploying the Azure Arc agents.
 The following information is required in order to successfully onboard the new cluster.
