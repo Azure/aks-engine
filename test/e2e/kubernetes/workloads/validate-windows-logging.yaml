@@ -1,0 +1,21 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: validate-windows-logging
+  labels:
+    name: storage
+spec:
+  containers:
+    - image: mcr.microsoft.com/windows/servercore:2004
+      name: validate-windows-logging
+      command:
+        - powershell.exe
+        - -Command
+        - sleep 10; $a="1234567890"; $a="$a-$a"; $a="$a-$a"; $a="$a-$a"; $a="$a-$a"; $a="$a-$a";
+          $a="$a-$a"; $a="$a-$a"; $a="$a-$a"; $a="$a-$a"; $a="$a-$a"; $a="$a-$a"; $a="$a-$a";
+          $a="$a-$a"; $a="$a-$a"; $a="$a-$a"; do { write-host "DATE=$(date)-$a"; sleep 0.1;
+          } until($false)
+  nodeSelector:
+    kubernetes.io/os: windows
+
+
