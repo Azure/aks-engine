@@ -93,7 +93,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 	}
 
 	if cs.Properties.WindowsProfile != nil {
-		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
+		cs.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
 	}
 
 	properties.setTelemetryProfileDefaults()
@@ -735,9 +735,14 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 }
 
 // setWindowsProfileDefaults sets default WindowsProfile values
-func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
-	windowsProfile := p.WindowsProfile
+func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+	windowsProfile := cs.Properties.WindowsProfile
 	if !isUpgrade && !isScale {
+		// Allow non-default values of windowsProfile.ProvisioningScriptsPackageURL to allow for testing of updates to the scripts.
+		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
+			windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
+		}
 		if windowsProfile.SSHEnabled == nil {
 			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
 		}
@@ -787,6 +792,11 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 			}
 		}
 	} else if isUpgrade {
+		// Allow non-default values of windowsProfile.ProvisioningScriptsPackageURL to allow for custom clouds.
+		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
+			windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
+		}
+
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
 		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
 		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {

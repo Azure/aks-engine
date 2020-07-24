@@ -18,7 +18,7 @@ function DownloadFileOverHttp {
 
     # First check to see if a file with the same name is already cached on the VHD
     $fileName = [IO.Path]::GetFileName($Url)
-    
+
     $search = @()
     if (Test-Path $global:CacheDir) {
         $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
@@ -31,14 +31,14 @@ function DownloadFileOverHttp {
     else {
         $secureProtocols = @()
         $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
-    
+
         foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType])) {
             if ($insecureProtocols -notcontains $protocol) {
                 $secureProtocols += $protocol
             }
         }
         [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
-    
+
         $oldProgressPreference = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
 
@@ -57,6 +57,13 @@ function DownloadFileOverHttp {
         $ProgressPreference = $oldProgressPreference
         Write-Log "Downloaded file to $DestinationPath"
     }
+}
+
+function Get-ProvisioningScripts {
+    Write-Log "Getting provisioning scripts"
+    DownloadFileOverHttp -Url $global:ProvisioningScriptsPackageUrl -DestinationPath 'c:\k\provisioningscripts.zip'
+    Expand-Archive -Path 'c:\k\provisioningscripts.zip' -DestinationPath 'c:\k' -Force
+    Remove-Item -Path 'c:\k\provisioningscripts.zip' -Force
 }
 
 function Get-WindowsVersion {
@@ -190,9 +197,6 @@ function Get-LogCollectionScripts {
 function Register-LogsCleanupScriptTask {
     Write-Log "Creating a scheduled task to run windowslogscleanup.ps1"
 
-    (Get-Content "c:\AzureData\k8s\windowslogscleanup.ps1") |
-    Out-File "c:\k\windowslogscleanup.ps1"
-
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\windowslogscleanup.ps1`""
     $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
     $trigger = New-JobTrigger -Daily -At "00:00" -DaysInterval 1
@@ -203,13 +207,6 @@ function Register-LogsCleanupScriptTask {
 function Register-NodeResetScriptTask {
     Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
-    (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
-    Foreach-Object { $_ -replace '{{CsiProxyEnabled}}', $global:EnableCsiProxy } |
-    Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
-    Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
-    Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
-    Out-File 'c:\k\windowsnodereset.ps1'
-
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\windowsnodereset.ps1`""
     $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
     $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
@@ -219,10 +216,10 @@ function Register-NodeResetScriptTask {
 
 # TODO ksubrmnn parameterize this fully
 function Write-KubeClusterConfig {
-    param(		
-        [Parameter(Mandatory = $true)][string]	
+    param(
+        [Parameter(Mandatory = $true)][string]
         $MasterIP,
-        [Parameter(Mandatory = $true)][string]	
+        [Parameter(Mandatory = $true)][string]
         $KubeDnsServiceIp
     )
 
@@ -266,10 +263,10 @@ function Write-KubeClusterConfig {
         };
     }
 
-    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{ 
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{
         Destination = "c:\k";
     }
-    
+
     $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
 }
 
@@ -278,7 +275,7 @@ function Assert-FileExists {
         [Parameter(Mandatory = $true, Position = 0)][string]
         $Filename
     )
-    
+
     if (-Not (Test-Path $Filename)) {
         throw "$Filename does not exist"
     }
@@ -289,5 +286,9 @@ function Update-DefenderPreferences {
 
     if ($global:EnableCsiProxy) {
         Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
+    }
+
+    if ($global:ContainerRuntime -eq 'containerd') {
+        Add-MpPreference -ExclusionProcess "c:\program files\containerd\containerd.exe"
     }
 }

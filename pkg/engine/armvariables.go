@@ -374,6 +374,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 	}
 	masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
+	masterVars["enableHostsConfigAgent"] = cs.Properties.OrchestratorProfile.IsHostsConfigAgentEnabled()
 
 	if isHostedMaster {
 		masterVars["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"
@@ -616,14 +617,17 @@ func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
 func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 	enableCSIProxy := common.DefaultEnableCSIProxyWindows
 	CSIProxyURL := ""
+	provisioningScriptsPackageURL := ""
 
 	if wp != nil {
 		enableCSIProxy = wp.IsCSIProxyEnabled()
 		CSIProxyURL = wp.CSIProxyURL
+		provisioningScriptsPackageURL = wp.ProvisioningScriptsPackageURL
 	}
 	vars := map[string]interface{}{
-		"windowsEnableCSIProxy": enableCSIProxy,
-		"windowsCSIProxyURL":    CSIProxyURL,
+		"windowsEnableCSIProxy":                enableCSIProxy,
+		"windowsCSIProxyURL":                   CSIProxyURL,
+		"windowsProvisioningScriptsPackageURL": provisioningScriptsPackageURL,
 	}
 	return vars
 }

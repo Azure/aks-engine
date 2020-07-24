@@ -329,9 +329,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.OrchestratorProfile.IsPrivateCluster()
 		},
 		"EnableHostsConfigAgent": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig != nil &&
-				cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
-				to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent)
+			return cs.Properties.OrchestratorProfile.IsHostsConfigAgentEnabled()
 		},
 		"ProvisionJumpbox": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
@@ -476,15 +474,13 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			var parts = []string{
 				kubernetesWindowsAgentFunctionsPS1,
 				kubernetesWindowsConfigFunctionsPS1,
+				kubernetesWindowsContainerdFunctionsPS1,
 				kubernetesWindowsCsiProxyFunctionsPS1,
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
-				kubernetesWindowsLogsCleanupPS1,
-				kubernetesWindowsNodeResetPS1,
+				kubernetesWindowsHostsConfigAgentFunctionsPS1,
 				kubernetesWindowsOpenSSHFunctionPS1,
-				kubeletStartPS1,
-				kubeproxyStartPS1,
 			}
 
 			// Create a buffer, new zip

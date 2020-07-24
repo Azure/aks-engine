@@ -41,7 +41,9 @@ Write-AzureConfig {
         [Parameter(Mandatory = $true)][string]
         $KubeDir,
         [Parameter(Mandatory = $true)][string]
-        $TargetEnvironment
+        $TargetEnvironment,
+        [Parameter(Mandatory = $false)][bool]
+        $UseContainerD = $false
     )
 
     if ( -Not $PrimaryAvailabilitySetName -And -Not $PrimaryScaleSetName ) {
@@ -134,16 +136,50 @@ users:
 }
 
 function
+Test-ContainerImageExists {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $Image,
+        [Parameter(Mandatory = $false)][string]
+        $Tag,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
+    )
+
+    $target = $Image
+    if ($Tag) {
+        $target += ":$Tag"
+    }
+
+    if ($ContainerRuntime -eq "docker") {
+        $images = docker image list $target --format "{{json .}}"
+        return $images.Count -gt 0
+    }
+    else {
+        return ( (ctr.exe -n k8s.io images list) | Select-String $target) -ne $Null
+    }
+}
+
+function
 Build-PauseContainer {
     Param(
         [Parameter(Mandatory = $true)][string]
         $WindowsBase,
-        $DestinationTag
+        $DestinationTag,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
     # Future work: This needs to build wincat - see https://github.com/Azure/aks-engine/issues/1461
+    # Otherwise, delete this code and require a prebuilt pause image (or override with one from an Azure Container Registry instance)
+    # ContainerD can't build, so doing the builds outside of node deployment is probably the right long-term solution.
     "FROM $($WindowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
     "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
-    Invoke-Executable -Executable "docker" -ArgList @("build", "-t", "$DestinationTag", ".")
+    if ($ContainerRuntime -eq "docker") {
+        Invoke-Executable -Executable "docker" -ArgList @("build", "-t", "$DestinationTag", ".")
+    }
+    else {
+        throw "Cannot build pause container without Docker"
+    }
 }
 
 function
@@ -151,7 +187,9 @@ New-InfraContainer {
     Param(
         [Parameter(Mandatory = $true)][string]
         $KubeDir,
-        $DestinationTag = "kubletwin/pause"
+        $DestinationTag = "kubletwin/pause",
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
     cd $KubeDir
     $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
@@ -165,14 +203,22 @@ New-InfraContainer {
     $pauseImageVersions = @("1809", "1903", "1909", "2004")
 
     if ($pauseImageVersions -icontains $windowsVersion) {
-        $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
-        if (-not $imageList) {
-            Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
+        if ($ContainerRuntime -eq "docker") {
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
+            }
+            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
-        Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
+        else {
+            # containerd
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+                Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
+            }
+            Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "tag", "$defaultPauseImage", "$DestinationTag")
+        }
     }
     else {
-        Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag
+        Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag -ContainerRuntime $ContainerRuntime
     }
 }
 
@@ -182,7 +228,9 @@ Test-ContainerImageExists {
         [Parameter(Mandatory = $true)][string]
         $Image,
         [Parameter(Mandatory = $false)][string]
-        $Tag
+        $Tag,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
 
     $target = $Image
@@ -190,11 +238,14 @@ Test-ContainerImageExists {
         $target += ":$Tag"
     }
 
-    $images = docker image list $target --format "{{json .}}"
-
-    return $images.Count -gt 0
+    if ($ContainerRuntime -eq "docker") {
+        $images = docker image list $target --format "{{json .}}"
+        return $images.Count -gt 0
+    }
+    else {
+        return ( (ctr.exe -n k8s.io images list) | Select-String $target) -ne $Null
+    }
 }
-
 
 # TODO: Deprecate this and replace with methods that get individual components instead of zip containing everything
 # This expects the ZIP file created by Azure Pipelines.
@@ -269,7 +320,10 @@ New-NSSMService {
 
     $kubeletDependOnServices = "docker"
     if ($global:EnableCsiProxy) {
-        $kubeletDependOnServices += " csi-proxy-server"
+        $kubeletDependOnServices += " csi-proxy"
+    }
+    if ($global:EnableHostsConfigAgent) {
+        $kubeletDependOnServices += " hosts-config-agent"
     }
 
     # setup kubelet
@@ -278,7 +332,6 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubelet DependOnService "$kubeletDependOnServices" | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem | RemoveNulls
@@ -292,6 +345,9 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1 | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400 | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760 | RemoveNulls
+    # Do not use & when calling DependOnService since 'docker csi-proxy'
+    # is parsed as a single string instead of two separate strings
+    Invoke-Expression "$KubeDir\nssm.exe set Kubelet DependOnService $kubeletDependOnServices | RemoveNulls"
 
     # setup kubeproxy
     & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
@@ -314,9 +370,9 @@ New-NSSMService {
 
 # Renamed from Write-KubernetesStartFiles
 function
-Install-KubernetesServices {  
-    param(		
-        [Parameter(Mandatory = $true)][string]	
+Install-KubernetesServices {
+    param(
+        [Parameter(Mandatory = $true)][string]
         $KubeDir
     )
 
