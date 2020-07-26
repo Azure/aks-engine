@@ -1577,7 +1577,7 @@ func (a *AgentPoolProfile) IsCoreOS() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
-	return strings.EqualFold(string(a.Distro), string(AKSUbuntu1604)) || strings.EqualFold(string(a.Distro), string(AKSUbuntu1804)) || strings.EqualFold(string(a.Distro), string(AKSUbuntuGPU1804)) || strings.EqualFold(string(a.Distro), string(AKSUbuntuGPU1804Gen2))
+	return strings.EqualFold(string(a.Distro), string(AKSUbuntu1604)) || strings.EqualFold(string(a.Distro), string(AKSUbuntu1804)) || strings.EqualFold(string(a.Distro), string(Ubuntu1804Gen2)) || strings.EqualFold(string(a.Distro), string(AKSUbuntuGPU1804)) || strings.EqualFold(string(a.Distro), string(AKSUbuntuGPU1804Gen2))
 }
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
