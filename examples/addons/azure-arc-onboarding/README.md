@@ -27,17 +27,28 @@ Example:
 
 ```json
 {
-    "name": "azure-arc-onboarding",
-    "enabled": true,
-    "config": {
-        "tenantID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
-        "subscriptionID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
-        "resourceGroup": "connectedClusters",
-        "clusterName": "clusterName",
-        "clientID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
-        "clientSecret": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
-        "location": "eastus"
-    }
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "kubernetesConfig": {
+        "addons": [
+          {
+            "name": "azure-arc-onboarding",
+            "enabled": true,
+            "config": {
+                "tenantID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+                "subscriptionID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+                "resourceGroup": "connectedClusters",
+                "clusterName": "clusterName",
+                "clientID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+                "clientSecret": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+                "location": "eastus"
+            }
+          }
+        ]
+      }
+    },
+  }
 }
 ```
 
