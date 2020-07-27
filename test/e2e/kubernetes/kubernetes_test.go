@@ -2584,7 +2584,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have arc agents running", func() {
-			if hasArc, _ := eng.HasAddon("azure-arc-onboarding"); hasArc {
+			if hasArc, _ := eng.HasAddon(common.AzureArcOnboardingAddonName); hasArc {
 				By("Checking the onboarding job succeeded")
 				succeeded, err := job.WaitOnSucceeded("azure-arc-onboarding", "azure-arc-onboarding", 30*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())

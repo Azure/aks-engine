@@ -851,7 +851,7 @@ func (a *Properties) validateAddons() error {
 					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						return errors.Errorf("%s add-on can only be used in 1.16+", addon.Name)
 					}
-				case "azure-arc-onboarding":
+				case common.AzureArcOnboardingAddonName:
 					if err := addon.validateArcAddonConfig(); err != nil {
 						return err
 					}

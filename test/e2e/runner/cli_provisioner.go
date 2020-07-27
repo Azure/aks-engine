@@ -205,6 +205,8 @@ func (cli *CLIProvisioner) provision() error {
 	}
 	cli.Engine = eng
 
+	cli.EnsureArcResourceGroup()
+
 	err = cli.Engine.Write()
 	if err != nil {
 		return errors.Wrap(err, "Error while trying to write Engine Template to disk:%s")
@@ -431,6 +433,22 @@ func (cli *CLIProvisioner) FetchActivityLog(acct *azure.Account, logPath string)
 		path := filepath.Join(logPath, fmt.Sprintf("activity-log-%s", rg))
 		if err := ioutil.WriteFile(path, []byte(log), 0644); err != nil {
 			return errors.Wrap(err, "cannot write activity log in file")
+		}
+	}
+	return nil
+}
+
+// EnsureArcResourceGroup creates the resource group for the connected cluster resource
+// Once Arc is supported in all regions, we should delete this method and reuse the cluster resource group
+// https://docs.microsoft.com/en-us/azure/azure-arc/kubernetes/overview#supported-regions
+func (cli *CLIProvisioner) EnsureArcResourceGroup() error {
+	for _, addon := range cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.Addons {
+		if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) {
+			rg := cli.Account.ResourceGroup
+			if err := cli.Account.CreateGroupWithRetry(addon.Config["resourceGroup"], addon.Config["location"], 30*time.Second, cli.Config.Timeout); err != nil {
+				return errors.Wrapf(err, "Error while trying to create Azure Arc resource group: %s", rg)
+			}
+			cli.Account.ResourceGroup = rg
 		}
 	}
 	return nil
