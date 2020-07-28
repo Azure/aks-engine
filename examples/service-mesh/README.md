@@ -22,7 +22,6 @@ You may have to adjust `--service-account-api-audiences` and `--service-account-
 {
     "kubernetesConfig": {
         "apiServerConfig": {
-            "--feature-gates": "TokenRequestProjection=true",
             "--service-account-api-audiences": "api,istio-ca",
             "--service-account-issuer": "kubernetes.default.svc",
             "--service-account-signing-key-file": "/etc/kubernetes/certs/apiserver.key"
