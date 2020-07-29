@@ -174,6 +174,8 @@ func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecParams) er
 			azureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = helpers.EnsureString(asccKubernetesSpecConfig.WindowsTelemetryGUID, azsKubernetesSpecConfig.WindowsTelemetryGUID)
 			azureStackCloudSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, azsKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+			azureStackCloudSpec.KubernetesSpecConfig.WindowsPauseImageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsPauseImageURL, azsKubernetesSpecConfig.WindowsPauseImageURL)
+			azureStackCloudSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage = asccKubernetesSpecConfig.AlwaysPullWindowsPauseImage
 
 			//EndpointConfig
 			asccEndpointConfig := ascc.EndpointConfig

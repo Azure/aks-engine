@@ -618,16 +618,22 @@ func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 	enableCSIProxy := common.DefaultEnableCSIProxyWindows
 	CSIProxyURL := ""
 	provisioningScriptsPackageURL := ""
+	windowsPauseImageURL := ""
+	alwaysPullWindowsPauseImage := false
 
 	if wp != nil {
 		enableCSIProxy = wp.IsCSIProxyEnabled()
 		CSIProxyURL = wp.CSIProxyURL
 		provisioningScriptsPackageURL = wp.ProvisioningScriptsPackageURL
+		windowsPauseImageURL = wp.WindowsPauseImageURL
+		alwaysPullWindowsPauseImage = (wp.AlwaysPullWindowsPauseImage != nil && *wp.AlwaysPullWindowsPauseImage)
 	}
 	vars := map[string]interface{}{
 		"windowsEnableCSIProxy":                enableCSIProxy,
 		"windowsCSIProxyURL":                   CSIProxyURL,
 		"windowsProvisioningScriptsPackageURL": provisioningScriptsPackageURL,
+		"windowsPauseImageURL":                 windowsPauseImageURL,
+		"alwaysPullWindowsPauseImage":          strconv.FormatBool(alwaysPullWindowsPauseImage),
 	}
 	return vars
 }

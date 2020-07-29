@@ -191,6 +191,7 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 	}
 	api.ImageVersion = vlabs.ImageVersion
 	api.ProvisioningScriptsPackageURL = vlabs.ProvisioningScriptsPackageURL
+	api.WindowsPauseImageURL = vlabs.WindowsPauseImageURL
 	api.WindowsImageSourceURL = vlabs.WindowsImageSourceURL
 	api.WindowsPublisher = vlabs.WindowsPublisher
 	api.WindowsOffer = vlabs.WindowsOffer
@@ -209,6 +210,7 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 	if vlabs.EnableAHUB != nil && *vlabs.EnableAHUB {
 		api.EnableAHUB = to.BoolPtr(true)
 	}
+	api.AlwaysPullWindowsPauseImage = vlabs.AlwaysPullWindowsPauseImage
 }
 
 func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) error {
@@ -790,6 +792,8 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 		VnetCNIWindowsPluginsDownloadURL:     vlabses.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
 		ContainerdDownloadURLBase:            vlabses.KubernetesSpecConfig.ContainerdDownloadURLBase,
 		WindowsProvisioningScriptsPackageURL: vlabses.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
+		WindowsPauseImageURL:                 vlabses.KubernetesSpecConfig.WindowsPauseImageURL,
+		AlwaysPullWindowsPauseImage:          vlabses.KubernetesSpecConfig.AlwaysPullWindowsPauseImage,
 	}
 	api.OSImageConfig = map[Distro]AzureOSImageConfig{}
 	for k, v := range vlabses.OSImageConfig {

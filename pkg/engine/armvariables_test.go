@@ -184,6 +184,9 @@ func TestK8sVars(t *testing.T) {
 		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
@@ -752,6 +755,9 @@ func TestK8sVars(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -1003,6 +1009,9 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
@@ -1022,27 +1031,39 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 			name: "No windows profile",
 			wp:   nil,
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
 			},
 		},
 		{
 			name: "Defaults",
 			wp:   &api.WindowsProfile{},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
 			},
 		},
 		{
 			name: "Non-defaults",
 			wp: &api.WindowsProfile{
-				EnableCSIProxy: &trueVar,
-				CSIProxyURL:    "http://some/package.tar",
+				EnableCSIProxy:                &trueVar,
+				CSIProxyURL:                   "http://some/package.tar",
+				ProvisioningScriptsPackageURL: "https://provisioning/package",
+				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
+				AlwaysPullWindowsPauseImage:   &trueVar,
 			},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": true,
-				"windowsCSIProxyURL":    "http://some/package.tar",
+				"windowsEnableCSIProxy":                true,
+				"windowsCSIProxyURL":                   "http://some/package.tar",
+				"windowsProvisioningScriptsPackageURL": "https://provisioning/package",
+				"windowsPauseImageURL":                 "mcr.contoso.com/core/pause:",
+				"alwaysPullWindowsPauseImage":          "true",
 			},
 		},
 	}
