@@ -6,7 +6,7 @@ metadata:
     name: storage
 spec:
   containers:
-    - image: mcr.microsoft.com/windows/servercore:2004
+    - image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
       name: validate-windows-logging
       command:
         - powershell.exe
