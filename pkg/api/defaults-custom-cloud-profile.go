@@ -164,6 +164,7 @@ func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecParams) er
 			azureStackCloudSpec.KubernetesSpecConfig.CalicoImageBase = helpers.EnsureString(asccKubernetesSpecConfig.CalicoImageBase, azsKubernetesSpecConfig.CalicoImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.CNIPluginsDownloadURL, azsKubernetesSpecConfig.CNIPluginsDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.ContainerdDownloadURLBase = helpers.EnsureString(asccKubernetesSpecConfig.ContainerdDownloadURLBase, azsKubernetesSpecConfig.ContainerdDownloadURLBase)
+			azureStackCloudSpec.KubernetesSpecConfig.CSIProxyDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.CSIProxyDownloadURL, azsKubernetesSpecConfig.CSIProxyDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase = helpers.EnsureString(asccKubernetesSpecConfig.EtcdDownloadURLBase, azsKubernetesSpecConfig.EtcdDownloadURLBase)
 			azureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase = helpers.EnsureString(asccKubernetesSpecConfig.KubeBinariesSASURLBase, azsKubernetesSpecConfig.KubeBinariesSASURLBase)
 			azureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase = helpers.EnsureString(asccKubernetesSpecConfig.KubernetesImageBase, azsKubernetesSpecConfig.KubernetesImageBase)
