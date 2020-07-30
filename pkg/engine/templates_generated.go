@@ -18314,7 +18314,6 @@ configureAzureCNI() {
 }
 {{- if NeedsContainerd}}
 installContainerd() {
-  removeMoby
   CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
   if [[ $CURRENT_VERSION != "${CONTAINERD_VERSION}" ]]; then
     os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
@@ -18325,6 +18324,7 @@ installContainerd() {
     else
       exit 25
     fi
+    removeMoby
     removeContainerd
     retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
@@ -18695,12 +18695,6 @@ cleanUpContainerd() {
 {{end}}
 removeEtcd() {
   rm -rf /usr/bin/etcd
-}
-removeMoby() {
-  apt_get_purge moby-engine moby-cli || exit 27
-}
-removeContainerd() {
-  apt_get_purge moby-containerd || exit 27
 }
 #EOF
 `)
@@ -19300,10 +19294,16 @@ downloadGPUDrivers() {
     exit 85
   fi
 }
+removeMoby() {
+  apt_get_purge moby-engine moby-cli || exit 27
+}
+removeContainerd() {
+  apt_get_purge moby-containerd || exit 27
+}
 installMoby() {
-  removeContainerd
   CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
   if [[ $CURRENT_VERSION != "${MOBY_VERSION}" ]]; then
+    removeContainerd
     removeMoby
     retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
