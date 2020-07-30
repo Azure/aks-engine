@@ -87,9 +87,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.1.6
 1.1.3
 1.1.2
-1.1.0
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -398,7 +398,7 @@ done
 
 # Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
 CLOUD_MANAGER_VERSIONS="
-0.5.0
+0.5.1
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do

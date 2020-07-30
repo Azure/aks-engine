@@ -107,10 +107,15 @@ var _ = BeforeSuite(func() {
 		deploymentReplicasCount += profile.Count
 	}
 
+	var getNodeByRegexError error
+	masterNodes, getNodeByRegexError = node.GetByRegexWithRetry(fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix), 3*time.Minute, cfg.Timeout)
+	Expect(getNodeByRegexError).NotTo(HaveOccurred())
+	var getKubeConfigError error
+	kubeConfig, getKubeConfigError = GetConfigWithRetry(3*time.Second, cfg.Timeout)
+	Expect(getKubeConfigError).NotTo(HaveOccurred())
+
 	if !cfg.BlockSSHPort {
 		var err error
-		masterNodes, err = node.GetByRegexWithRetry(fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix), 3*time.Minute, cfg.Timeout)
-		Expect(err).NotTo(HaveOccurred())
 		masterName := masterNodes[0].Metadata.Name
 		if strings.Contains(masterName, "vmss") {
 			masterSSHPort = "50001"
@@ -118,8 +123,6 @@ var _ = BeforeSuite(func() {
 			masterSSHPort = "22"
 		}
 		masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
-		kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
-		Expect(err).NotTo(HaveOccurred())
 		sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 		success := false
@@ -1442,7 +1445,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with a windows agent pool", func() {
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.HasWindowsAgents() {
 					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.GetSSHEnabled() {
 						nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
@@ -2317,6 +2322,32 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
 			}
+		})
+
+		// verifies that the pod logs continue to flow even during rotation
+		// https://github.com/Azure/aks-engine/issues/3573
+		It("should be able to rotate docker logs", func() {
+			if !eng.HasWindowsAgents() {
+				Skip("No windows agent was provisioned for this Cluster Definition")
+			}
+
+			windowsImages, err := eng.GetWindowsTestImages()
+			loggingPodFile, err := pod.ReplaceContainerImageFromFile(filepath.Join(WorkloadDir, "validate-windows-logging.yaml"), windowsImages.ServerCore)
+			Expect(err).NotTo(HaveOccurred())
+			defer os.Remove(loggingPodFile)
+
+			By("launching a pod that logs too much")
+			podName := "validate-windows-logging" // should be the same as in iis-azurefile.yaml
+			loggingPod, err := pod.CreatePodFromFileWithRetry(loggingPodFile, podName, "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			ready, err := loggingPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+
+			By("validating the logs continue to flow")
+			logsRotated, err := loggingPod.ValidateLogsRotate(20*time.Second, 2*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(logsRotated).To(Equal(true))
 		})
 	})
 

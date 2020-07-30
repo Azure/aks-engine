@@ -48,7 +48,7 @@ const (
 	// DockerCEDockerComposeVersion is the Docker Compose version
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.5"
+	KubernetesWindowsDockerVersion = "19.03.11"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
@@ -336,11 +336,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.1.3"
+	AzureCniPluginVerLinux = "v1.1.6"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.1.3"
+	AzureCniPluginVerWindows = "v1.1.6"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.8.6"
