@@ -1457,6 +1457,76 @@ func (p *Pod) ValidateAzureFile(mountPath string, sleep, timeout time.Duration) 
 	}
 }
 
+// ValidateLogsRotate will keep checking the last time stamp written and compare to previous to make sure logs continue flowing
+func (p *Pod) ValidateLogsRotate(sleep, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan string)
+	var previous time.Time
+	var current time.Time
+	var new string
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// extract the date
+				output, err := p.checkTailOfLogFor("20", "-oP '(?<=DATE=)[^.-]*'")
+				if err != nil {
+					log.Printf("Unable to tail the log:\n %s \n", output)
+					time.Sleep(sleep)
+					continue
+				}
+				ch <- output
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case new = <-ch:
+			if new == "" {
+				// there is a chance the last few lines of the file might not contain a date
+				// due to the amount of data written and timing on the rotation of a log
+				continue
+			}
+			previous = current
+			newTime, err := time.Parse("01/02/2006 15:04:05", new)
+			if err != nil || new == "" {
+				log.Printf("Unable to convert time:\n %s", err)
+				continue
+			}
+			current = newTime
+		case <-ctx.Done():
+			log.Print("Finished waiting for logs to rotate")
+			if previous.Before(current) {
+				log.Printf("Time has continued to update. previous: %s current %s", previous, current)
+				return true, nil
+			}
+
+			err := p.Logs()
+			if err != nil {
+				log.Printf("Unable to print pod logs:\n %s", err)
+			}
+			err = p.Describe()
+			if err != nil {
+				log.Printf("Unable to describe pod:\n %s", err)
+			}
+			return false, errors.Errorf("ValidateLogsRotate did not see time stamp change: prior '%s' current '%s'\n", previous, current)
+		}
+	}
+}
+
+// checkTailOfLogFor will get last line matched with grep filters
+func (p *Pod) checkTailOfLogFor(numberOflines, grepFromat string) (string, error) {
+	var commandTimeout time.Duration
+	piped := fmt.Sprintf("k logs %s -n %s --tail %s | grep %s | tail -n 1 | tr -d '\\n'", p.Metadata.Name, p.Metadata.Namespace, numberOflines, grepFromat)
+	cmd := exec.Command("bash", "-c", piped)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	return string(out), err
+}
+
 // ValidatePVC will keep retrying the check if azure disk is mounted in Pod
 func (p *Pod) ValidatePVC(mountPath string, sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
