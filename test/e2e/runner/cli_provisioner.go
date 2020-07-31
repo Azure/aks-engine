@@ -128,7 +128,7 @@ func (cli *CLIProvisioner) provision() error {
 	if err != nil {
 		return errors.Wrap(err, "Error while trying to create resource group")
 	}
-	cli.Account.ResourceGroup = ResourceGroup{
+	cli.Account.ResourceGroup = azure.ResourceGroup{
 		Name:     cli.Config.Name,
 		Location: cli.Config.Location,
 		Tags: map[string]string{
