@@ -752,6 +752,9 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		if windowsProfile.SSHEnabled == nil {
 			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
 		}
+		if windowsProfile.EnableCSIProxy != nil && *windowsProfile.EnableCSIProxy && len(windowsProfile.CSIProxyURL) == 0 {
+			windowsProfile.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
+		}
 
 		// This allows caller to use the latest ImageVersion and WindowsSku for adding a new Windows pool to an existing cluster.
 		// We must assure that same WindowsPublisher and WindowsOffer are used in an existing cluster.
@@ -807,6 +810,9 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		}
 		if windowsProfile.AlwaysPullWindowsPauseImage == nil {
 			windowsProfile.AlwaysPullWindowsPauseImage = to.BoolPtr(cloudSpecConfig.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
+		}
+		if windowsProfile.EnableCSIProxy != nil && *windowsProfile.EnableCSIProxy && len(windowsProfile.CSIProxyURL) == 0 {
+			windowsProfile.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
 		}
 
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.

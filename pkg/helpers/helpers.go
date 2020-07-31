@@ -226,6 +226,8 @@ func GetTargetEnv(location, customCloudName string) string {
 	switch {
 	case customCloudName != "" && strings.EqualFold(customCloudName, "AzureStackCloud"):
 		return "AzureStackCloud"
+	case customCloudName != "" && strings.EqualFold(customCloudName, "akscustom"):
+		return "akscustom"
 	default:
 		return GetCloudTargetEnv(location)
 	}
