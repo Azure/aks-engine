@@ -197,6 +197,53 @@ func (a *Account) CreateGroup(name, location string) error {
 	return nil
 }
 
+// CreateArcGroupWithRetry should be deleted once Arc is supported in all regions
+func (a *Account) CreateArcGroupWithRetry(name, location string, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentCreateGroupWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- a.CreateArcGroup(name, location):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case mostRecentCreateGroupWithRetryError = <-ch:
+			if mostRecentCreateGroupWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("CreateArcGroupWithRetry timed out: %s\n", mostRecentCreateGroupWithRetryError)
+		}
+	}
+}
+
+// CreateArcGroup should be deleted once Arc is supported in all regions
+func (a *Account) CreateArcGroup(name, location string) error {
+	now := fmt.Sprintf("now=%v", time.Now().Unix())
+	var cmd *exec.Cmd
+	if a.TimeoutCommands {
+		cmd = exec.Command("timeout", "60", "az", "group", "create", "--name", name, "--location", location, "--tags", now)
+	} else {
+		cmd = exec.Command("az", "group", "create", "--name", name, "--location", location, "--tags", now)
+	}
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error while trying to create Arc resource group (%s) in %s:%s", name, location, err)
+		log.Printf("Output:%s\n", out)
+		return err
+	}
+	return nil
+}
+
 // ShowGroupWithRetry invokes ShowGroup, retrying up to a timeout
 func (a *Account) ShowGroupWithRetry(name string, sleep, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
