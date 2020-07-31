@@ -128,6 +128,13 @@ func (cli *CLIProvisioner) provision() error {
 	if err != nil {
 		return errors.Wrap(err, "Error while trying to create resource group")
 	}
+	cli.Account.ResourceGroup = ResourceGroup{
+		Name:     cli.Config.Name,
+		Location: cli.Config.Location,
+		Tags: map[string]string{
+			"now": fmt.Sprintf("now=%v", time.Now().Unix()),
+		},
+	}
 	err = cli.Account.ShowGroupWithRetry(cli.Account.ResourceGroup.Name, 10*time.Second, cli.Config.Timeout)
 	if err != nil {
 		return errors.Wrap(err, "Unable to successfully get the resource group using the az CLI")
@@ -444,7 +451,7 @@ func (cli *CLIProvisioner) FetchActivityLog(acct *azure.Account, logPath string)
 func (cli *CLIProvisioner) EnsureArcResourceGroup() error {
 	for _, addon := range cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.Addons {
 		if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) {
-			if err := cli.Account.CreateArcGroupWithRetry(addon.Config["resourceGroup"], addon.Config["location"], 30*time.Second, cli.Config.Timeout); err != nil {
+			if err := cli.Account.CreateGroupWithRetry(addon.Config["resourceGroup"], addon.Config["location"], 30*time.Second, cli.Config.Timeout); err != nil {
 				return errors.Wrapf(err, "Error while trying to create Azure Arc resource group: %s", addon.Config["resourceGroup"])
 			}
 		}
