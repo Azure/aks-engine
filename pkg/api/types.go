@@ -1579,7 +1579,7 @@ func (a *AgentPoolProfile) IsCoreOS() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
-	return strings.EqualFold(string(a.Distro), string(AKSUbuntu1604)) || strings.EqualFold(string(a.Distro), string(AKSUbuntu1804))
+	return strings.EqualFold(string(a.Distro), string(AKSUbuntu1604)) || strings.EqualFold(string(a.Distro), string(AKSUbuntu1804)) || strings.EqualFold(string(a.Distro), string(Ubuntu1804Gen2)) || strings.EqualFold(string(a.Distro), string(AKSUbuntuGPU1804)) || strings.EqualFold(string(a.Distro), string(AKSUbuntuGPU1804Gen2))
 }
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
@@ -1649,7 +1649,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if !strings.EqualFold(string(a.OSType), string(Windows)) {
 		switch a.Distro {
-		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
+		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntuGPU1804, AKSUbuntuGPU1804Gen2:
 			return true
 		default:
 			return false
