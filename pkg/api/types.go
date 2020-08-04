@@ -1970,25 +1970,8 @@ func (k *KubernetesConfig) SystemAssignedIDEnabled() bool {
 	return k.UseManagedIdentity && k.UserAssignedID == ""
 }
 
-// UserAssignedClientIDEnabled checks if the user assigned client ID is enabled or not.
-func (k *KubernetesConfig) UserAssignedClientIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedClientID != ""
-}
-
-// GetUserAssignedID returns the user assigned ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedID() string {
-	if k.UserAssignedIDEnabled() {
-		return k.UserAssignedID
-	}
-	return ""
-}
-
-// GetUserAssignedClientID returns the user assigned client ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedClientID() string {
-	if k.UserAssignedClientIDEnabled() {
-		return k.UserAssignedClientID
-	}
-	return ""
+func (k *KubernetesConfig) ShouldCreateNewUserAssignedIdentity() bool {
+	return !(k.UserAssignedIDEnabled() && strings.Contains(k.UserAssignedID, "/"))
 }
 
 // GetOrderedKubeletConfigString returns an ordered string of key/val pairs
