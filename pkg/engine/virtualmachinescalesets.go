@@ -24,9 +24,10 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
 
-	var userAssignedIDEnabled bool
+	var useManagedIdentity, userAssignedIDEnabled bool
 	if k8sConfig != nil {
-		userAssignedIDEnabled = k8sConfig.UserAssignedIDEnabled()
+		useManagedIdentity = k8sConfig.UseManagedIdentity
+		userAssignedIDEnabled = useManagedIdentity && k8sConfig.UserAssignedID != ""
 	}
 	isAzureCNI := orchProfile.IsAzureCNI()
 	masterCount := masterProfile.Count
@@ -88,7 +89,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		virtualMachine.Zones = &masterProfile.AvailabilityZones
 	}
 
-	if userAssignedIDEnabled {
+	if useManagedIdentity && userAssignedIDEnabled {
 		identity := &compute.VirtualMachineScaleSetIdentity{}
 		identity.Type = compute.ResourceIdentityTypeUserAssigned
 		identity.UserAssignedIdentities = map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{

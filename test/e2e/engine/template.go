@@ -33,7 +33,6 @@ type Config struct {
 	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY"`
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
-	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID"`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
 	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
@@ -251,11 +250,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
 			pool.ProximityPlacementGroupID = str
 		}
-	}
-
-	if config.MSIUserAssignedID != "" {
-		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
 	return &Engine{
