@@ -211,8 +211,6 @@ func GetCloudTargetEnv(location string) string {
 		return "AzureGermanCloud"
 	case strings.HasPrefix(loc, "usgov") || strings.HasPrefix(loc, "usdod"):
 		return "AzureUSGovernmentCloud"
-	case strings.HasPrefix(strings.ToLower(loc), "usnat") || strings.HasPrefix(strings.ToLower(loc), "ussec"):
-		return "akscustom"
 	default:
 		return "AzurePublicCloud"
 	}
@@ -228,6 +226,8 @@ func GetTargetEnv(location, customCloudName string) string {
 	switch {
 	case customCloudName != "" && strings.EqualFold(customCloudName, "AzureStackCloud"):
 		return "AzureStackCloud"
+	case customCloudName != "" && strings.EqualFold(customCloudName, "akscustom"):
+		return "akscustom"
 	default:
 		return GetCloudTargetEnv(location)
 	}
