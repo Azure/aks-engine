@@ -2086,6 +2086,12 @@ func (p *Properties) IsAzureStackCloud() bool {
 	return p.CustomCloudProfile != nil
 }
 
+// IsAKSCustomCloud checks if it's in AKS custom cloud
+func (p *Properties) IsAKSCustomCloud() bool {
+	return p.CustomCloudEnv != nil &&
+		strings.EqualFold(p.CustomCloudEnv.Name, "akscustom")
+}
+
 // GetCustomEnvironmentJSON return the JSON format string for custom environment
 func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 	var environmentJSON string
@@ -2109,6 +2115,8 @@ func (p *Properties) GetCustomCloudName() string {
 	var cloudProfileName string
 	if p.IsAzureStackCloud() {
 		cloudProfileName = p.CustomCloudProfile.Environment.Name
+	} else if p.IsAKSCustomCloud() {
+		cloudProfileName = p.CustomCloudEnv.Name
 	}
 	return cloudProfileName
 }
