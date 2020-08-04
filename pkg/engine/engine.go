@@ -743,6 +743,9 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
 		},
+		"ContainerConfigBase64": func(name string) string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config[name]))
+		},
 		"HasWindows": func() bool {
 			return cs.Properties.HasWindows()
 		},
