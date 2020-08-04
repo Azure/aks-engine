@@ -87,7 +87,6 @@
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
 // ../../parts/k8s/cloud-init/artifacts/generateproxycerts.sh
 // ../../parts/k8s/cloud-init/artifacts/health-monitor.sh
-// ../../parts/k8s/cloud-init/artifacts/kms.service
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/kubelet.service
@@ -115,6 +114,7 @@
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
 // ../../parts/k8s/kuberneteswindowssetup.ps1
+// ../../parts/k8s/manifests/kubernetesmaster-azure-kubernetes-kms.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-addon-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-apiserver.yaml
@@ -18688,11 +18688,6 @@ ensureDocker() {
   enableCRISystemdMonitor
 }
 {{end}}
-{{- if EnableEncryptionWithExternalKms}}
-ensureKMS() {
-  systemctlEnableAndStart kms || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
-}
-{{end}}
 {{- if IsIPv6Enabled}}
 ensureDHCPv6() {
   wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
@@ -20011,12 +20006,6 @@ time_metric "EnsureContainerd" ensureContainerd
 time_metric "ConfigPrivateClusterHosts" configPrivateClusterHosts
 {{end}}
 
-{{- if EnableEncryptionWithExternalKms}}
-if [[ -n ${MASTER_NODE} && ${KMS_PROVIDER_VAULT_NAME} != "" ]]; then
-  time_metric "EnsureKMS" ensureKMS
-fi
-{{end}}
-
 {{/* configure and enable dhcpv6 for ipv6 features */}}
 {{- if IsIPv6Enabled}}
 time_metric "EnsureDHCPv6" ensureDHCPv6
@@ -20605,42 +20594,6 @@ func k8sCloudInitArtifactsHealthMonitorSh() (*asset, error) {
 	return a, nil
 }
 
-var _k8sCloudInitArtifactsKmsService = []byte(`[Unit]
-Description=azurekms
-Requires=docker.service
-After=network-online.target
-
-[Service]
-Type=simple
-Restart=always
-TimeoutStartSec=0
-ExecStart=/usr/bin/docker run \
-  --net=host \
-  --volume=/opt:/opt \
-  --volume=/etc/kubernetes:/etc/kubernetes \
-  --volume=/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt \
-  --volume=/var/lib/waagent:/var/lib/waagent \
-  mcr.microsoft.com/k8s/kms/keyvault:v0.0.9
-
-[Install]
-WantedBy=multi-user.target
-`)
-
-func k8sCloudInitArtifactsKmsServiceBytes() ([]byte, error) {
-	return _k8sCloudInitArtifactsKmsService, nil
-}
-
-func k8sCloudInitArtifactsKmsService() (*asset, error) {
-	bytes, err := k8sCloudInitArtifactsKmsServiceBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/kms.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sCloudInitArtifactsKubeletMonitorService = []byte(`[Unit]
 Description=a script that checks kubelet health and restarts if needed
 After=kubelet.service
@@ -20695,9 +20648,6 @@ func k8sCloudInitArtifactsKubeletMonitorTimer() (*asset, error) {
 var _k8sCloudInitArtifactsKubeletService = []byte(`[Unit]
 Description=Kubelet
 ConditionPathExists=/usr/local/bin/kubelet
-{{if EnableEncryptionWithExternalKms}}
-Requires=kms.service
-{{end}}
 
 [Service]
 Restart=always
@@ -21663,13 +21613,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "labelNodesSystemdService"}}
 
-- path: /etc/systemd/system/kms.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
-
 - path: /etc/apt/preferences
   permissions: "0644"
   encoding: gzip
@@ -22235,13 +22178,6 @@ write_files:
     {{CloudInitData "dockerMonitorSystemdService"}}
 
 {{- if not .IsVHDDistro}}
-- path: /etc/systemd/system/kms.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
-
 - path: /etc/apt/preferences
   permissions: "0644"
   encoding: gzip
@@ -24066,6 +24002,75 @@ func k8sKuberneteswindowssetupPs1() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/kuberneteswindowssetup.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sManifestsKubernetesmasterAzureKubernetesKmsYaml = []byte(`apiVersion: v1
+kind: Pod
+metadata:
+  name: azure-kms-provider
+  namespace: kube-system
+  labels:
+    tier: control-plane
+    component: azure-kms-provider
+spec:
+  priorityClassName: system-node-critical
+  hostNetwork: true
+  containers:
+    - name: azure-kms-provider
+      image: {{ContainerImage "azure-kms-provider"}}
+      imagePullPolicy: IfNotPresent
+      command: [{{ContainerConfig "command"}}]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 4
+          memory: 2Gi
+      volumeMounts:
+      - name: etc-kubernetes
+        mountPath: /etc/kubernetes
+      - name: etc-ssl
+        mountPath: /etc/ssl
+        readOnly: true
+      - name: var-lib-kubelet
+        mountPath: /var/lib/kubelet
+      - name: msi
+        mountPath: /var/lib/waagent/ManagedIdentity-Settings
+        readOnly: true
+      - name: sock
+        mountPath: /opt
+  volumes:
+    - name: etc-kubernetes
+      hostPath:
+        path: /etc/kubernetes
+    - name: etc-ssl
+      hostPath:
+        path: /etc/ssl
+    - name: var-lib-kubelet
+      hostPath:
+        path: /var/lib/kubelet
+    - name: msi
+      hostPath:
+        path: /var/lib/waagent/ManagedIdentity-Settings
+    - name: sock
+      hostPath:
+        path: /opt
+`)
+
+func k8sManifestsKubernetesmasterAzureKubernetesKmsYamlBytes() ([]byte, error) {
+	return _k8sManifestsKubernetesmasterAzureKubernetesKmsYaml, nil
+}
+
+func k8sManifestsKubernetesmasterAzureKubernetesKmsYaml() (*asset, error) {
+	bytes, err := k8sManifestsKubernetesmasterAzureKubernetesKmsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/manifests/kubernetesmaster-azure-kubernetes-kms.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -29303,7 +29308,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/etcd.service":                              k8sCloudInitArtifactsEtcdService,
 	"k8s/cloud-init/artifacts/generateproxycerts.sh":                     k8sCloudInitArtifactsGenerateproxycertsSh,
 	"k8s/cloud-init/artifacts/health-monitor.sh":                         k8sCloudInitArtifactsHealthMonitorSh,
-	"k8s/cloud-init/artifacts/kms.service":                               k8sCloudInitArtifactsKmsService,
 	"k8s/cloud-init/artifacts/kubelet-monitor.service":                   k8sCloudInitArtifactsKubeletMonitorService,
 	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                     k8sCloudInitArtifactsKubeletMonitorTimer,
 	"k8s/cloud-init/artifacts/kubelet.service":                           k8sCloudInitArtifactsKubeletService,
@@ -29331,6 +29335,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/kubernetesparams.t":                                             k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                 k8sKuberneteswindowsfunctionsPs1,
 	"k8s/kuberneteswindowssetup.ps1":                                     k8sKuberneteswindowssetupPs1,
+	"k8s/manifests/kubernetesmaster-azure-kubernetes-kms.yaml":           k8sManifestsKubernetesmasterAzureKubernetesKmsYaml,
 	"k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml":       k8sManifestsKubernetesmasterCloudControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-addon-manager.yaml":             k8sManifestsKubernetesmasterKubeAddonManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                 k8sManifestsKubernetesmasterKubeApiserverYaml,
@@ -29502,7 +29507,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"etcd.service":                              {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
 				"generateproxycerts.sh":                     {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
 				"health-monitor.sh":                         {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
-				"kms.service":                               {k8sCloudInitArtifactsKmsService, map[string]*bintree{}},
 				"kubelet-monitor.service":                   {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
 				"kubelet-monitor.timer":                     {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
 				"kubelet.service":                           {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
@@ -29533,6 +29537,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"kuberneteswindowsfunctions.ps1": {k8sKuberneteswindowsfunctionsPs1, map[string]*bintree{}},
 		"kuberneteswindowssetup.ps1":     {k8sKuberneteswindowssetupPs1, map[string]*bintree{}},
 		"manifests": {nil, map[string]*bintree{
+			"kubernetesmaster-azure-kubernetes-kms.yaml":     {k8sManifestsKubernetesmasterAzureKubernetesKmsYaml, map[string]*bintree{}},
 			"kubernetesmaster-cloud-controller-manager.yaml": {k8sManifestsKubernetesmasterCloudControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-addon-manager.yaml":       {k8sManifestsKubernetesmasterKubeAddonManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-apiserver.yaml":           {k8sManifestsKubernetesmasterKubeApiserverYaml, map[string]*bintree{}},

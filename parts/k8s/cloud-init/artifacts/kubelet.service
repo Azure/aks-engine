@@ -1,9 +1,6 @@
 [Unit]
 Description=Kubelet
 ConditionPathExists=/usr/local/bin/kubelet
-{{if EnableEncryptionWithExternalKms}}
-Requires=kms.service
-{{end}}
 
 [Service]
 Restart=always

@@ -102,6 +102,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotEighteenDotZero).To(Equal(expected))
 
@@ -190,6 +191,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotSeventeenDotZero).To(Equal(expected))
 
@@ -274,6 +276,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotSixteenDotZero).To(Equal(expected))
 
@@ -354,6 +357,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotFifteenDotZero).To(Equal(expected))
 
@@ -433,6 +437,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotFourteenDotZero).To(Equal(expected))
 
@@ -511,6 +516,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotThirteenDotZero).To(Equal(expected))
 

@@ -152,13 +152,6 @@ write_files:
     {{CloudInitData "dockerMonitorSystemdService"}}
 
 {{- if not .IsVHDDistro}}
-- path: /etc/systemd/system/kms.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
-
 - path: /etc/apt/preferences
   permissions: "0644"
   encoding: gzip

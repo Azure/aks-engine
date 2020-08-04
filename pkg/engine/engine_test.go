@@ -1737,7 +1737,6 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 			for _, file := range []string{etcdSystemdService,
 				dhcpv6ConfigurationScript,
 				kubernetesCISScript,
-				kmsSystemdService,
 				labelNodesScript,
 				labelNodesSystemdService,
 				aptPreferences,

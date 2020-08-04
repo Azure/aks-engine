@@ -347,11 +347,6 @@ ensureDocker() {
   enableCRISystemdMonitor
 }
 {{end}}
-{{- if EnableEncryptionWithExternalKms}}
-ensureKMS() {
-  systemctlEnableAndStart kms || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
-}
-{{end}}
 {{- if IsIPv6Enabled}}
 ensureDHCPv6() {
   wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
