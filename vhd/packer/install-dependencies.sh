@@ -156,7 +156,7 @@ METRICS_SERVER_VERSIONS="
 0.3.7
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
+    CONTAINER_IMAGE="k8s.gcr.io/metrics-server/metrics-server:v${METRICS_SERVER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-server:v${METRICS_SERVER_VERSION}"
