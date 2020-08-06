@@ -15,6 +15,7 @@ echo "Components downloaded in this VHD build (some of the below components migh
 AUDITD_ENABLED=true
 installDeps
 cat << EOF >> ${VHD_LOGS_FILEPATH}
+apt packages:
   - apache2-utils
   - apt-transport-https
   - auditd
@@ -33,7 +34,10 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - gcc
   - git
   - glusterfs-client
+  - htop
+  - iftop
   - init-system-helpers
+  - iotop
   - iproute2
   - ipset
   - iptables
@@ -44,7 +48,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - make
   - mount
   - nfs-common
-  - pigz socat
+  - pigz
+  - socat
+  - sysstat
   - traceroute
   - util-linux
   - xz-utils
@@ -60,6 +66,10 @@ chmod a-x /etc/update-motd.d/??-{motd-news,release-upgrade}
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
+
+cat << EOF >> ${VHD_LOGS_FILEPATH}
+Binaries:
+EOF
 
 apmz_version="v0.5.1"
 ensureAPMZ "${apmz_version}"
@@ -561,6 +571,7 @@ df -h
 
 echo "Using kernel:" >> ${VHD_LOGS_FILEPATH}
 tee -a ${VHD_LOGS_FILEPATH} < /proc/version
+{ printf "Installed apt packages:\n"; apt list --installed | grep -v 'Listing...'; } >> ${VHD_LOGS_FILEPATH}
 {
   echo "Install completed successfully on " $(date)
   echo "VSTS Build NUMBER: ${BUILD_NUMBER}"
