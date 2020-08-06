@@ -41596,6 +41596,7 @@ try
             Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
         }
 
+        # For AKSClustomCloud, TargetEnvironment must be set to AzureStackCloud
         Write-Log "Write Azure cloud provider config"
         Write-AzureConfig ` + "`" + `
             -KubeDir $global:KubeDir ` + "`" + `
@@ -41617,9 +41618,9 @@ try
             -UseInstanceMetadata $global:UseInstanceMetadata ` + "`" + `
             -LoadBalancerSku $global:LoadBalancerSku ` + "`" + `
             -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB ` + "`" + `
-            -TargetEnvironment $TargetEnvironment
+            -TargetEnvironment {{if IsAKSCustomCloud}}"AzureStackCloud"{{else}}$TargetEnvironment{{end}}
 
-        {{if IsAzureStackCloud}}
+        {{if or IsAzureStackCloud IsAKSCustomCloud}}
         $azureStackConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
         $envJSON = "{{ GetBase64EncodedEnvironmentJSON }}"
         [io.file]::WriteAllBytes($azureStackConfigFile, [System.Convert]::FromBase64String($envJSON))
