@@ -2087,6 +2087,22 @@ func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 		if escape {
 			environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
 		}
+	} else if p.IsAKSCustomCloud() {
+		// Workaround to set correct name in AzureStackCloud.json
+		oldName := p.CustomCloudEnv.Name
+		p.CustomCloudEnv.Name = AzureStackCloud
+		defer func() {
+			// Restore p.CustomCloudEnv to old value
+			p.CustomCloudEnv.Name = oldName
+		}()
+		bytes, err := json.Marshal(p.CustomCloudEnv)
+		if err != nil {
+			return "", fmt.Errorf("Could not serialize CustomCloudEnv object - %s", err.Error())
+		}
+		environmentJSON = string(bytes)
+		if escape {
+			environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
+		}
 	}
 	return environmentJSON, nil
 }
