@@ -170,31 +170,32 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 	errorCodeStrings = append(errorCodeStrings, "ERR_HOLD_MY_BEER")
 	errorCodes = append(errorCodes, -1)
 	cases := []struct {
-		name                                  string
-		cs                                    *api.ContainerService
-		expectedHasCustomSearchDomain         bool
-		expectedGetSearchDomainName           string
-		expectedGetSearchDomainRealmUser      string
-		expectedGetSearchDomainRealmPassword  string
-		expectedHasCustomNodesDNS             bool
-		expectedGetHyperkubeImageReference    string
-		expectedGetTargetEnvironment          string
-		expectedIsNSeriesSKU                  bool
-		expectedIsDockerContainerRuntime      bool
-		expectedHasPrivateAzureRegistryServer bool
-		expectedGetPrivateAzureRegistryServer string
-		expectedGetSysctlDConfigKeyVals       string
-		expectedGetCSEErrorCodeVals           []int
-		expectedHasVHDDistroNodes             bool
-		expectedIsVHDDistroForAllNodes        bool
-		expectedHasClusterInitComponent       bool
-		expectedIsVirtualMachineScaleSets     bool
-		expectedUseManagedIdentity            bool
-		expectedHasKubeReservedCgroup         bool
-		expectedGetKubeReservedCgroup         string
-		expectedHasCustomPodSecurityPolicy    bool
-		expectedIsDashboardAddonEnabled       bool
-		expectedGetEtcdStorageLimitGB         int
+		name                                    string
+		cs                                      *api.ContainerService
+		expectedHasCustomSearchDomain           bool
+		expectedGetSearchDomainName             string
+		expectedGetSearchDomainRealmUser        string
+		expectedGetSearchDomainRealmPassword    string
+		expectedHasCustomNodesDNS               bool
+		expectedGetHyperkubeImageReference      string
+		expectedGetTargetEnvironment            string
+		expectedIsNSeriesSKU                    bool
+		expectedIsDockerContainerRuntime        bool
+		expectedHasPrivateAzureRegistryServer   bool
+		expectedGetPrivateAzureRegistryServer   string
+		expectedGetSysctlDConfigKeyVals         string
+		expectedGetCSEErrorCodeVals             []int
+		expectedHasVHDDistroNodes               bool
+		expectedIsVHDDistroForAllNodes          bool
+		expectedHasClusterInitComponent         bool
+		expectedIsVirtualMachineScaleSets       bool
+		expectedUseManagedIdentity              bool
+		expectedHasKubeReservedCgroup           bool
+		expectedGetKubeReservedCgroup           string
+		expectedHasCustomPodSecurityPolicy      bool
+		expectedIsDashboardAddonEnabled         bool
+		expectedIsPodSecurityPolicyAddonEnabled bool
+		expectedGetEtcdStorageLimitGB           int
 	}{
 		{
 			name: "1.15 release",
@@ -894,19 +895,20 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedHasCustomSearchDomain:        false,
-			expectedGetSearchDomainName:          "",
-			expectedGetSearchDomainRealmUser:     "",
-			expectedGetSearchDomainRealmPassword: "",
-			expectedHasCustomNodesDNS:            false,
-			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
-			expectedGetTargetEnvironment:         "AzurePublicCloud",
-			expectedIsNSeriesSKU:                 false,
-			expectedIsDockerContainerRuntime:     true,
-			expectedGetSysctlDConfigKeyVals:      "",
-			expectedGetCSEErrorCodeVals:          []int{-1},
-			expectedIsVirtualMachineScaleSets:    true,
-			expectedHasCustomPodSecurityPolicy:   true,
+			expectedHasCustomSearchDomain:           false,
+			expectedGetSearchDomainName:             "",
+			expectedGetSearchDomainRealmUser:        "",
+			expectedGetSearchDomainRealmPassword:    "",
+			expectedHasCustomNodesDNS:               false,
+			expectedGetHyperkubeImageReference:      "hyperkube-amd64:v1.15.4",
+			expectedGetTargetEnvironment:            "AzurePublicCloud",
+			expectedIsNSeriesSKU:                    false,
+			expectedIsDockerContainerRuntime:        true,
+			expectedGetSysctlDConfigKeyVals:         "",
+			expectedGetCSEErrorCodeVals:             []int{-1},
+			expectedIsVirtualMachineScaleSets:       true,
+			expectedHasCustomPodSecurityPolicy:      true,
+			expectedIsPodSecurityPolicyAddonEnabled: true,
 		},
 		{
 			name: "kubernetes-dashboard addon enabled",
@@ -1022,6 +1024,47 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetEtcdStorageLimitGB:        8589934592,
+		},
+		{
+			name: "pod-security-policy addon enabled",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.PodSecurityPolicyAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:           false,
+			expectedGetSearchDomainName:             "",
+			expectedGetSearchDomainRealmUser:        "",
+			expectedGetSearchDomainRealmPassword:    "",
+			expectedHasCustomNodesDNS:               false,
+			expectedGetHyperkubeImageReference:      "hyperkube-amd64:v1.15.4",
+			expectedGetTargetEnvironment:            "AzurePublicCloud",
+			expectedIsNSeriesSKU:                    false,
+			expectedIsDockerContainerRuntime:        true,
+			expectedGetSysctlDConfigKeyVals:         "",
+			expectedGetCSEErrorCodeVals:             []int{-1},
+			expectedIsVirtualMachineScaleSets:       true,
+			expectedIsPodSecurityPolicyAddonEnabled: true,
 		},
 	}
 
@@ -1183,7 +1226,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			v = reflect.ValueOf(funcMap["IsDashboardAddonEnabled"])
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedIsDashboardAddonEnabled {
-				t.Errorf("expected funcMap invocation of HasCustomPodSecurityPolicy to return %t, instead got %t", c.expectedIsDashboardAddonEnabled, ret[0].Interface())
+				t.Errorf("expected funcMap invocation of IsDashboardAddonEnabled to return %t, instead got %t", c.expectedIsDashboardAddonEnabled, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsPodSecurityPolicyAddonEnabled"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsPodSecurityPolicyAddonEnabled {
+				t.Errorf("expected funcMap invocation of IsPodSecurityPolicyAddonEnabled to return %t, instead got %t", c.expectedIsPodSecurityPolicyAddonEnabled, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["GetEtcdStorageLimitGB"])
 			ret = v.Call(make([]reflect.Value, 0))
