@@ -571,8 +571,7 @@ df -h
 
 echo "Using kernel:" >> ${VHD_LOGS_FILEPATH}
 tee -a ${VHD_LOGS_FILEPATH} < /proc/version
-echo "Installed apt packages:" >> ${VHD_LOGS_FILEPATH}
-apt list --installed >> ${VHD_LOGS_FILEPATH}
+{ printf "Installed apt packages:\n"; apt list --installed | grep -v 'Listing...'; } >> ${VHD_LOGS_FILEPATH}
 {
   echo "Install completed successfully on " $(date)
   echo "VSTS Build NUMBER: ${BUILD_NUMBER}"
