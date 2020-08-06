@@ -27,30 +27,24 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 	}
 
-	var useManagedIdentity, userAssignedIDEnabled, createNewUserAssignedIdentity bool
+	var useManagedIdentity, userAssignedIDEnabled bool
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
-		createNewUserAssignedIdentity = kubernetesConfig.ShouldCreateNewUserAssignedIdentity()
+		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
 	}
 
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	if userAssignedIDEnabled {
-		if createNewUserAssignedIdentity {
-			userAssignedID := createUserAssignedIdentities()
-			armResources = append(armResources, userAssignedID)
-		}
-
+		userAssignedID := createUserAssignedIdentities()
 		var msiRoleAssignment RoleAssignmentARM
 		if isHostedMaster {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityReaderRole)
 		} else {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
 		}
-
-		armResources = append(armResources, msiRoleAssignment)
+		armResources = append(armResources, userAssignedID, msiRoleAssignment)
 	}
 
 	// Create the Standard Load Balancer resource spec, so long as:
@@ -166,7 +160,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 	agentVMASResources = append(agentVMASResources, agentVMASVM)
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
+	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
 
 	if useManagedIdentity && !userAssignedIDEnabled {
 		agentVMASSysRoleAssignment := createAgentVMASSysRoleAssignment(profile)

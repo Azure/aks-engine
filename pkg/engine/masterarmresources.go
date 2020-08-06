@@ -114,7 +114,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	var useManagedIdentity, userAssignedIDEnabled bool
 	useManagedIdentity = kubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
+	userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
 
 	if useManagedIdentity && !userAssignedIDEnabled {
 		vmasRoleAssignment := createVMASRoleAssignment()
