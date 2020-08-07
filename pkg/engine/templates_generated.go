@@ -16611,11 +16611,7 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
         - /metrics-server
-{{- if IsKubernetesVersionGe "1.16.0"}}
         - --kubelet-insecure-tls
-{{else}}
-        - --source=kubernetes.summary_api:''
-{{- end}}
       nodeSelector:
         kubernetes.io/os: linux
 ---
