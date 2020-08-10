@@ -514,7 +514,7 @@ We are investigating possible risks & mitigations for when VMs are deprovisioned
 
 Kubernetes 1.18 introduces alpha support for the ContainerD runtime on Windows Server 2019. This is still a work-in-progress tracked in [kubernetes/enhancements#1001](https://github.com/kubernetes/enhancements/issues/1001). This feature in AKS-Engine is for testing the in-development versions of ContainerD and Kubernetes, and is not for production use. Be sure to review [open issues](https://github.com/azure/aks-engine/issues?q=containerd+label%3Awindows+is%3Aopen) if you want to test or contribute to this effort.
 
-Currently it requires URLs to custom ContainerD and CNI plugin builds.
+Containerd now has supported builds at https://github.com/containerd/containerd/releases/tag/v1.4.0-rc.0.
 
 ### Deploying multi-OS clusters with ContainerD
 
@@ -525,15 +525,84 @@ These parameters are all required.
 
 ```json
       "kubernetesConfig": {
-        "networkPlugin": "kubenet",
+        "networkPlugin": "azure",
         "containerRuntime": "containerd",
-        "windowsContainerdURL": "...",
-        "windowsSdnPluginURL": "..."
+        "windowsContainerdURL": "..."
       }
 ```
 
-### Building ContainerD
+### Hyper-v support
+This feature in AKS-Engine is for testing the in-development versions of ContainerD and Kubernetes, and is not for production use. Be sure to review [open issues](https://github.com/azure/aks-engine/issues?q=containerd+label%3Awindows+is%3Aopen) if you want to test or contribute to this effort.
 
-As of March 3, 2020, the ContainerD and network plugin repos don't have public builds available. This repo has a script that will build them from source and create two ZIP files: [build-windows-containerd.sh](../../scripts/build-windows-containerd.sh)
+The current default for hyper-v sets hyper-v containers as default and adds a process isolated option for the currently selected host VM OS version. If you VM OS version is Windows Server 2004 (10.0.19041) and you apply a pod spec with now updates you will get a 2004 container running in hyper-v container.  
 
-Upload these ZIP files to a location that your cluster will be able to reach, then put those URLs in `windowsContainerdURL` and `windowsSdnPluginURL` in the AKS-Engine API model shown above.
+If you wish to have process isolated or OS version below your current Host OS version, you will need to create a RuntimeClass object and map the pod to the RuntimeClass.  Note that Hyper-v support is currently backwards compatible.  You have to have a Host OS that is the same version or newer than the version of the container you wish to run.
+
+For example, assuming a Windows Host OS of 2004 (10.0.19041), you can apply the following `RuntimeClass` 
+
+```yaml
+apiVersion: node.k8s.io/v1beta1
+kind: RuntimeClass
+metadata:
+  name: windows-2019
+handler: 'runhcs-wcow-hypervisor-17763'
+scheduling:
+  nodeSelector:
+    kubernetes.io/os: 'windows'
+    kubernetes.io/arch: 'amd64'
+    node.kubernetes.io/windows-build: '10.0.19041'
+  tolerations:
+  - effect: NoSchedule
+    key: os
+    operator: Equal
+    value: "windows"
+```
+
+And then you would be able to run a 2019/1809 (10.0.17763) container by setting the `runtimeClassName` to the `windows-2019` RuntimeClass on the container template:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iis-ltsc2019
+  labels:
+    app: iis-ltsc2019
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: iis-ltsc2019
+      labels:
+        app: iis-ltsc2019
+    spec:
+      runtimeClassName: windows-2019
+      containers:
+      - name: iis
+        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+        resources:
+          limits:
+            cpu: 1
+            memory: 800m
+          requests:
+            cpu: .1
+            memory: 300m
+        ports:
+          - containerPort: 80
+      nodeSelector:
+        "kubernetes.io/os": windows
+  selector:
+    matchLabels:
+      app: iis-ltsc2019
+
+```
+
+You can learn more about RuntimeClasses and the future of the windows support:
+
+- https://kubernetes.io/docs/concepts/containers/runtime-class/
+- https://github.com/kubernetes/enhancements/blob/master/keps/sig-windows/windows-runtimeclass-support.md
+
+### Building ContainerD with Hyper-v
+
+As of Aug 10, 2020, the ContainerD hyper-v support don't have public builds available. This repo has a script that will build it from source and create a ZIP file: [build-windows-containerd.sh](../../scripts/build-windows-containerd.sh)
+
+Upload these ZIP files to a location that your cluster will be able to reach, then put those URLs in `windowsContainerdURL` in the AKS-Engine API model shown above.

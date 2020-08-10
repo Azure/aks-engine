@@ -22429,6 +22429,7 @@ state = "C:\\ProgramData\\containerd\\state"
           DebugType = 2
           SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
           SandboxPlatform = "windows/amd64"
+          SandboxIsolation = 1
       [plugins.cri.containerd.runtimes]
         [plugins.cri.containerd.runtimes.runhcs-wcow-process]
           runtime_type = "io.containerd.runhcs.v1"
@@ -24889,7 +24890,7 @@ function Install-Containerd {
 
   # configure
   if (Test-Path -Path "$global:ContainerdInstallLocation\containerd-template.toml") {
-    #Hyperv config set up
+    # Hyperv config set up
     Write-Host "Configuring containerd for hyperv"
     $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
     (Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" -Raw).
@@ -24899,7 +24900,7 @@ function Install-Containerd {
       Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
       Out-File -FilePath "$configFile" -Encoding ascii
   }else{
-    #non hyperv configuration
+    # non hyperv configuration
     Write-Host "Configuring containerd for process isolated"
     & $cdbinary config dump | ` + "`" + `
       % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | ` + "`" + `

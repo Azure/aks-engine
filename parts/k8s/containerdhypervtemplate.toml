@@ -40,6 +40,7 @@ state = "C:\\ProgramData\\containerd\\state"
           DebugType = 2
           SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
           SandboxPlatform = "windows/amd64"
+          SandboxIsolation = 1
       [plugins.cri.containerd.runtimes]
         [plugins.cri.containerd.runtimes.runhcs-wcow-process]
           runtime_type = "io.containerd.runhcs.v1"
@@ -48,33 +49,33 @@ state = "C:\\ProgramData\\containerd\\state"
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
             SandboxPlatform = "windows/amd64"
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1809]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-17763]
           runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1809.options]
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-17763.options]
             Debug = true
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-1809-amd64"
             SandboxPlatform = "windows/amd64"
             SandboxIsolation = 1
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1903]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18362]
           runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1903.options]
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18362.options]
             Debug = true
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-1903-amd64"
             SandboxPlatform = "windows/amd64"
             SandboxIsolation = 1
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1909]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18363]
           runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1909.options]
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18363.options]
             Debug = true
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-1909-amd64"
             SandboxPlatform = "windows/amd64"
             SandboxIsolation = 1
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-2004]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-19041]
           runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-2004.options]
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-19041.options]
             Debug = true
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-2004-amd64"
