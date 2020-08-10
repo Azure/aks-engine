@@ -534,9 +534,9 @@ These parameters are all required.
 ### Hyper-v support
 This feature in AKS-Engine is for testing the in-development versions of ContainerD and Kubernetes, and is not for production use. Be sure to review [open issues](https://github.com/azure/aks-engine/issues?q=containerd+label%3Awindows+is%3Aopen) if you want to test or contribute to this effort.
 
-The current default for hyper-v sets hyper-v containers as default and adds a process isolated option for the currently selected host VM OS version. If you VM OS version is Windows Server 2004 (10.0.19041) and you apply a pod spec with now updates you will get a 2004 container running in hyper-v container.  
+The current default for Hyper-V sets Hyper-V containers as default and adds a process isolated option for the currently selected host VM OS version. If your VM OS version is Windows Server 2004 (10.0.19041) and you apply a pod spec with new updates, you will get a 2004 container running in a Hyper-V container.  
 
-If you wish to have process isolated or OS version below your current Host OS version, you will need to create a RuntimeClass object and map the pod to the RuntimeClass.  Note that Hyper-v support is currently backwards compatible.  You have to have a Host OS that is the same version or newer than the version of the container you wish to run.  Multi-arch container images are not supported. You must have a single arch image if hyperv is enabled in containerd.
+If you wish to have process isolated or use an OS version below your current Host OS version, you will need to create a RuntimeClass object and map the pod to the RuntimeClass.  Note that Hyper-V support is currently backwards compatible.  You have to have a Host OS that is the same version or newer than the version of the container you wish to run.  Multi-arch container images are not supported. You must have a single arch image if Hyper-V is enabled in containerd.
 
 For example, assuming a Windows Host OS of 2004 (10.0.19041), you can apply the following `RuntimeClass` 
 
@@ -598,9 +598,9 @@ spec:
 
 Current limitations:
 
-- Currently the Runtime Hanlders are not configurable.  
-- If you specific a hanlder that does not map the the fields in [../../parts/k8s/containerdhypervtemplate.toml](parts/k8s/containerdhypervtemplate.toml) then then the container will not start. 
-- If you map to container version that is higher than your current OS image your container will not start.
+- Currently the Runtime handlers are not configurable.  
+- If you specify a handler that does not map the fields in [../../parts/k8s/containerdhypervtemplate.toml](parts/k8s/containerdhypervtemplate.toml), then the container will not start. 
+- If you map to a container version that is higher than your current OS image your container will not start.
 - Multi-arch container images are not supported
 
 You can learn more about RuntimeClasses and the future of the Windows support:
@@ -608,8 +608,8 @@ You can learn more about RuntimeClasses and the future of the Windows support:
 - https://kubernetes.io/docs/concepts/containers/runtime-class/
 - https://github.com/kubernetes/enhancements/blob/master/keps/sig-windows/windows-runtimeclass-support.md
 
-### Building ContainerD with Hyper-v
+### Building ContainerD with Hyper-V
 
-As of Aug 10, 2020, the ContainerD hyper-v support don't have public builds available. This repo has a script that will build it from source and create a ZIP file: [build-windows-containerd.sh](../../scripts/build-windows-containerd.sh)
+As of Aug 10, 2020, the ContainerD Hyper-V support doesn't have public builds available. This repo has a script that will build it from source and create a ZIP file: [build-windows-containerd.sh](../../scripts/build-windows-containerd.sh)
 
 Upload these ZIP files to a location that your cluster will be able to reach, then put those URLs in `windowsContainerdURL` in the AKS-Engine API model shown above.
