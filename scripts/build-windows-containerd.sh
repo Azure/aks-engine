@@ -32,8 +32,8 @@ cp bin/ctr.exe /output
 cd \$GOPATH
 cd src/github.com/containerd
 git clone https://github.com/jterry75/cri.git
-git checkout windows_port
 cd cri
+git checkout windows_port
 git rev-parse HEAD > /output/cri-revision.txt
 make containerd
 cp _output/containerd.exe /output
