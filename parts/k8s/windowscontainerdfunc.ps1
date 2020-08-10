@@ -40,6 +40,7 @@ function Install-Containerd {
 
   # TODO: check if containerd is already installed and is the same version before this.
   
+  # Extract the package
   if ($ContainerdUrl.endswith(".zip")) {
     $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
     DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
@@ -56,23 +57,36 @@ function Install-Containerd {
     del -Recurse -Force $global:ContainerdInstallLocation\bin
   }
 
+  # get configuration options
   Add-SystemPathEntry $global:ContainerdInstallLocation
-
   $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
   $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
   $pauseImage = $clusterConfig.Cri.Images.Pause
-
   $formatedbin=$(($CNIBinDir).Replace("\","/"))
   $formatedconf=$(($CNIConfDir).Replace("\","/"))
-  & $cdbinary config dump | `
-    % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | `
-    % {$_ -replace "bin_dir = ""(.*?[^\\])""", "bin_dir = ""$formatedbin""" } | `
-    % {$_ -replace "conf_dir = ""(.*?[^\\])""", "conf_dir = ""$formatedconf""" } | `
-    Out-File $configFile -Encoding ascii
+
+  # configure
+  if (Test-Path -Path "$global:ContainerdInstallLocation\containerd-template.toml") {
+    # Hyperv config set up
+    Write-Host "Configuring containerd for hyperv"
+    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+    (Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" -Raw).
+      Replace('{{pauseImage}}', $pauseImage).
+      Replace('{{cnibin}}', $formatedbin).
+      Replace('{{cniconf}}', $formatedconf).
+      Replace('{{currentversion}}', $windowsVersion) | `
+      Out-File -FilePath "$configFile" -Encoding ascii
+  }else{
+    # non hyperv configuration
+    Write-Host "Configuring containerd for process isolated"
+    & $cdbinary config dump | `
+      % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | `
+      % {$_ -replace "bin_dir = ""(.*?[^\\])""", "bin_dir = ""$formatedbin""" } | `
+      % {$_ -replace "conf_dir = ""(.*?[^\\])""", "conf_dir = ""$formatedconf""" } | `
+      Out-File $configFile -Encoding ascii
+  }
 
   RegisterContainerDService
 }
-
-
 

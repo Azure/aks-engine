@@ -110,6 +110,7 @@
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
+// ../../parts/k8s/containerdhypervtemplate.toml
 // ../../parts/k8s/kubeconfig.json
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
@@ -22386,6 +22387,119 @@ func k8sCloudInitNodecustomdataYml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContainerdhypervtemplateToml = []byte(`root = "C:\\ProgramData\\containerd\\root"
+state = "C:\\ProgramData\\containerd\\state"
+
+[grpc]
+  address = "\\\\.\\pipe\\containerd-containerd"
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+
+[ttrpc]
+  address = ""
+
+[debug]
+  address = ""
+  level = "debug"
+
+[metrics]
+  address = ""
+  grpc_histogram = false
+
+[cgroup]
+  path = ""
+
+[plugins]
+  [plugins.cri]
+    stream_server_address = "127.0.0.1"
+    stream_server_port = "0"
+    enable_selinux = false
+    sandbox_image = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+    stats_collect_period = 10
+    systemd_cgroup = false
+    enable_tls_streaming = false
+    max_container_log_line_size = 16384
+    [plugins.cri.containerd]
+      snapshotter = "windows"
+      no_pivot = false
+      [plugins.cri.containerd.default_runtime]
+        runtime_type = "io.containerd.runhcs.v1"
+        [plugins.cri.containerd.default_runtime.options]
+          Debug = true
+          DebugType = 2
+          SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+          SandboxPlatform = "windows/amd64"
+      [plugins.cri.containerd.runtimes]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-process]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-process.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+            SandboxPlatform = "windows/amd64"
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1809]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1809.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-1809-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1903]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1903.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-1903-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1909]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-1909.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-1909-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-2004]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-2004.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-2004-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+    [plugins.cri.cni]
+      bin_dir = "{{cnibin}}"
+      conf_dir = "{{cniconf}}"
+    [plugins.cri.registry]
+      [plugins.cri.registry.mirrors]
+        [plugins.cri.registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+  [plugins.diff-service]
+    default = ["windows"]
+  [plugins.scheduler]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = "0s"
+    startup_delay = "100ms"`)
+
+func k8sContainerdhypervtemplateTomlBytes() ([]byte, error) {
+	return _k8sContainerdhypervtemplateToml, nil
+}
+
+func k8sContainerdhypervtemplateToml() (*asset, error) {
+	bytes, err := k8sContainerdhypervtemplateTomlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containerdhypervtemplate.toml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sKubeconfigJson = []byte(`    {
         "apiVersion": "v1",
         "clusters": [
@@ -24747,6 +24861,7 @@ function Install-Containerd {
 
   # TODO: check if containerd is already installed and is the same version before this.
   
+  # Extract the package
   if ($ContainerdUrl.endswith(".zip")) {
     $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
     DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
@@ -24763,25 +24878,38 @@ function Install-Containerd {
     del -Recurse -Force $global:ContainerdInstallLocation\bin
   }
 
+  # get configuration options
   Add-SystemPathEntry $global:ContainerdInstallLocation
-
   $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
   $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
   $pauseImage = $clusterConfig.Cri.Images.Pause
-
   $formatedbin=$(($CNIBinDir).Replace("\","/"))
   $formatedconf=$(($CNIConfDir).Replace("\","/"))
-  & $cdbinary config dump | ` + "`" + `
-    % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | ` + "`" + `
-    % {$_ -replace "bin_dir = ""(.*?[^\\])""", "bin_dir = ""$formatedbin""" } | ` + "`" + `
-    % {$_ -replace "conf_dir = ""(.*?[^\\])""", "conf_dir = ""$formatedconf""" } | ` + "`" + `
-    Out-File $configFile -Encoding ascii
+
+  # configure
+  if (Test-Path -Path "$global:ContainerdInstallLocation\containerd-template.toml") {
+    #Hyperv config set up
+    Write-Host "Configuring containerd for hyperv"
+    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+    (Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" -Raw).
+      Replace('{{pauseImage}}', $pauseImage).
+      Replace('{{cnibin}}', $formatedbin).
+      Replace('{{cniconf}}', $formatedconf).
+      Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
+      Out-File -FilePath "$configFile" -Encoding ascii
+  }else{
+    #non hyperv configuration
+    Write-Host "Configuring containerd for process isolated"
+    & $cdbinary config dump | ` + "`" + `
+      % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | ` + "`" + `
+      % {$_ -replace "bin_dir = ""(.*?[^\\])""", "bin_dir = ""$formatedbin""" } | ` + "`" + `
+      % {$_ -replace "conf_dir = ""(.*?[^\\])""", "conf_dir = ""$formatedconf""" } | ` + "`" + `
+      Out-File $configFile -Encoding ascii
+  }
 
   RegisterContainerDService
 }
-
-
 
 `)
 
@@ -28893,6 +29021,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/jumpboxcustomdata.yml":                               k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                            k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                  k8sCloudInitNodecustomdataYml,
+	"k8s/containerdhypervtemplate.toml":                                  k8sContainerdhypervtemplateToml,
 	"k8s/kubeconfig.json":                                                k8sKubeconfigJson,
 	"k8s/kubernetesparams.t":                                             k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                 k8sKuberneteswindowsfunctionsPs1,
@@ -29093,6 +29222,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},
 			"nodecustomdata.yml":       {k8sCloudInitNodecustomdataYml, map[string]*bintree{}},
 		}},
+		"containerdhypervtemplate.toml":  {k8sContainerdhypervtemplateToml, map[string]*bintree{}},
 		"kubeconfig.json":                {k8sKubeconfigJson, map[string]*bintree{}},
 		"kubernetesparams.t":             {k8sKubernetesparamsT, map[string]*bintree{}},
 		"kuberneteswindowsfunctions.ps1": {k8sKuberneteswindowsfunctionsPs1, map[string]*bintree{}},
