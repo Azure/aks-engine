@@ -5,13 +5,10 @@
       "orchestratorType": "Kubernetes",
       "orchestratorRelease": "1.15",
       "kubernetesConfig": {
-               "apiServerConfig" : {
-                 "--feature-gates": "HyperVContainer=true"
-               },
-               "kubeletConfig" : {
-                    "--feature-gates": "HyperVContainer=true"
-                }
-          }
+        "networkPlugin": "azure",
+        "containerRuntime": "containerd",
+        "windowsContainerdURL": "https://k8swin.blob.core.windows.net/k8s-windows/containerd/containerplat-aks-test-0.0.8.zip"
+      }
     },
     "masterProfile": {
       "count": 1,
@@ -19,19 +16,14 @@
       "vmSize": "Standard_D2_v3"
     },
     "agentPoolProfiles": [
-	    {
-		"name": "windowspool",
-		"count": 2,
-		"vmSize": "Standard_D2_v3",
-		"availabilityProfile": "AvailabilitySet",
-		"osType": "Windows",
-		"osDiskSizeGB": 128,
-		"extensions": [
-		    {
-                        "name": "winrm"
-		    }
-		]
-	    }
+      {
+        "name": "windowspool",
+        "count": 2,
+        "vmSize": "Standard_D4s_v3",
+        "availabilityProfile": "AvailabilitySet",
+        "osType": "Windows",
+        "osDiskSizeGB": 128
+      }
     ],
     "windowsProfile": {
       "adminUsername": "azureuser",
@@ -50,12 +42,5 @@
     "servicePrincipalProfile": {
       "clientId": "",
       "secret": ""
-    },
-    "extensionProfiles": [
-      {
-        "name": "winrm",
-        "version": "v1"
-      }
-    ]
+    }
   }
-}
