@@ -696,16 +696,35 @@ Custom YAML specifications can be configured for kube-scheduler, kube-controller
 
 #### sysctldConfig
 
-The `sysctldConfig` configuration interface allows generic Linux kernel runtime configuration that will be delivered to sysctl. Use at your own risk! It is a generic key/value object, and a child property of `masterProfile` and node pool configurations under `agentPoolProfiles`, for tuning the Linux kernel parameters on master and/or node pool VMs, respectively. An example custom sysctl config:
+The `sysctldConfig` configuration interface allows generic Linux kernel runtime configuration that will be delivered to sysctl. Use at your own risk! It is a generic key/value object, and a child property of both `masterProfile` and node pool configurations under `agentPoolProfiles`, for tuning the Linux kernel parameters on master and/or node pool VMs, respectively. An example custom sysctl config that tunes the control plane VMs:
 
 ```
-"kubernetesConfig": {
+"masterProfile": {
+    ...
     "sysctldConfig": {
         "net.ipv4.tcp_keepalive_time": "120",
         "net.ipv4.tcp_keepalive_intvl": "75",
         "net.ipv4.tcp_keepalive_probes": "9"
     }
+    ...
 }
+```
+
+And, here's that same config override example on a node pool named "my-custom-node-pool":
+
+```
+"agentPoolProfiles": [
+  {
+    "name": "my-custom-node-pool",
+    ...
+    "sysctldConfig": {
+        "net.ipv4.tcp_keepalive_time": "120",
+        "net.ipv4.tcp_keepalive_intvl": "75",
+        "net.ipv4.tcp_keepalive_probes": "9"
+    }
+    ...
+  }
+]
 ```
 
 Kubernetes kernel configuration varies by distro, so please validate that the kernel parameter and value works for the Linux flavor you are using in your cluster.
