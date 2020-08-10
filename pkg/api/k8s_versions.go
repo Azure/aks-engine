@@ -224,7 +224,7 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.6",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.19.0-beta.1",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.19.0",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
@@ -242,13 +242,13 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.4",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.5",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.6",
 		},
 		"1.15": {
 			common.AddonResizerComponentName:           "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:              "oss/kubernetes/metrics-server:v0.2.1",
 			common.AddonManagerComponentName:           "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.6",
+			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.7",
 			common.CloudControllerManagerComponentName: "oss/kubernetes/cloud-controller-manager",
 		},
 		"1.14": {
