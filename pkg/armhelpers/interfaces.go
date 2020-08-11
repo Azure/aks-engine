@@ -19,6 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 // ResourceSkusResultPage
@@ -243,6 +244,8 @@ type KubernetesClient interface {
 	ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error)
 	// GetDaemonSet returns details about DaemonSet with passed in name.
 	GetDaemonSet(namespace, name string) (*appsv1.DaemonSet, error)
+	// GetDeployment returns a given deployment in a namespace.
+	GetDeployment(namespace, name string) (*appsv1.Deployment, error)
 	// GetNode returns details about node with passed in name.
 	GetNode(name string) (*v1.Node, error)
 	// UpdateNode updates the node in the api server with the passed in info.
@@ -251,8 +254,12 @@ type KubernetesClient interface {
 	DeleteNode(name string) error
 	// SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported.
 	SupportEviction() (string, error)
+	// DeleteClusterRole deletes the passed in ClusterRole.
+	DeleteClusterRole(role *rbacv1.ClusterRole) error
 	// DeleteDaemonSet deletes the passed in DaemonSet.
 	DeleteDaemonSet(ds *appsv1.DaemonSet) error
+	// DeleteDeployment deletes the passed in Deployment.
+	DeleteDeployment(ds *appsv1.Deployment) error
 	// DeletePod deletes the passed in pod.
 	DeletePod(pod *v1.Pod) error
 	// DeleteServiceAccount deletes the passed in service account.
@@ -261,8 +268,6 @@ type KubernetesClient interface {
 	EvictPod(pod *v1.Pod, policyGroupVersion string) error
 	// WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure.
 	WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error)
-	// GetDeployment returns a given deployment in a namespace.
-	GetDeployment(namespace, name string) (*appsv1.Deployment, error)
 	// UpdateDeployment updates a deployment to match the given specification.
 	UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error)
 }
