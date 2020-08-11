@@ -164,6 +164,12 @@ for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
+# gcr URL for metrics-server v0.2.1 is different, so we can't (easily) re-use the above enumeration
+# so let's just do it boutique-style below until we no longer have to build images for k8s 1.15
+METRICS_SERVER_VERSION_FOR_K8S_1DOT15="v0.2.1"
+pullContainerImage "docker" k8s.gcr.io/metrics-server-amd64:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
+pullContainerImage "docker" mcr.microsoft.com/oss/kubernetes/metrics-server:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
+
 KUBE_DNS_VERSIONS="
 1.15.4
 "
