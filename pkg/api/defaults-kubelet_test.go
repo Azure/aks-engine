@@ -2180,8 +2180,108 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 			}
 		})
 	}
-
 }
+
+func TestInputOverridesDuringUpgrade(t *testing.T) {
+	defaultConfig := map[string]string{
+		"--pod-infra-container-image": pauseImageReference,
+	}
+
+	inputConfig := map[string]string{
+		"--pod-infra-container-image": "input-pause",
+	}
+
+	cases := []struct {
+		name                  string
+		cs                    *ContainerService
+		isUpgrade             bool
+		expectedKubeletConfig map[string]string
+	}{
+		{
+			name: "use default value if no input",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+				},
+			},
+			isUpgrade:             false,
+			expectedKubeletConfig: defaultConfig,
+		},
+		{
+			name: "use input if not upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: inputConfig,
+						},
+					},
+				},
+			},
+			isUpgrade:             false,
+			expectedKubeletConfig: inputConfig,
+		},
+		{
+			name: "override input if upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: inputConfig,
+						},
+					},
+				},
+			},
+			isUpgrade:             true,
+			expectedKubeletConfig: defaultConfig,
+		},
+		{
+			name: "use default value if no input and upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+				},
+			},
+			isUpgrade:             true,
+			expectedKubeletConfig: defaultConfig,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setKubeletConfig(c.isUpgrade)
+
+			for ek, ev := range c.expectedKubeletConfig {
+				v, ok := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig[ek]
+				if !ok {
+					t.Fatalf("missing expected config %s", ek)
+				}
+				if v != ev {
+					t.Fatalf("expected config %s to equal %s, got %s", ek, ev, v)
+				}
+			}
+		})
+	}
+}
+
 func TestReadOnlyPort(t *testing.T) {
 	cases := []struct {
 		name                 string

@@ -136,6 +136,11 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		defaultKubeletConfig["--container-runtime-endpoint"] = "unix:///run/containerd/containerd.sock"
 	}
 
+	if isUpgrade {
+		// if upgrade, force default "--pod-infra-container-image" value
+		delete(o.KubernetesConfig.KubeletConfig, "--pod-infra-container-image")
+	}
+
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
