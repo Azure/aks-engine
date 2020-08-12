@@ -138,7 +138,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	if isUpgrade {
 		// if upgrade, force default "--pod-infra-container-image" value
-		delete(o.KubernetesConfig.KubeletConfig, "--pod-infra-container-image")
+		o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = defaultKubeletConfig["--pod-infra-container-image"]
 	}
 
 	// If no user-configurable kubelet config values exists, use the defaults
@@ -187,7 +187,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 		if isUpgrade {
 			// if upgrade, force default "--pod-infra-container-image" value
-			delete(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, "--pod-infra-container-image")
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
 		}
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
@@ -237,7 +237,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 		if isUpgrade {
 			// if upgrade, force default "--pod-infra-container-image" value
-			delete(profile.KubernetesConfig.KubeletConfig, "--pod-infra-container-image")
+			profile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
 		}
 
 		if profile.IsWindows() {

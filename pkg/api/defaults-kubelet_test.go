@@ -2187,15 +2187,20 @@ func TestInputOverridesDuringUpgrade(t *testing.T) {
 		"--pod-infra-container-image": pauseImageReference,
 	}
 
+	defaultWindowsConfig := map[string]string{
+		"--pod-infra-container-image": "kubletwin/pause",
+	}
+
 	inputConfig := map[string]string{
 		"--pod-infra-container-image": "input-pause",
 	}
 
 	cases := []struct {
-		name                  string
-		cs                    *ContainerService
-		isUpgrade             bool
-		expectedKubeletConfig map[string]string
+		name                     string
+		cs                       *ContainerService
+		isUpgrade                bool
+		expectedKubeletConfig    map[string]string
+		expectedWinKubeletConfig map[string]string
 	}{
 		{
 			name: "use default value if no input",
@@ -2208,10 +2213,30 @@ func TestInputOverridesDuringUpgrade(t *testing.T) {
 							KubeletConfig: map[string]string{},
 						},
 					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
 				},
 			},
-			isUpgrade:             false,
-			expectedKubeletConfig: defaultConfig,
+			isUpgrade:                false,
+			expectedKubeletConfig:    defaultConfig,
+			expectedWinKubeletConfig: defaultWindowsConfig,
 		},
 		{
 			name: "use input if not upgrade",
@@ -2221,13 +2246,40 @@ func TestInputOverridesDuringUpgrade(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
-							KubeletConfig: inputConfig,
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-infra-container-image": "input-pause",
+								},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
 						},
 					},
 				},
 			},
 			isUpgrade:             false,
 			expectedKubeletConfig: inputConfig,
+			// --pod-infra-container-image is static for windows nodes
+			expectedWinKubeletConfig: defaultWindowsConfig,
 		},
 		{
 			name: "override input if upgrade",
@@ -2237,16 +2289,42 @@ func TestInputOverridesDuringUpgrade(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
-							KubeletConfig: inputConfig,
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-infra-container-image": "input-pause",
+								},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
 						},
 					},
 				},
 			},
-			isUpgrade:             true,
-			expectedKubeletConfig: defaultConfig,
+			isUpgrade:                true,
+			expectedKubeletConfig:    defaultConfig,
+			expectedWinKubeletConfig: defaultWindowsConfig,
 		},
 		{
-			name: "use default value if no input and upgrade",
+			name: "override input if no input and upgrade",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -2256,26 +2334,72 @@ func TestInputOverridesDuringUpgrade(t *testing.T) {
 							KubeletConfig: map[string]string{},
 						},
 					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
 				},
 			},
-			isUpgrade:             true,
-			expectedKubeletConfig: defaultConfig,
+			isUpgrade:                true,
+			expectedKubeletConfig:    defaultConfig,
+			expectedWinKubeletConfig: defaultWindowsConfig,
 		},
 	}
 
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
 			c.cs.setKubeletConfig(c.isUpgrade)
 
 			for ek, ev := range c.expectedKubeletConfig {
 				v, ok := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig[ek]
 				if !ok {
-					t.Fatalf("missing expected config %s", ek)
+					t.Fatalf("OrchestratorProfile missing expected config %s", ek)
 				}
 				if v != ev {
-					t.Fatalf("expected config %s to equal %s, got %s", ek, ev, v)
+					t.Fatalf("OrchestratorProfile expected config %s to equal %s, got %s", ek, ev, v)
+				}
+
+				v, ok = c.cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig[ek]
+				if !ok {
+					t.Fatalf("MasterProfile missing expected config %s", ek)
+				}
+				if v != ev {
+					t.Fatalf("MasterProfile expected config %s to equal %s, got %s", ek, ev, v)
+				}
+
+				pool := c.cs.Properties.AgentPoolProfiles[0]
+				v, ok = pool.KubernetesConfig.KubeletConfig[ek]
+				if !ok {
+					t.Fatalf("%s AgentPoolProfiles missing expected config %s", pool.OSType, ek)
+				}
+				if v != ev {
+					t.Fatalf("%s AgentPoolProfiles expected config %s to equal %s, got %s", pool.OSType, ek, ev, v)
+				}
+			}
+			for ek, ev := range c.expectedWinKubeletConfig {
+				pool := c.cs.Properties.AgentPoolProfiles[1]
+				v, ok := pool.KubernetesConfig.KubeletConfig[ek]
+				if !ok {
+					t.Fatalf("%s AgentPoolProfiles missing expected config %s", pool.OSType, ek)
+				}
+				if v != ev {
+					t.Fatalf("%s AgentPoolProfiles expected config %s to equal %s, got %s", pool.OSType, ek, ev, v)
 				}
 			}
 		})
