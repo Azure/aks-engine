@@ -3392,13 +3392,14 @@ func ExampleProperties_validateZones() {
 
 func TestProperties_ValidateLoadBalancer(t *testing.T) {
 	tests := []struct {
-		name                string
-		orchestratorRelease string
-		loadBalancerSku     string
-		masterProfile       *MasterProfile
-		agentProfiles       []*AgentPoolProfile
-		expectedErr         bool
-		expectedErrStr      string
+		name                        string
+		orchestratorRelease         string
+		loadBalancerSku             string
+		masterProfile               *MasterProfile
+		agentProfiles               []*AgentPoolProfile
+		excludeMasterFromStandardLB bool
+		expectedErr                 bool
+		expectedErrStr              string
 	}{
 		{
 			name:                "lowercase basic LB",
@@ -3409,6 +3410,15 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 				DNSPrefix:           "foo",
 				VMSize:              "Standard_DS2_v2",
 				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			agentProfiles: []*AgentPoolProfile{
+				{
+					Name:                   "agentpool",
+					VMSize:                 "Standard_DS2_v2",
+					Count:                  4,
+					AvailabilityProfile:    VirtualMachineScaleSets,
+					EnableVMSSNodePublicIP: to.BoolPtr(true),
+				},
 			},
 		},
 		{
@@ -3434,6 +3444,19 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 			},
 		},
 		{
+			name:                "Standard LB without master excluded",
+			orchestratorRelease: "1.15",
+			loadBalancerSku:     StandardLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			expectedErr:    true,
+			expectedErrStr: "standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"",
+		},
+		{
 			name:                "Standard LB",
 			orchestratorRelease: "1.15",
 			loadBalancerSku:     StandardLoadBalancerSku,
@@ -3443,6 +3466,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 				VMSize:              "Standard_DS2_v2",
 				AvailabilityProfile: VirtualMachineScaleSets,
 			},
+			excludeMasterFromStandardLB: true,
 		},
 		{
 			name:                "empty string LB value",
@@ -3479,7 +3503,8 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 			cs.Properties.AgentPoolProfiles = test.agentProfiles
 			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-				LoadBalancerSku: test.loadBalancerSku,
+				LoadBalancerSku:             test.loadBalancerSku,
+				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
 			}
 
 			err := cs.Validate(false)
@@ -3491,6 +3516,8 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 						t.Errorf("expected error with message : %s, but got : %s", test.expectedErrStr, err.Error())
 					}
 				}
+			} else if err != nil {
+				t.Error(err)
 			}
 		})
 	}
