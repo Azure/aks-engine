@@ -183,6 +183,8 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	if cs.Properties.MasterProfile != nil {
 		if cs.Properties.MasterProfile.KubernetesConfig == nil {
 			cs.Properties.MasterProfile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig == nil {
 			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig = make(map[string]string)
 		}
 		if isUpgrade {
@@ -232,6 +234,8 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	for _, profile := range cs.Properties.AgentPoolProfiles {
 		if profile.KubernetesConfig == nil {
 			profile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if profile.KubernetesConfig.KubeletConfig == nil {
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
 		}
 
