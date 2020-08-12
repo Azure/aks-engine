@@ -24,6 +24,7 @@ import (
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -97,9 +98,9 @@ func (ku *Upgrader) RunUpgrade() error {
 // handleUnreconcilableAddons ensures addon upgrades that addon-manager cannot handle by itself.
 // This method fails silently otherwide it would break test "Should not fail if a Kubernetes client cannot be created" (upgradecluster_test.go)
 func (ku *Upgrader) handleUnreconcilableAddons() {
+	upgradeVersion := ku.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 	// kube-proxy upgrade fails from v1.15 to 1.16: https://github.com/Azure/aks-engine/issues/3557
 	// deleting daemonset so addon-manager recreates instead of patching
-	upgradeVersion := ku.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 	if !common.IsKubernetesVersionGe(ku.CurrentVersion, "1.16.0") && common.IsKubernetesVersionGe(upgradeVersion, "1.16.0") {
 		ku.logger.Infof("Attempting to delete kube-proxy daemonset.")
 		client, err := ku.getKubernetesClient(getResourceTimeout)
@@ -107,18 +108,43 @@ func (ku *Upgrader) handleUnreconcilableAddons() {
 			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
 			return
 		}
-		ds := &appsv1.DaemonSet{
+		err = client.DeleteDaemonSet(&appsv1.DaemonSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "kube-system",
 				Name:      common.KubeProxyAddonName,
 			},
-		}
-		err = client.DeleteDaemonSet(ds)
+		})
 		if err != nil {
 			ku.logger.Errorf("Error deleting kube-proxy daemonset: %v", err)
-			return
 		}
 		ku.logger.Infof("Deleted kube-proxy daemonset. Addon-manager will recreate it.")
+	}
+	// metrics-server upgrade fails from v1.15 to 1.16 as the addon mode is EnsureExists for pre-v1.16 cluster
+	if !common.IsKubernetesVersionGe(ku.CurrentVersion, "1.16.0") && common.IsKubernetesVersionGe(upgradeVersion, "1.16.0") {
+		ku.logger.Infof("Attempting to delete metrics-server deployment.")
+		client, err := ku.getKubernetesClient(getResourceTimeout)
+		if err != nil {
+			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
+			return
+		}
+		err = client.DeleteClusterRole(&rbacv1.ClusterRole{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "system:metrics-server",
+			},
+		})
+		if err != nil {
+			ku.logger.Errorf("Error deleting metrics-server cluster role: %v", err)
+		}
+		err = client.DeleteDeployment(&appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "kube-system",
+				Name:      common.MetricsServerAddonName,
+			},
+		})
+		if err != nil {
+			ku.logger.Errorf("Error deleting metrics-server deployment: %v", err)
+		}
+		ku.logger.Infof("Deleted metrics-server deployment. Addon-manager will recreate it.")
 	}
 }
 

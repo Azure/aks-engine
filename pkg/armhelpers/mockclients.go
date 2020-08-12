@@ -26,6 +26,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 const (
@@ -85,7 +86,9 @@ type MockKubernetesClient struct {
 	FailDeleteServiceAccount  bool
 	FailSupportEviction       bool
 	FailDeletePod             bool
+	FailDeleteClusterRole     bool
 	FailDeleteDaemonSet       bool
+	FailDeleteDeployment      bool
 	FailEvictPod              bool
 	FailWaitForDelete         bool
 	ShouldSupportEviction     bool
@@ -395,10 +398,26 @@ func (mkc *MockKubernetesClient) SupportEviction() (string, error) {
 	return "", nil
 }
 
+//DeleteDeployment deletes the passed in daemonset
+func (mkc *MockKubernetesClient) DeleteClusterRole(role *rbacv1.ClusterRole) error {
+	if mkc.FailDeleteClusterRole {
+		return errors.New("ClusterRole failed")
+	}
+	return nil
+}
+
 //DeleteDaemonSet deletes the passed in daemonset
 func (mkc *MockKubernetesClient) DeleteDaemonSet(pod *appsv1.DaemonSet) error {
 	if mkc.FailDeleteDaemonSet {
 		return errors.New("DaemonSet failed")
+	}
+	return nil
+}
+
+//DeleteDeployment deletes the passed in daemonset
+func (mkc *MockKubernetesClient) DeleteDeployment(pod *appsv1.Deployment) error {
+	if mkc.FailDeleteDeployment {
+		return errors.New("Deployment failed")
 	}
 	return nil
 }

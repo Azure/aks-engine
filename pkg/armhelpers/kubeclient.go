@@ -10,6 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -116,9 +117,19 @@ func (c *KubernetesClientSetClient) SupportEviction() (string, error) {
 	return "", nil
 }
 
+// DeleteClusterRole deletes the passed in cluster role.
+func (c *KubernetesClientSetClient) DeleteClusterRole(role *rbacv1.ClusterRole) error {
+	return c.clientset.RbacV1().ClusterRoles().Delete(role.Name, &metav1.DeleteOptions{})
+}
+
 // DeleteDaemonSet deletes the passed in daemonset.
 func (c *KubernetesClientSetClient) DeleteDaemonSet(daemonset *appsv1.DaemonSet) error {
 	return c.clientset.AppsV1().DaemonSets(daemonset.Namespace).Delete(daemonset.Name, &metav1.DeleteOptions{})
+}
+
+// DeleteDeployment deletes the passed in daemonset.
+func (c *KubernetesClientSetClient) DeleteDeployment(deployment *appsv1.Deployment) error {
+	return c.clientset.AppsV1().Deployments(deployment.Namespace).Delete(deployment.Name, &metav1.DeleteOptions{})
 }
 
 // DeletePod deletes the passed in pod.
