@@ -2361,47 +2361,26 @@ func TestInputOverridesDuringUpgrade(t *testing.T) {
 		},
 	}
 
+	assert := func(profile string, expected, actual map[string]string, t *testing.T) {
+		for ek, ev := range expected {
+			av, ok := actual[ek]
+			if !ok {
+				t.Fatalf("%s missing expected config %s", profile, ek)
+			}
+			if av != ev {
+				t.Fatalf("%s expected config %s to equal %s, got %s", profile, ek, ev, av)
+			}
+		}
+	}
+
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			c.cs.setKubeletConfig(c.isUpgrade)
-
-			for ek, ev := range c.expectedKubeletConfig {
-				v, ok := c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig[ek]
-				if !ok {
-					t.Fatalf("OrchestratorProfile missing expected config %s", ek)
-				}
-				if v != ev {
-					t.Fatalf("OrchestratorProfile expected config %s to equal %s, got %s", ek, ev, v)
-				}
-
-				v, ok = c.cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig[ek]
-				if !ok {
-					t.Fatalf("MasterProfile missing expected config %s", ek)
-				}
-				if v != ev {
-					t.Fatalf("MasterProfile expected config %s to equal %s, got %s", ek, ev, v)
-				}
-
-				pool := c.cs.Properties.AgentPoolProfiles[0]
-				v, ok = pool.KubernetesConfig.KubeletConfig[ek]
-				if !ok {
-					t.Fatalf("%s AgentPoolProfiles missing expected config %s", pool.OSType, ek)
-				}
-				if v != ev {
-					t.Fatalf("%s AgentPoolProfiles expected config %s to equal %s, got %s", pool.OSType, ek, ev, v)
-				}
-			}
-			for ek, ev := range c.expectedWinKubeletConfig {
-				pool := c.cs.Properties.AgentPoolProfiles[1]
-				v, ok := pool.KubernetesConfig.KubeletConfig[ek]
-				if !ok {
-					t.Fatalf("%s AgentPoolProfiles missing expected config %s", pool.OSType, ek)
-				}
-				if v != ev {
-					t.Fatalf("%s AgentPoolProfiles expected config %s to equal %s, got %s", pool.OSType, ek, ev, v)
-				}
-			}
+			assert("OrchestratorProfile", c.expectedKubeletConfig, c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig, t)
+			assert("MasterProfile", c.expectedKubeletConfig, c.cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, t)
+			assert("Linux AgentPoolProfile", c.expectedKubeletConfig, c.cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig, t)
+			assert("Windows AgentPoolProfile", c.expectedWinKubeletConfig, c.cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig, t)
 		})
 	}
 }
