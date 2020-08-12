@@ -250,6 +250,9 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 				addValue(parametersMap, fmt.Sprintf("windowsKeyVaultID%dCertificateStore%d", i, j), c.CertificateStore)
 			}
 		}
+
+		addValue(parametersMap, "defaultContainerdRuntimeHandler", properties.WindowsProfile.GetWindowsDefaultRuntimeHandler())
+		addValue(parametersMap, "hypervRuntimeHandlers", properties.WindowsProfile.GetWindowsHypervRuntimeHandlers())
 	}
 
 	for _, extension := range properties.ExtensionProfiles {

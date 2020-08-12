@@ -187,6 +187,16 @@ type WindowsProfile struct {
 	EnableAHUB                    *bool             `json:"enableAHUB,omitempty"`
 	WindowsPauseImageURL          string            `json:"windowsPauseImageURL"`
 	AlwaysPullWindowsPauseImage   *bool             `json:"alwaysPullWindowsPauseImage,omitempty"`
+	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
+}
+
+type WindowsRuntimes struct {
+	Default  string            `json:"default,omitempty"`
+	Handlers []RuntimeHandlers `json:"handlers,omitempty"`
+}
+
+type RuntimeHandlers struct {
+	HandlerName string `json:"handlerName,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.

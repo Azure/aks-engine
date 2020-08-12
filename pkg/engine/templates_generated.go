@@ -22429,7 +22429,7 @@ state = "C:\\ProgramData\\containerd\\state"
           DebugType = 2
           SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
           SandboxPlatform = "windows/amd64"
-          SandboxIsolation = 1
+          SandboxIsolation = {{sandboxIsolation}}
       [plugins.cri.containerd.runtimes]
         [plugins.cri.containerd.runtimes.runhcs-wcow-process]
           runtime_type = "io.containerd.runhcs.v1"
@@ -22438,38 +22438,7 @@ state = "C:\\ProgramData\\containerd\\state"
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
             SandboxPlatform = "windows/amd64"
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-17763]
-          runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-17763.options]
-            Debug = true
-            DebugType = 2
-            SandboxImage = "{{pauseImage}}-windows-1809-amd64"
-            SandboxPlatform = "windows/amd64"
-            SandboxIsolation = 1
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18362]
-          runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18362.options]
-            Debug = true
-            DebugType = 2
-            SandboxImage = "{{pauseImage}}-windows-1903-amd64"
-            SandboxPlatform = "windows/amd64"
-            SandboxIsolation = 1
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18363]
-          runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18363.options]
-            Debug = true
-            DebugType = 2
-            SandboxImage = "{{pauseImage}}-windows-1909-amd64"
-            SandboxPlatform = "windows/amd64"
-            SandboxIsolation = 1
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-19041]
-          runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-19041.options]
-            Debug = true
-            DebugType = 2
-            SandboxImage = "{{pauseImage}}-windows-2004-amd64"
-            SandboxPlatform = "windows/amd64"
-            SandboxIsolation = 1
+{{hypervisors}}
     [plugins.cri.cni]
       bin_dir = "{{cnibin}}"
       conf_dir = "{{cniconf}}"
@@ -23472,6 +23441,8 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## ContainerD Usage
 $global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
+$global:DefaultContainerdRuntimeHandler = "{{WrapAsParameter "defaultContainerdRuntimeHandler"}}"
+$global:HypervRuntimeHandlers = "{{WrapAsParameter "hypervRuntimeHandlers"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -24843,6 +24814,66 @@ function RegisterContainerDService {
   }
 }
 
+function CreateHypervisorRuntime {
+Param(
+    [Parameter(Mandatory = $true)][string]
+    $image,
+    [Parameter(Mandatory = $true)][string]
+    $version,
+    [Parameter(Mandatory = $true)][string]
+    $buildNumber
+  )
+
+  return @"
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "$image-windows-$version-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+"@
+}
+
+function CreateHypervisorRuntimes {
+  Param(
+     [Parameter(Mandatory = $true)][string[]]
+      $builds,
+     [Parameter(Mandatory = $true)][string]
+      $image
+    )
+  
+  Write-Host "Adding hyperv runtimes $builds"
+  $hypervRuntimes = ""
+  ForEach ($buildid in $builds){
+    $windowsVersion = Select-Windows-Version -buildid $buildid
+    $runtime = createHypervisorRuntime -image $pauseImage -version $windowsVersion -buildNumber $buildid
+    if ($hypervRuntimes -eq ""){
+      $hypervRuntimes = $runtime
+    }else{
+      $hypervRuntimes = $hypervRuntimes + "` + "`" + `r` + "`" + `n" + $runtime
+    }
+  }
+
+  return $hypervRuntimes
+}
+
+function Select-Windows-Version{
+  param (
+      [Parameter()]
+      [string]
+      $buildid
+  )
+
+  switch ($buildid) {
+    "17763" {  return "1809" }
+    "18362" {  return "1903" }
+    "18363" {  return "1909" }
+    "19041" {  return "2004" }
+    Default {  return "" } 
+  }
+}
 
 function Install-Containerd {
   Param(
@@ -24887,31 +24918,34 @@ function Install-Containerd {
   $pauseImage = $clusterConfig.Cri.Images.Pause
   $formatedbin=$(($CNIBinDir).Replace("\","/"))
   $formatedconf=$(($CNIConfDir).Replace("\","/"))
+  $sandboxIsolation = 0
+  $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  $hypervRuntimes = ""
+  $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
   # configure
-  if (Test-Path -Path "$global:ContainerdInstallLocation\containerd-template.toml") {
-    # Hyperv config set up
-    Write-Host "Configuring containerd for hyperv"
-    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
-    (Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" -Raw).
-      Replace('{{pauseImage}}', $pauseImage).
-      Replace('{{cnibin}}', $formatedbin).
-      Replace('{{cniconf}}', $formatedconf).
-      Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
-      Out-File -FilePath "$configFile" -Encoding ascii
-  }else{
-    # non hyperv configuration
-    Write-Host "Configuring containerd for process isolated"
-    & $cdbinary config dump | ` + "`" + `
-      % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | ` + "`" + `
-      % {$_ -replace "bin_dir = ""(.*?[^\\])""", "bin_dir = ""$formatedbin""" } | ` + "`" + `
-      % {$_ -replace "conf_dir = ""(.*?[^\\])""", "conf_dir = ""$formatedconf""" } | ` + "`" + `
-      Out-File $configFile -Encoding ascii
+  if ($global:DefaultContainerdRuntimeHandler == "hyperv") {
+    Write-Host "default runtime for containerd set to hyperv"
+    $sandboxIsolation = 1
+    $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
   }
+
+  $template = Get-Content -Path "template.toml" 
+  if ($sandboxIsolation -eq 0 -Or $hypervHandlers.Count -eq 0) {
+    # remove the value hypervisor place holder
+    $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
+  }
+
+  $template.Replace('{{sandboxIsolation}}', $sandboxIsolation).
+    Replace('{{pauseImage}}', $pauseImage).
+    Replace('{{hypervisors}}', $hypervRuntimes).
+    Replace('{{cnibin}}', "c:\containerd\temp").
+    Replace('{{cniconf}}', "c:\containerd\temp").
+    Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
+    Out-File -FilePath "test.toml" -Encoding ascii
 
   RegisterContainerDService
 }
-
 `)
 
 func k8sWindowscontainerdfuncPs1Bytes() ([]byte, error) {
@@ -28840,6 +28874,20 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
       "defaultValue": "18.09.2",
       "metadata": {
         "description": "The version of Docker to be installed on Windows Nodes"
+      },
+      "type": "string"
+    },
+    "defaultContainerdRuntimeHandler": {
+      "defaultValue": "process",
+      "metadata": {
+        "description": "The containerd handler type (process isolated or hyperv)"
+      },
+      "type": "string"
+    },
+    "hypervRuntimeHandlers": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "comma seperated list of hyperv values"
       },
       "type": "string"
     }

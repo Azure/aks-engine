@@ -233,6 +233,16 @@ type WindowsProfile struct {
 	EnableAHUB                    *bool             `json:"enableAHUB,omitempty"`
 	WindowsPauseImageURL          string            `json:"windowsPauseImageURL"`
 	AlwaysPullWindowsPauseImage   *bool             `json:"alwaysPullWindowsPauseImage,omitempty"`
+	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
+}
+
+type WindowsRuntimes struct {
+	Default  string            `json:"default,omitempty"`
+	Handlers []RuntimeHandlers `json:"Handlers,omitempty"`
+}
+
+type RuntimeHandlers struct {
+	HandlerName string `json:"handlerName,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -1799,6 +1809,28 @@ func (w *WindowsProfile) GetWindowsDockerVersion() string {
 		return w.WindowsDockerVersion
 	}
 	return KubernetesWindowsDockerVersion
+}
+
+// GetWindowsDefaultRuntimeHandler get the default containerd runtime handler or return default value
+func (w *WindowsProfile) GetWindowsDefaultRuntimeHandler() string {
+	if w.WindowsRuntimes != nil && w.WindowsRuntimes.Default != "" {
+		return w.WindowsRuntimes.Default
+	}
+
+	return KubernetesDefaultWindowsRuntimeHandler
+}
+
+// GetWindowsHypervRuntimeHandlers gets comma seperated list of runtimehandler names
+func (w *WindowsProfile) GetWindowsHypervRuntimeHandlers() string {
+	if w.WindowsRuntimes != nil && len(w.WindowsRuntimes.Handlers) > 0 {
+		handlernames := []string{}
+		for _, h := range w.WindowsRuntimes.Handlers {
+			handlernames = append(handlernames, h.HandlerName)
+		}
+		return strings.Join(handlernames, ",")
+	}
+
+	return ""
 }
 
 // GetWindowsSku gets the marketplace sku specified (such as Datacenter-Core-1809-with-Containers-smalldisk) or returns default value

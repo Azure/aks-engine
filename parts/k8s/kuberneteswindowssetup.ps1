@@ -76,6 +76,8 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## ContainerD Usage
 $global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
+$global:DefaultContainerdRuntimeHandler = "{{WrapAsParameter "defaultContainerdRuntimeHandler"}}"
+$global:HypervRuntimeHandlers = "{{WrapAsParameter "hypervRuntimeHandlers"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"

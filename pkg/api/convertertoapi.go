@@ -211,6 +211,16 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 		api.EnableAHUB = to.BoolPtr(true)
 	}
 	api.AlwaysPullWindowsPauseImage = vlabs.AlwaysPullWindowsPauseImage
+	if vlabs.WindowsRuntimes != nil {
+		api.WindowsRuntimes = &WindowsRuntimes{}
+		api.WindowsRuntimes.Default = vlabs.WindowsRuntimes.Default
+		api.WindowsRuntimes.Handlers = []RuntimeHandlers{}
+		for _, h := range vlabs.WindowsRuntimes.Handlers {
+			handler := RuntimeHandlers{}
+			handler.HandlerName = h.HandlerName
+			api.WindowsRuntimes.Handlers = append(api.WindowsRuntimes.Handlers, handler)
+		}
+	}
 }
 
 func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) error {

@@ -21,6 +21,66 @@ function RegisterContainerDService {
   }
 }
 
+function CreateHypervisorRuntime {
+Param(
+    [Parameter(Mandatory = $true)][string]
+    $image,
+    [Parameter(Mandatory = $true)][string]
+    $version,
+    [Parameter(Mandatory = $true)][string]
+    $buildNumber
+  )
+
+  return @"
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "$image-windows-$version-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+"@
+}
+
+function CreateHypervisorRuntimes {
+  Param(
+     [Parameter(Mandatory = $true)][string[]]
+      $builds,
+     [Parameter(Mandatory = $true)][string]
+      $image
+    )
+  
+  Write-Host "Adding hyperv runtimes $builds"
+  $hypervRuntimes = ""
+  ForEach ($buildid in $builds){
+    $windowsVersion = Select-Windows-Version -buildid $buildid
+    $runtime = createHypervisorRuntime -image $pauseImage -version $windowsVersion -buildNumber $buildid
+    if ($hypervRuntimes -eq ""){
+      $hypervRuntimes = $runtime
+    }else{
+      $hypervRuntimes = $hypervRuntimes + "`r`n" + $runtime
+    }
+  }
+
+  return $hypervRuntimes
+}
+
+function Select-Windows-Version{
+  param (
+      [Parameter()]
+      [string]
+      $buildid
+  )
+
+  switch ($buildid) {
+    "17763" {  return "1809" }
+    "18362" {  return "1903" }
+    "18363" {  return "1909" }
+    "19041" {  return "2004" }
+    Default {  return "" } 
+  }
+}
 
 function Install-Containerd {
   Param(
@@ -65,28 +125,31 @@ function Install-Containerd {
   $pauseImage = $clusterConfig.Cri.Images.Pause
   $formatedbin=$(($CNIBinDir).Replace("\","/"))
   $formatedconf=$(($CNIConfDir).Replace("\","/"))
+  $sandboxIsolation = 0
+  $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  $hypervRuntimes = ""
+  $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
   # configure
-  if (Test-Path -Path "$global:ContainerdInstallLocation\containerd-template.toml") {
-    # Hyperv config set up
-    Write-Host "Configuring containerd for hyperv"
-    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
-    (Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" -Raw).
-      Replace('{{pauseImage}}', $pauseImage).
-      Replace('{{cnibin}}', $formatedbin).
-      Replace('{{cniconf}}', $formatedconf).
-      Replace('{{currentversion}}', $windowsVersion) | `
-      Out-File -FilePath "$configFile" -Encoding ascii
-  }else{
-    # non hyperv configuration
-    Write-Host "Configuring containerd for process isolated"
-    & $cdbinary config dump | `
-      % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | `
-      % {$_ -replace "bin_dir = ""(.*?[^\\])""", "bin_dir = ""$formatedbin""" } | `
-      % {$_ -replace "conf_dir = ""(.*?[^\\])""", "conf_dir = ""$formatedconf""" } | `
-      Out-File $configFile -Encoding ascii
+  if ($global:DefaultContainerdRuntimeHandler == "hyperv") {
+    Write-Host "default runtime for containerd set to hyperv"
+    $sandboxIsolation = 1
+    $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
   }
+
+  $template = Get-Content -Path "template.toml" 
+  if ($sandboxIsolation -eq 0 -Or $hypervHandlers.Count -eq 0) {
+    # remove the value hypervisor place holder
+    $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
+  }
+
+  $template.Replace('{{sandboxIsolation}}', $sandboxIsolation).
+    Replace('{{pauseImage}}', $pauseImage).
+    Replace('{{hypervisors}}', $hypervRuntimes).
+    Replace('{{cnibin}}', "c:\containerd\temp").
+    Replace('{{cniconf}}', "c:\containerd\temp").
+    Replace('{{currentversion}}', $windowsVersion) | `
+    Out-File -FilePath "test.toml" -Encoding ascii
 
   RegisterContainerDService
 }
-
