@@ -109,4 +109,18 @@
         "description": "The version of Docker to be installed on Windows Nodes"
       },
       "type": "string"
+    },
+    "defaultContainerdRuntimeHandler": {
+      "defaultValue": "process",
+      "metadata": {
+        "description": "The containerd handler type (process isolated or hyperv)"
+      },
+      "type": "string"
+    },
+    "hypervRuntimeHandlers": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "comma separated list of hyperv values"
+      },
+      "type": "string"
     }

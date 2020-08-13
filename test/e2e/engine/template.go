@@ -230,10 +230,8 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	}
 
 	if config.ContainerRuntime == "containerd" &&
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" &&
-		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip"
-		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0-rc.0/containerd-1.4.0-rc.0-windows-amd64.tar.gz"
 	}
 
 	if config.ContainerRuntime != "" {
