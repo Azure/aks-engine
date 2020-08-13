@@ -1276,14 +1276,31 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
 					Handlers: []RuntimeHandlers{
-						{HandlerName: "saf"},
+						{HandlerName: "17763"},
 						{HandlerName: "18362"},
-						{HandlerName: "18363"},
+						{HandlerName: "invalid"},
 						{HandlerName: "19041"},
 					},
 				},
 			},
 			expectedError: errors.New("Current hyperv buildids values supported are 17763, 18362, 18363, 19041"),
+		},
+		{
+			name: "valid handlers must be unique",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					Handlers: []RuntimeHandlers{
+						{HandlerName: "17763"},
+						{HandlerName: "18362"},
+						{HandlerName: "18363"},
+						{HandlerName: "17763"},
+					},
+				},
+			},
+			expectedError: errors.New("Hyperv buildids have duplicate runtime '17763', Windows Runtimes must be unique"),
 		},
 	}
 

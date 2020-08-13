@@ -1257,10 +1257,16 @@ func validateWindowsRuntimes(r *WindowsRuntimes) error {
 	}
 
 	if r.Handlers != nil {
+		handlersMap := make(map[string]bool)
 		for _, h := range r.Handlers {
 			if h.HandlerName != "17763" && h.HandlerName != "18362" && h.HandlerName != "18363" && h.HandlerName != "19041" {
 				return errors.New("Current hyperv buildids values supported are 17763, 18362, 18363, 19041")
 			}
+
+			if _, ok := handlersMap[h.HandlerName]; ok {
+				return errors.Errorf("Hyperv buildids have duplicate runtime '%s', Windows Runtimes must be unique", h.HandlerName)
+			}
+			handlersMap[h.HandlerName] = true
 		}
 	}
 
