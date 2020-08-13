@@ -2180,8 +2180,211 @@ func TestSupportPodPidsLimitFeatureGateInAgentPool(t *testing.T) {
 			}
 		})
 	}
-
 }
+
+func TestInputOverridesDuringUpgrade(t *testing.T) {
+	defaultConfig := map[string]string{
+		"--pod-infra-container-image": pauseImageReference,
+	}
+
+	defaultWindowsConfig := map[string]string{
+		"--pod-infra-container-image": "kubletwin/pause",
+	}
+
+	inputConfig := map[string]string{
+		"--pod-infra-container-image": "input-pause",
+	}
+
+	cases := []struct {
+		name                     string
+		cs                       *ContainerService
+		isUpgrade                bool
+		expectedKubeletConfig    map[string]string
+		expectedWinKubeletConfig map[string]string
+	}{
+		{
+			name: "use default value if no input",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                false,
+			expectedKubeletConfig:    defaultConfig,
+			expectedWinKubeletConfig: defaultWindowsConfig,
+		},
+		{
+			name: "use input if not upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-infra-container-image": "input-pause",
+								},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:             false,
+			expectedKubeletConfig: inputConfig,
+			// --pod-infra-container-image is static for windows nodes
+			expectedWinKubeletConfig: defaultWindowsConfig,
+		},
+		{
+			name: "override input if upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--pod-infra-container-image": "input-pause",
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--pod-infra-container-image": "input-pause",
+								},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                true,
+			expectedKubeletConfig:    defaultConfig,
+			expectedWinKubeletConfig: defaultWindowsConfig,
+		},
+		{
+			name: "override input if no input and upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: "Linux",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+						{
+							OSType: "Windows",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:                true,
+			expectedKubeletConfig:    defaultConfig,
+			expectedWinKubeletConfig: defaultWindowsConfig,
+		},
+	}
+
+	assert := func(profile string, expected, actual map[string]string, t *testing.T) {
+		for ek, ev := range expected {
+			av, ok := actual[ek]
+			if !ok {
+				t.Fatalf("%s missing expected config %s", profile, ek)
+			}
+			if av != ev {
+				t.Fatalf("%s expected config %s to equal %s, got %s", profile, ek, ev, av)
+			}
+		}
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			c.cs.setKubeletConfig(c.isUpgrade)
+			assert("OrchestratorProfile", c.expectedKubeletConfig, c.cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig, t)
+			assert("MasterProfile", c.expectedKubeletConfig, c.cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, t)
+			assert("Linux AgentPoolProfile", c.expectedKubeletConfig, c.cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig, t)
+			assert("Windows AgentPoolProfile", c.expectedWinKubeletConfig, c.cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig, t)
+		})
+	}
+}
+
 func TestReadOnlyPort(t *testing.T) {
 	cases := []struct {
 		name                 string
