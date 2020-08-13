@@ -198,7 +198,7 @@ type WindowsRuntimes struct {
 
 // RuntimeHandlers configures the runtime settings in containerd
 type RuntimeHandlers struct {
-	BuildID string `json:"buildID,omitempty"`
+	BuildNumber string `json:"buildNumber,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.

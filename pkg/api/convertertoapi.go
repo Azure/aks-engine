@@ -217,7 +217,7 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 		api.WindowsRuntimes.HypervRuntimes = []RuntimeHandlers{}
 		for _, h := range vlabs.WindowsRuntimes.HypervRuntimes {
 			handler := RuntimeHandlers{}
-			handler.BuildID = h.BuildID
+			handler.BuildNumber = h.BuildNumber
 			api.WindowsRuntimes.HypervRuntimes = append(api.WindowsRuntimes.HypervRuntimes, handler)
 		}
 	}

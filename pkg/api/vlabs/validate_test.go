@@ -1245,7 +1245,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
 					HypervRuntimes: []RuntimeHandlers{
-						{BuildID: "something"},
+						{BuildNumber: "something"},
 					},
 				},
 			},
@@ -1259,10 +1259,10 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
 					HypervRuntimes: []RuntimeHandlers{
-						{BuildID: "17763"},
-						{BuildID: "18362"},
-						{BuildID: "18363"},
-						{BuildID: "19041"},
+						{BuildNumber: "17763"},
+						{BuildNumber: "18362"},
+						{BuildNumber: "18363"},
+						{BuildNumber: "19041"},
 					},
 				},
 			},
@@ -1276,10 +1276,10 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
 					HypervRuntimes: []RuntimeHandlers{
-						{BuildID: "17763"},
-						{BuildID: "18362"},
-						{BuildID: "invalid"},
-						{BuildID: "19041"},
+						{BuildNumber: "17763"},
+						{BuildNumber: "18362"},
+						{BuildNumber: "invalid"},
+						{BuildNumber: "19041"},
 					},
 				},
 			},
@@ -1293,14 +1293,14 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
 					HypervRuntimes: []RuntimeHandlers{
-						{BuildID: "17763"},
-						{BuildID: "18362"},
-						{BuildID: "18363"},
-						{BuildID: "17763"},
+						{BuildNumber: "17763"},
+						{BuildNumber: "18362"},
+						{BuildNumber: "18363"},
+						{BuildNumber: "17763"},
 					},
 				},
 			},
-			expectedError: errors.New("Hyper-v buildids have duplicate runtime with build id '17763', Windows Runtimes must be unique"),
+			expectedError: errors.New("Hyper-v RuntimeHandlers have duplicate runtime with build number '17763', Windows Runtimes must be unique"),
 		},
 	}
 

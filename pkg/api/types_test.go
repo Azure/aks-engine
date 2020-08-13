@@ -3657,8 +3657,8 @@ func TestWindowsProfile(t *testing.T) {
 		WindowsRuntimes: &WindowsRuntimes{
 			Default: "hyperv",
 			HypervRuntimes: []RuntimeHandlers{
-				{BuildID: "17763"},
-				{BuildID: "18362"},
+				{BuildNumber: "17763"},
+				{BuildNumber: "18362"},
 			},
 		},
 	}

@@ -24847,9 +24847,9 @@ function CreateHypervisorRuntimes {
   
   Write-Host "Adding hyperv runtimes $builds"
   $hypervRuntimes = ""
-  ForEach ($buildid in $builds){
-    $windowsVersion = Select-Windows-Version -buildid $buildid
-    $runtime = createHypervisorRuntime -image $pauseImage -version $windowsVersion -buildNumber $buildid
+  ForEach ($buildNumber in $builds){
+    $windowsVersion = Select-Windows-Version -buildNumber $buildNumber
+    $runtime = createHypervisorRuntime -image $pauseImage -version $windowsVersion -buildNumber $buildNumber
     if ($hypervRuntimes -eq ""){
       $hypervRuntimes = $runtime
     }else{
@@ -24864,10 +24864,10 @@ function Select-Windows-Version{
   param (
       [Parameter()]
       [string]
-      $buildid
+      $buildNumber
   )
 
-  switch ($buildid) {
+  switch ($buildNumber) {
     "17763" {  return "1809" }
     "18362" {  return "1903" }
     "18363" {  return "1909" }

@@ -786,7 +786,7 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
 					HypervRuntimes: []RuntimeHandlers{
-						{BuildID: "17763"},
+						{BuildNumber: "17763"},
 					},
 				},
 			},
@@ -805,7 +805,7 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				WindowsRuntimes: &vlabs.WindowsRuntimes{
 					Default: "process",
 					HypervRuntimes: []vlabs.RuntimeHandlers{
-						{BuildID: "17763"},
+						{BuildNumber: "17763"},
 					},
 				},
 			},

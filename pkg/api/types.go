@@ -244,7 +244,7 @@ type WindowsRuntimes struct {
 
 // RuntimeHandlers configures the runtime settings in containerd
 type RuntimeHandlers struct {
-	BuildID string `json:"buildID,omitempty"`
+	BuildNumber string `json:"buildNumber,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -1827,7 +1827,7 @@ func (w *WindowsProfile) GetWindowsHypervRuntimeHandlers() string {
 	if w.WindowsRuntimes != nil && len(w.WindowsRuntimes.HypervRuntimes) > 0 {
 		handlernames := []string{}
 		for _, h := range w.WindowsRuntimes.HypervRuntimes {
-			handlernames = append(handlernames, h.BuildID)
+			handlernames = append(handlernames, h.BuildNumber)
 		}
 		return strings.Join(handlernames, ",")
 	}

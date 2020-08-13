@@ -37,8 +37,8 @@
       "windowsRuntimes": {
         "default": "process",
         "hypervRuntimes": [
-          {"buildID": "17763"},
-          {"buildID": "19041"}
+          {"buildNumber": "17763"},
+          {"buildNumber": "19041"}
         ]
       }
     },
