@@ -209,6 +209,10 @@ func TestK8sVars(t *testing.T) {
 			Name:    common.AADPodIdentityAddonName,
 			Enabled: to.BoolPtr(true),
 		},
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		},
 	}
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
@@ -254,7 +258,12 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	// Test with ubuntu 16.04 distro
-	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
 	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
 	varMap, err = GetKubernetesVariables(cs)
@@ -814,6 +823,10 @@ func TestK8sVars(t *testing.T) {
 			Config: map[string]string{
 				"appgw-sku": "WAF_v2",
 			},
+		},
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
 		},
 	}
 
