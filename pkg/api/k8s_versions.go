@@ -134,7 +134,7 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 		},
 		"1.16": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.2.1",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.4",
 		},
