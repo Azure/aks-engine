@@ -599,7 +599,7 @@ spec:
 Current limitations:
 
 - Currently the Runtime handlers are not configurable.  
-- If you specify a handler that does not map the fields in [../../parts/k8s/containerdhypervtemplate.toml](parts/k8s/containerdhypervtemplate.toml), then the container will not start. 
+- If you specify a handler that does not map the fields in [../../parts/k8s/containerdtemplate.toml](parts/k8s/containerdtemplate.toml), then the container will not start. 
 - If you map to a container version that is higher than your current OS image your container will not start.
 - Multi-arch container images are not supported
 

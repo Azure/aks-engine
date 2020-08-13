@@ -214,11 +214,11 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 	if vlabs.WindowsRuntimes != nil {
 		api.WindowsRuntimes = &WindowsRuntimes{}
 		api.WindowsRuntimes.Default = vlabs.WindowsRuntimes.Default
-		api.WindowsRuntimes.Handlers = []RuntimeHandlers{}
-		for _, h := range vlabs.WindowsRuntimes.Handlers {
+		api.WindowsRuntimes.HypervRuntimes = []RuntimeHandlers{}
+		for _, h := range vlabs.WindowsRuntimes.HypervRuntimes {
 			handler := RuntimeHandlers{}
-			handler.HandlerName = h.HandlerName
-			api.WindowsRuntimes.Handlers = append(api.WindowsRuntimes.Handlers, handler)
+			handler.BuildID = h.BuildID
+			api.WindowsRuntimes.HypervRuntimes = append(api.WindowsRuntimes.HypervRuntimes, handler)
 		}
 	}
 }

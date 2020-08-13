@@ -236,13 +236,15 @@ type WindowsProfile struct {
 	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
 }
 
+// WindowsRuntimes configures containerd runtimes that are avaliable on the windows nodes
 type WindowsRuntimes struct {
-	Default  string            `json:"default,omitempty"`
-	Handlers []RuntimeHandlers `json:"Handlers,omitempty"`
+	Default        string            `json:"default,omitempty"`
+	HypervRuntimes []RuntimeHandlers `json:"hypervRuntimes,omitempty"`
 }
 
+// RuntimeHandlers configures the runtime settings in containerd
 type RuntimeHandlers struct {
-	HandlerName string `json:"handlerName,omitempty"`
+	BuildID string `json:"buildID,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -1822,10 +1824,10 @@ func (w *WindowsProfile) GetWindowsDefaultRuntimeHandler() string {
 
 // GetWindowsHypervRuntimeHandlers gets comma seperated list of runtimehandler names
 func (w *WindowsProfile) GetWindowsHypervRuntimeHandlers() string {
-	if w.WindowsRuntimes != nil && len(w.WindowsRuntimes.Handlers) > 0 {
+	if w.WindowsRuntimes != nil && len(w.WindowsRuntimes.HypervRuntimes) > 0 {
 		handlernames := []string{}
-		for _, h := range w.WindowsRuntimes.Handlers {
-			handlernames = append(handlernames, h.HandlerName)
+		for _, h := range w.WindowsRuntimes.HypervRuntimes {
+			handlernames = append(handlernames, h.BuildID)
 		}
 		return strings.Join(handlernames, ",")
 	}

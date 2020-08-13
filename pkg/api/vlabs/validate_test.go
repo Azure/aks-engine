@@ -1244,12 +1244,12 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				AdminPassword: "replacePassword1234$",
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
-					Handlers: []RuntimeHandlers{
-						{HandlerName: "something"},
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildID: "something"},
 					},
 				},
 			},
-			expectedError: errors.New("Current hyperv buildids values supported are 17763, 18362, 18363, 19041"),
+			expectedError: errors.New("Current hyper-v build id values supported are 17763, 18362, 18363, 19041"),
 		},
 		{
 			name: "valid handler names",
@@ -1258,11 +1258,11 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				AdminPassword: "replacePassword1234$",
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
-					Handlers: []RuntimeHandlers{
-						{HandlerName: "17763"},
-						{HandlerName: "18362"},
-						{HandlerName: "18363"},
-						{HandlerName: "19041"},
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildID: "17763"},
+						{BuildID: "18362"},
+						{BuildID: "18363"},
+						{BuildID: "19041"},
 					},
 				},
 			},
@@ -1275,15 +1275,15 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				AdminPassword: "replacePassword1234$",
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
-					Handlers: []RuntimeHandlers{
-						{HandlerName: "17763"},
-						{HandlerName: "18362"},
-						{HandlerName: "invalid"},
-						{HandlerName: "19041"},
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildID: "17763"},
+						{BuildID: "18362"},
+						{BuildID: "invalid"},
+						{BuildID: "19041"},
 					},
 				},
 			},
-			expectedError: errors.New("Current hyperv buildids values supported are 17763, 18362, 18363, 19041"),
+			expectedError: errors.New("Current hyper-v build id values supported are 17763, 18362, 18363, 19041"),
 		},
 		{
 			name: "valid handlers must be unique",
@@ -1292,15 +1292,15 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				AdminPassword: "replacePassword1234$",
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
-					Handlers: []RuntimeHandlers{
-						{HandlerName: "17763"},
-						{HandlerName: "18362"},
-						{HandlerName: "18363"},
-						{HandlerName: "17763"},
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildID: "17763"},
+						{BuildID: "18362"},
+						{BuildID: "18363"},
+						{BuildID: "17763"},
 					},
 				},
 			},
-			expectedError: errors.New("Hyperv buildids have duplicate runtime '17763', Windows Runtimes must be unique"),
+			expectedError: errors.New("Hyper-v buildids have duplicate runtime with build id '17763', Windows Runtimes must be unique"),
 		},
 	}
 

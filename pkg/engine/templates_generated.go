@@ -110,7 +110,7 @@
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
-// ../../parts/k8s/containerdhypervtemplate.toml
+// ../../parts/k8s/containerdtemplate.toml
 // ../../parts/k8s/kubeconfig.json
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
@@ -22387,7 +22387,7 @@ func k8sCloudInitNodecustomdataYml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sContainerdhypervtemplateToml = []byte(`root = "C:\\ProgramData\\containerd\\root"
+var _k8sContainerdtemplateToml = []byte(`root = "C:\\ProgramData\\containerd\\root"
 state = "C:\\ProgramData\\containerd\\state"
 
 [grpc]
@@ -22455,17 +22455,17 @@ state = "C:\\ProgramData\\containerd\\state"
     schedule_delay = "0s"
     startup_delay = "100ms"`)
 
-func k8sContainerdhypervtemplateTomlBytes() ([]byte, error) {
-	return _k8sContainerdhypervtemplateToml, nil
+func k8sContainerdtemplateTomlBytes() ([]byte, error) {
+	return _k8sContainerdtemplateToml, nil
 }
 
-func k8sContainerdhypervtemplateToml() (*asset, error) {
-	bytes, err := k8sContainerdhypervtemplateTomlBytes()
+func k8sContainerdtemplateToml() (*asset, error) {
+	bytes, err := k8sContainerdtemplateTomlBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "k8s/containerdhypervtemplate.toml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "k8s/containerdtemplate.toml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -24930,7 +24930,7 @@ function Install-Containerd {
     $sandboxIsolation = 1
   }
 
-  $template = Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" 
+  $template = Get-Content -Path "c:\AzureData\k8s\containerdtemplate.toml" 
   if ($sandboxIsolation -eq 0 -And $hypervHandlers.Count -eq 0) {
     # remove the value hypervisor place holder
     $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
@@ -29072,7 +29072,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/jumpboxcustomdata.yml":                               k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                            k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                  k8sCloudInitNodecustomdataYml,
-	"k8s/containerdhypervtemplate.toml":                                  k8sContainerdhypervtemplateToml,
+	"k8s/containerdtemplate.toml":                                        k8sContainerdtemplateToml,
 	"k8s/kubeconfig.json":                                                k8sKubeconfigJson,
 	"k8s/kubernetesparams.t":                                             k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                 k8sKuberneteswindowsfunctionsPs1,
@@ -29273,7 +29273,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},
 			"nodecustomdata.yml":       {k8sCloudInitNodecustomdataYml, map[string]*bintree{}},
 		}},
-		"containerdhypervtemplate.toml":  {k8sContainerdhypervtemplateToml, map[string]*bintree{}},
+		"containerdtemplate.toml":        {k8sContainerdtemplateToml, map[string]*bintree{}},
 		"kubeconfig.json":                {k8sKubeconfigJson, map[string]*bintree{}},
 		"kubernetesparams.t":             {k8sKubernetesparamsT, map[string]*bintree{}},
 		"kuberneteswindowsfunctions.ps1": {k8sKuberneteswindowsfunctionsPs1, map[string]*bintree{}},

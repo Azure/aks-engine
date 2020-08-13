@@ -3656,9 +3656,9 @@ func TestWindowsProfile(t *testing.T) {
 		EnableAHUB:                to.BoolPtr(false),
 		WindowsRuntimes: &WindowsRuntimes{
 			Default: "hyperv",
-			Handlers: []RuntimeHandlers{
-				{HandlerName: "17763"},
-				{HandlerName: "18362"},
+			HypervRuntimes: []RuntimeHandlers{
+				{BuildID: "17763"},
+				{BuildID: "18362"},
 			},
 		},
 	}

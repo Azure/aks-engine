@@ -785,8 +785,8 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				EnableAHUB:             to.BoolPtr(true),
 				WindowsRuntimes: &WindowsRuntimes{
 					Default: "process",
-					Handlers: []RuntimeHandlers{
-						{HandlerName: "17763"},
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildID: "17763"},
 					},
 				},
 			},
@@ -804,8 +804,8 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				EnableAHUB:             to.BoolPtr(true),
 				WindowsRuntimes: &vlabs.WindowsRuntimes{
 					Default: "process",
-					Handlers: []vlabs.RuntimeHandlers{
-						{HandlerName: "17763"},
+					HypervRuntimes: []vlabs.RuntimeHandlers{
+						{BuildID: "17763"},
 					},
 				},
 			},
