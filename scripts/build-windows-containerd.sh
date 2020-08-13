@@ -40,7 +40,6 @@ cp _output/containerd.exe /output
 apt update
 apt install -y zip
 cd /output
-touch containerd-template.toml
 zip windows-cri-containerd.zip *.exe *.txt *.toml
 rm -f /output/*.exe
 rm -f /output/*.txt

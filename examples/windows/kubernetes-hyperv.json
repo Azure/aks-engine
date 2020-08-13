@@ -27,7 +27,20 @@
     ],
     "windowsProfile": {
       "adminUsername": "azureuser",
-      "adminPassword": "replacepassword1234$"
+      "adminPassword": "replacepassword1234$",
+      "enableAutomaticUpdates": false,
+      "sshEnabled": true,
+      "windowsPublisher": "MicrosoftWindowsServer",
+      "windowsOffer": "WindowsServer",
+      "windowsSku": "Datacenter-Core-2004-with-Containers-smalldisk",
+      "imageVersion": "latest",
+      "windowsRuntimes": {
+        "default": "process",
+        "hypervRuntimes": [
+          {"buildID": "17763"},
+          {"buildID": "19041"}
+        ]
+      }
     },
     "linuxProfile": {
       "adminUsername": "azureuser",
