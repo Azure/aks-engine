@@ -134,13 +134,14 @@ function Install-Containerd {
   if ($global:DefaultContainerdRuntimeHandler -eq "hyperv") {
     Write-Host "default runtime for containerd set to hyperv"
     $sandboxIsolation = 1
-    $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
   }
 
   $template = Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" 
-  if ($sandboxIsolation -eq 0 -Or $hypervHandlers.Count -eq 0) {
+  if ($sandboxIsolation -eq 0 -And $hypervHandlers.Count -eq 0) {
     # remove the value hypervisor place holder
     $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
+  }else{
+    $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
   }
 
   $template.Replace('{{sandboxIsolation}}', $sandboxIsolation).
