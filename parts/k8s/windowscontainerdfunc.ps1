@@ -131,13 +131,13 @@ function Install-Containerd {
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
   # configure
-  if ($global:DefaultContainerdRuntimeHandler == "hyperv") {
+  if ($global:DefaultContainerdRuntimeHandler -eq "hyperv") {
     Write-Host "default runtime for containerd set to hyperv"
     $sandboxIsolation = 1
     $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
   }
 
-  $template = Get-Content -Path "template.toml" 
+  $template = Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" 
   if ($sandboxIsolation -eq 0 -Or $hypervHandlers.Count -eq 0) {
     # remove the value hypervisor place holder
     $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
@@ -146,10 +146,10 @@ function Install-Containerd {
   $template.Replace('{{sandboxIsolation}}', $sandboxIsolation).
     Replace('{{pauseImage}}', $pauseImage).
     Replace('{{hypervisors}}', $hypervRuntimes).
-    Replace('{{cnibin}}', "c:\containerd\temp").
-    Replace('{{cniconf}}', "c:\containerd\temp").
+    Replace('{{cnibin}}', $formatedbin).
+    Replace('{{cniconf}}', $formatedconf).
     Replace('{{currentversion}}', $windowsVersion) | `
-    Out-File -FilePath "test.toml" -Encoding ascii
+    Out-File -FilePath "$configFile" -Encoding ascii
 
   RegisterContainerDService
 }

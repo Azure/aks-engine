@@ -23547,6 +23547,7 @@ try
     # to the windows machine, and run the script manually to watch
     # the output.
     if ($true) {
+        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret -NetworkAPIVersion $NetworkAPIVersion -TargetEnvironment $TargetEnvironment"
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
         $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
@@ -24924,7 +24925,7 @@ function Install-Containerd {
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
   # configure
-  if ($global:DefaultContainerdRuntimeHandler == "hyperv") {
+  if ($global:DefaultContainerdRuntimeHandler -eq "hyperv") {
     Write-Host "default runtime for containerd set to hyperv"
     $sandboxIsolation = 1
     $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
