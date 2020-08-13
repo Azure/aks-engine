@@ -534,9 +534,9 @@ These parameters are all required.
 ### Hyper-v support
 This feature in AKS-Engine is for testing the in-development versions of ContainerD and Kubernetes, and is not for production use. Be sure to review [open issues](https://github.com/azure/aks-engine/issues?q=containerd+label%3Awindows+is%3Aopen) if you want to test or contribute to this effort.
 
-The current default for Hyper-V enabled containerd sets process isolated containers as default.  It is required to explicity set the BuildIds of the OS you want to support with hyper-v.  With the default your VM OS version is Windows Server 2004 (10.0.19041) and you apply a pod spec with new updates, you will get a 2004 container running in as process isolated container.  
+The current default for a Hyper-V enabled containerD sets process isolated containers as default.  It is required to explicity set the [Build Numbers of the OS](https://kubernetes.io/docs/setup/production-environment/windows/user-guide-windows-containers/#handling-multiple-windows-versions-in-the-same-cluster) in the api models to add Hyper-V options to containerD.  For example, with the default settings, if your VM OS version is Windows Server 2004 (10.0.19041) and you apply a pod spec with no RuntimeClass setting, you will get a 2004 container running as a process isolated container.  
 
-To Configure other OS in as hyper-v containers set the following on the WindowsProfile:
+To Configure other OS as hyper-v containers in the containerD set the following on the WindowsProfile:
 
 ```
 "windowsProfile": {
@@ -548,8 +548,8 @@ To Configure other OS in as hyper-v containers set the following on the WindowsP
       "windowsRuntimes": {
         "default": "process",
         "hypervRuntimes": [
-          {"buildID": "17763"},
-          {"buildID": "19041"}
+          {"buildNumber": "17763"},
+          {"buildNumber": "19041"}
         ]
       }
     },
@@ -562,7 +562,7 @@ Supported Hyperv OS build Id's are:
 - 18363 - Windows Server SAC 1909
 - 19041 - Windows Server SAC 2004
 
-If you wish to use an OS version below your current Host OS version or in hyper-v conatiners, you will need to create a RuntimeClass object and map the pod to the RuntimeClass.  Note that Hyper-V support is currently backwards compatible.  You have to have a Host OS that is the same version or newer than the version of the container you wish to run.  Multi-arch container images are not supported. You must have a single arch image if Hyper-V is enabled in containerd.
+If you wish to use an OS version for a container below your current Host OS version or explicitly run in a Hyper-v conatiners, you will need to create a RuntimeClass object and map the pod to the RuntimeClass.  Note that Hyper-V support is currently backwards compatible.  You have to have a Host OS that is the same version or newer than the version of the container you wish to run.  Multi-arch container images are not supported; You must have a single arch image if Hyper-V is enabled in containerd.
 
 For example, assuming a Windows Host OS of 2004 (10.0.19041), you can apply the following `RuntimeClass` 
 
@@ -621,6 +621,14 @@ spec:
       app: iis-ltsc2019
 
 ```
+
+The `handler` names for `RuntimeClass` will be dependent on the `hypervRuntimes` you enabled in the api model and will be in the format of `runhcs-wcow-hypervisor-$buildNumber`.  The possible values (depending on configuration) are:
+
+- runhcs-wcow-process (defaults process isolated for current host OS build number)
+- runhcs-wcow-hypervisor-17763
+- runhcs-wcow-hypervisor-18362
+- runhcs-wcow-hypervisor-18363
+- runhcs-wcow-hypervisor-19041
 
 Current limitations:
 
