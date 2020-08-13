@@ -236,7 +236,7 @@ type WindowsProfile struct {
 	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
 }
 
-// WindowsRuntimes configures containerd runtimes that are avaliable on the windows nodes
+// WindowsRuntimes configures containerd runtimes that are available on the windows nodes
 type WindowsRuntimes struct {
 	Default        string            `json:"default,omitempty"`
 	HypervRuntimes []RuntimeHandlers `json:"hypervRuntimes,omitempty"`
@@ -1822,7 +1822,7 @@ func (w *WindowsProfile) GetWindowsDefaultRuntimeHandler() string {
 	return KubernetesDefaultWindowsRuntimeHandler
 }
 
-// GetWindowsHypervRuntimeHandlers gets comma seperated list of runtimehandler names
+// GetWindowsHypervRuntimeHandlers gets comma separated list of runtimehandler names
 func (w *WindowsProfile) GetWindowsHypervRuntimeHandlers() string {
 	if w.WindowsRuntimes != nil && len(w.WindowsRuntimes.HypervRuntimes) > 0 {
 		handlernames := []string{}

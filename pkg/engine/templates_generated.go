@@ -28889,7 +28889,7 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
     "hypervRuntimeHandlers": {
       "defaultValue": "",
       "metadata": {
-        "description": "comma seperated list of hyperv values"
+        "description": "comma separated list of hyperv values"
       },
       "type": "string"
     }

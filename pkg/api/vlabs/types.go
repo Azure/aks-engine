@@ -190,7 +190,7 @@ type WindowsProfile struct {
 	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
 }
 
-// WindowsRuntimes configures containerd runtimes that are avaliable on the windows nodes
+// WindowsRuntimes configures containerd runtimes that are available on the windows nodes
 type WindowsRuntimes struct {
 	Default        string            `json:"default,omitempty"`
 	HypervRuntimes []RuntimeHandlers `json:"hypervRuntimes,omitempty"`
