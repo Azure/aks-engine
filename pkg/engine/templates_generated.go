@@ -203,6 +203,7 @@
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
+// ../../parts/k8s/containerdhypervtemplate.toml
 // ../../parts/k8s/kubeconfig.json
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
@@ -40390,6 +40391,120 @@ func k8sCloudInitNodecustomdataYml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContainerdhypervtemplateToml = []byte(`root = "C:\\ProgramData\\containerd\\root"
+state = "C:\\ProgramData\\containerd\\state"
+
+[grpc]
+  address = "\\\\.\\pipe\\containerd-containerd"
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+
+[ttrpc]
+  address = ""
+
+[debug]
+  address = ""
+  level = "debug"
+
+[metrics]
+  address = ""
+  grpc_histogram = false
+
+[cgroup]
+  path = ""
+
+[plugins]
+  [plugins.cri]
+    stream_server_address = "127.0.0.1"
+    stream_server_port = "0"
+    enable_selinux = false
+    sandbox_image = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+    stats_collect_period = 10
+    systemd_cgroup = false
+    enable_tls_streaming = false
+    max_container_log_line_size = 16384
+    [plugins.cri.containerd]
+      snapshotter = "windows"
+      no_pivot = false
+      [plugins.cri.containerd.default_runtime]
+        runtime_type = "io.containerd.runhcs.v1"
+        [plugins.cri.containerd.default_runtime.options]
+          Debug = true
+          DebugType = 2
+          SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+          SandboxPlatform = "windows/amd64"
+          SandboxIsolation = 1
+      [plugins.cri.containerd.runtimes]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-process]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-process.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+            SandboxPlatform = "windows/amd64"
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-17763]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-17763.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-1809-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18362]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18362.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-1903-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18363]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-18363.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-1909-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-19041]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-19041.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-2004-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+    [plugins.cri.cni]
+      bin_dir = "{{cnibin}}"
+      conf_dir = "{{cniconf}}"
+    [plugins.cri.registry]
+      [plugins.cri.registry.mirrors]
+        [plugins.cri.registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+  [plugins.diff-service]
+    default = ["windows"]
+  [plugins.scheduler]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = "0s"
+    startup_delay = "100ms"`)
+
+func k8sContainerdhypervtemplateTomlBytes() ([]byte, error) {
+	return _k8sContainerdhypervtemplateToml, nil
+}
+
+func k8sContainerdhypervtemplateToml() (*asset, error) {
+	bytes, err := k8sContainerdhypervtemplateTomlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containerdhypervtemplate.toml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sKubeconfigJson = []byte(`    {
         "apiVersion": "v1",
         "clusters": [
@@ -40679,7 +40794,9 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
          "3.0.6",
          "3.0.7",
          "3.0.8",
-         "3.0.10"
+         "3.0.10",
+         "19.03.11",
+         "19.03.12"
        ],
       "type": "string"
     },
@@ -40691,7 +40808,8 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       "allowedValues": [
          "1.1.5",
          "1.1.6",
-         "1.2.4"
+         "1.2.4",
+	 "1.3.2"
        ],
       "type": "string"
     },
@@ -43141,133 +43259,58 @@ function Install-Containerd {
   }
 
   # TODO: check if containerd is already installed and is the same version before this.
-  $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
-  DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
-  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
-  del $zipfile
+  
+  # Extract the package
+  if ($ContainerdUrl.endswith(".zip")) {
+    $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
+    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
+    Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
+    del $zipfile
+  }elseif ($ContainerdUrl.endswith(".tar.gz")) {
+    # upstream containerd package is a tar 
+    $tarfile = [Io.path]::Combine($ENV:TEMP, "containerd.tar.gz")
+    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $tarfile
+    mkdir -Force "C:\Program Files\containerd"
+    tar -xzf $tarfile -C $global:ContainerdInstallLocation
+    mv $global:ContainerdInstallLocation\bin\* $global:ContainerdInstallLocation\
+    del $tarfile
+    del -Recurse -Force $global:ContainerdInstallLocation\bin
+  }
 
+  # get configuration options
   Add-SystemPathEntry $global:ContainerdInstallLocation
-
-  # TODO: remove if the node comes up without this code
-  # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
-  # if (-Not (Test-Path $configDir)) {
-  #     mkdir $configDir
-  # }
-
-  # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
+  $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
-
   $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
   $pauseImage = $clusterConfig.Cri.Images.Pause
+  $formatedbin=$(($CNIBinDir).Replace("\","/"))
+  $formatedconf=$(($CNIConfDir).Replace("\","/"))
 
-  @"
-version = 2
-root = "C:\\ProgramData\\containerd\\root"
-state = "C:\\ProgramData\\containerd\\state"
-plugin_dir = ""
-disabled_plugins = []
-required_plugins = []
-oom_score = 0
-
-[grpc]
-  address = "\\\\.\\pipe\\containerd-containerd"
-  tcp_address = ""
-  tcp_tls_cert = ""
-  tcp_tls_key = ""
-  uid = 0
-  gid = 0
-  max_recv_message_size = 16777216
-  max_send_message_size = 16777216
-
-[ttrpc]
-  address = ""
-  uid = 0
-  gid = 0
-
-[debug]
-  address = ""
-  uid = 0
-  gid = 0
-  level = ""
-
-[metrics]
-  address = ""
-  grpc_histogram = false
-
-[cgroup]
-  path = ""
-
-[timeouts]
-  "io.containerd.timeout.shim.cleanup" = "5s"
-  "io.containerd.timeout.shim.load" = "5s"
-  "io.containerd.timeout.shim.shutdown" = "3s"
-  "io.containerd.timeout.task.state" = "2s"
-
-[plugins]
-  [plugins."io.containerd.gc.v1.scheduler"]
-    pause_threshold = 0.02
-    deletion_threshold = 0
-    mutation_threshold = 100
-    schedule_delay = "0s"
-    startup_delay = "100ms"
-  [plugins."io.containerd.grpc.v1.cri"]
-    disable_tcp_service = true
-    stream_server_address = "127.0.0.1"
-    stream_server_port = "0"
-    stream_idle_timeout = "4h0m0s"
-    enable_selinux = false
-    sandbox_image = "$pauseImage"
-    stats_collect_period = 10
-    systemd_cgroup = false
-    enable_tls_streaming = false
-    max_container_log_line_size = 16384
-    disable_cgroup = false
-    disable_apparmor = false
-    restrict_oom_score_adj = false
-    max_concurrent_downloads = 3
-    disable_proc_mount = false
-    [plugins."io.containerd.grpc.v1.cri".containerd]
-      snapshotter = "windows"
-      default_runtime_name = "runhcs-wcow-process"
-      no_pivot = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime]
-        runtime_type = ""
-        runtime_engine = ""
-        runtime_root = ""
-        privileged_without_host_devices = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime]
-        runtime_type = ""
-        runtime_engine = ""
-        runtime_root = ""
-        privileged_without_host_devices = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process]
-          runtime_type = "io.containerd.runhcs.v1"
-          runtime_engine = ""
-          runtime_root = ""
-          privileged_without_host_devices = false
-    [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "$(($CNIBinDir).Replace("\","//"))"
-      conf_dir = "$(($CNIConfDir).Replace("\","//"))"
-      max_conf_num = 1
-      conf_template = ""
-    [plugins."io.containerd.grpc.v1.cri".registry]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
-        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
-          endpoint = ["https://registry-1.docker.io"]
-    [plugins."io.containerd.grpc.v1.cri".x509_key_pair_streaming]
-      tls_cert_file = ""
-      tls_key_file = ""
-  [plugins."io.containerd.metadata.v1.bolt"]
-    content_sharing_policy = "shared"
-  [plugins."io.containerd.runtime.v2.task"]
-    platforms = ["windows/amd64", "linux/amd64"]
-  [plugins."io.containerd.service.v1.diff-service"]
-    default = ["windows", "windows-lcow"]
-"@ | Out-File -Encoding ascii $configFile
+  # configure
+  if (Test-Path -Path "$global:ContainerdInstallLocation\containerd-template.toml") {
+    # Hyperv config set up
+    Write-Host "Configuring containerd for hyperv"
+    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+    (Get-Content -Path "c:\AzureData\k8s\containerdhypervtemplate.toml" -Raw).
+      Replace('{{pauseImage}}', $pauseImage).
+      Replace('{{cnibin}}', $formatedbin).
+      Replace('{{cniconf}}', $formatedconf).
+      Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
+      Out-File -FilePath "$configFile" -Encoding ascii
+  }else{
+    # non hyperv configuration
+    Write-Host "Configuring containerd for process isolated"
+    & $cdbinary config dump | ` + "`" + `
+      % {$_ -replace "sandbox_image = ""(.*?[^\\])""", "sandbox_image = ""$pauseImage""" } | ` + "`" + `
+      % {$_ -replace "bin_dir = ""(.*?[^\\])""", "bin_dir = ""$formatedbin""" } | ` + "`" + `
+      % {$_ -replace "conf_dir = ""(.*?[^\\])""", "conf_dir = ""$formatedconf""" } | ` + "`" + `
+      Out-File $configFile -Encoding ascii
+  }
 
   RegisterContainerDService
-}`)
+}
+
+`)
 
 func k8sWindowscontainerdfuncPs1Bytes() ([]byte, error) {
 	return _k8sWindowscontainerdfuncPs1, nil
@@ -47470,6 +47513,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/jumpboxcustomdata.yml":                                    k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                                 k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                       k8sCloudInitNodecustomdataYml,
+	"k8s/containerdhypervtemplate.toml":                                       k8sContainerdhypervtemplateToml,
 	"k8s/kubeconfig.json":                                                     k8sKubeconfigJson,
 	"k8s/kubernetesparams.t":                                                  k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                      k8sKuberneteswindowsfunctionsPs1,
@@ -47794,6 +47838,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},
 			"nodecustomdata.yml":       {k8sCloudInitNodecustomdataYml, map[string]*bintree{}},
 		}},
+		"containerdhypervtemplate.toml":  {k8sContainerdhypervtemplateToml, map[string]*bintree{}},
 		"kubeconfig.json":                {k8sKubeconfigJson, map[string]*bintree{}},
 		"kubernetesparams.t":             {k8sKubernetesparamsT, map[string]*bintree{}},
 		"kuberneteswindowsfunctions.ps1": {k8sKuberneteswindowsfunctionsPs1, map[string]*bintree{}},
