@@ -24816,7 +24816,7 @@ function RegisterContainerDService {
 }
 
 function CreateHypervisorRuntime {
-Param(
+  Param(
     [Parameter(Mandatory = $true)][string]
     $image,
     [Parameter(Mandatory = $true)][string]
@@ -24839,20 +24839,21 @@ Param(
 
 function CreateHypervisorRuntimes {
   Param(
-     [Parameter(Mandatory = $true)][string[]]
-      $builds,
-     [Parameter(Mandatory = $true)][string]
-      $image
-    )
+    [Parameter(Mandatory = $true)][string[]]
+    $builds,
+    [Parameter(Mandatory = $true)][string]
+    $image
+  )
   
   Write-Host "Adding hyperv runtimes $builds"
   $hypervRuntimes = ""
-  ForEach ($buildNumber in $builds){
+  ForEach ($buildNumber in $builds) {
     $windowsVersion = Select-Windows-Version -buildNumber $buildNumber
     $runtime = createHypervisorRuntime -image $pauseImage -version $windowsVersion -buildNumber $buildNumber
-    if ($hypervRuntimes -eq ""){
+    if ($hypervRuntimes -eq "") {
       $hypervRuntimes = $runtime
-    }else{
+    }
+    else {
       $hypervRuntimes = $hypervRuntimes + "` + "`" + `r` + "`" + `n" + $runtime
     }
   }
@@ -24860,19 +24861,19 @@ function CreateHypervisorRuntimes {
   return $hypervRuntimes
 }
 
-function Select-Windows-Version{
+function Select-Windows-Version {
   param (
-      [Parameter()]
-      [string]
-      $buildNumber
+    [Parameter()]
+    [string]
+    $buildNumber
   )
 
   switch ($buildNumber) {
-    "17763" {  return "1809" }
-    "18362" {  return "1903" }
-    "18363" {  return "1909" }
-    "19041" {  return "2004" }
-    Default {  return "" } 
+    "17763" { return "1809" }
+    "18362" { return "1903" }
+    "18363" { return "1909" }
+    "19041" { return "2004" }
+    Default { return "" } 
   }
 }
 
@@ -24900,7 +24901,8 @@ function Install-Containerd {
     DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
     Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
     del $zipfile
-  }elseif ($ContainerdUrl.endswith(".tar.gz")) {
+  }
+  elseif ($ContainerdUrl.endswith(".tar.gz")) {
     # upstream containerd package is a tar 
     $tarfile = [Io.path]::Combine($ENV:TEMP, "containerd.tar.gz")
     DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $tarfile
@@ -24917,8 +24919,8 @@ function Install-Containerd {
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
   $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
   $pauseImage = $clusterConfig.Cri.Images.Pause
-  $formatedbin=$(($CNIBinDir).Replace("\","/"))
-  $formatedconf=$(($CNIConfDir).Replace("\","/"))
+  $formatedbin = $(($CNIBinDir).Replace("\", "/"))
+  $formatedconf = $(($CNIConfDir).Replace("\", "/"))
   $sandboxIsolation = 0
   $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
   $hypervRuntimes = ""
@@ -24934,16 +24936,17 @@ function Install-Containerd {
   if ($sandboxIsolation -eq 0 -And $hypervHandlers.Count -eq 0) {
     # remove the value hypervisor place holder
     $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
-  }else{
+  }
+  else {
     $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
   }
 
   $template.Replace('{{sandboxIsolation}}', $sandboxIsolation).
-    Replace('{{pauseImage}}', $pauseImage).
-    Replace('{{hypervisors}}', $hypervRuntimes).
-    Replace('{{cnibin}}', $formatedbin).
-    Replace('{{cniconf}}', $formatedconf).
-    Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
+  Replace('{{pauseImage}}', $pauseImage).
+  Replace('{{hypervisors}}', $hypervRuntimes).
+  Replace('{{cnibin}}', $formatedbin).
+  Replace('{{cniconf}}', $formatedconf).
+  Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
     Out-File -FilePath "$configFile" -Encoding ascii
 
   RegisterContainerDService
