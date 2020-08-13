@@ -1232,6 +1232,9 @@ func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 	if e := validateCsiProxyWindowsProperties(w, version); e != nil {
 		return e
 	}
+	if e := validateWindowsRuntimes(w.WindowsRuntimes); e != nil {
+		return e
+	}
 
 	return nil
 }
@@ -1240,6 +1243,27 @@ func validateCsiProxyWindowsProperties(w *WindowsProfile, k8sVersion string) err
 	if w.IsCSIProxyEnabled() && !common.IsKubernetesVersionGe(k8sVersion, "1.18.0") {
 		return errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater")
 	}
+	return nil
+}
+
+func validateWindowsRuntimes(r *WindowsRuntimes) error {
+	if r == nil {
+		// can be blank defaults will be applied
+		return nil
+	}
+
+	if r.Default != "process" && r.Default != "hyperv" {
+		return errors.New("Default runtime types are process or hyperv")
+	}
+
+	if r.Handlers != nil {
+		for _, h := range r.Handlers {
+			if h.HandlerName != "17763" && h.HandlerName != "18362" && h.HandlerName != "18363" && h.HandlerName != "19041" {
+				return errors.New("Current hyperv buildids values supported are 17763, 18362, 18363, 19041")
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -1336,25 +1360,6 @@ func validateKeyVaultSecrets(secrets []KeyVaultSecrets, requireCertificateStore 
 		}
 	}
 	return nil
-}
-
-// Validate ensures that the WindowsProfile is valid
-func (w *WindowsProfile) Validate(orchestratorType string) error {
-	if w.WindowsImageSourceURL != "" {
-		if orchestratorType != DCOS && orchestratorType != Kubernetes {
-			return errors.New("Windows Custom Images are only supported if the Orchestrator Type is DCOS or Kubernetes")
-		}
-	}
-	if e := validate.Var(w.AdminUsername, "required"); e != nil {
-		return errors.New("WindowsProfile.AdminUsername is required, when agent pool specifies windows")
-	}
-	if e := validate.Var(w.AdminPassword, "required"); e != nil {
-		return errors.New("WindowsProfile.AdminPassword is required, when agent pool specifies windows")
-	}
-	if !validatePasswordComplexity(w.AdminUsername, w.AdminPassword) {
-		return errors.New("WindowsProfile.AdminPassword complexity not met. Windows password should contain 3 of the following categories - uppercase letters(A-Z), lowercase(a-z) letters, digits(0-9), special characters (~!@#$%^&*_-+=`|\\(){}[]:;<>,.?/')")
-	}
-	return validateKeyVaultSecrets(w.Secrets, true)
 }
 
 func validatePasswordComplexity(name string, password string) (out bool) {

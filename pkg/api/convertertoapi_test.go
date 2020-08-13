@@ -921,6 +921,12 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
 				EnableAHUB:             to.BoolPtr(true),
+				WindowsRuntimes: &vlabs.WindowsRuntimes{
+					Default: "process",
+					Handlers: []vlabs.RuntimeHandlers{
+						{HandlerName: "17763"},
+					},
+				},
 			},
 			expected: WindowsProfile{
 				AdminUsername:          "user",
@@ -934,6 +940,12 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 				WindowsDockerVersion:   "18.09",
 				Secrets:                []KeyVaultSecrets{},
 				EnableAHUB:             to.BoolPtr(true),
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					Handlers: []RuntimeHandlers{
+						{HandlerName: "17763"},
+					},
+				},
 			},
 		},
 		{

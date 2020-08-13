@@ -1204,6 +1204,87 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 			isUpdate:      true,
 			expectedError: nil,
 		},
+		{
+			name: "wrong runtime",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "something",
+				},
+			},
+			expectedError: errors.New("Default runtime types are process or hyperv"),
+		},
+		{
+			name: "process runtime",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "hyperv runtime",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "invalid runtime handler name",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					Handlers: []RuntimeHandlers{
+						{HandlerName: "something"},
+					},
+				},
+			},
+			expectedError: errors.New("Current hyperv buildids values supported are 17763, 18362, 18363, 19041"),
+		},
+		{
+			name: "valid handler names",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					Handlers: []RuntimeHandlers{
+						{HandlerName: "17763"},
+						{HandlerName: "18362"},
+						{HandlerName: "18363"},
+						{HandlerName: "19041"},
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "some valid handlers some not",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					Handlers: []RuntimeHandlers{
+						{HandlerName: "saf"},
+						{HandlerName: "18362"},
+						{HandlerName: "18363"},
+						{HandlerName: "19041"},
+					},
+				},
+			},
+			expectedError: errors.New("Current hyperv buildids values supported are 17763, 18362, 18363, 19041"),
+		},
 	}
 
 	for _, test := range tests {
@@ -3856,55 +3937,6 @@ func TestProperties_ValidateVNET(t *testing.T) {
 			err := cs.Validate(true)
 			if err.Error() != test.expectedMsg {
 				t.Errorf("expected error message : %s, but got %s", test.expectedMsg, err.Error())
-			}
-		})
-	}
-}
-
-func TestWindowsProfile_Validate(t *testing.T) {
-	tests := []struct {
-		name             string
-		orchestratorType string
-		w                *WindowsProfile
-		expectedMsg      string
-	}{
-		{
-			name:             "unsupported orchestrator",
-			orchestratorType: "Mesos",
-			w: &WindowsProfile{
-				WindowsImageSourceURL: "http://fakeWindowsImageSourceURL",
-			},
-			expectedMsg: "Windows Custom Images are only supported if the Orchestrator Type is DCOS or Kubernetes",
-		},
-		{
-			name:             "empty adminUsername",
-			orchestratorType: "Kubernetes",
-			w: &WindowsProfile{
-				WindowsImageSourceURL: "http://fakeWindowsImageSourceURL",
-				AdminUsername:         "",
-				AdminPassword:         "password",
-			},
-			expectedMsg: "WindowsProfile.AdminUsername is required, when agent pool specifies windows",
-		},
-		{
-			name:             "empty password",
-			orchestratorType: "DCOS",
-			w: &WindowsProfile{
-				WindowsImageSourceURL: "http://fakeWindowsImageSourceURL",
-				AdminUsername:         "azure",
-				AdminPassword:         "",
-			},
-			expectedMsg: "WindowsProfile.AdminPassword is required, when agent pool specifies windows",
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			err := test.w.Validate(test.orchestratorType)
-			if err.Error() != test.expectedMsg {
-				t.Errorf("should error on unsupported orchType with msg : %s, but got : %s", test.expectedMsg, err.Error())
 			}
 		})
 	}
