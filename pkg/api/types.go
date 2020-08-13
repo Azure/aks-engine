@@ -527,6 +527,7 @@ type KubernetesConfig struct {
 	ProxyMode                         KubeProxyMode         `json:"kubeProxyMode,omitempty"`
 	PrivateAzureRegistryServer        string                `json:"privateAzureRegistryServer,omitempty"`
 	OutboundRuleIdleTimeoutInMinutes  int32                 `json:"outboundRuleIdleTimeoutInMinutes,omitempty"`
+	MicrosoftAptRepositoryURL         string                `json:"microsoftAptRepositoryURL,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -2523,6 +2524,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
 		"CUSTOM_HYPERKUBE_IMAGE":               kubernetesConfig.CustomHyperkubeImage,
+		"MICROSOFT_APT_REPO":                   kubernetesConfig.MicrosoftAptRepositoryURL,
 	}
 
 	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {

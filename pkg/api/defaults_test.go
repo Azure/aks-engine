@@ -914,6 +914,30 @@ func TestEtcdStorageLimitGB(t *testing.T) {
 	}
 }
 
+func TestMicrosoftAptRepositoryURL(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.18.5")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.MasterProfile.Count = 1
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.MicrosoftAptRepositoryURL != DefaultMicrosoftAptRepositoryURL {
+		t.Fatalf("MicrosoftAptRepositoryURL did not have the expected size, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.MicrosoftAptRepositoryURL, DefaultMicrosoftAptRepositoryURL)
+	}
+
+	// validate defaults doesn't override valid value
+	mockCS = getMockBaseContainerService("1.18.5")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.MasterProfile.Count = 1
+	properties.OrchestratorProfile.KubernetesConfig.MicrosoftAptRepositoryURL = "custom.packages.com"
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.MicrosoftAptRepositoryURL != "custom.packages.com" {
+		t.Fatalf("MicrosoftAptRepositoryURL did not have the expected size, got %s, expected custom.packages.com",
+			properties.OrchestratorProfile.KubernetesConfig.MicrosoftAptRepositoryURL)
+	}
+}
+
 func TestGenerateEtcdEncryptionKey(t *testing.T) {
 	key1 := generateEtcdEncryptionKey()
 	key2 := generateEtcdEncryptionKey()

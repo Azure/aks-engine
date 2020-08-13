@@ -308,9 +308,9 @@ installContainerd() {
     fi
     removeMoby
     removeContainerd
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27

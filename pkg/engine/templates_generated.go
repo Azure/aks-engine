@@ -18447,9 +18447,9 @@ installContainerd() {
     fi
     removeMoby
     removeContainerd
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
@@ -19369,7 +19369,7 @@ installEtcd() {
 installDeps() {
   packages="apache2-utils apt-transport-https blobfuse=1.1.1 ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
-    retrycmd_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
+    retrycmd_no_stats 120 5 25 curl -fsSL ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
     aptmarkWALinuxAgent hold
     packages+=" cgroup-lite ceph-common glusterfs-client"
@@ -19428,9 +19428,9 @@ installMoby() {
   if [[ $CURRENT_VERSION != "${MOBY_VERSION}" ]]; then
     removeContainerd
     removeMoby
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     MOBY_CLI=${MOBY_VERSION}
