@@ -153,19 +153,22 @@ for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
 done
 
 METRICS_SERVER_VERSIONS="
-0.3.6
-0.3.5
-0.3.4
-0.2.1
+0.3.7
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
+    CONTAINER_IMAGE="k8s.gcr.io/metrics-server/metrics-server:v${METRICS_SERVER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-server:v${METRICS_SERVER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
+
+# gcr URL for metrics-server v0.2.1 is different, so we can't (easily) re-use the above enumeration
+# so let's just do it boutique-style below until we no longer have to build images for k8s 1.15
+METRICS_SERVER_VERSION_FOR_K8S_1DOT15="v0.2.1"
+pullContainerImage "docker" k8s.gcr.io/metrics-server-amd64:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
+pullContainerImage "docker" mcr.microsoft.com/oss/kubernetes/metrics-server:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
 
 KUBE_DNS_VERSIONS="
 1.15.4
