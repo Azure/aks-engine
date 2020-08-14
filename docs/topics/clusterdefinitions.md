@@ -95,6 +95,7 @@ $ aks-engine get-versions
 | cloudProviderRateLimitBucketWrite | no                        | The size of the overflow write request queue when cloudProviderRateLimit is enabled. Follows the same defaults calculation as cloudProviderRateLimitBucket.                                                                                                                                                      |
 | cloudProviderRateLimitQPSWrite | no                        | QPS for Azure cloudprovider write request rate limiter enforcement. Follows the same defaults calculation as cloudProviderRateLimitQPS.                                                                                                                                                 |
 | cloudProviderDisableOutboundSNAT | no                        | For clusters w/ Standard LB only: enforces the disabling of outbound NAT for that load balancing rule. See [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview#disablesnat) for more details. Defaults to `false`.                                                                                                                                               |
+| microsoftAptRepositoryURL | no                        | You may configure certain Microsoft-curated apt packages to be sourced from a custom repository so long as it acts as a mirror to the data at "https://packages.microsoft.com/" (the default value). |
 
 #### addons
 
