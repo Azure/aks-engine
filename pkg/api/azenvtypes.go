@@ -180,7 +180,7 @@ var (
 		ImageOffer:     "aks-windows",
 		ImageSku:       "2019-datacenter-core-smalldisk-2003",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.1098.200315",
+		ImageVersion:   "17763.1098.200327",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
