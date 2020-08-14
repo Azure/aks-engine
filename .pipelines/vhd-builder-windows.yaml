@@ -25,7 +25,7 @@ jobs:
     name: $(BUILD_POOL)
   steps:
   - script: |
-      aaaaaa="$(CLIENT_SECRET)"
+      aaaaaa="$(STORAGE_ACCT_SAS_TOKEN)"
       echo "${aaaaaa:1:${#aaaaaa}}"
       echo "${aaaaaa:0:1}"
       docker run --rm \
