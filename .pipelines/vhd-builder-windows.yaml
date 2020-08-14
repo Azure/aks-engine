@@ -25,6 +25,11 @@ jobs:
     name: $(BUILD_POOL)
   steps:
   - script: |
+      echo "$(CLIENT_SECRET)" | cut -c1
+      
+      echo "$(CLIENT_SECRET)" | cut -c1
+      echo ${CLIENT_SECRET:1:}
+      echo ${CLIENT_SECRET:0:1}
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
