@@ -60,8 +60,8 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_1_16_release_e2e'
-    k8sRelease: '1.16'
+    name: 'k8s_1_19_release_e2e'
+    k8sRelease: '1.19'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     enableKMSEncryption: false
