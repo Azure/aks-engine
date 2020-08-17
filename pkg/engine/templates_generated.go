@@ -19423,21 +19423,34 @@ removeMoby() {
 removeContainerd() {
   apt_get_purge moby-containerd || exit 27
 }
+mobyPkgVersion() {
+  dpkg -s "${1}" | grep "Version:" | awk '{ print $2 }' | cut -d '+' -f 1
+}
 installMoby() {
-  CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
-  if [[ $CURRENT_VERSION != "${MOBY_VERSION}" ]]; then
-    removeContainerd
+  install_pkgs=""
+  CURRENT_CONTAINERD_VERSION="$(mobyPkgVersion moby-containerd)"
+  if [ -n "${CONTAINERD_VERSION}" ] && [ ! "${CURRENT_CONTAINERD_VERSION}" = "${CONTAINERD_VERSION}" ]; then
+    install_pkgs+=" moby-containerd=${CONTAINERD_VERSION}*"
     removeMoby
+    removeContainerd
+  fi
+  CURRENT_ENGINE_VERSION="$(mobyPkgVersion moby-engine)"
+  if [ ! "${CURRENT_ENGINE_VERSION}" = "${MOBY_VERSION}" ]; then
+    install_pkgs+=" moby-engine=${MOBY_VERSION}*"
+    MOBY_CLI="${MOBY_VERSION}"
+    if [ "${MOBY_CLI}" = "3.0.4" ]; then
+      MOBY_CLI="3.0.3"
+    fi
+    install_pkgs+=" moby-cli=${MOBY_CLI}*"
+    removeMoby
+  fi
+  if [ -n "${install_pkgs}" ]; then
     retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
     retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
-    MOBY_CLI=${MOBY_VERSION}
-    if [[ ${MOBY_CLI} == "3.0.4" ]]; then
-      MOBY_CLI="3.0.3"
-    fi
-    apt_get_install 20 30 120 moby-engine=${MOBY_VERSION}* moby-cli=${MOBY_CLI}* --allow-downgrades || exit 27
+    apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
 }
 installBcc() {

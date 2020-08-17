@@ -15,6 +15,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/versions"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
@@ -1606,13 +1607,12 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 
 	// Validate containerd scenarios
 	if k.ContainerRuntime == Docker || k.ContainerRuntime == "" {
-		if k.ContainerdVersion != "" {
+		if k.MobyVersion != "" && k.ContainerdVersion != "" && versions.LessThan(k.MobyVersion, "19.03") {
 			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd)
 		}
-	} else {
-		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
-			return e
-		}
+	}
+	if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
+		return e
 	}
 
 	if to.Bool(k.UseCloudControllerManager) || k.CustomCcmImage != "" {
