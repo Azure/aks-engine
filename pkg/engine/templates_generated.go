@@ -13805,6 +13805,9 @@ rules:
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["watch","list","get","update", "patch"]
+- apiGroups: [""]
+  resources: ["nodes/status"]
+  verbs: ["patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
