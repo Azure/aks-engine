@@ -4,7 +4,10 @@
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
+				"orchestratorType": "Kubernetes",
+				"kubernetesConfig": {
+					"networkPlugin": "kubenet"
+				}
 			},
 			"masterProfile": {
 				"count": 5,
