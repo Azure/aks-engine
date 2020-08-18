@@ -1,5 +1,7 @@
 {
-	"env": {},
+	"env": {
+		"BLOCK_SSH": "true"
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
