@@ -187,15 +187,15 @@ func getVersionOverrides(v string) map[string]string {
 	case "1.18.2":
 		return map[string]string{"windowszip": "v1.18.2-hotfix.20200624/windowszip/v1.18.2-hotfix.20200624-1int.zip"}
 	case "1.17.9":
-		return map[string]string{"windowszip": "v1.17.9-hotfix.20200714/windowszip/v1.17.9-hotfix.20200714-1int.zip"}
+		return map[string]string{"windowszip": "v1.17.9-hotfix.20200817/windowszip/v1.17.9-hotfix.20200817-1int.zip"}
 	case "1.17.7":
-		return map[string]string{"windowszip": "v1.17.7-hotfix.20200714/windowszip/v1.17.7-hotfix.20200714-1int.zip"}
+		return map[string]string{"windowszip": "v1.17.7-hotfix.20200817/windowszip/v1.17.7-hotfix.20200817-1int.zip"}
 	case "1.16.13":
-		return map[string]string{"windowszip": "v1.16.13-hotfix.20200714/windowszip/v1.16.13-hotfix.20200714-1int.zip"}
+		return map[string]string{"windowszip": "v1.16.13-hotfix.20200817/windowszip/v1.16.13-hotfix.20200817-1int.zip"}
 	case "1.16.11":
 		return map[string]string{"windowszip": "v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip"}
 	case "1.16.10":
-		return map[string]string{"windowszip": "v1.16.10-hotfix.20200714/windowszip/v1.16.10-hotfix.20200714-1int.zip"}
+		return map[string]string{"windowszip": "v1.16.10-hotfix.20200817/windowszip/v1.16.10-hotfix.20200817-1int.zip"}
 	case "1.15.12":
 		return map[string]string{"windowszip": "v1.15.12-hotfix.20200714/windowszip/v1.15.12-hotfix.20200714-1int.zip"}
 	case "1.15.11":
