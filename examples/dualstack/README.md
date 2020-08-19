@@ -98,6 +98,10 @@ nginx-ipv6    LoadBalancer   fd00::6283       2603:1030:805:3::3   80:31140/TCP 
 
 - Dual stack clusters are supported only with kubenet and azurecni.
 - Dual stack clusters are supported only with Linux.
-- Dual stack clusters are currently only supported with ipvs kube-proxy mode.
-- Dual stack clusters are currently only supported with Availability sets.
+- Dual stack clusters with Windows is not supported at this time because it requires
+  - Kubernetes version 1.19+ and 
+  - [backport to 2004 to support dualstack containers](https://github.com/Azure/aks-engine/issues/3568).
+- Dual stack clusters are supported with 
+  - ipvs kube-proxy mode (Kubernetes version 1.16+)
+  - iptables kube-proxy mode (Kubernetes version 1.18+).
 - API model enables Azure Standard LB for dual stack clusters. Azure Basic LBs have a limitation of only 1 IPv6 frontend configurations while Standard LB supports up to 600 IPv6 frontend configurations.
