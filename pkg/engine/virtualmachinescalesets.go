@@ -300,7 +300,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			AutoUpgradeMinorVersion: to.BoolPtr(true),
 			Settings:                map[string]interface{}{},
 			ProtectedSettings: map[string]interface{}{
-				"commandToExecute": fmt.Sprintf("[concat('echo $(date),$(hostname); "+outBoundCmd+" for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' IS_VHD=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD),
+				"commandToExecute": fmt.Sprintf("[concat('echo $(date),$(hostname); "+outBoundCmd+" for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' IS_VHD=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> %s 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, linuxCSELogPath),
 			},
 		},
 	}
@@ -773,7 +773,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 		isVHD := strconv.FormatBool(profile.IsVHDDistro())
 
-		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIdentityEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
+		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> %s 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIdentityEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, linuxCSELogPath, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{

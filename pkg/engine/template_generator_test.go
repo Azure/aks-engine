@@ -196,6 +196,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedIsDashboardAddonEnabled         bool
 		expectedIsPodSecurityPolicyAddonEnabled bool
 		expectedGetEtcdStorageLimitGB           int
+		expectedGetLinuxCSELogPath              string
 	}{
 		{
 			name: "1.15 release",
@@ -230,6 +231,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedGetCSEErrorCodeVals:          []int{-1},
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "1.16 release",
@@ -263,6 +265,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "1.17 release",
@@ -296,6 +299,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "1.17 release w/ VHD distro",
@@ -332,6 +336,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasVHDDistroNodes:            true,
 			expectedIsVHDDistroForAllNodes:       true,
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "custom search domain",
@@ -372,6 +377,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "custom nodes DNS",
@@ -410,6 +416,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "1.17 release with custom kube images",
@@ -446,6 +453,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "china cloud",
@@ -480,6 +488,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "german cloud",
@@ -514,6 +523,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "usgov cloud",
@@ -548,6 +558,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "Azure Stack",
@@ -586,6 +597,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "N series SKU",
@@ -620,6 +632,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "AvailabilitySet pool",
@@ -652,6 +665,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    false,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "managed identity enabled",
@@ -686,6 +700,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedUseManagedIdentity:           true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "PrivateAzureRegistryServer",
@@ -722,6 +737,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetPrivateAzureRegistryServer: "my-server",
 			expectedGetSysctlDConfigKeyVals:       "",
 			expectedIsVirtualMachineScaleSets:     true,
+			expectedGetLinuxCSELogPath:            linuxCSELogPath,
 		},
 		{
 			name: "cluster-init config",
@@ -762,6 +778,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedHasClusterInitComponent:      true,
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "sysctl config",
@@ -818,6 +835,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 			expectedGetSysctlDConfigKeyVals: `net.core.message_burst = 80
     net.core.message_cost = 40
     net.core.somaxconn = 16384
@@ -866,6 +884,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedHasKubeReservedCgroup:        true,
 			expectedGetKubeReservedCgroup:        "kubereserved",
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "custom pod-security-policy via addon",
@@ -909,6 +928,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:       true,
 			expectedHasCustomPodSecurityPolicy:      true,
 			expectedIsPodSecurityPolicyAddonEnabled: true,
+			expectedGetLinuxCSELogPath:              linuxCSELogPath,
 		},
 		{
 			name: "kubernetes-dashboard addon enabled",
@@ -950,6 +970,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetCSEErrorCodeVals:          []int{-1},
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedIsDashboardAddonEnabled:      true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "deprecated custom pod-security-policy",
@@ -989,6 +1010,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetCSEErrorCodeVals:          []int{-1},
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedHasCustomPodSecurityPolicy:   true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "1.17 release",
@@ -1024,6 +1046,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetEtcdStorageLimitGB:        8589934592,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
 		},
 		{
 			name: "pod-security-policy addon enabled",
@@ -1065,6 +1088,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetCSEErrorCodeVals:             []int{-1},
 			expectedIsVirtualMachineScaleSets:       true,
 			expectedIsPodSecurityPolicyAddonEnabled: true,
+			expectedGetLinuxCSELogPath:              linuxCSELogPath,
 		},
 	}
 
@@ -1237,6 +1261,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetEtcdStorageLimitGB {
 				t.Errorf("expected funcMap invocation of GetEtcdStorageLimitGB to return %d, instead got %d", c.expectedGetEtcdStorageLimitGB, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetLinuxCSELogPath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetLinuxCSELogPath {
+				t.Errorf("expected funcMap invocation of GetLinuxCSELogPath to return %s, instead got %s", c.expectedGetLinuxCSELogPath, ret[0].Interface())
 			}
 		})
 	}

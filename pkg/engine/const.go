@@ -278,3 +278,5 @@ const (
 	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
 	clusterInitComponentDestinationFilename            string = "cluster-init.yaml"
 )
+
+const linuxCSELogPath string = "/var/log/azure/cluster-provision.log"

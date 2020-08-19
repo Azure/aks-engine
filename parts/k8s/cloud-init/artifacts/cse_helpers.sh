@@ -227,5 +227,8 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
-
+exit_cse() {
+  journalctl -u kubelet --no-pager >> $1
+  exit $2
+}
 #HELPERSEOF

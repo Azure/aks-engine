@@ -18707,16 +18707,15 @@ ensureKubelet() {
 }
 
 ensureAddons() {
-  retrycmd 120 5 30 $KUBECTL get pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
 {{- if not HasCustomPodSecurityPolicy}}
-  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   rm -Rf ${ADDONS_DIR}/init
 {{- end}}
   replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
   retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
   retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
-  exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -18791,11 +18790,11 @@ ensureK8sControlPlane() {
   if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
-  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{end}}
 ensureEtcd() {
@@ -19494,7 +19493,10 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
-
+exit_cse() {
+  journalctl -u kubelet --no-pager >> $1
+  exit $2
+}
 #HELPERSEOF
 `)
 
@@ -20011,16 +20013,11 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
 time_metric "EnsureKubelet" ensureKubelet
-if [[ -n ${MASTER_NODE} ]]; then
 {{if IsAzurePolicyAddonEnabled}}
+if [[ -n ${MASTER_NODE} ]]; then
   time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
-{{end}}
-  if [ -f /var/run/reboot-required ]; then
-    time_metric "ReplaceAddonsInit" replaceAddonsInit
-  else
-    time_metric "EnsureAddons" ensureAddons
-  fi
 fi
+{{end}}
 time_metric "EnsureJournal" ensureJournal
 
 if [[ -n ${MASTER_NODE} ]]; then
@@ -20036,6 +20033,11 @@ if [[ -n ${MASTER_NODE} ]]; then
     fi
   fi
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
+  if [ -f /var/run/reboot-required ]; then
+    time_metric "ReplaceAddonsInit" replaceAddonsInit
+  else
+    time_metric "EnsureAddons" ensureAddons
+  fi
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
@@ -21870,30 +21872,6 @@ MASTER_MANIFESTS_CONFIG_PLACEHOLDER
 MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
-
-{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}}
-- path: /etc/kubernetes/addons/init/namespaces.yaml
-  permissions: "0644"
-  owner: root
-  content: |
-  {{- if IsDashboardAddonEnabled}}
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: kubernetes-dashboard
-      labels:
-        addonmanager.kubernetes.io/mode: EnsureExists
-    ---
-  {{- end}}
-  {{- if IsAzurePolicyAddonEnabled}}
-    apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: gatekeeper-system
-      labels:
-        addonmanager.kubernetes.io/mode: EnsureExists
-  {{- end}}
-{{- end}}
 
 - path: /etc/default/kubelet
   permissions: "0644"
