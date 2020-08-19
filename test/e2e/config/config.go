@@ -44,6 +44,8 @@ type Config struct {
 	ResourceGroup       string `envconfig:"RESOURCE_GROUP" default:""`
 	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME" default:""`
 	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY" default:"false"`
+	PublicSSHKey        string `envconfig:"PUBLIC_SSH_KEY" default:""`
+	PrivateSSHKeyPath   string `envconfig:"PRIVATE_SSH_KEY_FILE" default:""`
 	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND" default:"false"`
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS" default:""`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP" default:""`
@@ -187,11 +189,23 @@ func (ccc *CustomCloudConfig) SetEnvironment() error {
 	// as azure-cli complains otherwise
 	azsSelfSignedCaPath := "/aks-engine/Certificates.pem"
 	if _, err = os.Stat(azsSelfSignedCaPath); err == nil {
+		// include cacert.pem from python2.7 path for upgrade scenario
+		if _, err := os.Stat("/usr/local/lib/python2.7/dist-packages/certifi/cacert.pem"); err == nil {
+			cmd := exec.Command("/bin/bash", "-c",
+				fmt.Sprintf(`CA=/usr/local/lib/python2.7/dist-packages/certifi/cacert.pem;
+			if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath))
+
+			if out, err := cmd.CombinedOutput(); err != nil {
+				log.Printf("output for python2.7:%s\n", out)
+			}
+		}
+
 		// latest dev_image has an azure-cli version that requires python3
 		cmd := exec.Command("/bin/bash", "-c",
 			fmt.Sprintf(`VER=$(python3 -V | grep -o [0-9].[0-9]*. | grep -o [0-9].[0-9]*);
 		CA=/usr/local/lib/python${VER}/dist-packages/certifi/cacert.pem;
 		if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath))
+
 		if out, err := cmd.CombinedOutput(); err != nil {
 			log.Printf("output:%s\n", out)
 			return err
@@ -254,6 +268,9 @@ func (c *Config) SetKubeConfig() {
 
 // GetSSHKeyPath will return the absolute path to the ssh private key
 func (c *Config) GetSSHKeyPath() string {
+	if c.PrivateSSHKeyPath != "" {
+		return filepath.Join(c.CurrentWorkingDir, c.PrivateSSHKeyPath)
+	}
 	if c.UseDeployCommand {
 		return filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "azureuser_rsa")
 	}

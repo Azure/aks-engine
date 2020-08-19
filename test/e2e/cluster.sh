@@ -42,6 +42,14 @@ ${ADD_NODE_POOL_INPUT}
 END
 fi
 
+if [ -n "$PUBLIC_SSH_KEY_FILE" ]; then
+  PUBLIC_SSH_KEY=$(cat "${PUBLIC_SSH_KEY_FILE}")
+fi
+
+if [ -n "$PRIVATE_SSH_KEY_FILE" ]; then
+  PRIVATE_SSH_KEY_FILE=$(realpath --relative-to=$(pwd) ${PRIVATE_SSH_KEY_FILE})
+fi
+
 echo "Running E2E tests against a cluster built with the following API model:"
 cat ${TMP_DIR}/apimodel-input.json
 
@@ -90,6 +98,8 @@ docker run --rm \
 -e ORCHESTRATOR=kubernetes \
 -e ORCHESTRATOR_RELEASE="${ORCHESTRATOR_RELEASE}" \
 -e CREATE_VNET="${CREATE_VNET}" \
+-e PUBLIC_SSH_KEY="${PUBLIC_SSH_KEY}" \
+-e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
 -e TIMEOUT="${E2E_TEST_TIMEOUT}" \
 -e LB_TIMEOUT="${LB_TEST_TIMEOUT}" \
 -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
@@ -141,7 +151,9 @@ docker run --rm \
 -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
 -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
 -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-"${DEV_IMAGE}" make test-kubernetes || exit 1
+"${DEV_IMAGE}" make test-kubernetes
+
+sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/deploy-junit.xml
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
   # shellcheck disable=SC2012
@@ -160,6 +172,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
   fi
 
   if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
+      PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE:-_output/${RESOURCE_GROUP}-ssh}"
       docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
@@ -170,7 +183,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --ssh-host $API_SERVER \
-      --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
+      --linux-ssh-private-key $PRIVATE_SSH_KEY_FILE \
       --linux-script ./scripts/collect-logs.sh
       # TODO remove --linux-script once collect-logs.sh is part of the VHD
   fi
@@ -184,18 +197,21 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       done
     done
   fi
-  git reset --hard
-  git remote rm $UPGRADE_FORK
-  git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
-  git fetch --prune $UPGRADE_FORK
-  git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
-  git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
-  git pull
-  git log -1
-  docker run --rm \
-    -v $(pwd):${WORK_DIR} \
-    -w ${WORK_DIR} \
-    "${DEV_IMAGE}" make build-binary > /dev/null 2>&1 || exit 1
+  
+  if [ "${UPGRADE_CLUSTER}" = "true" ]; then
+    git reset --hard
+    git remote rm $UPGRADE_FORK
+    git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
+    git fetch --prune $UPGRADE_FORK
+    git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
+    git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
+    git pull
+    git log -1
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      "${DEV_IMAGE}" make build-binary > /dev/null 2>&1 || exit 1
+  fi
 else
   exit 0
 fi
@@ -310,6 +326,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
+    -e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}"
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
     -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
     -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
@@ -345,7 +362,9 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || exit 1
+    ${DEV_IMAGE} make test-kubernetes
+
+    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -396,6 +415,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
       -e ORCHESTRATOR=kubernetes \
       -e NAME=$RESOURCE_GROUP \
+      -e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
       -e TIMEOUT=${E2E_TEST_TIMEOUT} \
       -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
       -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
@@ -431,7 +451,9 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
       -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
       -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-      ${DEV_IMAGE} make test-kubernetes || exit 1
+      ${DEV_IMAGE} make test-kubernetes
+
+    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
   done
 fi
 
@@ -471,6 +493,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
+    -e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
     -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
     -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
@@ -506,5 +529,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || exit 1
+    ${DEV_IMAGE} make test-kubernetes
+
+    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-up-junit.xml
 fi
