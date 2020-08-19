@@ -8,6 +8,7 @@ KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 ADDONS_DIR=/etc/kubernetes/addons
 POD_SECURITY_POLICY_SPEC=$ADDONS_DIR/pod-security-policy.yaml
 ADDON_MANAGER_SPEC=/etc/kubernetes/manifests/kube-addon-manager.yaml
+GET_KUBELET_LOGS="journalctl -u kubelet --no-pager"
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -388,14 +389,14 @@ ensureKubelet() {
 
 ensureAddons() {
 {{- if not HasCustomPodSecurityPolicy}}
-  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   rm -Rf ${ADDONS_DIR}/init
 {{- end}}
   replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
   retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
   retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
-  exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -470,11 +471,11 @@ ensureK8sControlPlane() {
   if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
-  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit_cse {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{end}}
 ensureEtcd() {
