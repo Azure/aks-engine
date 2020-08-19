@@ -19821,7 +19821,7 @@ if [[ -n ${MASTER_NODE} ]]; then
 {{if IsAzurePolicyAddonEnabled}}
   time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
 {{end}}
-  if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
+  if [ -f /var/run/reboot-required ]; then
     time_metric "ReplaceAddonsInit" replaceAddonsInit
   else
     time_metric "EnsureAddons" ensureAddons
