@@ -18709,14 +18709,14 @@ ensureKubelet() {
 
 ensureAddons() {
 {{- if not HasCustomPodSecurityPolicy}}
-  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
   rm -Rf ${ADDONS_DIR}/init
 {{- end}}
   replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
   retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
   retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
-  exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -18791,11 +18791,11 @@ ensureK8sControlPlane() {
   if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
-  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}} $GET_KUBELET_LOGS
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit_cse $GET_KUBELET_LOGS {{GetLinuxCSELogPath}} {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit_cse {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}} $GET_KUBELET_LOGS
 }
 {{end}}
 ensureEtcd() {
@@ -19002,6 +19002,12 @@ cleanUpContainerd() {
 {{end}}
 removeEtcd() {
   rm -rf /usr/bin/etcd
+}
+exit_cse() {
+  local exit_code=$1
+  shift
+  $@ >> {{GetLinuxCSELogPath}} &
+  exit $exit_code
 }
 #EOF
 `)
@@ -19493,13 +19499,6 @@ sysctl_reload() {
 }
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
-}
-exit_cse() {
-  local output=${*: -2: 1}
-  local exit_code=${*: -1: 1}
-  local command=${*:1:$#-2}
-  $command >> $output
-  exit $exit_code
 }
 #HELPERSEOF
 `)
