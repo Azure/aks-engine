@@ -19495,9 +19495,9 @@ version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
 exit_cse() {
-  local output=${@: -2: 1}
-  local exit_code=${@: -1: 1}
-  local command=${@:1:$#-2}
+  local output=${*: -2: 1}
+  local exit_code=${*: -1: 1}
+  local command=${*:1:$#-2}
   $command >> $output
   exit $exit_code
 }
