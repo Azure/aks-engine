@@ -76,6 +76,8 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## ContainerD Usage
 $global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
+$global:DefaultContainerdRuntimeHandler = "{{WrapAsParameter "defaultContainerdRuntimeHandler"}}"
+$global:HypervRuntimeHandlers = "{{WrapAsParameter "hypervRuntimeHandlers"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -180,7 +182,7 @@ try
     # to the windows machine, and run the script manually to watch
     # the output.
     if ($true) {
-        Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
+        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret -NetworkAPIVersion $NetworkAPIVersion -TargetEnvironment $TargetEnvironment"
 
         if ($global:EnableTelemetry) {
             $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()

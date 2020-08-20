@@ -1,0 +1,68 @@
+root = "C:\\ProgramData\\containerd\\root"
+state = "C:\\ProgramData\\containerd\\state"
+
+[grpc]
+  address = "\\\\.\\pipe\\containerd-containerd"
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+
+[ttrpc]
+  address = ""
+
+[debug]
+  address = ""
+  level = "debug"
+
+[metrics]
+  address = ""
+  grpc_histogram = false
+
+[cgroup]
+  path = ""
+
+[plugins]
+  [plugins.cri]
+    stream_server_address = "127.0.0.1"
+    stream_server_port = "0"
+    enable_selinux = false
+    sandbox_image = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+    stats_collect_period = 10
+    systemd_cgroup = false
+    enable_tls_streaming = false
+    max_container_log_line_size = 16384
+    disable_http2_client = false
+    [plugins.cri.containerd]
+      snapshotter = "windows"
+      no_pivot = false
+      [plugins.cri.containerd.default_runtime]
+        runtime_type = "io.containerd.runhcs.v1"
+        [plugins.cri.containerd.default_runtime.options]
+          Debug = true
+          DebugType = 2
+          SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+          SandboxPlatform = "windows/amd64"
+          SandboxIsolation = {{sandboxIsolation}}
+      [plugins.cri.containerd.runtimes]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-process]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-process.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+            SandboxPlatform = "windows/amd64"
+{{hypervisors}}
+    [plugins.cri.cni]
+      bin_dir = "{{cnibin}}"
+      conf_dir = "{{cniconf}}"
+    [plugins.cri.registry]
+      [plugins.cri.registry.mirrors]
+        [plugins.cri.registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+  [plugins.diff-service]
+    default = ["windows"]
+  [plugins.scheduler]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = "0s"
+    startup_delay = "100ms"
