@@ -9,6 +9,7 @@ WORK_DIR="/aks-engine"
 MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
 AZURE_ENV="${AZURE_ENV:-AzurePublicCloud}"
 IDENTITY_SYSTEM="${IDENTITY_SYSTEM:-azure_ad}"
+GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST:-true}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
