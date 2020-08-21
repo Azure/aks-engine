@@ -1907,6 +1907,32 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("No windows agent was provisioned for this Cluster Definition")
 			}
 		})
+
+		// verifies that the pod logs continue to flow even during rotation
+		// https://github.com/Azure/aks-engine/issues/3573
+		It("should be able to rotate docker logs", func() {
+			if !eng.HasWindowsAgents() {
+				Skip("No windows agent was provisioned for this Cluster Definition")
+			}
+
+			windowsImages, err := eng.GetWindowsTestImages()
+			loggingPodFile, err := pod.ReplaceContainerImageFromFile(filepath.Join(WorkloadDir, "validate-windows-logging.yaml"), windowsImages.ServerCore)
+			Expect(err).NotTo(HaveOccurred())
+			defer os.Remove(loggingPodFile)
+
+			By("launching a pod that logs too much")
+			podName := "validate-windows-logging" // should be the same as in iis-azurefile.yaml
+			loggingPod, err := pod.CreatePodFromFileWithRetry(loggingPodFile, podName, "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			ready, err := loggingPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+
+			By("validating the logs continue to flow")
+			logsRotated, err := loggingPod.ValidateLogsRotate(20*time.Second, 2*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(logsRotated).To(Equal(true))
+		})
 	})
 
 	Describe("after the cluster has been up for awhile", func() {
