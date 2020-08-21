@@ -21,6 +21,67 @@ function RegisterContainerDService {
   }
 }
 
+function CreateHypervisorRuntime {
+  Param(
+    [Parameter(Mandatory = $true)][string]
+    $image,
+    [Parameter(Mandatory = $true)][string]
+    $version,
+    [Parameter(Mandatory = $true)][string]
+    $buildNumber
+  )
+
+  return @"
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "$image-windows-$version-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+"@
+}
+
+function CreateHypervisorRuntimes {
+  Param(
+    [Parameter(Mandatory = $true)][string[]]
+    $builds,
+    [Parameter(Mandatory = $true)][string]
+    $image
+  )
+  
+  Write-Host "Adding hyperv runtimes $builds"
+  $hypervRuntimes = ""
+  ForEach ($buildNumber in $builds) {
+    $windowsVersion = Select-Windows-Version -buildNumber $buildNumber
+    $runtime = createHypervisorRuntime -image $pauseImage -version $windowsVersion -buildNumber $buildNumber
+    if ($hypervRuntimes -eq "") {
+      $hypervRuntimes = $runtime
+    }
+    else {
+      $hypervRuntimes = $hypervRuntimes + "`r`n" + $runtime
+    }
+  }
+
+  return $hypervRuntimes
+}
+
+function Select-Windows-Version {
+  param (
+    [Parameter()]
+    [string]
+    $buildNumber
+  )
+
+  switch ($buildNumber) {
+    "17763" { return "1809" }
+    "18362" { return "1903" }
+    "18363" { return "1909" }
+    "19041" { return "2004" }
+    Default { return "" } 
+  }
+}
 
 function Install-Containerd {
   Param(
@@ -39,130 +100,60 @@ function Install-Containerd {
   }
 
   # TODO: check if containerd is already installed and is the same version before this.
-  $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
-  DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
-  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
-  del $zipfile
+  
+  # Extract the package
+  if ($ContainerdUrl.endswith(".zip")) {
+    $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
+    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
+    Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
+    del $zipfile
+  }
+  elseif ($ContainerdUrl.endswith(".tar.gz")) {
+    # upstream containerd package is a tar 
+    $tarfile = [Io.path]::Combine($ENV:TEMP, "containerd.tar.gz")
+    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $tarfile
+    mkdir -Force "C:\Program Files\containerd"
+    tar -xzf $tarfile -C $global:ContainerdInstallLocation
+    mv $global:ContainerdInstallLocation\bin\* $global:ContainerdInstallLocation\
+    del $tarfile
+    del -Recurse -Force $global:ContainerdInstallLocation\bin
+  }
 
+  # get configuration options
   Add-SystemPathEntry $global:ContainerdInstallLocation
-
-  # TODO: remove if the node comes up without this code
-  # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
-  # if (-Not (Test-Path $configDir)) {
-  #     mkdir $configDir
-  # }
-
-  # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
+  $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
-
   $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
   $pauseImage = $clusterConfig.Cri.Images.Pause
+  $formatedbin = $(($CNIBinDir).Replace("\", "/"))
+  $formatedconf = $(($CNIConfDir).Replace("\", "/"))
+  $sandboxIsolation = 0
+  $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  $hypervRuntimes = ""
+  $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
-  @"
-version = 2
-root = "C:\\ProgramData\\containerd\\root"
-state = "C:\\ProgramData\\containerd\\state"
-plugin_dir = ""
-disabled_plugins = []
-required_plugins = []
-oom_score = 0
+  # configure
+  if ($global:DefaultContainerdRuntimeHandler -eq "hyperv") {
+    Write-Host "default runtime for containerd set to hyperv"
+    $sandboxIsolation = 1
+  }
 
-[grpc]
-  address = "\\\\.\\pipe\\containerd-containerd"
-  tcp_address = ""
-  tcp_tls_cert = ""
-  tcp_tls_key = ""
-  uid = 0
-  gid = 0
-  max_recv_message_size = 16777216
-  max_send_message_size = 16777216
+  $template = Get-Content -Path "c:\AzureData\k8s\containerdtemplate.toml" 
+  if ($sandboxIsolation -eq 0 -And $hypervHandlers.Count -eq 0) {
+    # remove the value hypervisor place holder
+    $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
+  }
+  else {
+    $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
+  }
 
-[ttrpc]
-  address = ""
-  uid = 0
-  gid = 0
-
-[debug]
-  address = ""
-  uid = 0
-  gid = 0
-  level = ""
-
-[metrics]
-  address = ""
-  grpc_histogram = false
-
-[cgroup]
-  path = ""
-
-[timeouts]
-  "io.containerd.timeout.shim.cleanup" = "5s"
-  "io.containerd.timeout.shim.load" = "5s"
-  "io.containerd.timeout.shim.shutdown" = "3s"
-  "io.containerd.timeout.task.state" = "2s"
-
-[plugins]
-  [plugins."io.containerd.gc.v1.scheduler"]
-    pause_threshold = 0.02
-    deletion_threshold = 0
-    mutation_threshold = 100
-    schedule_delay = "0s"
-    startup_delay = "100ms"
-  [plugins."io.containerd.grpc.v1.cri"]
-    disable_tcp_service = true
-    stream_server_address = "127.0.0.1"
-    stream_server_port = "0"
-    stream_idle_timeout = "4h0m0s"
-    enable_selinux = false
-    sandbox_image = "$pauseImage"
-    stats_collect_period = 10
-    systemd_cgroup = false
-    enable_tls_streaming = false
-    max_container_log_line_size = 16384
-    disable_cgroup = false
-    disable_apparmor = false
-    restrict_oom_score_adj = false
-    max_concurrent_downloads = 3
-    disable_proc_mount = false
-    [plugins."io.containerd.grpc.v1.cri".containerd]
-      snapshotter = "windows"
-      default_runtime_name = "runhcs-wcow-process"
-      no_pivot = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime]
-        runtime_type = ""
-        runtime_engine = ""
-        runtime_root = ""
-        privileged_without_host_devices = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime]
-        runtime_type = ""
-        runtime_engine = ""
-        runtime_root = ""
-        privileged_without_host_devices = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process]
-          runtime_type = "io.containerd.runhcs.v1"
-          runtime_engine = ""
-          runtime_root = ""
-          privileged_without_host_devices = false
-    [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "$(($CNIBinDir).Replace("\","//"))"
-      conf_dir = "$(($CNIConfDir).Replace("\","//"))"
-      max_conf_num = 1
-      conf_template = ""
-    [plugins."io.containerd.grpc.v1.cri".registry]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
-        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
-          endpoint = ["https://registry-1.docker.io"]
-    [plugins."io.containerd.grpc.v1.cri".x509_key_pair_streaming]
-      tls_cert_file = ""
-      tls_key_file = ""
-  [plugins."io.containerd.metadata.v1.bolt"]
-    content_sharing_policy = "shared"
-  [plugins."io.containerd.runtime.v2.task"]
-    platforms = ["windows/amd64", "linux/amd64"]
-  [plugins."io.containerd.service.v1.diff-service"]
-    default = ["windows", "windows-lcow"]
-"@ | Out-File -Encoding ascii $configFile
+  $template.Replace('{{sandboxIsolation}}', $sandboxIsolation).
+  Replace('{{pauseImage}}', $pauseImage).
+  Replace('{{hypervisors}}', $hypervRuntimes).
+  Replace('{{cnibin}}', $formatedbin).
+  Replace('{{cniconf}}', $formatedconf).
+  Replace('{{currentversion}}', $windowsVersion) | `
+    Out-File -FilePath "$configFile" -Encoding ascii
 
   RegisterContainerDService
 }

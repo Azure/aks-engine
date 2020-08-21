@@ -95,6 +95,7 @@ $ aks-engine get-versions
 | cloudProviderRateLimitBucketWrite | no                        | The size of the overflow write request queue when cloudProviderRateLimit is enabled. Follows the same defaults calculation as cloudProviderRateLimitBucket.                                                                                                                                                      |
 | cloudProviderRateLimitQPSWrite | no                        | QPS for Azure cloudprovider write request rate limiter enforcement. Follows the same defaults calculation as cloudProviderRateLimitQPS.                                                                                                                                                 |
 | cloudProviderDisableOutboundSNAT | no                        | For clusters w/ Standard LB only: enforces the disabling of outbound NAT for that load balancing rule. See [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview#disablesnat) for more details. Defaults to `false`.                                                                                                                                               |
+| microsoftAptRepositoryURL | no                        | You may configure certain Microsoft-curated apt packages to be sourced from a custom repository so long as it acts as a mirror to the data at "https://packages.microsoft.com/" (the default value). |
 
 #### addons
 
@@ -128,6 +129,7 @@ $ aks-engine get-versions
 | [cilium](https://docs.cilium.io/en/v1.4/kubernetes/policy/#ciliumnetworkpolicy)                            | true if networkPolicy is "cilium"; currently validated against Kubernetes v1.13, v1.14, and v1.15                                                                                | 0     | A NetworkPolicy CRD implementation by the Cilium project (currently supports v1.4)                                                                                                                                                                  |
 | [flannel](https://coreos.com/flannel/docs/0.8.0/index.html)                            | false                                                                                | 0     | An addon that delivers flannel: a virtual network that gives a subnet to each host for use with container runtimes. If `networkPlugin` is set to `"flannel"` this addon will be enabled automatically. Not compatible with any other `networkPlugin` or `networkPolicy`.                                                                                                                                                                 |
 | [csi-secrets-store](../../examples/addons/csi-secrets-store/README.md)                                | true (for 1.16+ clusters)                                                                                | as many as linux agent nodes    | Integrates secrets stores (Azure keyvault) via a [Container Storage Interface (CSI)](https://kubernetes-csi.github.io/docs/) volume.                                                                                                                                                                    |
+| [azure-arc-onboarding](../../examples/addons/azure-arc-onboarding/README.md)                                  | false                                                                                | 7                               | Attaches the cluster to Azure Arc enabled Kubernetes. |
 
 To give a bit more info on the `addons` property: We've tried to expose the basic bits of data that allow useful configuration of these cluster features. Here are some example usage patterns that will unpack what `addons` provide:
 
@@ -695,16 +697,35 @@ Custom YAML specifications can be configured for kube-scheduler, kube-controller
 
 #### sysctldConfig
 
-The `sysctldConfig` configuration interface allows generic Linux kernel runtime configuration that will be delivered to sysctl. Use at your own risk! It is a generic key/value object, and a child property of `masterProfile` and node pool configurations under `agentPoolProfiles`, for tuning the Linux kernel parameters on master and/or node pool VMs, respectively. An example custom sysctl config:
+The `sysctldConfig` configuration interface allows generic Linux kernel runtime configuration that will be delivered to sysctl. Use at your own risk! It is a generic key/value object, and a child property of both `masterProfile` and node pool configurations under `agentPoolProfiles`, for tuning the Linux kernel parameters on master and/or node pool VMs, respectively. An example custom sysctl config that tunes the control plane VMs:
 
 ```
-"kubernetesConfig": {
+"masterProfile": {
+    ...
     "sysctldConfig": {
         "net.ipv4.tcp_keepalive_time": "120",
         "net.ipv4.tcp_keepalive_intvl": "75",
         "net.ipv4.tcp_keepalive_probes": "9"
     }
+    ...
 }
+```
+
+And, here's that same config override example on a node pool named "my-custom-node-pool":
+
+```
+"agentPoolProfiles": [
+  {
+    "name": "my-custom-node-pool",
+    ...
+    "sysctldConfig": {
+        "net.ipv4.tcp_keepalive_time": "120",
+        "net.ipv4.tcp_keepalive_intvl": "75",
+        "net.ipv4.tcp_keepalive_probes": "9"
+    }
+    ...
+  }
+]
 ```
 
 Kubernetes kernel configuration varies by distro, so please validate that the kernel parameter and value works for the Linux flavor you are using in your cluster.

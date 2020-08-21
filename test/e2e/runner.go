@@ -288,8 +288,13 @@ func teardown() {
 	}
 	if cfg.CleanUpOnExit {
 		for _, rg := range rgs {
-			log.Printf("Deleting Group:%s\n", rg)
+			log.Printf("Deleting Group: %s\n", rg)
 			acct.DeleteGroup(rg, false)
+		}
+		// Delete once we reuse the cluster group for the connectedCluster resource
+		if cfg.ArcOnboardingConfig != nil {
+			log.Printf("Deleting Arc Group: %s\n", fmt.Sprintf("%s-arc", cfg.Name))
+			acct.DeleteGroup(fmt.Sprintf("%s-arc", cfg.Name), false)
 		}
 	}
 }

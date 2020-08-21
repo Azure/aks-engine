@@ -186,14 +186,6 @@ func (a *Account) CreateGroup(name, location string) error {
 		log.Printf("Output:%s\n", out)
 		return err
 	}
-	r := ResourceGroup{
-		Name:     name,
-		Location: location,
-		Tags: map[string]string{
-			"now": now,
-		},
-	}
-	a.ResourceGroup = r
 	return nil
 }
 

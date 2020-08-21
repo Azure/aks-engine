@@ -384,6 +384,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(DefaultRBACEnabled)
 		}
 
+		if a.OrchestratorProfile.KubernetesConfig.MicrosoftAptRepositoryURL == "" {
+			a.OrchestratorProfile.KubernetesConfig.MicrosoftAptRepositoryURL = DefaultMicrosoftAptRepositoryURL
+		}
+
 		// Upgrade scenario:
 		// We need to force set EnableRbac to true for upgrades to 1.15.0 and greater if it was previously set to false (AKS Engine only)
 		if !a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && isUpgrade && !cs.Properties.IsHostedMasterProfile() {

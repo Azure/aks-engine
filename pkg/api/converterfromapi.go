@@ -217,6 +217,16 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 		vlabsProfile.EnableAHUB = to.BoolPtr(true)
 	}
 	vlabsProfile.AlwaysPullWindowsPauseImage = api.AlwaysPullWindowsPauseImage
+	if api.WindowsRuntimes != nil {
+		vlabsProfile.WindowsRuntimes = &vlabs.WindowsRuntimes{}
+		vlabsProfile.WindowsRuntimes.Default = api.WindowsRuntimes.Default
+		vlabsProfile.WindowsRuntimes.HypervRuntimes = []vlabs.RuntimeHandlers{}
+		for _, h := range api.WindowsRuntimes.HypervRuntimes {
+			handler := vlabs.RuntimeHandlers{}
+			handler.BuildNumber = h.BuildNumber
+			vlabsProfile.WindowsRuntimes.HypervRuntimes = append(vlabsProfile.WindowsRuntimes.HypervRuntimes, handler)
+		}
+	}
 }
 
 func convertOrchestratorProfileToVLabs(api *OrchestratorProfile, o *vlabs.OrchestratorProfile) {
@@ -336,6 +346,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.OutboundRuleIdleTimeoutInMinutes = apiCfg.OutboundRuleIdleTimeoutInMinutes
 	vlabsCfg.CloudProviderDisableOutboundSNAT = apiCfg.CloudProviderDisableOutboundSNAT
 	vlabsCfg.KubeReservedCgroup = apiCfg.KubeReservedCgroup
+	vlabsCfg.MicrosoftAptRepositoryURL = apiCfg.MicrosoftAptRepositoryURL
 	convertComponentsToVlabs(apiCfg, vlabsCfg)
 	convertAddonsToVlabs(apiCfg, vlabsCfg)
 	convertKubeletConfigToVlabs(apiCfg, vlabsCfg)

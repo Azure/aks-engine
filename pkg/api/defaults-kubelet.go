@@ -138,6 +138,11 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
+	if isUpgrade {
+		// if upgrade, force default "--pod-infra-container-image" value
+		o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = defaultKubeletConfig["--pod-infra-container-image"]
+	}
+
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
 
 	// Override default cloud-provider?
@@ -178,7 +183,13 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	if cs.Properties.MasterProfile != nil {
 		if cs.Properties.MasterProfile.KubernetesConfig == nil {
 			cs.Properties.MasterProfile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig == nil {
 			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig = make(map[string]string)
+		}
+		if isUpgrade {
+			// if upgrade, force default "--pod-infra-container-image" value
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
 		}
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
@@ -223,7 +234,14 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	for _, profile := range cs.Properties.AgentPoolProfiles {
 		if profile.KubernetesConfig == nil {
 			profile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if profile.KubernetesConfig.KubeletConfig == nil {
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
+		}
+
+		if isUpgrade {
+			// if upgrade, force default "--pod-infra-container-image" value
+			profile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
 		}
 
 		if profile.IsWindows() {

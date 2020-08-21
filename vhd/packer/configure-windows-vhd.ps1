@@ -10,18 +10,16 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-filter Timestamp {"$(Get-Date -Format o): $_"}
+filter Timestamp { "$(Get-Date -Format o): $_" }
 
 $global:containerdPackageUrl = "https://marosset.blob.core.windows.net/pub/containerd/containerd-0.0.87-public.zip"
 
-function Write-Log($Message)
-{
+function Write-Log($Message) {
     $msg = $message | Timestamp
     Write-Output $msg
 }
 
-function Disable-WindowsUpdates
-{
+function Disable-WindowsUpdates {
     # See https://docs.microsoft.com/en-us/windows/deployment/update/waas-wu-settings
     # for additional information on WU related registry settings
 
@@ -29,8 +27,7 @@ function Disable-WindowsUpdates
     $WindowsUpdatePath = "HKLM:SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"
     $AutoUpdatePath = "HKLM:SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
 
-    if (Test-Path -Path $WindowsUpdatePath)
-    {
+    if (Test-Path -Path $WindowsUpdatePath) {
         Remove-Item -Path $WindowsUpdatePath -Recurse
     }
 
@@ -39,8 +36,7 @@ function Disable-WindowsUpdates
     Set-ItemProperty -Path $AutoUpdatePath -Name NoAutoUpdate -Value 1 | Out-Null
 }
 
-function Get-ContainerImages
-{
+function Get-ContainerImages {
     param (
         $containerRuntime
     )
@@ -55,19 +51,19 @@ function Get-ContainerImages
         foreach ($image in $imagesToPull) {
             & ctr.exe -n k8s.io images pull $image
         }
-    } else {
+    }
+    else {
         foreach ($image in $imagesToPull) {
             docker pull $image
         }
     }
 }
 
-function Get-FilesToCacheOnVHD
-{
+function Get-FilesToCacheOnVHD {
     Write-Log "Caching misc files on VHD"
 
     $map = @{
-        "c:\akse-cache\" = @(
+        "c:\akse-cache\"              = @(
             "https://github.com/Azure/aks-engine/raw/master/scripts/collect-windows-logs.ps1",
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/cni/win-bridge.exe",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/collectlogs.ps1",
@@ -82,37 +78,43 @@ function Get-FilesToCacheOnVHD
             "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.2.zip"
         );
-        "c:\akse-cache\containerd\" = @(
+        "c:\akse-cache\containerd\"   = @(
             $global:containerdPackageUrl
         );
 
-        "c:\akse-cache\win-k8s\" = @(
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.10-azs/windowszip/v1.15.10-azs-1int.zip",
+        "c:\akse-cache\win-k8s\"      = @(
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-azs/windowszip/v1.15.11-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-azs/windowszip/v1.15.12-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-azs/windowszip/v1.16.13-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.14-azs/windowszip/v1.16.14-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9-azs/windowszip/v1.17.9-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.11-azs/windowszip/v1.17.11-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.10/windowszip/v1.15.10-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11/windowszip/v1.15.11-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-hotfix.20200714/windowszip/v1.15.11-hotfix.20200714-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-hotfix.20200817/windowszip/v1.15.11-hotfix.20200817-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12/windowszip/v1.15.12-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-hotfix.20200714/windowszip/v1.15.12-hotfix.20200714-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-hotfix.20200623/windowszip/v1.15.12-hotfix.20200623-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.11/windowszip/v1.16.11-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-hotfix.20200817/windowszip/v1.15.12-hotfix.20200817-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.10-hotfix.20200817/windowszip/v1.16.10-hotfix.20200817-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.12/windowszip/v1.16.12-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13/windowszip/v1.16.13-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-hotfix.20200714/windowszip/v1.16.13-hotfix.20200714-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.7/windowszip/v1.17.7-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.7-hotfix.20200714/windowszip/v1.17.7-hotfix.20200714-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-hotfix.20200817/windowszip/v1.16.13-hotfix.20200817-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.14/windowszip/v1.16.14-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.7-hotfix.20200817/windowszip/v1.17.7-hotfix.20200817-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.8/windowszip/v1.17.8-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9/windowszip/v1.17.9-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9-hotfix.20200714/windowszip/v1.17.9-hotfix.20200714-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.4/windowszip/v1.18.4-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.4-hotfix.20200624/windowszip/v1.18.4-hotfix.20200624-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9-hotfix.20200817/windowszip/v1.17.9-hotfix.20200817-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.11/windowszip/v1.17.11-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.4-hotfix.20200626/windowszip/v1.18.4-hotfix.20200626-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.5/windowszip/v1.18.5-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.6/windowszip/v1.18.6-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.0-rc.3/windowszip/v1.19.0-rc.3-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.6-hotfix.20200723/windowszip/v1.18.6-hotfix.20200723-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.8/windowszip/v1.18.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.0-rc.4/windowszip/v1.19.0-rc.4-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.2/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.2.zip",
@@ -121,12 +123,10 @@ function Get-FilesToCacheOnVHD
         )
     }
 
-    foreach ($dir in $map.Keys)
-    {
+    foreach ($dir in $map.Keys) {
         New-Item -ItemType Directory $dir -Force | Out-Null
 
-        foreach ($URL in $map[$dir])
-        {
+        foreach ($URL in $map[$dir]) {
             $fileName = [IO.Path]::GetFileName($URL)
             $dest = [IO.Path]::Combine($dir, $fileName)
 
@@ -166,9 +166,8 @@ function Install-ContainerD {
     }
 }
 
-function Install-Docker
-{
-    $defaultDockerVersion = "19.03.5"
+function Install-Docker {
+    $defaultDockerVersion = "19.03.11"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-null
@@ -179,56 +178,46 @@ function Install-Docker
 }
 
 
-function Install-OpenSSH
-{
+function Install-OpenSSH {
     Write-Log "Installing OpenSSH Server"
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 }
 
-function Install-WindowsPatches
-{
+function Install-WindowsPatches {
     # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
     # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-    # KB4558998 contains July 2020 cumulative updates for Windows Server 2019
-    # https://www.catalog.update.microsoft.com/Search.aspx?q=4558998
-    $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/secu/2020/07/windows10.0-kb4558998-x64_6da68fe659dacb747458ab3a431c3546ce7765b5.msu")
+    # KB4558998 contains August 11, 2020 cumulative updates for Windows Server 2019
+    # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4565349
+    $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2020/08/windows10.0-kb4565349-x64_919b9f31d4ccfa91183fbb9bab8c2975529e66b6.msu")
 
-    foreach ($patchUrl in $patchUrls)
-    {
+    foreach ($patchUrl in $patchUrls) {
         $pathOnly = $patchUrl.Split("?")[0]
         $fileName = Split-Path $pathOnly -Leaf
         $fileExtension = [IO.Path]::GetExtension($fileName)
         $fullPath = [IO.Path]::Combine($env:TEMP, $fileName)
 
-        switch ($fileExtension)
-        {
-            ".msu"
-            {
+        switch ($fileExtension) {
+            ".msu" {
                 Write-Log "Downloading windows patch from $pathOnly to $fullPath"
                 Invoke-WebRequest -UseBasicParsing $patchUrl -OutFile $fullPath
                 Write-Log "Starting install of $fileName"
                 $proc = Start-Process -Passthru -FilePath wusa.exe -ArgumentList "$fullPath /quiet /norestart"
                 Wait-Process -InputObject $proc
-                switch ($proc.ExitCode)
-                {
-                    0
-                    {
+                switch ($proc.ExitCode) {
+                    0 {
                         Write-Log "Finished install of $fileName"
                     }
-                    3010
-                    {
+                    3010 {
                         WRite-Log "Finished install of $fileName. Reboot required"
                     }
-                    default
-                    {
+                    default {
                         Write-Log "Error during install of $fileName. ExitCode: $($proc.ExitCode)"
                         exit 1
                     }
                 }
             }
-            default
-            {
+            default {
                 Write-Log "Installing patches with extension $fileExtension is not currently supported."
                 exit 1
             }
@@ -236,15 +225,12 @@ function Install-WindowsPatches
     }
 }
 
-function Set-AllowedSecurityProtocols
-{
+function Set-AllowedSecurityProtocols {
     $allowedProtocols = @()
     $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
 
-    foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
-    {
-        if ($insecureProtocols -notcontains $protocol)
-        {
+    foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType])) {
+        if ($insecureProtocols -notcontains $protocol) {
             $allowedProtocols += $protocol
         }
     }
@@ -253,14 +239,12 @@ function Set-AllowedSecurityProtocols
     [System.Net.ServicePointManager]::SecurityProtocol = $allowedProtocols
 }
 
-function Set-WinRmServiceAutoStart
-{
+function Set-WinRmServiceAutoStart {
     Write-Log "Setting WinRM service start to auto"
     sc.exe config winrm start=auto
 }
 
-function Set-WinRmServiceDelayedStart
-{
+function Set-WinRmServiceDelayedStart {
     # Hyper-V messes with networking components on startup after the feature is enabled
     # causing issues with communication over winrm and setting winrm to delayed start
     # gives Hyper-V enough time to finish configuration before having packer continue.
@@ -268,21 +252,18 @@ function Set-WinRmServiceDelayedStart
     sc.exe config winrm start=delayed-auto
 }
 
-function Update-DefenderSignatures
-{
+function Update-DefenderSignatures {
     Write-Log "Updating windows defender signatures."
     Update-MpSignature
 }
 
-function Update-WindowsFeatures
-{
+function Update-WindowsFeatures {
     $featuresToEnable = @(
         "Containers",
         "Hyper-V",
         "Hyper-V-PowerShell")
 
-    foreach ($feature in $featuresToEnable)
-    {
+    foreach ($feature in $featuresToEnable) {
         Write-Log "Enabling Windows feature: $feature"
         Install-WindowsFeature $feature
     }
@@ -298,10 +279,8 @@ if (-not ($validContainerRuntimes -contains $containerRuntime)) {
     exit 1
 }
 
-switch ($env:ProvisioningPhase)
-{
-    "1"
-    {
+switch ($env:ProvisioningPhase) {
+    "1" {
         Write-Log "Performing actions for provisioning phase 1"
         Set-WinRmServiceDelayedStart
         Set-AllowedSecurityProtocols
@@ -311,8 +290,7 @@ switch ($env:ProvisioningPhase)
         Install-OpenSSH
         Update-WindowsFeatures
     }
-    "2"
-    {
+    "2" {
         Write-Log "Performing actions for provisioning phase 2 for container runtime '$containerRuntime'"
         Set-WinRmServiceAutoStart
         # TODO: make decision on if we want to install docker along with containerd (will need to update CSE too,)
@@ -324,8 +302,7 @@ switch ($env:ProvisioningPhase)
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
     }
-    default
-    {
+    default {
         Write-Log "Unable to determine provisiong phase... exiting"
         exit 1
     }

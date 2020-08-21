@@ -55,6 +55,7 @@ type Config struct {
 	SubscriptionID      string `envconfig:"SUBSCRIPTION_ID"`
 	ClientID            string `envconfig:"CLIENT_ID"`
 	ClientSecret        string `envconfig:"CLIENT_SECRET"`
+	*ArcOnboardingConfig
 }
 
 // CustomCloudConfig holds configurations for custom cloud
@@ -78,6 +79,15 @@ type CustomCloudConfig struct {
 	PortalURL                    string `envconfig:"PORTAL_ENDPOINT" default:""`
 	TimeoutCommands              bool
 	CustomCloudName              string `envconfig:"CUSTOM_CLOUD_NAME"`
+}
+
+// ArcOnboardingConfig holds the azure arc onboarding addon configuration
+type ArcOnboardingConfig struct {
+	ClientID       string `envconfig:"ARC_CLIENT_ID" default:""`
+	ClientSecret   string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	SubscriptionID string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	Location       string `envconfig:"ARC_LOCATION" default:""`
+	TenantID       string `envconfig:"TENANT_ID"`
 }
 
 const (

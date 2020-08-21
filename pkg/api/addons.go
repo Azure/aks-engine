@@ -877,6 +877,17 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultAzureArcOnboardingAddonsConfig := KubernetesAddon{
+		Name:    common.AzureArcOnboardingAddonName,
+		Enabled: to.BoolPtr(DefaultAzureArcOnboardingAddonEnabled),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.AzureArcOnboardingAddonName,
+				Image: k8sComponents[common.AzureArcOnboardingAddonName],
+			},
+		},
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -917,6 +928,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultFlannelAddonsConfig,
 		defaultScheduledMaintenanceAddonsConfig,
 		defaultSecretsStoreCSIDriverAddonsConfig,
+		defaultAzureArcOnboardingAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

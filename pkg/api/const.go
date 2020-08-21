@@ -51,6 +51,8 @@ const (
 	KubernetesWindowsDockerVersion = "19.03.11"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
+	KubernetesDefaultWindowsRuntimeHandler = "process"
 )
 
 // validation values
@@ -186,6 +188,8 @@ const (
 	DefaultContainerMonitoringAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
+	// DefaultArcAddonEnabled determines the aks-engine provided default for enabling arc addon
+	DefaultAzureArcOnboardingAddonEnabled = false
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// DefaultPrivateClusterHostsConfigAgentEnabled enables the hosts config agent for private cluster
@@ -328,6 +332,7 @@ const (
 	//AzureChinaCloudDCOSBootstrapDownloadURL is the China specific DCOS package download url.
 	AzureChinaCloudDCOSBootstrapDownloadURL = "https://acsengine.blob.core.chinacloudapi.cn/dcos/%s.bootstrap.tar.xz"
 	//AzureEdgeDCOSWindowsBootstrapDownloadURL
+	DefaultMicrosoftAptRepositoryURL = "https://packages.microsoft.com"
 )
 
 const (

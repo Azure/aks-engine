@@ -187,6 +187,18 @@ type WindowsProfile struct {
 	EnableAHUB                    *bool             `json:"enableAHUB,omitempty"`
 	WindowsPauseImageURL          string            `json:"windowsPauseImageURL"`
 	AlwaysPullWindowsPauseImage   *bool             `json:"alwaysPullWindowsPauseImage,omitempty"`
+	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
+}
+
+// WindowsRuntimes configures containerd runtimes that are available on the windows nodes
+type WindowsRuntimes struct {
+	Default        string            `json:"default,omitempty"`
+	HypervRuntimes []RuntimeHandlers `json:"hypervRuntimes,omitempty"`
+}
+
+// RuntimeHandlers configures the runtime settings in containerd
+type RuntimeHandlers struct {
+	BuildNumber string `json:"buildNumber,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -394,6 +406,7 @@ type KubernetesConfig struct {
 	ProxyMode                         KubeProxyMode         `json:"kubeProxyMode,omitempty"`
 	PrivateAzureRegistryServer        string                `json:"privateAzureRegistryServer,omitempty"`
 	OutboundRuleIdleTimeoutInMinutes  int32                 `json:"outboundRuleIdleTimeoutInMinutes,omitempty"`
+	MicrosoftAptRepositoryURL         string                `json:"microsoftAptRepositoryURL,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest

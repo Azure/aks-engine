@@ -68,6 +68,7 @@ type Config struct {
 	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
 	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
 	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
+	*ArcOnboardingConfig
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -83,6 +84,15 @@ type Engine struct {
 	Config             *Config
 	ClusterDefinition  *api.VlabsARMContainerService // Holds the parsed ClusterDefinition
 	ExpandedDefinition *api.ContainerService         // Holds the expanded ClusterDefinition
+}
+
+// ArcOnboardingConfig holds the azure arc onboarding addon configuration
+type ArcOnboardingConfig struct {
+	ClientID       string `envconfig:"ARC_CLIENT_ID" default:""`
+	ClientSecret   string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	SubscriptionID string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	Location       string `envconfig:"ARC_LOCATION" default:""`
+	TenantID       string `envconfig:"TENANT_ID"`
 }
 
 // ParseConfig will return a new engine config struct taking values from env vars
@@ -220,10 +230,8 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	}
 
 	if config.ContainerRuntime == "containerd" &&
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" &&
-		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip"
-		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0-rc.0/containerd-1.4.0-rc.0-windows-amd64.tar.gz"
 	}
 
 	if config.ContainerRuntime != "" {
@@ -291,6 +299,26 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 					addOn.Config = make(map[string]string)
 				}
 				addOn.Config["workspaceKey"] = config.LogAnalyticsWorkspaceKey
+				break
+			}
+		}
+	}
+
+	if len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
+		for _, addon := range prop.OrchestratorProfile.KubernetesConfig.Addons {
+			if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) {
+				if addon.Config == nil {
+					addon.Config = make(map[string]string)
+				}
+				if cfg.ArcOnboardingConfig != nil {
+					addon.Config["tenantID"] = config.ArcOnboardingConfig.TenantID
+					addon.Config["subscriptionID"] = config.ArcOnboardingConfig.SubscriptionID
+					addon.Config["clientID"] = config.ArcOnboardingConfig.ClientID
+					addon.Config["clientSecret"] = config.ArcOnboardingConfig.ClientSecret
+					addon.Config["location"] = config.ArcOnboardingConfig.Location
+				}
+				addon.Config["clusterName"] = cfg.Name
+				addon.Config["resourceGroup"] = fmt.Sprintf("%s-arc", cfg.Name) // set to config.Name once Arc is supported in all regions
 				break
 			}
 		}

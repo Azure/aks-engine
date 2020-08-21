@@ -13,8 +13,10 @@ echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${VHD_LOGS_FILEPATH}
 
 AUDITD_ENABLED=true
+MICROSOFT_APT_REPO=packages.microsoft.com
 installDeps
 cat << EOF >> ${VHD_LOGS_FILEPATH}
+apt packages:
   - apache2-utils
   - apt-transport-https
   - auditd
@@ -33,7 +35,10 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - gcc
   - git
   - glusterfs-client
+  - htop
+  - iftop
   - init-system-helpers
+  - iotop
   - iproute2
   - ipset
   - iptables
@@ -44,7 +49,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - make
   - mount
   - nfs-common
-  - pigz socat
+  - pigz
+  - socat
+  - sysstat
   - traceroute
   - util-linux
   - xz-utils
@@ -60,6 +67,10 @@ chmod a-x /etc/update-motd.d/??-{motd-news,release-upgrade}
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
+
+cat << EOF >> ${VHD_LOGS_FILEPATH}
+Binaries:
+EOF
 
 apmz_version="v0.5.1"
 ensureAPMZ "${apmz_version}"
@@ -143,19 +154,22 @@ for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
 done
 
 METRICS_SERVER_VERSIONS="
-0.3.6
-0.3.5
-0.3.4
-0.2.1
+0.3.7
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
+    CONTAINER_IMAGE="k8s.gcr.io/metrics-server/metrics-server:v${METRICS_SERVER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-server:v${METRICS_SERVER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
+
+# gcr URL for metrics-server v0.2.1 is different, so we can't (easily) re-use the above enumeration
+# so let's just do it boutique-style below until we no longer have to build images for k8s 1.15
+METRICS_SERVER_VERSION_FOR_K8S_1DOT15="v0.2.1"
+pullContainerImage "docker" k8s.gcr.io/metrics-server-amd64:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
+pullContainerImage "docker" mcr.microsoft.com/oss/kubernetes/metrics-server:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
 
 KUBE_DNS_VERSIONS="
 1.15.4
@@ -221,11 +235,11 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.19.0-beta.1
+1.19.0
 1.18.2
 1.17.3
-1.16.5
-1.15.6
+1.16.6
+1.15.7
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -350,15 +364,17 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.19.0-rc.3
+1.19.0-rc.4
+1.18.8
 1.18.6
-1.18.5
+1.17.11
+1.17.11-azs
 1.17.9
 1.17.9-azs
-1.17.8
+1.16.14
+1.16.14-azs
 1.16.13
 1.16.13-azs
-1.16.12
 1.15.12
 1.15.12-azs
 1.15.11
@@ -387,6 +403,7 @@ done
 
 # Use kube-proxy image instead of hyperkube for kube-proxy container. Fixes #3529.
 KUBE_PROXY_VERSIONS="
+1.16.14
 1.16.13
 1.16.12
 1.16.11
@@ -456,7 +473,7 @@ for CSI_PROVISIONER_VERSION in ${CSI_PROVISIONER_VERSIONS}; do
 done
 
 LIVENESSPROBE_VERSIONS="
-1.1.0
+2.0.0
 "
 for LIVENESSPROBE_VERSION in ${LIVENESSPROBE_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v${LIVENESSPROBE_VERSION}"
@@ -502,7 +519,7 @@ for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
 done
 
 CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS="
-0.0.6
+0.0.8
 "
 for CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION in ${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION}"
@@ -511,7 +528,7 @@ for CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION in ${CSI_SECRETS_STORE_PROVIDER_AZU
 done
 
 CSI_SECRETS_STORE_DRIVER_VERSIONS="
-0.0.11
+0.0.13
 "
 for CSI_SECRETS_STORE_DRIVER_VERSION in ${CSI_SECRETS_STORE_DRIVER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/driver:v${CSI_SECRETS_STORE_DRIVER_VERSION}"
@@ -561,6 +578,7 @@ df -h
 
 echo "Using kernel:" >> ${VHD_LOGS_FILEPATH}
 tee -a ${VHD_LOGS_FILEPATH} < /proc/version
+{ printf "Installed apt packages:\n"; apt list --installed | grep -v 'Listing...'; } >> ${VHD_LOGS_FILEPATH}
 {
   echo "Install completed successfully on " $(date)
   echo "VSTS Build NUMBER: ${BUILD_NUMBER}"

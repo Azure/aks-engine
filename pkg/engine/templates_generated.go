@@ -37,6 +37,7 @@
 // ../../parts/k8s/addons/aad-pod-identity.yaml
 // ../../parts/k8s/addons/aci-connector.yaml
 // ../../parts/k8s/addons/antrea.yaml
+// ../../parts/k8s/addons/arc-onboarding.yaml
 // ../../parts/k8s/addons/audit-policy.yaml
 // ../../parts/k8s/addons/azure-cloud-provider.yaml
 // ../../parts/k8s/addons/azure-cni-networkmonitor.yaml
@@ -109,6 +110,7 @@
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
+// ../../parts/k8s/containerdtemplate.toml
 // ../../parts/k8s/kubeconfig.json
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
@@ -8416,6 +8418,125 @@ func k8sAddonsAntreaYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddonsArcOnboardingYaml = []byte(`---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  TENANT_ID: {{ContainerConfigBase64 "tenantID"}}
+  SUBSCRIPTION_ID: {{ContainerConfigBase64 "subscriptionID"}}
+  RESOURCE_GROUP: {{ContainerConfigBase64 "resourceGroup"}}
+  CONNECTED_CLUSTER: {{ContainerConfigBase64 "clusterName"}}
+  LOCATION: {{ContainerConfigBase64 "location"}}
+  CLIENT_ID: {{ContainerConfigBase64 "clientID"}}
+  CLIENT_SECRET: {{ContainerConfigBase64 "clientSecret"}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: azure-arc-onboarding
+    namespace: azure-arc-onboarding
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: azure-arc-onboarding
+  namespace: azure-arc-onboarding
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+spec:
+  template:
+    spec:
+      serviceAccountName: azure-arc-onboarding
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
+      containers:
+      - name: azure-arc-onboarding
+        image: {{ContainerImage "azure-arc-onboarding"}}
+        env:
+        - name: TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: TENANT_ID
+        - name: SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: SUBSCRIPTION_ID
+        - name: RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: RESOURCE_GROUP
+        - name: CONNECTED_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CONNECTED_CLUSTER
+        - name: LOCATION
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: LOCATION
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CLIENT_ID
+        - name: CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: azure-arc-onboarding
+              key: CLIENT_SECRET
+      restartPolicy: Never
+  backoffLimit: 4
+`)
+
+func k8sAddonsArcOnboardingYamlBytes() ([]byte, error) {
+	return _k8sAddonsArcOnboardingYaml, nil
+}
+
+func k8sAddonsArcOnboardingYaml() (*asset, error) {
+	bytes, err := k8sAddonsArcOnboardingYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/arc-onboarding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1{{ if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
 kind: Policy
 omitStages:
@@ -13684,6 +13805,9 @@ rules:
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: ["watch","list","get","update", "patch"]
+- apiGroups: [""]
+  resources: ["nodes/status"]
+  verbs: ["patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -17277,6 +17401,42 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secretproviderclasses-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - secrets-store.csi.x-k8s.io
+  resources:
+  - secretproviderclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - secrets-store.csi.x-k8s.io
+  resources:
+  - secretproviderclasspodstatuses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - secrets-store.csi.x-k8s.io
+  resources:
+  - secretproviderclasspodstatuses/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: secretproviderclasses-rolebinding
@@ -17294,21 +17454,44 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: secretproviderclasses-role
+  name: secretprovidersyncing-role
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
-  - secrets-store.csi.x-k8s.io
+  - ""
   resources:
-  - secretproviderclasses
+  - secrets
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: secretprovidersyncing-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secretprovidersyncing-role
+subjects:
+- kind: ServiceAccount
+  name: secrets-store-csi-driver
+  namespace: kube-system
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
   name: secretproviderclasses.secrets-store.csi.x-k8s.io
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
@@ -17319,7 +17502,8 @@ spec:
     listKind: SecretProviderClassList
     plural: secretproviderclasses
     singular: secretproviderclass
-  scope: ""
+  preserveUnknownFields: false
+  scope: Namespaced
   validation:
     openAPIV3Schema:
       description: SecretProviderClass is the Schema for the secretproviderclasses
@@ -17328,12 +17512,12 @@ spec:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -17348,9 +17532,117 @@ spec:
             provider:
               description: Configuration for provider name
               type: string
+            secretObjects:
+              items:
+                description: SecretObject defines the desired state of synced K8s
+                  secret objects
+                properties:
+                  data:
+                    items:
+                      description: SecretObjectData defines the desired state of synced
+                        K8s secret object data
+                      properties:
+                        key:
+                          description: data field to populate
+                          type: string
+                        objectName:
+                          description: name of the object to sync
+                          type: string
+                      type: object
+                    type: array
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: labels of K8s secret object
+                    type: object
+                  secretName:
+                    description: name of the K8s secret object
+                    type: string
+                  type:
+                    description: type of K8s secret object
+                    type: string
+                type: object
+              type: array
           type: object
         status:
           description: SecretProviderClassStatus defines the observed state of SecretProviderClass
+          properties:
+            byPod:
+              items:
+                description: ByPodStatus defines the state of SecretProviderClass
+                  as seen by an individual controller
+                properties:
+                  id:
+                    description: id of the pod that wrote the status
+                    type: string
+                  namespace:
+                    description: namespace of the pod that wrote the status
+                    type: string
+                type: object
+              type: array
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: secretproviderclasspodstatuses.secrets-store.csi.x-k8s.io
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: secrets-store.csi.x-k8s.io
+  names:
+    kind: SecretProviderClassPodStatus
+    listKind: SecretProviderClassPodStatusList
+    plural: secretproviderclasspodstatuses
+    singular: secretproviderclasspodstatus
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: SecretProviderClassPodStatus is the Schema for the secretproviderclassespodstatus
+        API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        status:
+          description: SecretProviderClassPodStatusStatus defines the observed state
+            of SecretProviderClassPodStatus
+          properties:
+            mounted:
+              type: boolean
+            podName:
+              type: string
+            podUID:
+              type: string
+            secretProviderClassName:
+              type: string
+            targetPath:
+              type: string
           type: object
       type: object
   version: v1alpha1
@@ -17425,6 +17717,7 @@ spec:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(KUBE_NODE_NAME)"
             - "--provider-volume=/etc/kubernetes/secrets-store-csi-providers"
+            - "--metrics-addr=:8080"
           env:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
@@ -17470,6 +17763,7 @@ spec:
           - --csi-address=/csi/csi.sock
           - --probe-timeout=3s
           - --health-port=9808
+          - -v=2
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
@@ -17500,6 +17794,14 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-secrets-store-provider-azure
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -17519,7 +17821,7 @@ spec:
       labels:
         app: csi-secrets-store-provider-azure
     spec:
-      tolerations:
+      serviceAccountName: csi-secrets-store-provider-azure
       containers:
         - name: provider-azure-installer
           image: {{ContainerImage "provider-azure-installer"}}
@@ -18326,9 +18628,9 @@ installContainerd() {
     fi
     removeMoby
     removeContainerd
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
@@ -18410,10 +18712,11 @@ ensureAddons() {
   retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   rm -Rf ${ADDONS_DIR}/init
 {{- end}}
-  wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
-  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
+  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
+  exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -18435,6 +18738,10 @@ ensureAddons() {
     sleep 3
   done
   {{end}}
+}
+replaceAddonsInit() {
+  wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
 }
 ensureLabelNodes() {
   LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
@@ -18582,7 +18889,7 @@ configAddons() {
   {{if IsAzurePolicyAddonEnabled}}
   configAzurePolicyAddon
   {{end}}
-  {{- if not HasCustomPodSecurityPolicy}}
+  {{- if and (not HasCustomPodSecurityPolicy) IsPodSecurityPolicyAddonEnabled}}
   wait_for_file 1200 1 $POD_SECURITY_POLICY_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   mkdir -p $ADDONS_DIR/init && cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/ || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{- end}}
@@ -19246,7 +19553,7 @@ installEtcd() {
 installDeps() {
   packages="apache2-utils apt-transport-https blobfuse=1.1.1 ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
-    retrycmd_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
+    retrycmd_no_stats 120 5 25 curl -fsSL ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
     aptmarkWALinuxAgent hold
     packages+=" cgroup-lite ceph-common glusterfs-client"
@@ -19305,9 +19612,9 @@ installMoby() {
   if [[ $CURRENT_VERSION != "${MOBY_VERSION}" ]]; then
     removeContainerd
     removeMoby
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     MOBY_CLI=${MOBY_VERSION}
@@ -19695,7 +20002,11 @@ if [[ -n ${MASTER_NODE} ]]; then
 {{if IsAzurePolicyAddonEnabled}}
   time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
 {{end}}
-  time_metric "EnsureAddons" ensureAddons
+  if [ -f /var/run/reboot-required ]; then
+    time_metric "ReplaceAddonsInit" replaceAddonsInit
+  else
+    time_metric "EnsureAddons" ensureAddons
+  fi
 fi
 time_metric "EnsureJournal" ensureJournal
 
@@ -22266,6 +22577,89 @@ func k8sCloudInitNodecustomdataYml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContainerdtemplateToml = []byte(`root = "C:\\ProgramData\\containerd\\root"
+state = "C:\\ProgramData\\containerd\\state"
+
+[grpc]
+  address = "\\\\.\\pipe\\containerd-containerd"
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+
+[ttrpc]
+  address = ""
+
+[debug]
+  address = ""
+  level = "debug"
+
+[metrics]
+  address = ""
+  grpc_histogram = false
+
+[cgroup]
+  path = ""
+
+[plugins]
+  [plugins.cri]
+    stream_server_address = "127.0.0.1"
+    stream_server_port = "0"
+    enable_selinux = false
+    sandbox_image = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+    stats_collect_period = 10
+    systemd_cgroup = false
+    enable_tls_streaming = false
+    max_container_log_line_size = 16384
+    [plugins.cri.containerd]
+      snapshotter = "windows"
+      no_pivot = false
+      [plugins.cri.containerd.default_runtime]
+        runtime_type = "io.containerd.runhcs.v1"
+        [plugins.cri.containerd.default_runtime.options]
+          Debug = true
+          DebugType = 2
+          SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+          SandboxPlatform = "windows/amd64"
+          SandboxIsolation = {{sandboxIsolation}}
+      [plugins.cri.containerd.runtimes]
+        [plugins.cri.containerd.runtimes.runhcs-wcow-process]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-process.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
+            SandboxPlatform = "windows/amd64"
+{{hypervisors}}
+    [plugins.cri.cni]
+      bin_dir = "{{cnibin}}"
+      conf_dir = "{{cniconf}}"
+    [plugins.cri.registry]
+      [plugins.cri.registry.mirrors]
+        [plugins.cri.registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+  [plugins.diff-service]
+    default = ["windows"]
+  [plugins.scheduler]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = "0s"
+    startup_delay = "100ms"`)
+
+func k8sContainerdtemplateTomlBytes() ([]byte, error) {
+	return _k8sContainerdtemplateToml, nil
+}
+
+func k8sContainerdtemplateToml() (*asset, error) {
+	bytes, err := k8sContainerdtemplateTomlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containerdtemplate.toml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sKubeconfigJson = []byte(`    {
         "apiVersion": "v1",
         "clusters": [
@@ -23237,6 +23631,8 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## ContainerD Usage
 $global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
+$global:DefaultContainerdRuntimeHandler = "{{WrapAsParameter "defaultContainerdRuntimeHandler"}}"
+$global:HypervRuntimeHandlers = "{{WrapAsParameter "hypervRuntimeHandlers"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -23341,6 +23737,7 @@ try
     # to the windows machine, and run the script manually to watch
     # the output.
     if ($true) {
+        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret -NetworkAPIVersion $NetworkAPIVersion -TargetEnvironment $TargetEnvironment"
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
         $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
@@ -24608,6 +25005,67 @@ function RegisterContainerDService {
   }
 }
 
+function CreateHypervisorRuntime {
+  Param(
+    [Parameter(Mandatory = $true)][string]
+    $image,
+    [Parameter(Mandatory = $true)][string]
+    $version,
+    [Parameter(Mandatory = $true)][string]
+    $buildNumber
+  )
+
+  return @"
+        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber]
+          runtime_type = "io.containerd.runhcs.v1"
+          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber.options]
+            Debug = true
+            DebugType = 2
+            SandboxImage = "$image-windows-$version-amd64"
+            SandboxPlatform = "windows/amd64"
+            SandboxIsolation = 1
+"@
+}
+
+function CreateHypervisorRuntimes {
+  Param(
+    [Parameter(Mandatory = $true)][string[]]
+    $builds,
+    [Parameter(Mandatory = $true)][string]
+    $image
+  )
+  
+  Write-Host "Adding hyperv runtimes $builds"
+  $hypervRuntimes = ""
+  ForEach ($buildNumber in $builds) {
+    $windowsVersion = Select-Windows-Version -buildNumber $buildNumber
+    $runtime = createHypervisorRuntime -image $pauseImage -version $windowsVersion -buildNumber $buildNumber
+    if ($hypervRuntimes -eq "") {
+      $hypervRuntimes = $runtime
+    }
+    else {
+      $hypervRuntimes = $hypervRuntimes + "` + "`" + `r` + "`" + `n" + $runtime
+    }
+  }
+
+  return $hypervRuntimes
+}
+
+function Select-Windows-Version {
+  param (
+    [Parameter()]
+    [string]
+    $buildNumber
+  )
+
+  switch ($buildNumber) {
+    "17763" { return "1809" }
+    "18362" { return "1903" }
+    "18363" { return "1909" }
+    "19041" { return "2004" }
+    Default { return "" } 
+  }
+}
 
 function Install-Containerd {
   Param(
@@ -24626,133 +25084,64 @@ function Install-Containerd {
   }
 
   # TODO: check if containerd is already installed and is the same version before this.
-  $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
-  DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
-  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
-  del $zipfile
+  
+  # Extract the package
+  if ($ContainerdUrl.endswith(".zip")) {
+    $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
+    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
+    Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
+    del $zipfile
+  }
+  elseif ($ContainerdUrl.endswith(".tar.gz")) {
+    # upstream containerd package is a tar 
+    $tarfile = [Io.path]::Combine($ENV:TEMP, "containerd.tar.gz")
+    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $tarfile
+    mkdir -Force "C:\Program Files\containerd"
+    tar -xzf $tarfile -C $global:ContainerdInstallLocation
+    mv $global:ContainerdInstallLocation\bin\* $global:ContainerdInstallLocation\
+    del $tarfile
+    del -Recurse -Force $global:ContainerdInstallLocation\bin
+  }
 
+  # get configuration options
   Add-SystemPathEntry $global:ContainerdInstallLocation
-
-  # TODO: remove if the node comes up without this code
-  # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
-  # if (-Not (Test-Path $configDir)) {
-  #     mkdir $configDir
-  # }
-
-  # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
+  $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
-
   $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
   $pauseImage = $clusterConfig.Cri.Images.Pause
+  $formatedbin = $(($CNIBinDir).Replace("\", "/"))
+  $formatedconf = $(($CNIConfDir).Replace("\", "/"))
+  $sandboxIsolation = 0
+  $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  $hypervRuntimes = ""
+  $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
-  @"
-version = 2
-root = "C:\\ProgramData\\containerd\\root"
-state = "C:\\ProgramData\\containerd\\state"
-plugin_dir = ""
-disabled_plugins = []
-required_plugins = []
-oom_score = 0
+  # configure
+  if ($global:DefaultContainerdRuntimeHandler -eq "hyperv") {
+    Write-Host "default runtime for containerd set to hyperv"
+    $sandboxIsolation = 1
+  }
 
-[grpc]
-  address = "\\\\.\\pipe\\containerd-containerd"
-  tcp_address = ""
-  tcp_tls_cert = ""
-  tcp_tls_key = ""
-  uid = 0
-  gid = 0
-  max_recv_message_size = 16777216
-  max_send_message_size = 16777216
+  $template = Get-Content -Path "c:\AzureData\k8s\containerdtemplate.toml" 
+  if ($sandboxIsolation -eq 0 -And $hypervHandlers.Count -eq 0) {
+    # remove the value hypervisor place holder
+    $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
+  }
+  else {
+    $hypervRuntimes = CreateHypervisorRuntimes -builds @($hypervHandlers) -image $pauseImage
+  }
 
-[ttrpc]
-  address = ""
-  uid = 0
-  gid = 0
-
-[debug]
-  address = ""
-  uid = 0
-  gid = 0
-  level = ""
-
-[metrics]
-  address = ""
-  grpc_histogram = false
-
-[cgroup]
-  path = ""
-
-[timeouts]
-  "io.containerd.timeout.shim.cleanup" = "5s"
-  "io.containerd.timeout.shim.load" = "5s"
-  "io.containerd.timeout.shim.shutdown" = "3s"
-  "io.containerd.timeout.task.state" = "2s"
-
-[plugins]
-  [plugins."io.containerd.gc.v1.scheduler"]
-    pause_threshold = 0.02
-    deletion_threshold = 0
-    mutation_threshold = 100
-    schedule_delay = "0s"
-    startup_delay = "100ms"
-  [plugins."io.containerd.grpc.v1.cri"]
-    disable_tcp_service = true
-    stream_server_address = "127.0.0.1"
-    stream_server_port = "0"
-    stream_idle_timeout = "4h0m0s"
-    enable_selinux = false
-    sandbox_image = "$pauseImage"
-    stats_collect_period = 10
-    systemd_cgroup = false
-    enable_tls_streaming = false
-    max_container_log_line_size = 16384
-    disable_cgroup = false
-    disable_apparmor = false
-    restrict_oom_score_adj = false
-    max_concurrent_downloads = 3
-    disable_proc_mount = false
-    [plugins."io.containerd.grpc.v1.cri".containerd]
-      snapshotter = "windows"
-      default_runtime_name = "runhcs-wcow-process"
-      no_pivot = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime]
-        runtime_type = ""
-        runtime_engine = ""
-        runtime_root = ""
-        privileged_without_host_devices = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime]
-        runtime_type = ""
-        runtime_engine = ""
-        runtime_root = ""
-        privileged_without_host_devices = false
-      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process]
-          runtime_type = "io.containerd.runhcs.v1"
-          runtime_engine = ""
-          runtime_root = ""
-          privileged_without_host_devices = false
-    [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "$(($CNIBinDir).Replace("\","//"))"
-      conf_dir = "$(($CNIConfDir).Replace("\","//"))"
-      max_conf_num = 1
-      conf_template = ""
-    [plugins."io.containerd.grpc.v1.cri".registry]
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
-        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
-          endpoint = ["https://registry-1.docker.io"]
-    [plugins."io.containerd.grpc.v1.cri".x509_key_pair_streaming]
-      tls_cert_file = ""
-      tls_key_file = ""
-  [plugins."io.containerd.metadata.v1.bolt"]
-    content_sharing_policy = "shared"
-  [plugins."io.containerd.runtime.v2.task"]
-    platforms = ["windows/amd64", "linux/amd64"]
-  [plugins."io.containerd.service.v1.diff-service"]
-    default = ["windows", "windows-lcow"]
-"@ | Out-File -Encoding ascii $configFile
+  $template.Replace('{{sandboxIsolation}}', $sandboxIsolation).
+  Replace('{{pauseImage}}', $pauseImage).
+  Replace('{{hypervisors}}', $hypervRuntimes).
+  Replace('{{cnibin}}', $formatedbin).
+  Replace('{{cniconf}}', $formatedconf).
+  Replace('{{currentversion}}', $windowsVersion) | ` + "`" + `
+    Out-File -FilePath "$configFile" -Encoding ascii
 
   RegisterContainerDService
-}`)
+}
+`)
 
 func k8sWindowscontainerdfuncPs1Bytes() ([]byte, error) {
 	return _k8sWindowscontainerdfuncPs1, nil
@@ -28682,6 +29071,20 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
         "description": "The version of Docker to be installed on Windows Nodes"
       },
       "type": "string"
+    },
+    "defaultContainerdRuntimeHandler": {
+      "defaultValue": "process",
+      "metadata": {
+        "description": "The containerd handler type (process isolated or hyperv)"
+      },
+      "type": "string"
+    },
+    "hypervRuntimeHandlers": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "comma separated list of hyperv values"
+      },
+      "type": "string"
     }
 `)
 
@@ -28789,6 +29192,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/aad-pod-identity.yaml":                                   k8sAddonsAadPodIdentityYaml,
 	"k8s/addons/aci-connector.yaml":                                      k8sAddonsAciConnectorYaml,
 	"k8s/addons/antrea.yaml":                                             k8sAddonsAntreaYaml,
+	"k8s/addons/arc-onboarding.yaml":                                     k8sAddonsArcOnboardingYaml,
 	"k8s/addons/audit-policy.yaml":                                       k8sAddonsAuditPolicyYaml,
 	"k8s/addons/azure-cloud-provider.yaml":                               k8sAddonsAzureCloudProviderYaml,
 	"k8s/addons/azure-cni-networkmonitor.yaml":                           k8sAddonsAzureCniNetworkmonitorYaml,
@@ -28861,6 +29265,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/jumpboxcustomdata.yml":                               k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                            k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                  k8sCloudInitNodecustomdataYml,
+	"k8s/containerdtemplate.toml":                                        k8sContainerdtemplateToml,
 	"k8s/kubeconfig.json":                                                k8sKubeconfigJson,
 	"k8s/kubernetesparams.t":                                             k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                 k8sKuberneteswindowsfunctionsPs1,
@@ -28983,6 +29388,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"aad-pod-identity.yaml":                 {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
 			"aci-connector.yaml":                    {k8sAddonsAciConnectorYaml, map[string]*bintree{}},
 			"antrea.yaml":                           {k8sAddonsAntreaYaml, map[string]*bintree{}},
+			"arc-onboarding.yaml":                   {k8sAddonsArcOnboardingYaml, map[string]*bintree{}},
 			"audit-policy.yaml":                     {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
 			"azure-cloud-provider.yaml":             {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
 			"azure-cni-networkmonitor.yaml":         {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
@@ -29060,6 +29466,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},
 			"nodecustomdata.yml":       {k8sCloudInitNodecustomdataYml, map[string]*bintree{}},
 		}},
+		"containerdtemplate.toml":        {k8sContainerdtemplateToml, map[string]*bintree{}},
 		"kubeconfig.json":                {k8sKubeconfigJson, map[string]*bintree{}},
 		"kubernetesparams.t":             {k8sKubernetesparamsT, map[string]*bintree{}},
 		"kuberneteswindowsfunctions.ps1": {k8sKuberneteswindowsfunctionsPs1, map[string]*bintree{}},

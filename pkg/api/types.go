@@ -233,6 +233,18 @@ type WindowsProfile struct {
 	EnableAHUB                    *bool             `json:"enableAHUB,omitempty"`
 	WindowsPauseImageURL          string            `json:"windowsPauseImageURL"`
 	AlwaysPullWindowsPauseImage   *bool             `json:"alwaysPullWindowsPauseImage,omitempty"`
+	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
+}
+
+// WindowsRuntimes configures containerd runtimes that are available on the windows nodes
+type WindowsRuntimes struct {
+	Default        string            `json:"default,omitempty"`
+	HypervRuntimes []RuntimeHandlers `json:"hypervRuntimes,omitempty"`
+}
+
+// RuntimeHandlers configures the runtime settings in containerd
+type RuntimeHandlers struct {
+	BuildNumber string `json:"buildNumber,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -515,6 +527,7 @@ type KubernetesConfig struct {
 	ProxyMode                         KubeProxyMode         `json:"kubeProxyMode,omitempty"`
 	PrivateAzureRegistryServer        string                `json:"privateAzureRegistryServer,omitempty"`
 	OutboundRuleIdleTimeoutInMinutes  int32                 `json:"outboundRuleIdleTimeoutInMinutes,omitempty"`
+	MicrosoftAptRepositoryURL         string                `json:"microsoftAptRepositoryURL,omitempty"`
 }
 
 // CustomFile has source as the full absolute source path to a file and dest
@@ -1801,6 +1814,28 @@ func (w *WindowsProfile) GetWindowsDockerVersion() string {
 	return KubernetesWindowsDockerVersion
 }
 
+// GetWindowsDefaultRuntimeHandler get the default containerd runtime handler or return default value
+func (w *WindowsProfile) GetWindowsDefaultRuntimeHandler() string {
+	if w.WindowsRuntimes != nil && w.WindowsRuntimes.Default != "" {
+		return w.WindowsRuntimes.Default
+	}
+
+	return KubernetesDefaultWindowsRuntimeHandler
+}
+
+// GetWindowsHypervRuntimeHandlers gets comma separated list of runtimehandler names
+func (w *WindowsProfile) GetWindowsHypervRuntimeHandlers() string {
+	if w.WindowsRuntimes != nil && len(w.WindowsRuntimes.HypervRuntimes) > 0 {
+		handlernames := []string{}
+		for _, h := range w.WindowsRuntimes.HypervRuntimes {
+			handlernames = append(handlernames, h.BuildNumber)
+		}
+		return strings.Join(handlernames, ",")
+	}
+
+	return ""
+}
+
 // GetWindowsSku gets the marketplace sku specified (such as Datacenter-Core-1809-with-Containers-smalldisk) or returns default value
 func (w *WindowsProfile) GetWindowsSku() string {
 	if w.WindowsSku != "" {
@@ -2489,6 +2524,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
 		"CUSTOM_HYPERKUBE_IMAGE":               kubernetesConfig.CustomHyperkubeImage,
+		"MICROSOFT_APT_REPO":                   kubernetesConfig.MicrosoftAptRepositoryURL,
 	}
 
 	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {

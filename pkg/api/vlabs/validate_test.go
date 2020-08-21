@@ -178,7 +178,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.5",
+					OrchestratorVersion: "1.18.8",
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerSku:             BasicLoadBalancerSku,
 						ExcludeMasterFromStandardLB: to.BoolPtr(true),
@@ -192,7 +192,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.5",
+					OrchestratorVersion: "1.18.8",
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerOutboundIPs: to.IntPtr(17),
 					},
@@ -1203,6 +1203,104 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 			},
 			isUpdate:      true,
 			expectedError: nil,
+		},
+		{
+			name: "wrong runtime",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "something",
+				},
+			},
+			expectedError: errors.New("Default runtime types are process or hyperv"),
+		},
+		{
+			name: "process runtime",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "hyperv runtime",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "invalid runtime handler name",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildNumber: "something"},
+					},
+				},
+			},
+			expectedError: errors.New("Current hyper-v build id values supported are 17763, 18362, 18363, 19041"),
+		},
+		{
+			name: "valid handler names",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildNumber: "17763"},
+						{BuildNumber: "18362"},
+						{BuildNumber: "18363"},
+						{BuildNumber: "19041"},
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "some valid handlers some not",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildNumber: "17763"},
+						{BuildNumber: "18362"},
+						{BuildNumber: "invalid"},
+						{BuildNumber: "19041"},
+					},
+				},
+			},
+			expectedError: errors.New("Current hyper-v build id values supported are 17763, 18362, 18363, 19041"),
+		},
+		{
+			name: "valid handlers must be unique",
+			wp: &WindowsProfile{
+				AdminUsername: "azure",
+				AdminPassword: "replacePassword1234$",
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildNumber: "17763"},
+						{BuildNumber: "18362"},
+						{BuildNumber: "18363"},
+						{BuildNumber: "17763"},
+					},
+				},
+			},
+			expectedError: errors.New("Hyper-v RuntimeHandlers have duplicate runtime with build number '17763', Windows Runtimes must be unique"),
 		},
 	}
 
@@ -3392,13 +3490,14 @@ func ExampleProperties_validateZones() {
 
 func TestProperties_ValidateLoadBalancer(t *testing.T) {
 	tests := []struct {
-		name                string
-		orchestratorRelease string
-		loadBalancerSku     string
-		masterProfile       *MasterProfile
-		agentProfiles       []*AgentPoolProfile
-		expectedErr         bool
-		expectedErrStr      string
+		name                        string
+		orchestratorRelease         string
+		loadBalancerSku             string
+		masterProfile               *MasterProfile
+		agentProfiles               []*AgentPoolProfile
+		excludeMasterFromStandardLB bool
+		expectedErr                 bool
+		expectedErrStr              string
 	}{
 		{
 			name:                "lowercase basic LB",
@@ -3409,6 +3508,15 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 				DNSPrefix:           "foo",
 				VMSize:              "Standard_DS2_v2",
 				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			agentProfiles: []*AgentPoolProfile{
+				{
+					Name:                   "agentpool",
+					VMSize:                 "Standard_DS2_v2",
+					Count:                  4,
+					AvailabilityProfile:    VirtualMachineScaleSets,
+					EnableVMSSNodePublicIP: to.BoolPtr(true),
+				},
 			},
 		},
 		{
@@ -3434,6 +3542,19 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 			},
 		},
 		{
+			name:                "Standard LB without master excluded",
+			orchestratorRelease: "1.15",
+			loadBalancerSku:     StandardLoadBalancerSku,
+			masterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: VirtualMachineScaleSets,
+			},
+			expectedErr:    true,
+			expectedErrStr: "standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"",
+		},
+		{
 			name:                "Standard LB",
 			orchestratorRelease: "1.15",
 			loadBalancerSku:     StandardLoadBalancerSku,
@@ -3443,6 +3564,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 				VMSize:              "Standard_DS2_v2",
 				AvailabilityProfile: VirtualMachineScaleSets,
 			},
+			excludeMasterFromStandardLB: true,
 		},
 		{
 			name:                "empty string LB value",
@@ -3479,7 +3601,8 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 			cs.Properties.AgentPoolProfiles = test.agentProfiles
 			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-				LoadBalancerSku: test.loadBalancerSku,
+				LoadBalancerSku:             test.loadBalancerSku,
+				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
 			}
 
 			err := cs.Validate(false)
@@ -3491,6 +3614,8 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 						t.Errorf("expected error with message : %s, but got : %s", test.expectedErrStr, err.Error())
 					}
 				}
+			} else if err != nil {
+				t.Error(err)
 			}
 		})
 	}
@@ -3856,55 +3981,6 @@ func TestProperties_ValidateVNET(t *testing.T) {
 			err := cs.Validate(true)
 			if err.Error() != test.expectedMsg {
 				t.Errorf("expected error message : %s, but got %s", test.expectedMsg, err.Error())
-			}
-		})
-	}
-}
-
-func TestWindowsProfile_Validate(t *testing.T) {
-	tests := []struct {
-		name             string
-		orchestratorType string
-		w                *WindowsProfile
-		expectedMsg      string
-	}{
-		{
-			name:             "unsupported orchestrator",
-			orchestratorType: "Mesos",
-			w: &WindowsProfile{
-				WindowsImageSourceURL: "http://fakeWindowsImageSourceURL",
-			},
-			expectedMsg: "Windows Custom Images are only supported if the Orchestrator Type is DCOS or Kubernetes",
-		},
-		{
-			name:             "empty adminUsername",
-			orchestratorType: "Kubernetes",
-			w: &WindowsProfile{
-				WindowsImageSourceURL: "http://fakeWindowsImageSourceURL",
-				AdminUsername:         "",
-				AdminPassword:         "password",
-			},
-			expectedMsg: "WindowsProfile.AdminUsername is required, when agent pool specifies windows",
-		},
-		{
-			name:             "empty password",
-			orchestratorType: "DCOS",
-			w: &WindowsProfile{
-				WindowsImageSourceURL: "http://fakeWindowsImageSourceURL",
-				AdminUsername:         "azure",
-				AdminPassword:         "",
-			},
-			expectedMsg: "WindowsProfile.AdminPassword is required, when agent pool specifies windows",
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			err := test.w.Validate(test.orchestratorType)
-			if err.Error() != test.expectedMsg {
-				t.Errorf("should error on unsupported orchType with msg : %s, but got : %s", test.expectedMsg, err.Error())
 			}
 		})
 	}
@@ -5389,4 +5465,32 @@ func TestValidateContainerRuntimeConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateConnectedClusterProfile(t *testing.T) {
+	addon := &KubernetesAddon{}
+
+	t.Run("incomplete connected cluster profile", func(t *testing.T) {
+		err := addon.validateArcAddonConfig()
+		expected := errors.New("azure-arc-onboarding addon configuration must have a 'location' property; azure-arc-onboarding addon configuration must have a 'tenantID' property; azure-arc-onboarding addon configuration must have a 'subscriptionID' property; azure-arc-onboarding addon configuration must have a 'resourceGroup' property; azure-arc-onboarding addon configuration must have a 'clusterName' property; azure-arc-onboarding addon configuration must have a 'clientID' property; azure-arc-onboarding addon configuration must have a 'clientSecret' property")
+		if !helpers.EqualError(err, expected) {
+			t.Errorf("expected error: %v, got: %v", expected, err)
+		}
+	})
+
+	addon.Config = make(map[string]string)
+	addon.Config["location"] = "location"
+	addon.Config["tenantID"] = "tenantID"
+	addon.Config["subscriptionID"] = "subscriptionID"
+	addon.Config["resourceGroup"] = "resourceGroup"
+	addon.Config["clusterName"] = "clusterName"
+	addon.Config["clientID"] = "clientID"
+	addon.Config["clientSecret"] = "clientSecret"
+
+	t.Run("complete connected cluster profile", func(t *testing.T) {
+		err := addon.validateArcAddonConfig()
+		if err != nil {
+			t.Errorf("error not expected, got: %v", err)
+		}
+	})
 }

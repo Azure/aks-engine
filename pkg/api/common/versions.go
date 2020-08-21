@@ -170,8 +170,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.9":         false,
 	"1.16.10":        false,
 	"1.16.11":        false,
-	"1.16.12":        true,
+	"1.16.12":        false,
 	"1.16.13":        true,
+	"1.16.14":        true,
 	"1.17.0-alpha.1": false,
 	"1.17.0-alpha.2": false,
 	"1.17.0-alpha.3": false,
@@ -187,8 +188,10 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.5":         false,
 	"1.17.6":         false,
 	"1.17.7":         false,
-	"1.17.8":         true,
+	"1.17.8":         false,
 	"1.17.9":         true,
+	"1.17.10":        false, // replaced by 1.17.11 due to k8s release engineering issues
+	"1.17.11":        true,
 	"1.18.0-alpha.1": false,
 	"1.18.0-alpha.2": false,
 	"1.18.0-alpha.3": false,
@@ -199,8 +202,10 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.18.2":         false,
 	"1.18.3":         false,
 	"1.18.4":         false,
-	"1.18.5":         true,
+	"1.18.5":         false,
 	"1.18.6":         true,
+	"1.18.7":         false, // replaced by 1.18.8 due to k8s release engineering issues
+	"1.18.8":         true,
 	"1.19.0-alpha.1": true,
 	"1.19.0-alpha.2": true,
 	"1.19.0-alpha.3": true,
@@ -208,6 +213,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.19.0-beta.1":  true,
 	"1.19.0-beta.2":  true,
 	"1.19.0-rc.3":    true,
+	"1.19.0-rc.4":    true,
 }
 
 // AllKubernetesSupportedVersionsAzureStack is a hash table of all supported Kubernetes version strings on Azure Stack
@@ -224,11 +230,13 @@ var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.16.10": false,
 	"1.16.11": false,
 	"1.16.13": true,
+	"1.16.14": true,
 	"1.17.4":  false,
 	"1.17.5":  false,
 	"1.17.6":  false,
 	"1.17.7":  false,
 	"1.17.9":  true,
+	"1.17.11": true,
 }
 
 // AllKubernetesWindowsSupportedVersionsAzureStack maintain a set of available k8s Windows versions in aks-engine on Azure Stack
@@ -240,11 +248,13 @@ var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
 	"1.16.10": false,
 	"1.16.11": false,
 	"1.16.13": true,
+	"1.16.14": true,
 	"1.17.4":  false,
 	"1.17.5":  false,
 	"1.17.6":  false,
 	"1.17.7":  false,
 	"1.17.9":  true,
+	"1.17.11": true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release

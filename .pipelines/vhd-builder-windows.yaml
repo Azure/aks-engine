@@ -18,7 +18,7 @@ pr: none
 
 jobs:
 - job: build_vhd_windows
-  timeoutInMinutes: 120
+  timeoutInMinutes: 150
   strategy:
     maxParallel: 0
   pool:
@@ -130,5 +130,5 @@ jobs:
 
   - script: |
       sudo chown -R $USER:$USER .
-    displayName: cleanup - chown all files in work directory 
+    displayName: cleanup - chown all files in work directory
     condition: always()

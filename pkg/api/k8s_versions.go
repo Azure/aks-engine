@@ -36,7 +36,7 @@ const (
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.2"
 	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.5.0"
 	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
-	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v1.1.0"
+	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.0.0"
 	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64"
 	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v1.2.0"
 	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64"
@@ -57,9 +57,10 @@ const (
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
 	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.8"
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
-	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.6"
-	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.11"
+	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.8"
+	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.13"
 	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
+	azureArcOnboardingImageReference                  string = "arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0"
 )
 
 var kubernetesImageBaseDefaultImages = map[string]map[string]string{
@@ -115,25 +116,25 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 	common.KubernetesImageBaseTypeGCR: {
 		"1.19": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.6",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.6",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.6",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.1",
 		},
 		"1.16": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.4",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.4",
 		},
@@ -221,33 +222,33 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 	common.KubernetesImageBaseTypeMCR: {
 		"1.19": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.6",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.19.0-beta.1",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.19.0",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.6",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
 			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.18.2",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.6",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
 			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.17.3",
 		},
 		"1.16": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.4",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.5",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.6",
 		},
 		"1.15": {
 			common.AddonResizerComponentName:           "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:              "oss/kubernetes/metrics-server:v0.2.1",
 			common.AddonManagerComponentName:           "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.6",
+			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.7",
 			common.CloudControllerManagerComponentName: "oss/kubernetes/cloud-controller-manager",
 		},
 		"1.14": {
@@ -349,24 +350,26 @@ func GetK8sComponentsByVersionMap(k *KubernetesConfig) map[string]map[string]str
 
 func getVersionOverridesMCR(v string) map[string]string {
 	switch v {
+	case "1.18.6":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.6-hotfix.20200723/windowszip/v1.18.6-hotfix.20200723-1int.zip"}
 	case "1.18.4":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200624/windowszip/v1.18.4-hotfix.20200624-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200626/windowszip/v1.18.4-hotfix.20200626-1int.zip"}
 	case "1.18.2":
 		return map[string]string{common.WindowsArtifactComponentName: "v1.18.2-hotfix.20200624/windowszip/v1.18.2-hotfix.20200624-1int.zip"}
 	case "1.17.9":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.17.9-hotfix.20200714/windowszip/v1.17.9-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.17.9-hotfix.20200817/windowszip/v1.17.9-hotfix.20200817-1int.zip"}
 	case "1.17.7":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200714/windowszip/v1.17.7-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200817/windowszip/v1.17.7-hotfix.20200817-1int.zip"}
 	case "1.16.13":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.16.13-hotfix.20200714/windowszip/v1.16.13-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.16.13-hotfix.20200817/windowszip/v1.16.13-hotfix.20200817-1int.zip"}
 	case "1.16.11":
 		return map[string]string{common.WindowsArtifactComponentName: "v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip"}
 	case "1.16.10":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.16.10-hotfix.20200714/windowszip/v1.16.10-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.16.10-hotfix.20200817/windowszip/v1.16.10-hotfix.20200817-1int.zip"}
 	case "1.15.12":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.15.12-hotfix.20200714/windowszip/v1.15.12-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.15.12-hotfix.20200817/windowszip/v1.15.12-hotfix.20200817-1int.zip"}
 	case "1.15.11":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.15.11-hotfix.20200714/windowszip/v1.15.11-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.15.11-hotfix.20200817/windowszip/v1.15.11-hotfix.20200817-1int.zip"}
 	default:
 		return nil
 	}
@@ -374,24 +377,26 @@ func getVersionOverridesMCR(v string) map[string]string {
 
 func getVersionOverridesGCR(v string) map[string]string {
 	switch v {
+	case "1.18.6":
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.6-hotfix.20200723/windowszip/v1.18.6-hotfix.20200723-1int.zip"}
 	case "1.18.4":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200624/windowszip/v1.18.4-hotfix.20200624-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.18.4-hotfix.20200626/windowszip/v1.18.4-hotfix.20200626-1int.zip"}
 	case "1.18.2":
 		return map[string]string{common.WindowsArtifactComponentName: "v1.18.2-hotfix.20200624/windowszip/v1.18.2-hotfix.20200624-1int.zip"}
 	case "1.17.9":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.17.9-hotfix.20200714/windowszip/v1.17.9-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.17.9-hotfix.20200817/windowszip/v1.17.9-hotfix.20200817-1int.zip"}
 	case "1.17.7":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200714/windowszip/v1.17.7-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.17.7-hotfix.20200817/windowszip/v1.17.7-hotfix.20200817-1int.zip"}
 	case "1.16.13":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.16.13-hotfix.20200714/windowszip/v1.16.13-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.16.13-hotfix.20200817/windowszip/v1.16.13-hotfix.20200817-1int.zip"}
 	case "1.16.11":
 		return map[string]string{common.WindowsArtifactComponentName: "v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip"}
 	case "1.16.10":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.16.10-hotfix.20200714/windowszip/v1.16.10-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.16.10-hotfix.20200817/windowszip/v1.16.10-hotfix.20200817-1int.zip"}
 	case "1.15.12":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.15.12-hotfix.20200714/windowszip/v1.15.12-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.15.12-hotfix.20200817/windowszip/v1.15.12-hotfix.20200817-1int.zip"}
 	case "1.15.11":
-		return map[string]string{common.WindowsArtifactComponentName: "v1.15.11-hotfix.20200714/windowszip/v1.15.11-hotfix.20200714-1int.zip"}
+		return map[string]string{common.WindowsArtifactComponentName: "v1.15.11-hotfix.20200817/windowszip/v1.15.11-hotfix.20200817-1int.zip"}
 	case "1.8.11":
 		return map[string]string{common.KubeDNSAddonName: "k8s-dns-kube-dns-amd64:1.14.9"}
 	case "1.8.9":
@@ -519,6 +524,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		}
 	case "1.18":
 		ret = map[string]string{
@@ -602,6 +608,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		}
 	case "1.17":
 		ret = map[string]string{
@@ -683,6 +690,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		}
 	case "1.16":
 		ret = map[string]string{
@@ -760,6 +768,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		}
 	case "1.15":
 		ret = map[string]string{
@@ -833,6 +842,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		}
 	case "1.14":
 		ret = map[string]string{

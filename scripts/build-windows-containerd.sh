@@ -31,41 +31,19 @@ cp bin/ctr.exe /output
 #cp bin/containerd.exe /output # missing CRI plugin, so build from containerd/cri
 cd \$GOPATH
 cd src/github.com/containerd
-git clone https://github.com/containerd/cri.git
+git clone https://github.com/jterry75/cri.git
 cd cri
+git checkout windows_port
 git rev-parse HEAD > /output/cri-revision.txt
 make containerd
 cp _output/containerd.exe /output
 apt update
 apt install -y zip
 cd /output
-zip windows-cri-containerd.zip *.exe *.txt
+zip windows-cri-containerd.zip *.exe *.txt *.toml
 rm -f /output/*.exe
 rm -f /output/*.txt
 EOF
 chmod +x $OUTDIR/buildcri.sh
 
-cat <<EOF > $OUTDIR/buildcni.sh
-set -e -x -o pipefail
-export GOOS=windows
-export GOARCH=amd64
-mkdir -p src/github.com/Microsoft
-cd src/github.com/Microsoft
-git clone https://github.com/Microsoft/windows-container-networking.git
-cd windows-container-networking
-git rev-parse HEAD > /output/cni-revision.txt
-make all
-mv out/*.exe /output
-apt update
-apt install -y zip
-cd /output
-zip windows-cni-containerd.zip *.exe *.txt
-rm -f /output/*.exe
-rm -f /output/*.txt
-EOF
-chmod +x $OUTDIR/buildcni.sh
-
-
-
 docker run $DOCKERARGS -v $OUTDIR:/output golang:$GOTAG /bin/bash -c /output/buildcri.sh
-docker run $DOCKERARGS -v $OUTDIR:/output golang:$GOTAG /bin/bash -c /output/buildcni.sh

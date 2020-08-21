@@ -64,6 +64,19 @@
 								"min-replicas": "1",
 								"nodes-per-replica": "8"
 							}
+						},
+						{
+							"name": "azure-arc-onboarding",
+							"enabled": true,
+							"config": {
+								"tenantID": "",
+								"subscriptionID": "",
+								"resourceGroup": "",
+								"clusterName": "",
+								"clientID": "",
+								"clientSecret": "",
+								"location": ""
+							}
 						}
 					],
 					"components": [
@@ -76,7 +89,8 @@
 					"loadBalancerOutboundIPs": 2,
 					"apiServerConfig": {
 						"--anonymous-auth": "true"
-					}
+					},
+					"microsoftAptRepositoryURL": "https://packages.microsoft.com"
 				}
 			},
 			"masterProfile": {
