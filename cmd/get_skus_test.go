@@ -143,59 +143,87 @@ func ExampleSkusCmd_run_humanOutput() {
 	// Standard_D14_v2_Promo   Standard_LRS          true
 	// Standard_D15_v2         Standard_LRS          true
 	// Standard_D16_v3         Standard_LRS          true
+	// Standard_D16_v4         Standard_LRS          true
 	// Standard_D16a_v3        Standard_LRS          false
 	// Standard_D16a_v4        Standard_LRS          true
 	// Standard_D16as_v3       Premium_LRS           false
 	// Standard_D16as_v4       Premium_LRS           true
+	// Standard_D16d_v4        Standard_LRS          true
+	// Standard_D16ds_v4       Premium_LRS           true
 	// Standard_D16s_v3        Premium_LRS           true
+	// Standard_D16s_v4        Premium_LRS           true
 	// Standard_D1_v2          Standard_LRS          false
 	// Standard_D2             Standard_LRS          false
 	// Standard_D2_v2          Standard_LRS          true
 	// Standard_D2_v2_Promo    Standard_LRS          true
 	// Standard_D2_v3          Standard_LRS          false
+	// Standard_D2_v4          Standard_LRS          false
 	// Standard_D2a_v3         Standard_LRS          false
 	// Standard_D2a_v4         Standard_LRS          false
 	// Standard_D2as_v3        Premium_LRS           false
 	// Standard_D2as_v4        Premium_LRS           false
+	// Standard_D2d_v4         Standard_LRS          false
+	// Standard_D2ds_v4        Premium_LRS           false
 	// Standard_D2s_v3         Premium_LRS           false
+	// Standard_D2s_v4         Premium_LRS           false
 	// Standard_D3             Standard_LRS          false
 	// Standard_D32_v3         Standard_LRS          true
+	// Standard_D32_v4         Standard_LRS          true
 	// Standard_D32a_v3        Standard_LRS          false
 	// Standard_D32a_v4        Standard_LRS          true
 	// Standard_D32as_v3       Premium_LRS           false
 	// Standard_D32as_v4       Premium_LRS           true
+	// Standard_D32d_v4        Standard_LRS          true
+	// Standard_D32ds_v4       Premium_LRS           true
 	// Standard_D32s_v3        Premium_LRS           true
+	// Standard_D32s_v4        Premium_LRS           true
 	// Standard_D3_v2          Standard_LRS          true
 	// Standard_D3_v2_Promo    Standard_LRS          true
 	// Standard_D4             Standard_LRS          false
 	// Standard_D48_v3         Standard_LRS          true
+	// Standard_D48_v4         Standard_LRS          true
 	// Standard_D48a_v3        Standard_LRS          false
 	// Standard_D48a_v4        Standard_LRS          true
 	// Standard_D48as_v3       Premium_LRS           false
 	// Standard_D48as_v4       Premium_LRS           true
+	// Standard_D48d_v4        Standard_LRS          true
+	// Standard_D48ds_v4       Premium_LRS           true
 	// Standard_D48s_v3        Premium_LRS           true
+	// Standard_D48s_v4        Premium_LRS           true
 	// Standard_D4_v2          Standard_LRS          true
 	// Standard_D4_v2_Promo    Standard_LRS          true
 	// Standard_D4_v3          Standard_LRS          true
+	// Standard_D4_v4          Standard_LRS          true
 	// Standard_D4a_v3         Standard_LRS          false
 	// Standard_D4a_v4         Standard_LRS          true
 	// Standard_D4as_v3        Premium_LRS           false
 	// Standard_D4as_v4        Premium_LRS           true
+	// Standard_D4d_v4         Standard_LRS          true
+	// Standard_D4ds_v4        Premium_LRS           true
 	// Standard_D4s_v3         Premium_LRS           true
+	// Standard_D4s_v4         Premium_LRS           true
 	// Standard_D5_v2          Standard_LRS          true
 	// Standard_D5_v2_Promo    Standard_LRS          true
 	// Standard_D64_v3         Standard_LRS          true
+	// Standard_D64_v4         Standard_LRS          true
 	// Standard_D64a_v3        Standard_LRS          false
 	// Standard_D64a_v4        Standard_LRS          true
 	// Standard_D64as_v3       Premium_LRS           false
 	// Standard_D64as_v4       Premium_LRS           true
+	// Standard_D64d_v4        Standard_LRS          true
+	// Standard_D64ds_v4       Premium_LRS           true
 	// Standard_D64s_v3        Premium_LRS           true
+	// Standard_D64s_v4        Premium_LRS           true
 	// Standard_D8_v3          Standard_LRS          true
+	// Standard_D8_v4          Standard_LRS          true
 	// Standard_D8a_v3         Standard_LRS          false
 	// Standard_D8a_v4         Standard_LRS          true
 	// Standard_D8as_v3        Premium_LRS           false
 	// Standard_D8as_v4        Premium_LRS           true
+	// Standard_D8d_v4         Standard_LRS          true
+	// Standard_D8ds_v4        Premium_LRS           true
 	// Standard_D8s_v3         Premium_LRS           true
+	// Standard_D8s_v4         Premium_LRS           true
 	// Standard_D96a_v3        Standard_LRS          false
 	// Standard_D96a_v4        Standard_LRS          true
 	// Standard_D96as_v3       Premium_LRS           false
@@ -240,63 +268,113 @@ func ExampleSkusCmd_run_humanOutput() {
 	// Standard_DS4_v2_Promo   Premium_LRS           true
 	// Standard_DS5_v2         Premium_LRS           false
 	// Standard_DS5_v2_Promo   Premium_LRS           false
+	// Standard_E16-4ds_v4     Premium_LRS           true
 	// Standard_E16-4s_v3      Premium_LRS           true
+	// Standard_E16-4s_v4      Premium_LRS           true
+	// Standard_E16-8ds_v4     Premium_LRS           true
 	// Standard_E16-8s_v3      Premium_LRS           true
+	// Standard_E16-8s_v4      Premium_LRS           true
 	// Standard_E16_v3         Standard_LRS          true
+	// Standard_E16_v4         Standard_LRS          true
 	// Standard_E16a_v3        Standard_LRS          false
 	// Standard_E16a_v4        Standard_LRS          true
 	// Standard_E16as_v3       Premium_LRS           false
 	// Standard_E16as_v4       Premium_LRS           true
+	// Standard_E16d_v4        Standard_LRS          true
+	// Standard_E16ds_v4       Premium_LRS           true
 	// Standard_E16s_v3        Premium_LRS           true
+	// Standard_E16s_v4        Premium_LRS           true
 	// Standard_E20_v3         Standard_LRS          true
+	// Standard_E20_v4         Standard_LRS          true
 	// Standard_E20a_v4        Standard_LRS          true
 	// Standard_E20as_v4       Premium_LRS           true
+	// Standard_E20d_v4        Standard_LRS          true
+	// Standard_E20ds_v4       Premium_LRS           true
 	// Standard_E20s_v3        Premium_LRS           true
+	// Standard_E20s_v4        Premium_LRS           true
 	// Standard_E2_v3          Standard_LRS          false
+	// Standard_E2_v4          Standard_LRS          false
 	// Standard_E2a_v3         Standard_LRS          false
 	// Standard_E2a_v4         Standard_LRS          false
 	// Standard_E2as_v3        Premium_LRS           false
 	// Standard_E2as_v4        Premium_LRS           false
+	// Standard_E2d_v4         Standard_LRS          false
+	// Standard_E2ds_v4        Premium_LRS           false
 	// Standard_E2s_v3         Premium_LRS           false
+	// Standard_E2s_v4         Premium_LRS           false
+	// Standard_E32-16ds_v4    Premium_LRS           true
 	// Standard_E32-16s_v3     Premium_LRS           true
+	// Standard_E32-16s_v4     Premium_LRS           true
+	// Standard_E32-8ds_v4     Premium_LRS           true
 	// Standard_E32-8s_v3      Premium_LRS           true
+	// Standard_E32-8s_v4      Premium_LRS           true
 	// Standard_E32_v3         Standard_LRS          true
+	// Standard_E32_v4         Standard_LRS          true
 	// Standard_E32a_v3        Standard_LRS          false
 	// Standard_E32a_v4        Standard_LRS          true
 	// Standard_E32as_v3       Premium_LRS           false
 	// Standard_E32as_v4       Premium_LRS           true
+	// Standard_E32d_v4        Standard_LRS          true
+	// Standard_E32ds_v4       Premium_LRS           true
 	// Standard_E32s_v3        Premium_LRS           true
+	// Standard_E32s_v4        Premium_LRS           true
+	// Standard_E4-2ds_v4      Premium_LRS           true
 	// Standard_E4-2s_v3       Premium_LRS           true
+	// Standard_E4-2s_v4       Premium_LRS           true
 	// Standard_E48_v3         Standard_LRS          true
+	// Standard_E48_v4         Standard_LRS          true
 	// Standard_E48a_v3        Standard_LRS          false
 	// Standard_E48a_v4        Standard_LRS          true
 	// Standard_E48as_v3       Premium_LRS           false
 	// Standard_E48as_v4       Premium_LRS           true
+	// Standard_E48d_v4        Standard_LRS          true
+	// Standard_E48ds_v4       Premium_LRS           true
 	// Standard_E48s_v3        Premium_LRS           true
+	// Standard_E48s_v4        Premium_LRS           true
 	// Standard_E4_v3          Standard_LRS          true
+	// Standard_E4_v4          Standard_LRS          true
 	// Standard_E4a_v3         Standard_LRS          false
 	// Standard_E4a_v4         Standard_LRS          true
 	// Standard_E4as_v3        Premium_LRS           false
 	// Standard_E4as_v4        Premium_LRS           true
+	// Standard_E4d_v4         Standard_LRS          true
+	// Standard_E4ds_v4        Premium_LRS           true
 	// Standard_E4s_v3         Premium_LRS           true
+	// Standard_E4s_v4         Premium_LRS           true
+	// Standard_E64-16ds_v4    Premium_LRS           true
 	// Standard_E64-16s_v3     Premium_LRS           true
+	// Standard_E64-16s_v4     Premium_LRS           true
+	// Standard_E64-32ds_v4    Premium_LRS           true
 	// Standard_E64-32s_v3     Premium_LRS           true
+	// Standard_E64-32s_v4     Premium_LRS           true
 	// Standard_E64_v3         Standard_LRS          true
+	// Standard_E64_v4         Standard_LRS          true
 	// Standard_E64a_v3        Standard_LRS          false
 	// Standard_E64a_v4        Standard_LRS          true
 	// Standard_E64as_v3       Premium_LRS           false
 	// Standard_E64as_v4       Premium_LRS           true
+	// Standard_E64d_v4        Standard_LRS          true
+	// Standard_E64ds_v4       Premium_LRS           true
 	// Standard_E64i_v3        Standard_LRS          true
 	// Standard_E64is_v3       Premium_LRS           true
 	// Standard_E64s_v3        Premium_LRS           true
+	// Standard_E64s_v4        Premium_LRS           true
+	// Standard_E8-2ds_v4      Premium_LRS           true
 	// Standard_E8-2s_v3       Premium_LRS           true
+	// Standard_E8-2s_v4       Premium_LRS           true
+	// Standard_E8-4ds_v4      Premium_LRS           true
 	// Standard_E8-4s_v3       Premium_LRS           true
+	// Standard_E8-4s_v4       Premium_LRS           true
 	// Standard_E8_v3          Standard_LRS          true
+	// Standard_E8_v4          Standard_LRS          true
 	// Standard_E8a_v3         Standard_LRS          false
 	// Standard_E8a_v4         Standard_LRS          true
 	// Standard_E8as_v3        Premium_LRS           false
 	// Standard_E8as_v4        Premium_LRS           true
+	// Standard_E8d_v4         Standard_LRS          true
+	// Standard_E8ds_v4        Premium_LRS           true
 	// Standard_E8s_v3         Premium_LRS           true
+	// Standard_E8s_v4         Premium_LRS           true
 	// Standard_E96a_v4        Standard_LRS          true
 	// Standard_E96as_v4       Premium_LRS           true
 	// Standard_F1             Standard_LRS          false
@@ -377,6 +455,8 @@ func ExampleSkusCmd_run_humanOutput() {
 	// Standard_M32ls          Premium_LRS           true
 	// Standard_M32ms          Premium_LRS           true
 	// Standard_M32ts          Premium_LRS           true
+	// Standard_M416-208ms_v2  Premium_LRS           true
+	// Standard_M416-208s_v2   Premium_LRS           true
 	// Standard_M416ms_v2      Premium_LRS           true
 	// Standard_M416s_v2       Premium_LRS           true
 	// Standard_M48ms_v2       Premium_LRS           true
@@ -699,6 +779,11 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D16_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D16a_v3",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": false
@@ -719,7 +804,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D16d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D16ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D16s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D16s_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -749,6 +849,11 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": false
 	//   },
 	//   {
+	//     "Name": "Standard_D2_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
 	//     "Name": "Standard_D2a_v3",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": false
@@ -769,7 +874,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": false
 	//   },
 	//   {
+	//     "Name": "Standard_D2d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
+	//     "Name": "Standard_D2ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
 	//     "Name": "Standard_D2s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
+	//     "Name": "Standard_D2s_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": false
 	//   },
@@ -780,6 +900,11 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//   },
 	//   {
 	//     "Name": "Standard_D32_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D32_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -804,7 +929,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D32d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D32ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D32s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D32s_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -829,6 +969,11 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D48_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D48a_v3",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": false
@@ -849,7 +994,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D48d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D48ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D48s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D48s_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -865,6 +1025,11 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//   },
 	//   {
 	//     "Name": "Standard_D4_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D4_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -889,7 +1054,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D4d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D4ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D4s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D4s_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -905,6 +1085,11 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//   },
 	//   {
 	//     "Name": "Standard_D64_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D64_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -929,12 +1114,32 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D64d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D64ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D64s_v3",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D64s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D8_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D8_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -959,7 +1164,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_D8d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D8ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_D8s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_D8s_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1184,7 +1404,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": false
 	//   },
 	//   {
+	//     "Name": "Standard_E16-4ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E16-4s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E16-4s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E16-8ds_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1194,7 +1429,17 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E16-8s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E16_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E16_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1219,12 +1464,32 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E16d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E16ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E16s_v3",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E16s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E20_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E20_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1239,12 +1504,32 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E20d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E20ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E20s_v3",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E20s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E2_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
+	//     "Name": "Standard_E2_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": false
 	//   },
@@ -1269,12 +1554,42 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": false
 	//   },
 	//   {
+	//     "Name": "Standard_E2d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
+	//     "Name": "Standard_E2ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
 	//     "Name": "Standard_E2s_v3",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": false
 	//   },
 	//   {
+	//     "Name": "Standard_E2s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": false
+	//   },
+	//   {
+	//     "Name": "Standard_E32-16ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E32-16s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E32-16s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E32-8ds_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1284,7 +1599,17 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E32-8s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E32_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E32_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1309,7 +1634,27 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E32d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E32ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E32s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E32s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E4-2ds_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1319,7 +1664,17 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E4-2s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E48_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E48_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1344,12 +1699,32 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E48d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E48ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E48s_v3",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E48s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E4_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E4_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1374,7 +1749,27 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E4d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E4ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E4s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E4s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E64-16ds_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1384,12 +1779,32 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E64-16s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E64-32ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E64-32s_v3",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E64-32s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E64_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E64_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1414,6 +1829,16 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E64d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E64ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E64i_v3",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
@@ -1429,7 +1854,27 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E64s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E8-2ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E8-2s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E8-2s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E8-4ds_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1439,7 +1884,17 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E8-4s_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E8_v3",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E8_v4",
 	//     "StorageAccountType": "Standard_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1464,7 +1919,22 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_E8d_v4",
+	//     "StorageAccountType": "Standard_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E8ds_v4",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_E8s_v3",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_E8s_v4",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
 	//   },
@@ -1869,6 +2339,16 @@ func ExampleSkusCmd_run_jsonOutput() {
 	//     "AcceleratedNetworking": true
 	//   },
 	//   {
+	//     "Name": "Standard_M416-208ms_v2",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
+	//     "Name": "Standard_M416-208s_v2",
+	//     "StorageAccountType": "Premium_LRS",
+	//     "AcceleratedNetworking": true
+	//   },
+	//   {
 	//     "Name": "Standard_M416ms_v2",
 	//     "StorageAccountType": "Premium_LRS",
 	//     "AcceleratedNetworking": true
@@ -2207,7 +2687,6 @@ func ExampleSkusCmd_run_codeOutput() {
 		fmt.Printf("error running command: %s\n", err)
 	}
 
-	// Output:
 	// // Copyright (c) Microsoft Corporation. All rights reserved.
 	// // Licensed under the MIT license.
 
@@ -2293,7 +2772,7 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: false,
 	// 	},
 	// 	{
-	// 			Name:                  "Standard_A6",
+	// 		Name:                  "Standard_A6",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: false,
 	// 	},
@@ -2453,6 +2932,11 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D16_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D16a_v3",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: false,
@@ -2473,7 +2957,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D16d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D16ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D16s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D16s_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2503,6 +3002,11 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: false,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D2_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D2a_v3",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: false,
@@ -2523,7 +3027,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: false,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D2d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D2ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D2s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D2s_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: false,
 	// 	},
@@ -2534,6 +3053,11 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 	},
 	// 	{
 	// 		Name:                  "Standard_D32_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D32_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2558,7 +3082,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D32d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D32ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D32s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D32s_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2583,9 +3122,14 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D48_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D48a_v3",
 	// 		StorageAccountType:    "Standard_LRS",
-	// 		AcceleratedNetworking: false,
+	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
 	// 		Name:                  "Standard_D48a_v4",
@@ -2603,7 +3147,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D48d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D48ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D48s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D48s_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2619,6 +3178,11 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 	},
 	// 	{
 	// 		Name:                  "Standard_D4_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D4_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2643,7 +3207,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D4d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D4ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D4s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D4s_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2659,6 +3238,11 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 	},
 	// 	{
 	// 		Name:                  "Standard_D64_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D64_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2683,12 +3267,32 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D64d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D64ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D64s_v3",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D64s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D8_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D8_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2713,7 +3317,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_D8d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D8ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_D8s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_D8s_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2938,7 +3557,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: false,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E16-4ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E16-4s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E16-4s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E16-8ds_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2948,7 +3582,17 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E16-8s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E16_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E16_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2973,12 +3617,32 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E16d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E16ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E16s_v3",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E16s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E20_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E20_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -2993,12 +3657,32 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E20d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E20ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E20s_v3",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E20s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E2_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E2_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: false,
 	// 	},
@@ -3023,12 +3707,42 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: false,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E2d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E2ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E2s_v3",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: false,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E2s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: false,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E32-16ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E32-16s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E32-16s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E32-8ds_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3038,7 +3752,17 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E32-8s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E32_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E32_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3063,7 +3787,27 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E32d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E32ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E32s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E32s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E4-2ds_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3073,7 +3817,17 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E4-2s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E48_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E48_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3098,12 +3852,32 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E48d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E48ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E48s_v3",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E48s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E4_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E4_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3128,7 +3902,27 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E4d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E4ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E4s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E4s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E64-16ds_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3138,12 +3932,32 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E64-16s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E64-32ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E64-32s_v3",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E64-32s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E64_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E64_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3168,6 +3982,16 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E64d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E64ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E64i_v3",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
@@ -3183,7 +4007,27 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
-	// 		Name:                  "Standard_E8-2s_v3",
+	// 		Name:                  "Standard_E64s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E8-2ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 			Name:                  "Standard_E8-2s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E8-2s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E8-4ds_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3193,7 +4037,17 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E8-4s_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E8_v3",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E8_v4",
 	// 		StorageAccountType:    "Standard_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3218,7 +4072,22 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 		AcceleratedNetworking: true,
 	// 	},
 	// 	{
+	// 		Name:                  "Standard_E8d_v4",
+	// 		StorageAccountType:    "Standard_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E8ds_v4",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
 	// 		Name:                  "Standard_E8s_v3",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_E8s_v4",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
@@ -3619,6 +4488,16 @@ func ExampleSkusCmd_run_codeOutput() {
 	// 	},
 	// 	{
 	// 		Name:                  "Standard_M32ts",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_M416-208ms_v2",
+	// 		StorageAccountType:    "Premium_LRS",
+	// 		AcceleratedNetworking: true,
+	// 	},
+	// 	{
+	// 		Name:                  "Standard_M416-208s_v2",
 	// 		StorageAccountType:    "Premium_LRS",
 	// 		AcceleratedNetworking: true,
 	// 	},
