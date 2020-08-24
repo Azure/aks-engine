@@ -128,7 +128,7 @@ function Install-Containerd {
     DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $tarfile
     mkdir -Force $global:ContainerdInstallLocation
     tar -xzf $tarfile -C $global:ContainerdInstallLocation
-    mv $global:ContainerdInstallLocation\bin\* $global:ContainerdInstallLocation\
+    mv -Force $global:ContainerdInstallLocation\bin\* $global:ContainerdInstallLocation\
     del $tarfile
     del -Recurse -Force $global:ContainerdInstallLocation\bin
   }
