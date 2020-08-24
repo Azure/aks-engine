@@ -25067,6 +25067,20 @@ function Select-Windows-Version {
   }
 }
 
+function Enable-Logging {
+  if ((Test-Path "$global:ContainerdInstallLocation\diag.ps1") -And (Test-Path "$global:ContainerdInstallLocation\ContainerPlatform.wprp")) {
+    $logs = Join-path $pwd.drive.Root logs
+    Write-Log "Containerd hyperv logging enabled; temp location $logs"
+    $diag = Join-Path $global:ContainerdInstallLocation diag.ps1
+    mkdir -Force $logs
+    # !ContainerPlatformPersistent profile is made to work with long term and boot tracing
+    & $diag -Start -ProfilePath "$global:ContainerdInstallLocation\ContainerPlatform.wprp!ContainerPlatformPersistent" -TempPath $logs
+  }
+  else {
+    Write-Log "Containerd hyperv logging script not avalaible"
+  }
+}
+
 function Install-Containerd {
   Param(
     [Parameter(Mandatory = $true)][string]
@@ -25096,7 +25110,7 @@ function Install-Containerd {
     # upstream containerd package is a tar 
     $tarfile = [Io.path]::Combine($ENV:TEMP, "containerd.tar.gz")
     DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $tarfile
-    mkdir -Force "C:\Program Files\containerd"
+    mkdir -Force $global:ContainerdInstallLocation
     tar -xzf $tarfile -C $global:ContainerdInstallLocation
     mv $global:ContainerdInstallLocation\bin\* $global:ContainerdInstallLocation\
     del $tarfile
@@ -25118,7 +25132,7 @@ function Install-Containerd {
 
   # configure
   if ($global:DefaultContainerdRuntimeHandler -eq "hyperv") {
-    Write-Host "default runtime for containerd set to hyperv"
+    Write-Log "default runtime for containerd set to hyperv"
     $sandboxIsolation = 1
   }
 
@@ -25140,6 +25154,7 @@ function Install-Containerd {
     Out-File -FilePath "$configFile" -Encoding ascii
 
   RegisterContainerDService
+  Enable-Logging
 }
 `)
 
