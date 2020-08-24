@@ -403,6 +403,30 @@ MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
 
+{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}}
+- path: /etc/kubernetes/addons/init/namespaces.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+  {{- if IsDashboardAddonEnabled}}
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: kubernetes-dashboard
+      labels:
+        addonmanager.kubernetes.io/mode: EnsureExists
+    ---
+  {{- end}}
+  {{- if IsAzurePolicyAddonEnabled}}
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: gatekeeper-system
+      labels:
+        addonmanager.kubernetes.io/mode: EnsureExists
+  {{- end}}
+{{- end}}
+
 - path: /etc/default/kubelet
   permissions: "0644"
   owner: root

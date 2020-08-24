@@ -18708,6 +18708,12 @@ ensureKubelet() {
 }
 
 ensureAddons() {
+{{- if IsDashboardAddonEnabled}}
+  retrycmd 120 5 30 $KUBECTL get namespace kubernetes-dashboard || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+{{- end}}
+{{- if IsAzurePolicyAddonEnabled}}
+  retrycmd 120 5 30 $KUBECTL get namespace gatekeeper-system || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+{{- end}}
 {{- if not HasCustomPodSecurityPolicy}}
   retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
   rm -Rf ${ADDONS_DIR}/init
@@ -21875,6 +21881,30 @@ MASTER_MANIFESTS_CONFIG_PLACEHOLDER
 MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
+
+{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}}
+- path: /etc/kubernetes/addons/init/namespaces.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+  {{- if IsDashboardAddonEnabled}}
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: kubernetes-dashboard
+      labels:
+        addonmanager.kubernetes.io/mode: EnsureExists
+    ---
+  {{- end}}
+  {{- if IsAzurePolicyAddonEnabled}}
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: gatekeeper-system
+      labels:
+        addonmanager.kubernetes.io/mode: EnsureExists
+  {{- end}}
+{{- end}}
 
 - path: /etc/default/kubelet
   permissions: "0644"
