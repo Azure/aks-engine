@@ -231,7 +231,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.ContainerRuntime == "containerd" &&
 		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0-rc.0/containerd-1.4.0-rc.0-windows-amd64.tar.gz"
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
 	}
 
 	if config.ContainerRuntime != "" {

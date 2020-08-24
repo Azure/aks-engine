@@ -514,7 +514,7 @@ We are investigating possible risks & mitigations for when VMs are deprovisioned
 
 Kubernetes 1.18 introduces alpha support for the ContainerD runtime on Windows Server 2019. This is still a work-in-progress tracked in [kubernetes/enhancements#1001](https://github.com/kubernetes/enhancements/issues/1001). This feature in AKS-Engine is for testing the in-development versions of ContainerD and Kubernetes, and is not for production use. Be sure to review [open issues](https://github.com/azure/aks-engine/issues?q=containerd+label%3Awindows+is%3Aopen) if you want to test or contribute to this effort.
 
-Containerd now has supported builds at https://github.com/containerd/containerd/releases/tag/v1.4.0-rc.0.  You can find nightly builds of Containerd at https://github.com/marosset/windows-cri-containerd/releases/download/nightly/windows-cri-containerd.zip.
+Containerd now has supported builds starting with https://github.com/containerd/containerd/releases/tag/v1.4.0.  You can find nightly builds of Containerd at https://github.com/marosset/windows-cri-containerd/releases/download/nightly/windows-cri-containerd.zip.
 
 ### Deploying multi-OS clusters with ContainerD
 
