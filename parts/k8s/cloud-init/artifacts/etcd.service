@@ -7,8 +7,6 @@ Wants=network-online.target
 RequiresMountsFor=/var/lib/etcddisk
 [Service]
 Environment=DAEMON_ARGS=
-Environment=ETCD_NAME=%H
-Environment=ETCD_DATA_DIR=
 EnvironmentFile=-/etc/default/%p
 Type=notify
 User=etcd

@@ -104,15 +104,16 @@ configureEtcd() {
 
   chown -R etcd:etcd /var/lib/etcddisk
   systemctlEtcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
+  ETCDCTL_PARAMS="--cert=/etc/kubernetes/certs/etcdclient.crt --key=/etc/kubernetes/certs/etcdclient.key --cacert=/etc/kubernetes/certs/ca.crt --endpoints=${ETCD_CLIENT_URL}"
   for i in $(seq 1 600); do
-    MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
+    MEMBER="$(sudo -E etcdctl ${ETCDCTL_PARAMS} member list | grep -E ${NODE_NAME} | cut -d',' -f 1)"
     if [ "$MEMBER" != "" ]; then
       break
     else
       sleep 1
     fi
   done
-  retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
+  retrycmd 120 5 25 sudo -E etcdctl ${ETCDCTL_PARAMS} member update $MEMBER --peer-urls=${ETCD_PEER_URL} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
 }
 ensureNTP() {
   systemctlEnableAndStart ntp || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
