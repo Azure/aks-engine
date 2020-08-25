@@ -8479,6 +8479,14 @@ spec:
       nodeSelector:
         kubernetes.io/arch: amd64
         kubernetes.io/os: linux
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: accelerator
+                operator: NotIn
+                values:
+                - nvidia
       containers:
       - name: azure-arc-onboarding
         image: {{ContainerImage "azure-arc-onboarding"}}
