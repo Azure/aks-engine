@@ -34,6 +34,7 @@ jobs:
     ENABLE_KMS_ENCRYPTION: ${{ parameters.enableKMSEncryption }}
     SUBSCRIPTION_ID: '$(SUBSCRIPTION_ID_E2E_KUBERNETES)'
     MSI_USER_ASSIGNED_ID: '$(MSI_USER_ASSIGNED_ID_AKS_ENGINE_E2E)'
+    REBOOT_CONTROL_PLANE_NODES: ${{ parameters.rebootControlPlaneNodes }}
 
   steps:
     - template: e2e-step-template.yaml

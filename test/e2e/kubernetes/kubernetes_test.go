@@ -116,6 +116,7 @@ var _ = BeforeSuite(func() {
 
 	if cfg.RebootControlPlaneNodes {
 		cfg.BlockSSHPort = true
+		cfg.StabilityIterations = 0
 	}
 
 	if !cfg.BlockSSHPort {
