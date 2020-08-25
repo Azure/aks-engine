@@ -317,7 +317,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
 			var expectedReadyNodes int
-			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !cli.Config.RebootControlPlaneNodes {
 				expectedReadyNodes = cli.Engine.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
