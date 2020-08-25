@@ -213,6 +213,18 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			addValue(parametersMap, fmt.Sprintf("%sosImageSKU", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImageSku)
 			addValue(parametersMap, fmt.Sprintf("%sosImagePublisher", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImagePublisher)
 			addValue(parametersMap, fmt.Sprintf("%sosImageVersion", agentProfile.Name), cloudSpecConfig.OSImageConfig[agentProfile.Distro].ImageVersion)
+		} else {
+			// Set ImageRef if it is not nil and always set the Windows VHD information in WindowsProfile.
+			// ImageRef will be used to generate ARM template for the agent pool if it is set.
+			// Otherwise, the Windows VHD information in WindowsProfile will be used to generate ARM template.
+			if agentProfile.ImageRef != nil {
+				addValue(parametersMap, fmt.Sprintf("%sosImageName", agentProfile.Name), agentProfile.ImageRef.Name)
+				addValue(parametersMap, fmt.Sprintf("%sosImageResourceGroup", agentProfile.Name), agentProfile.ImageRef.ResourceGroup)
+			}
+			addValue(parametersMap, fmt.Sprintf("%sosImageOffer", agentProfile.Name), properties.WindowsProfile.WindowsOffer)
+			addValue(parametersMap, fmt.Sprintf("%sosImageSKU", agentProfile.Name), properties.WindowsProfile.GetWindowsSku())
+			addValue(parametersMap, fmt.Sprintf("%sosImagePublisher", agentProfile.Name), properties.WindowsProfile.WindowsPublisher)
+			addValue(parametersMap, fmt.Sprintf("%sosImageVersion", agentProfile.Name), properties.WindowsProfile.ImageVersion)
 		}
 
 		if !isSetVnetCidrs && properties.HostedMasterProfile != nil && len(agentProfile.VnetCidrs) != 0 {
@@ -232,15 +244,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 
 		if properties.WindowsProfile.HasCustomImage() {
 			addValue(parametersMap, "agentWindowsSourceUrl", properties.WindowsProfile.WindowsImageSourceURL)
-		} else if properties.WindowsProfile.HasImageRef() {
-			addValue(parametersMap, "agentWindowsImageResourceGroup", properties.WindowsProfile.ImageRef.ResourceGroup)
-			addValue(parametersMap, "agentWindowsImageName", properties.WindowsProfile.ImageRef.Name)
-		} else {
-			addValue(parametersMap, "agentWindowsPublisher", properties.WindowsProfile.WindowsPublisher)
-			addValue(parametersMap, "agentWindowsOffer", properties.WindowsProfile.WindowsOffer)
-			addValue(parametersMap, "agentWindowsSku", properties.WindowsProfile.GetWindowsSku())
-			addValue(parametersMap, "agentWindowsVersion", properties.WindowsProfile.ImageVersion)
-
 		}
 
 		addValue(parametersMap, "windowsDockerVersion", properties.WindowsProfile.GetWindowsDockerVersion())
