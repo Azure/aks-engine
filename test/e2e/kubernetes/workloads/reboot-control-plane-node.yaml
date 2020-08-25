@@ -42,11 +42,11 @@ spec:
             - bash
             - -c
             - >-
-              while [[ $(kubectl annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
+              while [[ $(kubectl --request-timeout 30s annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
               do sleep ${CHECK_FREQUENCY}; done;
               kubectl annotate namespace ${LOCK_NS} ${LOCK_NAME}-;
               sleep ${CHECK_DELAY};
-              while [[ $(kubectl annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
+              while [[ $(kubectl --request-timeout 30s annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
               do sleep ${CHECK_FREQUENCY}; done;
               echo >/etc/cron.d/reboot-test "* * * * * root /bin/bash -c '/bin/rm -f /etc/cron.d/reboot-test; /sbin/reboot ${FORCE}' >/var/log/RebootTest.log 2>&1";
               echo "Waiting for the reboot to happen...";
