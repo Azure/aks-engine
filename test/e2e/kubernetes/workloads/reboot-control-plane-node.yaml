@@ -44,7 +44,7 @@ spec:
             - >-
               while [[ $(kubectl --request-timeout 30s annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
               do sleep ${CHECK_FREQUENCY}; done;
-              kubectl annotate namespace ${LOCK_NS} ${LOCK_NAME}-;
+              kubectl --request-timeout 30s annotate namespace ${LOCK_NS} ${LOCK_NAME}-;
               sleep ${CHECK_DELAY};
               while [[ $(kubectl --request-timeout 30s annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
               do sleep ${CHECK_FREQUENCY}; done;
