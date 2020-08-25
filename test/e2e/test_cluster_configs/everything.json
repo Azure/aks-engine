@@ -19,7 +19,7 @@
 						"dataDir": "/mnt/docker"
 					},
 					"kubeReservedCgroup": "kubesystem",
-					"etcdVersion": "3.4.25",
+					"etcdVersion": "3.4.13",
 					"etcdStorageLimitGB": 8,
 					"clusterSubnet": "10.239.0.0/16",
 					"addons": [
