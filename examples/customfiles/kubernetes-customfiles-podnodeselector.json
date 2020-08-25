@@ -3,7 +3,7 @@
     "properties": {
       "orchestratorProfile": {
         "orchestratorType": "Kubernetes",
-        "orchestratorVersion": "1.15.11",
+        "orchestratorVersion": "1.16.14",
         "kubernetesConfig": {
           "enableRbac" : true,
           "enableAggregatedAPIs": true,

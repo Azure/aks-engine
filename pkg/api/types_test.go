@@ -42,7 +42,7 @@ const exampleAKSAPIModel = `{
 	"properties": {
 		"dnsPrefix": "agents006",
 		"fqdn": "agents006.azmk8s.io",
-		"kubernetesVersion": "1.15.11",
+		"kubernetesVersion": "1.16.14",
 		"agentPoolProfiles": [ { "name": "agentpool1", "count": 2, "vmSize": "Standard_D2_v2" } ],
 		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
 	},

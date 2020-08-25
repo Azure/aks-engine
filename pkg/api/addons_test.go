@@ -5176,13 +5176,10 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 				},
 			},
 		},
-	}
-
-	if common.IsKubernetesVersionGe(version, "1.15.0") {
-		addons = append(addons, KubernetesAddon{
+		{
 			Name:    common.PodSecurityPolicyAddonName,
 			Enabled: to.BoolPtr(true),
-		})
+		},
 	}
 
 	if !common.IsKubernetesVersionGe(version, "1.16.0") {

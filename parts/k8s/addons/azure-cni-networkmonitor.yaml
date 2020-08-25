@@ -1,8 +1,4 @@
-{{- if IsKubernetesVersionGe "1.16.0"}}
 apiVersion: apps/v1
-{{else}}
-apiVersion: extensions/v1beta1
-{{- end}}
 kind: DaemonSet
 metadata:
   name: azure-cni-networkmonitor
@@ -20,10 +16,6 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-{{- end}}
 {{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"

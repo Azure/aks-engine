@@ -284,14 +284,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetMasterKubernetesLabels": func(rg string) string {
 			return common.GetMasterKubernetesLabels(rg, false)
 		},
-		"GetMasterKubernetesLabelsDeprecated": func(rg string) string {
-			return common.GetMasterKubernetesLabels(rg, true)
-		},
 		"GetAgentKubernetesLabels": func(profile *api.AgentPoolProfile, rg string) string {
 			return profile.GetKubernetesLabels(rg, false)
-		},
-		"GetAgentKubernetesLabelsDeprecated": func(profile *api.AgentPoolProfile, rg string) string {
-			return profile.GetKubernetesLabels(rg, true)
 		},
 		"GetKubeletConfigKeyVals": func(kc *api.KubernetesConfig) string {
 			if kc == nil {

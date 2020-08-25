@@ -1,4 +1,4 @@
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rescheduler
@@ -16,14 +16,8 @@ spec:
     metadata:
       labels:
         k8s-app: rescheduler
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-{{- end}}
     spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
       priorityClassName: system-node-critical
-{{- end}}
       nodeSelector:
         kubernetes.io/os: linux
       containers:
