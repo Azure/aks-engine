@@ -151,9 +151,10 @@ docker run --rm \
 -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
 -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
 -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-"${DEV_IMAGE}" make test-kubernetes
-
-sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/deploy-junit.xml
+"${DEV_IMAGE}" make test-kubernetes || {
+  sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/deploy-junit.xml
+  exit 1
+}
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
   # shellcheck disable=SC2012
@@ -287,7 +288,10 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || exit 1
+    ${DEV_IMAGE} make test-kubernetes || {
+      sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/add-node-pool-junit.xml
+      exit 1
+    }
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
@@ -362,9 +366,10 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes
-
-    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
+    ${DEV_IMAGE} make test-kubernetes || {
+      sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
+      exit 1
+    } 
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -451,9 +456,10 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
       -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
       -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-      ${DEV_IMAGE} make test-kubernetes
-
-    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
+      ${DEV_IMAGE} make test-kubernetes || {
+        sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
+        exit 1
+      }
   done
 fi
 
@@ -529,7 +535,8 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes
-
-    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-up-junit.xml
+    ${DEV_IMAGE} make test-kubernetes || {
+      sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-up-junit.xml
+      exit 1
+    }
 fi

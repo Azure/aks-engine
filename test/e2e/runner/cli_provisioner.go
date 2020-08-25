@@ -113,7 +113,7 @@ func (cli *CLIProvisioner) provision() error {
 	}
 	os.Setenv("NAME", cli.Config.Name)
 
-	if cli.Config.PublicSSHKey == "" || cli.Config.PrivateSSHKeyPath == "" {
+	if cli.Config.PublicSSHKey == "" && cli.Config.PrivateSSHKeyPath == "" {
 		outputPath := filepath.Join(cli.Config.CurrentWorkingDir, "_output")
 		if !cli.Config.UseDeployCommand {
 			publicSSHKey, err := createSaveSSH(outputPath, cli.Config.Name+"-ssh")

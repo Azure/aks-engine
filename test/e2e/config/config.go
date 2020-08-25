@@ -44,8 +44,8 @@ type Config struct {
 	ResourceGroup       string `envconfig:"RESOURCE_GROUP" default:""`
 	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME" default:""`
 	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY" default:"false"`
-	PublicSSHKey        string `envconfig:"PUBLIC_SSH_KEY" default:""`
-	PrivateSSHKeyPath   string `envconfig:"PRIVATE_SSH_KEY_FILE" default:""`
+	PublicSSHKey        string `envconfig:"PUBLIC_SSH_KEY" default:""`       //Content of the custom Public SSH Key
+	PrivateSSHKeyPath   string `envconfig:"PRIVATE_SSH_KEY_FILE" default:""` //Relative path of the custom Private SSH Key in aks-engine
 	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND" default:"false"`
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS" default:""`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP" default:""`
@@ -196,7 +196,7 @@ func (ccc *CustomCloudConfig) SetEnvironment() error {
 			if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath))
 
 			if out, err := cmd.CombinedOutput(); err != nil {
-				log.Printf("output for python2.7:%s\n", out)
+				log.Printf("error updating Python 2.7 CA bundle:%s\n", out)
 			}
 		}
 
