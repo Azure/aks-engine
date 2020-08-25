@@ -1,0 +1,111 @@
+# How this works:
+# On every master, a pod will run that will try to get an annotation lock
+# once it gets the lock for its node, it releases it, sleeps a bit and
+# then loops until it can get it again.
+# After it gets it the second time, it will then trigger a node hard reboot
+# (Since force or double force)
+# Then, when the node (master) comes back up, it will again run this pod
+# and it will again see it has the annotation and will release it, letting
+# another node race to get it.
+# Works with ubuntu 16.04 and 18.04 on kubernetes 1.15+  (may work earlier)
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: reboot-test
+  name: reboot-test
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: reboot-test
+  template:
+    metadata:
+      labels:
+        app: reboot-test
+    spec:
+      # This restricts this to masters
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.azure.com/role
+                    operator: In
+                    values:
+                      - master
+      containers:
+        - name: reboot-test
+          image: ubuntu:18.04
+          imagePullPolicy: IfNotPresent
+          command:
+            - bash
+            - -c
+            - >-
+              while [[ $(kubectl annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
+              do sleep ${CHECK_FREQUENCY}; done;
+              kubectl annotate namespace ${LOCK_NS} ${LOCK_NAME}-;
+              sleep ${CHECK_DELAY};
+              while [[ $(kubectl annotate namespace ${LOCK_NS} ${LOCK_NAME}=${NODE_ID} 2>&1) != *\(${NODE_ID}\)* ]];
+              do sleep ${CHECK_FREQUENCY}; done;
+              echo >/etc/cron.d/reboot-test "* * * * * root /bin/bash -c '/bin/rm -f /etc/cron.d/reboot-test; /sbin/reboot ${FORCE}' >/var/log/RebootTest.log 2>&1";
+              echo "Waiting for the reboot to happen...";
+              sleep 1000
+          env:
+            - name: KUBECONFIG
+              value: /.kubeconfig
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: LOCK_NS
+              value: default
+            - name: LOCK_NAME
+              value: RebootTest
+              # CHECK_DELAY should be larger than CHECK_FREQUENCY to randomize who reboots
+            - name: CHECK_DELAY
+              value: 60s
+            - name: CHECK_FREQUENCY
+              value: 30s
+            - name: FORCE
+              value: --force
+              # For harder reboot, without process kill, use double-force...
+              # value: --force --force
+          volumeMounts:
+            - name: node-crond
+              mountPath: /etc/cron.d
+            - name: kubectl
+              mountPath: /usr/local/bin/kubectl
+              readOnly: true
+            - name: kubeconfig
+              mountPath: /.kubeconfig
+              readOnly: true
+            - name: certs
+              mountPath: /etc/kubernetes/certs
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 0
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - hostPath:
+            path: /etc/cron.d
+          name: node-crond
+        - hostPath:
+            path: /etc/kubernetes/certs
+          name: certs
+        - hostPath:
+            path: /var/lib/kubelet/kubeconfig
+          name: kubeconfig
+        - hostPath:
+            path: /usr/local/bin/kubectl
+          name: kubectl
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate

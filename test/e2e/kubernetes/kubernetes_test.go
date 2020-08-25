@@ -114,6 +114,10 @@ var _ = BeforeSuite(func() {
 	kubeConfig, getKubeConfigError = GetConfigWithRetry(3*time.Second, cfg.Timeout)
 	Expect(getKubeConfigError).NotTo(HaveOccurred())
 
+	if cfg.RebootControlPlaneNodes {
+		cfg.BlockSSHPort = true
+	}
+
 	if !cfg.BlockSSHPort {
 		var err error
 		masterName := masterNodes[0].Metadata.Name
@@ -682,7 +686,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have node labels and annotations added by E2E test runner", func() {
 			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
-				cfg.AddNodePoolInput == "" {
+				cfg.AddNodePoolInput == "" && !cfg.RebootControlPlaneNodes {
 				totalNodeCount := eng.NodeCount()
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
@@ -901,6 +905,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
+		})
+
+		It("should be able to run a node reboot daemonset", func() {
+			if cfg.RebootControlPlaneNodes {
+				_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "reboot-control-plane-node.yaml"), "reboot-test", "default", 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				pods, err := pod.GetAllRunningByLabelWithRetry("app", "reboot-test", "default", 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pods).NotTo(BeEmpty())
+			}
 		})
 
 		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
