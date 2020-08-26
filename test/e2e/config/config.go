@@ -189,22 +189,17 @@ func (ccc *CustomCloudConfig) SetEnvironment() error {
 	// as azure-cli complains otherwise
 	azsSelfSignedCaPath := "/aks-engine/Certificates.pem"
 	if _, err = os.Stat(azsSelfSignedCaPath); err == nil {
+		devImagePython := "python3"
 		// include cacert.pem from python2.7 path for upgrade scenario
 		if _, err := os.Stat("/usr/local/lib/python2.7/dist-packages/certifi/cacert.pem"); err == nil {
-			cmd := exec.Command("/bin/bash", "-c",
-				fmt.Sprintf(`CA=/usr/local/lib/python2.7/dist-packages/certifi/cacert.pem;
-			if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath))
-
-			if out, err := cmd.CombinedOutput(); err != nil {
-				log.Printf("error updating Python 2.7 CA bundle:%s\n", out)
-			}
+			devImagePython = "python"
 		}
 
 		// latest dev_image has an azure-cli version that requires python3
 		cmd := exec.Command("/bin/bash", "-c",
-			fmt.Sprintf(`VER=$(python3 -V | grep -o [0-9].[0-9]*. | grep -o [0-9].[0-9]*);
+			fmt.Sprintf(`VER=$(%s -V | grep -o [0-9].[0-9]*. | grep -o [0-9].[0-9]*);
 		CA=/usr/local/lib/python${VER}/dist-packages/certifi/cacert.pem;
-		if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath))
+		if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, devImagePython, azsSelfSignedCaPath))
 
 		if out, err := cmd.CombinedOutput(); err != nil {
 			log.Printf("output:%s\n", out)

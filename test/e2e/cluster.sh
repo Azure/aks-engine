@@ -50,6 +50,18 @@ if [ -n "$PRIVATE_SSH_KEY_FILE" ]; then
   PRIVATE_SSH_KEY_FILE=$(realpath --relative-to=$(pwd) ${PRIVATE_SSH_KEY_FILE})
 fi
 
+function tryExit {
+  if [ "${AZURE_ENV}" != "AzureStackCloud" ]; then
+    exit 1
+  fi
+}
+
+function moveStageJunit {
+  if [ "${AZURE_ENV}" == "AzureStackCloud" ]; then
+    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/${1}-junit.xml
+  fi
+}
+
 echo "Running E2E tests against a cluster built with the following API model:"
 cat ${TMP_DIR}/apimodel-input.json
 
@@ -151,10 +163,7 @@ docker run --rm \
 -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
 -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
 -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-"${DEV_IMAGE}" make test-kubernetes || {
-  sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/deploy-junit.xml
-  exit 1
-}
+"${DEV_IMAGE}" make test-kubernetes || tryExit && moveStageJunit "deploy"
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
   # shellcheck disable=SC2012
@@ -288,10 +297,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || {
-      sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/add-node-pool-junit.xml
-      exit 1
-    }
+    ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "add-node-pool"
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
@@ -366,10 +372,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || {
-      sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
-      exit 1
-    } 
+    ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "scale-down"
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -456,10 +459,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
       -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
       -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-      ${DEV_IMAGE} make test-kubernetes || {
-        sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-down-junit.xml
-        exit 1
-      }
+      ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "upgrade"
   done
 fi
 
@@ -535,8 +535,5 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || {
-      sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/scale-up-junit.xml
-      exit 1
-    }
+    ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "scale-up"
 fi

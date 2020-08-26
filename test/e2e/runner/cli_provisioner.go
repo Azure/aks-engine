@@ -122,6 +122,8 @@ func (cli *CLIProvisioner) provision() error {
 			}
 			os.Setenv("PUBLIC_SSH_KEY", publicSSHKey)
 		}
+	} else if cli.Config.PublicSSHKey == "" || cli.Config.PrivateSSHKeyPath == "" {
+		return errors.Errorf("Error validating SSH keys, variable PUBLIC_SSH_KEY_FILE or PRIVATE_SSH_KEY_FILE not set")
 	}
 
 	os.Setenv("DNS_PREFIX", cli.Config.Name)
