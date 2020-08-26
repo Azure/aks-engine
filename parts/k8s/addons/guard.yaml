@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: guard
+  namespace: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  TENANT_ID: {{ContainerConfigBase64 "tenantID"}}
+  SUBSCRIPTION_ID: {{ContainerConfigBase64 "subscriptionID"}}
+  RESOURCE_GROUP: {{ContainerConfigBase64 "resourceGroup"}}
+  CONNECTED_CLUSTER: {{ContainerConfigBase64 "clusterName"}}
+  LOCATION: {{ContainerConfigBase64 "location"}}
+  CLIENT_ID: {{ContainerConfigBase64 "clientID"}}
+  CLIENT_SECRET: {{ContainerConfigBase64 "clientSecret"}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: guard
+  namespace: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: guard
+    namespace: guard
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: guard
+  namespace: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+spec:
+  template:
+    spec:
+      volumes:
+      - name: guard-manifests
+        hostPath:
+          path: /etc/kubernetes/guard
+          type: DirectoryOrCreate
+      serviceAccountName: guard
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
+      containers:
+      - name: guard
+        image: delanyo32/guard:latest
+        volumeMounts:
+        - name: guard-manifests
+          mountPath: /etc/kubernetes/guard
+        env:
+        - name: TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: TENANT_ID
+        - name: SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: SUBSCRIPTION_ID
+        - name: RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: RESOURCE_GROUP
+        - name: CONNECTED_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: CONNECTED_CLUSTER
+        - name: LOCATION
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: LOCATION
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: CLIENT_ID
+        - name: CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: CLIENT_SECRET
+      restartPolicy: Never
+  backoffLimit: 4

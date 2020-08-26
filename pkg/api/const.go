@@ -190,6 +190,8 @@ const (
 	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultArcAddonEnabled determines the aks-engine provided default for enabling arc addon
 	DefaultAzureArcOnboardingAddonEnabled = false
+	// DefaultGuardAddonEnabled determines the aks-engine provided default for enabling kubernetes active directory intergration
+	DefaultGuardAddonEnabled = false
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// DefaultPrivateClusterHostsConfigAgentEnabled enables the hosts config agent for private cluster

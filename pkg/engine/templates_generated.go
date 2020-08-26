@@ -53,6 +53,7 @@
 // ../../parts/k8s/addons/container-monitoring.yaml
 // ../../parts/k8s/addons/coredns.yaml
 // ../../parts/k8s/addons/flannel.yaml
+// ../../parts/k8s/addons/guard.yaml
 // ../../parts/k8s/addons/ip-masq-agent.yaml
 // ../../parts/k8s/addons/keyvault-flexvolume.yaml
 // ../../parts/k8s/addons/kube-dns.yaml
@@ -15525,6 +15526,132 @@ func k8sAddonsFlannelYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddonsGuardYaml = []byte(`apiVersion: v1
+kind: Namespace
+metadata:
+  name: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: guard
+  namespace: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  TENANT_ID: {{ContainerConfigBase64 "tenantID"}}
+  SUBSCRIPTION_ID: {{ContainerConfigBase64 "subscriptionID"}}
+  RESOURCE_GROUP: {{ContainerConfigBase64 "resourceGroup"}}
+  CONNECTED_CLUSTER: {{ContainerConfigBase64 "clusterName"}}
+  LOCATION: {{ContainerConfigBase64 "location"}}
+  CLIENT_ID: {{ContainerConfigBase64 "clientID"}}
+  CLIENT_SECRET: {{ContainerConfigBase64 "clientSecret"}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: guard
+  namespace: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: guard
+    namespace: guard
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: guard
+  namespace: guard
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+spec:
+  template:
+    spec:
+      volumes:
+      - name: guard-manifests
+        hostPath:
+          path: /etc/kubernetes/guard
+          type: DirectoryOrCreate
+      serviceAccountName: guard
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        kubernetes.io/os: linux
+      containers:
+      - name: guard
+        image: delanyo32/guard:latest
+        volumeMounts:
+        - name: guard-manifests
+          mountPath: /etc/kubernetes/guard
+        env:
+        - name: TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: TENANT_ID
+        - name: SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: SUBSCRIPTION_ID
+        - name: RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: RESOURCE_GROUP
+        - name: CONNECTED_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: CONNECTED_CLUSTER
+        - name: LOCATION
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: LOCATION
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: CLIENT_ID
+        - name: CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: guard
+              key: CLIENT_SECRET
+      restartPolicy: Never
+  backoffLimit: 4
+`)
+
+func k8sAddonsGuardYamlBytes() ([]byte, error) {
+	return _k8sAddonsGuardYaml, nil
+}
+
+func k8sAddonsGuardYaml() (*asset, error) {
+	bytes, err := k8sAddonsGuardYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/guard.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsIpMasqAgentYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: DaemonSet
 metadata:
@@ -29302,6 +29429,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/container-monitoring.yaml":                               k8sAddonsContainerMonitoringYaml,
 	"k8s/addons/coredns.yaml":                                            k8sAddonsCorednsYaml,
 	"k8s/addons/flannel.yaml":                                            k8sAddonsFlannelYaml,
+	"k8s/addons/guard.yaml":                                              k8sAddonsGuardYaml,
 	"k8s/addons/ip-masq-agent.yaml":                                      k8sAddonsIpMasqAgentYaml,
 	"k8s/addons/keyvault-flexvolume.yaml":                                k8sAddonsKeyvaultFlexvolumeYaml,
 	"k8s/addons/kube-dns.yaml":                                           k8sAddonsKubeDnsYaml,
@@ -29498,6 +29626,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"container-monitoring.yaml":             {k8sAddonsContainerMonitoringYaml, map[string]*bintree{}},
 			"coredns.yaml":                          {k8sAddonsCorednsYaml, map[string]*bintree{}},
 			"flannel.yaml":                          {k8sAddonsFlannelYaml, map[string]*bintree{}},
+			"guard.yaml":                            {k8sAddonsGuardYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                    {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"keyvault-flexvolume.yaml":              {k8sAddonsKeyvaultFlexvolumeYaml, map[string]*bintree{}},
 			"kube-dns.yaml":                         {k8sAddonsKubeDnsYaml, map[string]*bintree{}},

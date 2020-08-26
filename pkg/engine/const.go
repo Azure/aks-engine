@@ -261,6 +261,8 @@ const (
 	secretsStoreCSIDriverAddonDestinationFileName  string = "secrets-store-csi-driver.yaml"
 	connectedClusterAddonSourceFilename            string = "arc-onboarding.yaml"
 	connectedClusterAddonDestinationFilename       string = "arc-onboarding.yaml"
+	guardAddonSourceFilename                       string = "guard.yaml"
+	guardAddonDestinationFilename                  string = "guard.yaml"
 )
 
 // components source and destination file references

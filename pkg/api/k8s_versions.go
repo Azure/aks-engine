@@ -62,6 +62,7 @@ const (
 	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
 	azureArcOnboardingImageReference                  string = "arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0"
 	azureKMSProviderImageReference                    string = "k8s/kms/keyvault:v0.0.9"
+	guardImageReference                               string = "delanyo32/guard-onboarding:latest"
 )
 
 var kubernetesImageBaseDefaultImages = map[string]map[string]string{
@@ -527,6 +528,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
+			common.GuardAddonName:                             guardImageReference,
 		}
 	case "1.18":
 		ret = map[string]string{
@@ -612,6 +614,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
+			common.GuardAddonName:                             guardImageReference,
 		}
 	case "1.17":
 		ret = map[string]string{
@@ -695,6 +698,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
+			common.GuardAddonName:                             guardImageReference,
 		}
 	case "1.16":
 		ret = map[string]string{
@@ -774,6 +778,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
+			common.GuardAddonName:                             guardImageReference,
 		}
 	case "1.15":
 		ret = map[string]string{
@@ -849,6 +854,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
+			common.GuardAddonName:                             guardImageReference,
 		}
 	case "1.14":
 		ret = map[string]string{

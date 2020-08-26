@@ -894,6 +894,17 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultGuardAddonsConfig := KubernetesAddon{
+		Name:    common.GuardAddonName,
+		Enabled: to.BoolPtr(DefaultGuardAddonEnabled),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.GuardAddonName,
+				Image: k8sComponents[common.GuardAddonName],
+			},
+		},
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -935,6 +946,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultScheduledMaintenanceAddonsConfig,
 		defaultSecretsStoreCSIDriverAddonsConfig,
 		defaultAzureArcOnboardingAddonsConfig,
+		defaultGuardAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

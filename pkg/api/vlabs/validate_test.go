@@ -5538,3 +5538,31 @@ func TestValidateConnectedClusterProfile(t *testing.T) {
 		}
 	})
 }
+
+func TestValidateGuardIntergration(t *testing.T) {
+	addon := &KubernetesAddon{}
+
+	t.Run("incomplete guard intergration config", func(t *testing.T) {
+		err := addon.validateGuardAddonConfig()
+		expected := errors.New("guard addon configuration must have a 'location' property; guard addon configuration must have a 'tenantID' property; guard addon configuration must have a 'subscriptionID' property; guard addon configuration must have a 'resourceGroup' property; guard addon configuration must have a 'clusterName' property; guard addon configuration must have a 'clientID' property; guard addon configuration must have a 'clientSecret' property")
+		if !helpers.EqualError(err, expected) {
+			t.Errorf("expected error: %v, got: %v", expected, err)
+		}
+	})
+
+	addon.Config = make(map[string]string)
+	addon.Config["location"] = "location"
+	addon.Config["tenantID"] = "tenantID"
+	addon.Config["subscriptionID"] = "subscriptionID"
+	addon.Config["resourceGroup"] = "resourceGroup"
+	addon.Config["clusterName"] = "clusterName"
+	addon.Config["clientID"] = "clientID"
+	addon.Config["clientSecret"] = "clientSecret"
+
+	t.Run("complete connected cluster profile", func(t *testing.T) {
+		err := addon.validateGuardAddonConfig()
+		if err != nil {
+			t.Errorf("error not expected, got: %v", err)
+		}
+	})
+}
