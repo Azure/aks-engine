@@ -6430,7 +6430,7 @@ data:
 
 ---
 {{- /* Source: calico/templates/kdd-crds.yaml */}}
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
@@ -6446,7 +6446,7 @@ spec:
     singular: felixconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
@@ -6462,7 +6462,7 @@ spec:
     singular: bgpconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
@@ -6478,7 +6478,7 @@ spec:
     singular: ippool
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
@@ -6494,7 +6494,7 @@ spec:
     singular: hostendpoint
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
@@ -6510,7 +6510,7 @@ spec:
     singular: clusterinformation
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
@@ -6526,7 +6526,7 @@ spec:
     singular: globalnetworkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
@@ -6542,7 +6542,7 @@ spec:
     singular: globalnetworkset
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
@@ -6558,7 +6558,7 @@ spec:
     singular: networkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
@@ -7216,7 +7216,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: azureassignedidentities.aadpodidentity.k8s.io
@@ -7231,7 +7231,7 @@ spec:
     plural: azureassignedidentities
   scope: Namespaced
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: azureidentitybindings.aadpodidentity.k8s.io
@@ -7246,7 +7246,7 @@ spec:
     plural: azureidentitybindings
   scope: Namespaced
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: azureidentities.aadpodidentity.k8s.io
@@ -7262,7 +7262,7 @@ spec:
     plural: azureidentities
   scope: Namespaced
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: azurepodidentityexceptions.aadpodidentity.k8s.io
@@ -7496,7 +7496,7 @@ spec:
         - name: MIC_POD_NAMESPACE
           valueFrom:
             fieldRef:
-              fieldPath: metadata.namespace                
+              fieldPath: metadata.namespace
         resources:
           requests:
             cpu: {{ContainerCPUReqs "mic"}}
@@ -7681,7 +7681,7 @@ func k8sAddonsAciConnectorYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsAntreaYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
+var _k8sAddonsAntreaYaml = []byte(`apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -7702,7 +7702,7 @@ spec:
     served: true
     storage: true
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -9151,7 +9151,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-system
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -9593,7 +9593,7 @@ webhooks:
   sideEffects: None
   timeoutSeconds: 5
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
@@ -9874,7 +9874,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 # Source: azuredisk-csi-driver/templates/crd-csi-node-info.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
@@ -10768,7 +10768,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 # Source: azuredisk-csi-driver/templates/crd-csi-snapshot.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -10918,7 +10918,7 @@ status:
   storedVersions: []
 ---
 # Source: azuredisk-csi-driver/templates/crd-csi-snapshot.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -10992,7 +10992,7 @@ status:
   storedVersions: []
 ---
 # Source: azuredisk-csi-driver/templates/crd-csi-snapshot.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -11251,7 +11251,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 # Source: azurefile-csi-driver/templates/crd-csi-node-info.yaml
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
@@ -12180,7 +12180,7 @@ data:
 
 ---
 {{- /* Source: calico/templates/kdd-crds.yaml */}}
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
@@ -12196,7 +12196,7 @@ spec:
     singular: felixconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
@@ -12212,7 +12212,7 @@ spec:
     singular: bgpconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
@@ -12228,7 +12228,7 @@ spec:
     singular: ippool
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
@@ -12244,7 +12244,7 @@ spec:
     singular: hostendpoint
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
@@ -12260,7 +12260,7 @@ spec:
     singular: clusterinformation
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
@@ -12276,7 +12276,7 @@ spec:
     singular: globalnetworkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
@@ -12292,7 +12292,7 @@ spec:
     singular: globalnetworkset
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
@@ -12308,7 +12308,7 @@ spec:
     singular: networkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
@@ -14944,7 +14944,7 @@ spec:
       port: 25227
       targetPort: in-rs-tcp
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   name: healthstates.azmon.container.insights
@@ -16623,7 +16623,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-apiVersion: apiregistration.k8s.io/v1beta1
+apiVersion: apiregistration.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: APIService
 metadata:
   name: v1beta1.metrics.k8s.io
@@ -17486,7 +17486,7 @@ subjects:
   name: secrets-store-csi-driver
   namespace: kube-system
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -17594,7 +17594,7 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
