@@ -189,13 +189,13 @@ func (ccc *CustomCloudConfig) SetEnvironment() error {
 	// as azure-cli complains otherwise
 	azsSelfSignedCaPath := "/aks-engine/Certificates.pem"
 	if _, err = os.Stat(azsSelfSignedCaPath); err == nil {
+		// latest dev_image has an azure-cli version that requires python3
 		devImagePython := "python3"
 		// include cacert.pem from python2.7 path for upgrade scenario
 		if _, err := os.Stat("/usr/local/lib/python2.7/dist-packages/certifi/cacert.pem"); err == nil {
 			devImagePython = "python"
 		}
 
-		// latest dev_image has an azure-cli version that requires python3
 		cmd := exec.Command("/bin/bash", "-c",
 			fmt.Sprintf(`VER=$(%s -V | grep -o [0-9].[0-9]*. | grep -o [0-9].[0-9]*);
 		CA=/usr/local/lib/python${VER}/dist-packages/certifi/cacert.pem;
