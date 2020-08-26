@@ -49,7 +49,7 @@ const (
 	defaultCordonDrainTimeout          = time.Minute * 20
 	nodePropertiesCopyTimeout          = time.Minute * 5
 	getResourceTimeout                 = time.Minute * 1
-	clusterUpgradeTimeout              = time.Minute * 180
+	perNodeUpgradeTimeout              = time.Minute * 20
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
 	vmStatusIgnored
@@ -75,9 +75,13 @@ func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clus
 
 // RunUpgrade runs the upgrade pipeline
 func (ku *Upgrader) RunUpgrade() error {
-	ctx, cancel := context.WithTimeout(context.Background(), clusterUpgradeTimeout)
-	defer cancel()
-	if err := ku.upgradeMasterNodes(ctx); err != nil {
+	controlPlaneUpgradeTimeout := perNodeUpgradeTimeout
+	if ku.ClusterTopology.DataModel.Properties.MasterProfile.Count > 0 {
+		controlPlaneUpgradeTimeout = perNodeUpgradeTimeout * time.Duration(ku.ClusterTopology.DataModel.Properties.MasterProfile.Count)
+	}
+	ctxControlPlane, cancelControlPlane := context.WithTimeout(context.Background(), controlPlaneUpgradeTimeout)
+	defer cancelControlPlane()
+	if err := ku.upgradeMasterNodes(ctxControlPlane); err != nil {
 		return err
 	}
 
@@ -87,12 +91,22 @@ func (ku *Upgrader) RunUpgrade() error {
 		return nil
 	}
 
-	if err := ku.upgradeAgentScaleSets(ctx); err != nil {
+	var numNodesToUpgrade int
+	for _, pool := range ku.ClusterTopology.AgentPoolScaleSetsToUpgrade {
+		numNodesToUpgrade += len(pool.VMsToUpgrade)
+	}
+	nodesUpgradeTimeout := perNodeUpgradeTimeout
+	if numNodesToUpgrade > 0 {
+		nodesUpgradeTimeout = perNodeUpgradeTimeout * time.Duration(numNodesToUpgrade)
+	}
+	ctxNodes, cancelNodes := context.WithTimeout(context.Background(), nodesUpgradeTimeout)
+	defer cancelNodes()
+	if err := ku.upgradeAgentScaleSets(ctxNodes); err != nil {
 		return err
 	}
 
 	//This is handling VMAS VMs only, not VMSS
-	return ku.upgradeAgentPools(ctx)
+	return ku.upgradeAgentPools(ctxNodes)
 }
 
 // handleUnreconcilableAddons ensures addon upgrades that addon-manager cannot handle by itself.
