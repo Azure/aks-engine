@@ -75,7 +75,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2]",
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7]",
 		},
 		"should error when KubernetesConfig has containerdVersion value for docker container runtime": {
 			properties: &Properties{
@@ -83,18 +83,8 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					OrchestratorType: "Kubernetes",
 					KubernetesConfig: &KubernetesConfig{
 						ContainerRuntime:  Docker,
-						ContainerdVersion: "1.0.0",
-					},
-				},
-			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd),
-		},
-		"should error when KubernetesConfig has containerdVersion value for default (empty string) container runtime": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					KubernetesConfig: &KubernetesConfig{
-						ContainerdVersion: "1.0.0",
+						MobyVersion:       "3.0.11",
+						ContainerdVersion: "1.3.2",
 					},
 				},
 			},
@@ -330,6 +320,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 
 	for testName, test := range tests {
 		test := test
+		testName := testName
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 			err := test.properties.ValidateOrchestratorProfile(test.isUpdate)

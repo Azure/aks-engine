@@ -80,6 +80,7 @@ installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
 MOBY_VERSION="19.03.12"
+CONTAINERD_VERSION="1.3.7"
 installMoby
 systemctl start docker
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}

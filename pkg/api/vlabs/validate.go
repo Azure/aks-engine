@@ -15,6 +15,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/versions"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
@@ -37,7 +38,7 @@ var (
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
 		"3.2.0", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.2.5", "3.2.6", "3.2.7", "3.2.8", "3.2.9", "3.2.11", "3.2.12",
 		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.2.26", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10", "3.3.13", "3.3.15", "3.3.18", "3.3.19", "3.3.22"}
-	containerdValidVersions              = [...]string{"1.3.2"}
+	containerdValidVersions              = [...]string{"1.3.2", "1.3.3", "1.3.4", "1.3.5", "1.3.6", "1.3.7"}
 	kubernetesImageBaseTypeValidVersions = [...]string{"", common.KubernetesImageBaseTypeGCR, common.KubernetesImageBaseTypeMCR}
 	cachingTypesValidValues              = [...]string{"", string(compute.CachingTypesNone), string(compute.CachingTypesReadWrite), string(compute.CachingTypesReadOnly)}
 	networkPluginPlusPolicyAllowed       = []k8sNetworkConfig{
@@ -1606,13 +1607,12 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 
 	// Validate containerd scenarios
 	if k.ContainerRuntime == Docker || k.ContainerRuntime == "" {
-		if k.ContainerdVersion != "" {
+		if k.MobyVersion != "" && k.ContainerdVersion != "" && versions.LessThan(k.MobyVersion, "19.03") {
 			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd)
 		}
-	} else {
-		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
-			return e
-		}
+	}
+	if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
+		return e
 	}
 
 	if to.Bool(k.UseCloudControllerManager) || k.CustomCcmImage != "" {
