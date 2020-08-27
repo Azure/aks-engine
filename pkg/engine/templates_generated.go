@@ -6430,7 +6430,7 @@ data:
 
 ---
 {{- /* Source: calico/templates/kdd-crds.yaml */}}
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
@@ -6446,7 +6446,7 @@ spec:
     singular: felixconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
@@ -6462,7 +6462,7 @@ spec:
     singular: bgpconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
@@ -6478,7 +6478,7 @@ spec:
     singular: ippool
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
@@ -6494,7 +6494,7 @@ spec:
     singular: hostendpoint
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
@@ -6510,7 +6510,7 @@ spec:
     singular: clusterinformation
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
@@ -6526,7 +6526,7 @@ spec:
     singular: globalnetworkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
@@ -6542,7 +6542,7 @@ spec:
     singular: globalnetworkset
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
@@ -6558,7 +6558,7 @@ spec:
     singular: networkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
