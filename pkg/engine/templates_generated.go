@@ -20508,6 +20508,9 @@ container_runtime_monitoring() {
       fi
       systemctl kill --kill-who=main "${container_runtime_name}"
       sleep 120
+      if ! systemctl is-active ${container_runtime_name}; then
+        systemctl start ${container_runtime_name}
+      fi
     else
       sleep "${SLEEP_SECONDS}"
     fi
@@ -20525,6 +20528,9 @@ kubelet_monitoring() {
       echo "Kubelet is unhealthy!"
       systemctl kill kubelet
       sleep 60
+      if ! systemctl is-active kubelet; then
+        systemctl start kubelet
+      fi
     else
       sleep "${SLEEP_SECONDS}"
     fi
