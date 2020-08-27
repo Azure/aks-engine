@@ -2645,16 +2645,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				systemdValidateScript := "systemd-validate.sh"
 				err = sshConn.CopyTo(systemdValidateScript)
 				Expect(err).NotTo(HaveOccurred())
-				envString := fmt.Sprintf("MASTER_NODE=true")
-				systemdValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, systemdValidateScript)
+				systemdValidationCommand := fmt.Sprintf("/tmp/%s", systemdValidateScript)
 				err = sshConn.Execute(systemdValidationCommand, false)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
 					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
 						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+systemdValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						envString = fmt.Sprintf("MASTER_NODE=%t", n.HasSubstring([]string{common.LegacyControlPlaneVMPrefix}))
-						systemdValidationCommand = fmt.Sprintf("%s /tmp/%s", envString, systemdValidateScript)
+						systemdValidationCommand = fmt.Sprintf("/tmp/%s", systemdValidateScript)
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, systemdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
