@@ -20508,6 +20508,9 @@ container_runtime_monitoring() {
       fi
       systemctl kill --kill-who=main "${container_runtime_name}"
       sleep 120
+      if ! systemctl is-active ${container_runtime_name}; then
+        systemctl start ${container_runtime_name}
+      fi
     else
       sleep "${SLEEP_SECONDS}"
     fi
@@ -20525,6 +20528,9 @@ kubelet_monitoring() {
       echo "Kubelet is unhealthy!"
       systemctl kill kubelet
       sleep 60
+      if ! systemctl is-active kubelet; then
+        systemctl start kubelet
+      fi
     else
       sleep "${SLEEP_SECONDS}"
     fi
@@ -21692,6 +21698,7 @@ write_files:
   owner: root
   content: |
     [Service]
+    Restart=always
     ExecStart=
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
@@ -22273,6 +22280,7 @@ write_files:
   owner: root
   content: |
     [Service]
+    Restart=always
     ExecStart=
     {{- if .IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
