@@ -65,7 +65,6 @@ jobs:
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     enableKMSEncryption: false
-    rebootControlPlaneNodes: true
 
 - template: e2e-job-template.yaml
   parameters:
