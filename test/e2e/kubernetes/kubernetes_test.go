@@ -2635,5 +2635,31 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("Onboarding connected cluster was not requested")
 			}
 		})
+
+		It("should have resilient kubelet and docker systemd services", func() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				systemdValidateScript := "systemd-validate.sh"
+				err = sshConn.CopyTo(systemdValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				systemdValidationCommand := fmt.Sprintf("/tmp/%s", systemdValidateScript)
+				err = sshConn.Execute(systemdValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
+				for _, n := range nodes {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+systemdValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						systemdValidationCommand = fmt.Sprintf("/tmp/%s", systemdValidateScript)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, systemdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
 	})
 })
