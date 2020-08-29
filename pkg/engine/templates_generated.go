@@ -7496,7 +7496,7 @@ spec:
         - name: MIC_POD_NAMESPACE
           valueFrom:
             fieldRef:
-              fieldPath: metadata.namespace                
+              fieldPath: metadata.namespace
         resources:
           requests:
             cpu: {{ContainerCPUReqs "mic"}}
@@ -16623,7 +16623,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-apiVersion: apiregistration.k8s.io/v1beta1
+apiVersion: apiregistration.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: APIService
 metadata:
   name: v1beta1.metrics.k8s.io
