@@ -164,35 +164,11 @@ The list below includes the addons currently unsupported on Azure Stack Hub:
 * Rescheduler
 * SMB Flex Volume
 
-### Agent Nodes Internet Connectivity
-
-Your agent nodes may lose internet connectivity after all Kubernetes services of type `LoadBalancer` are deleted. You are not expected to experience this problem if no services of type `LoadBalancer` are ever created.
-
-To work around this issue, do not delete `LoadBalancer` services as part of your release pipeline or always keep a dummy service.
-
 ### Limited Number of Frontend Public IPs
 
 The `Basic` load balancer SKU available on Azure Stack Hub limits the number of frontend IPs to 5. That implies that each cluster's agents pool is limited to 5 public IPs.
 
 If you need to expose more than 5 services, then the recommendation is to route traffic to those services using an Ingress controller.
-
-### Single agent pool
-
-Currently, Azure Stack Hub only supports the `Basic` load balancer SKU.
-This SKU [limits](https://docs.microsoft.com/en-us/azure/load-balancer/concepts-limitations#skus)
-the backend pool endpoints to virtual machines in a single availability set (or virtual machine scale set).
-This implies that all replicas of a `LoadBalancer` service should be deployed on the same agent pool
-and it also implies that each individual cluster can either have a Linux `LoadBalancer` service or
-a Windows `LoadBalancer` service.
-
-You can force Kubernetes to create pods in a specific agent pool by adding [node selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) "`agentpool: MY_POOL_NAME`" in your pod template.
-
-```yaml
-nodeSelector:
-  agentpool: linuxpool
-```
-
-If a `LoadBalancer` service was already created in your cluster, you can find out which agent pool was selected as the load balancer's backend pool by inspecting the load balancer `backend pools` blade in the Azure Stack Hub portal. Once you have that information, you can specify the target agent pool by updating your deployment/pod yaml (as explained in the previous paragraph).
 
 ### Upgrade from private-preview Kubernetes cluster with Windows nodes
 
