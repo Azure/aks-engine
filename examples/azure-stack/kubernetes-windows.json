@@ -4,7 +4,8 @@
     "properties": {
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
-            "orchestratorRelease": "1.15",
+            "orchestratorRelease": "1.17",
+            "orchestratorVersion": "1.17.11",
             "kubernetesConfig": {
                 "cloudProviderBackoff": true,
                 "cloudProviderBackoffRetries": 1,
@@ -17,7 +18,7 @@
                 "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
                 "useInstanceMetadata": false,
                 "networkPlugin": "azure",
-                "networkPolicy": "",
+                "networkPolicy": "azure",
                 "kubeletConfig": {
                     "--node-status-update-frequency": "1m"
                 },
@@ -62,11 +63,7 @@
         "windowsProfile": {
             "adminUsername": "azureuser",
             "adminPassword": "",
-            "sshEnabled": true,
-            "windowsPublisher": "microsoft-aks",
-            "windowsOffer": "aks-windows",
-            "windowsSku": "2019-datacenter-core-smalldisk-2005",
-            "imageVersion": "17763.1217.200513"
+            "sshEnabled": true
         },
         "linuxProfile": {
             "adminUsername": "azureuser",
