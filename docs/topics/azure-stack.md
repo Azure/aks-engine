@@ -172,7 +172,7 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 ### Upgrade from private-preview Kubernetes cluster with Windows nodes
 
-There is no official support for private-preview Kubernetes cluster with Windows nodes created with aks-engine v0.43.1 to upgrade with aks-engine v0.55.0. Users are encouraged to deploy new Kubernetes cluster with Windows nodes with the latest aks-engine version.
+There is no official support for private-preview Kubernetes cluster with Windows nodes created with AKS Engine v0.43.1 to upgrade with AKS Engine v0.55.0. Users are encouraged to deploy new Kubernetes cluster with Windows nodes with the latest AKS Engine version.
 
 ## Frequently Asked Questions
 
