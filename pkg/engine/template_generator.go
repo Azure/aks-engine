@@ -909,6 +909,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IndentString": func(original string, spaces int) string {
 			return common.IndentString(original, spaces)
 		},
+		"IsGuardAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.GuardAddonName)
+		},
 	}
 }
 

@@ -22132,6 +22132,30 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+{{- if IsGuardAddonEnabled}}
+- path: /etc/kubernetes/guard/guard-authn-webhook.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+    apiVersion: v1
+    kind: Config
+    clusters: []
+    contexts: []
+    users: [] 
+#EOF
+
+- path: /etc/kubernetes/guard/guard-authz-webhook.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+    apiVersion: v1
+    kind: Config
+    clusters: []
+    contexts: []
+    users: [] 
+#EOF
+{{end}}
+
 disk_setup:
   /dev/disk/azure/scsi1/lun0:
     table_type: gpt
@@ -22157,6 +22181,7 @@ runcmd:
 - set -x
 - source {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
+
 `)
 
 func k8sCloudInitMasternodecustomdataYmlBytes() ([]byte, error) {
