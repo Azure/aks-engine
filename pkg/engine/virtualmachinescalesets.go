@@ -85,7 +85,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
 
 	if hasAvailabilityZones {
-		virtualMachine.Zones = to.StringPtr("[parameters('availabilityZones')]")
+		virtualMachine.Zones = &[]string{"[parameters('availabilityZones')]"}
 	}
 
 	if userAssignedIDEnabled {
@@ -417,7 +417,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	addCustomTagsToVMScaleSets(profile.CustomVMTags, &virtualMachineScaleSet)
 
 	if profile.HasAvailabilityZones() {
-		virtualMachineScaleSet.Zones = to.StringPtr(fmt.Sprintf("[parameters('%sAvailabilityZones')]", profile.Name))
+		virtualMachineScaleSet.Zones = &[]string{fmt.Sprintf("[parameters('%sAvailabilityZones')]", profile.Name)}
 	}
 
 	var useManagedIdentity bool
