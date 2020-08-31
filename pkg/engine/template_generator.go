@@ -882,6 +882,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetSysctlDConfigKeyVals": func(sysctlDConfig map[string]string) string {
 			return common.GetOrderedNewlinedKeyValsStringForCloudInit(sysctlDConfig)
 		},
+		"GetLinuxCSELogPath": func() string {
+			return linuxCSELogPath
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},
