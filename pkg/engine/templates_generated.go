@@ -6412,7 +6412,7 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
-          "ipam": <calicoIPAMConfig>,
+          "ipam": {\"type\": \"host-local\", \"subnet\": \"usePodCidr\"},
           "policy": {
               "type": "k8s"
           },
@@ -6783,7 +6783,7 @@ spec:
         - name: USE_POD_CIDR
           value: "true"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}""
         # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
         # this opens a port on the host, which may need to be secured.
         #- name: TYPHA_PROMETHEUSMETRICSENABLED
@@ -6853,6 +6853,7 @@ spec:
       terminationGracePeriodSeconds: 0
       priorityClassName: system-node-critical
       initContainers:
+{{- if IsAzureCNI}}
       {{- /* Start of install-cni initContainer
       This container installs the CNI binaries
       and CNI network config file on each node. */}}
@@ -6883,6 +6884,7 @@ spec:
         - mountPath: /host/etc/cni/net.d
           name: cni-net-dir
       {{- /* End of install-cni initContainer
+{{- end}}
       Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
       to communicate with Felix over the Policy Sync API. */}}
       - name: flexvol-driver
@@ -6927,7 +6929,7 @@ spec:
         chosen from this range. Changing this value after installation will have
         no effect. This should fall within ` + "`" + `--cluster-cidr` + "`" + `. */}}
         - name: CALICO_IPV4POOL_CIDR
-          value: "<kubeClusterCidr>"
+          value: "{{GetClusterSubnet}}"
         {{- /* Disable file logging so ` + "`" + `kubectl logs` + "`" + ` works. */}}
         - name: CALICO_DISABLE_FILE_LOGGING
           value: "true"
@@ -6945,7 +6947,7 @@ spec:
         - name: CALICO_IPV4POOL_IPIP
           value: "off"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}""
         securityContext:
           privileged: true
         resources:
@@ -12162,7 +12164,7 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
-          "ipam": <calicoIPAMConfig>,
+          "ipam": {\"type\": \"host-local\", \"subnet\": \"usePodCidr\"},
           "policy": {
               "type": "k8s"
           },
@@ -12531,7 +12533,7 @@ spec:
         - name: USE_POD_CIDR
           value: "true"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
         # this opens a port on the host, which may need to be secured.
         #- name: TYPHA_PROMETHEUSMETRICSENABLED
@@ -12664,7 +12666,7 @@ spec:
         chosen from this range. Changing this value after installation will have
         no effect. This should fall within ` + "`" + `--cluster-cidr` + "`" + `. */}}
         - name: CALICO_IPV4POOL_CIDR
-          value: "<kubeClusterCidr>"
+          value: "{{GetClusterSubnet}}"
         {{- /* Disable file logging so ` + "`" + `kubectl logs` + "`" + ` works. */}}
         - name: CALICO_DISABLE_FILE_LOGGING
           value: "true"
@@ -12682,7 +12684,7 @@ spec:
         - name: CALICO_IPV4POOL_IPIP
           value: "off"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}""
         - name: FELIX_USAGEREPORTINGENABLED
           value: "{{ContainerConfig "usageReportingEnabled"}}"
         securityContext:
@@ -15373,7 +15375,7 @@ data:
     }
   net-conf.json: |
     {
-      "Network": "<kubeClusterCidr>",
+      "Network": "{{GetClusterSubnet}}",
       "Backend": {
         "Type": "vxlan"
       }
@@ -21945,18 +21947,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
-{{end}}
-{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
-    {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico.yaml
-    {{else}}
-    sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
-    sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
-    {{end}}
-{{end}}
-{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
 {{end}}
     #EOF
 
