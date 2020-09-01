@@ -6856,7 +6856,7 @@ spec:
       terminationGracePeriodSeconds: 0
       priorityClassName: system-node-critical
       initContainers:
-{{- if IsAzureCNI}}
+{{- if not IsAzureCNI}}
       {{- /* Start of install-cni initContainer
       This container installs the CNI binaries
       and CNI network config file on each node. */}}
