@@ -15527,17 +15527,10 @@ func k8sAddonsFlannelYaml() (*asset, error) {
 }
 
 var _k8sAddonsGuardYaml = []byte(`apiVersion: v1
-kind: Namespace
-metadata:
-  name: guard
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
----
-apiVersion: v1
 kind: Secret
 metadata:
-  name: guard
-  namespace: guard
+  name: guard-intergration
+  namespace: kube-system
   labels:
     addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
@@ -15552,15 +15545,15 @@ data:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: guard
-  namespace: guard
+  name: guard-intergration
+  namespace: kube-system
   labels:
     addonmanager.kubernetes.io/mode: "EnsureExists"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: guard
+  name: guardRoleBinding
   labels:
     addonmanager.kubernetes.io/mode: "EnsureExists"
 roleRef:
@@ -15569,14 +15562,14 @@ roleRef:
   name: cluster-admin
 subjects:
   - kind: ServiceAccount
-    name: guard
-    namespace: guard
+    name: guard-intergration
+    namespace: kube-system
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: guard
-  namespace: guard
+  name: guard-intergration
+  namespace: kube-system
   labels:
     addonmanager.kubernetes.io/mode: "EnsureExists"
 spec:
@@ -15585,53 +15578,52 @@ spec:
       volumes:
       - name: guard-manifests
         hostPath:
-          path: /etc/kubernetes/guard
-          type: DirectoryOrCreate
-      serviceAccountName: guard
+          path: /etc/kubernetes
+      serviceAccountName: guard-intergration
       nodeSelector:
         kubernetes.io/arch: amd64
         kubernetes.io/os: linux
       containers:
-      - name: guard
-        image: delanyo32/guard:latest
+      - name: guard-intergration
+        image: {{ContainerImage "guard"}}
         volumeMounts:
         - name: guard-manifests
-          mountPath: /etc/kubernetes/guard
+          mountPath: /etc/kubernetes
         env:
         - name: TENANT_ID
           valueFrom:
             secretKeyRef:
-              name: guard
+              name: guard-intergration
               key: TENANT_ID
         - name: SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
-              name: guard
+              name: guard-intergration
               key: SUBSCRIPTION_ID
         - name: RESOURCE_GROUP
           valueFrom:
             secretKeyRef:
-              name: guard
+              name: guard-intergration
               key: RESOURCE_GROUP
         - name: CONNECTED_CLUSTER
           valueFrom:
             secretKeyRef:
-              name: guard
+              name: guard-intergration
               key: CONNECTED_CLUSTER
         - name: LOCATION
           valueFrom:
             secretKeyRef:
-              name: guard
+              name: guard-intergration
               key: LOCATION
         - name: CLIENT_ID
           valueFrom:
             secretKeyRef:
-              name: guard
+              name: guard-intergration
               key: CLIENT_ID
         - name: CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: guard
+              name: guard-intergration
               key: CLIENT_SECRET
       restartPolicy: Never
   backoffLimit: 4
