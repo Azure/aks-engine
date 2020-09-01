@@ -52,6 +52,7 @@ type upgradeCmd struct {
 	force                                    bool
 	controlPlaneOnly                         bool
 	disableClusterInitComponentDuringUpgrade bool
+	upgradeWindowsVHD                        bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -87,6 +88,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", -1, "how long to wait for each vm to be cordoned in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
 	f.BoolVarP(&uc.controlPlaneOnly, "control-plane-only", "", false, "upgrade control plane VMs only, do not upgrade node pools")
+	f.BoolVarP(&uc.upgradeWindowsVHD, "upgrade-windows-vhd", "", true, "upgrade image reference of Windows VHD")
 	addAuthFlags(uc.getAuthArgs(), f)
 
 	_ = f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
@@ -166,6 +168,17 @@ func (uc *upgradeCmd) loadCluster() error {
 	uc.containerService, uc.apiVersion, err = apiloader.LoadContainerServiceFromFile(uc.apiModelPath, true, true, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
+	}
+
+	// Use the Windows VHD associated with the aks-engine version if upgradeWindowsVHD is set to "true"
+	if uc.upgradeWindowsVHD {
+		if uc.containerService.Properties.WindowsProfile.WindowsPublisher == api.AKSWindowsServer2019OSImageConfig.ImagePublisher && uc.containerService.Properties.WindowsProfile.WindowsOffer == api.AKSWindowsServer2019OSImageConfig.ImageOffer {
+			uc.containerService.Properties.WindowsProfile.ImageVersion = api.AKSWindowsServer2019OSImageConfig.ImageVersion
+			uc.containerService.Properties.WindowsProfile.WindowsSku = api.AKSWindowsServer2019OSImageConfig.ImageSku
+		} else if uc.containerService.Properties.WindowsProfile.WindowsPublisher == api.WindowsServer2019OSImageConfig.ImagePublisher && uc.containerService.Properties.WindowsProfile.WindowsOffer == api.WindowsServer2019OSImageConfig.ImageOffer {
+			uc.containerService.Properties.WindowsProfile.ImageVersion = api.WindowsServer2019OSImageConfig.ImageVersion
+			uc.containerService.Properties.WindowsProfile.WindowsSku = api.WindowsServer2019OSImageConfig.ImageSku
+		}
 	}
 
 	// The cluster-init component is a cluster create-only feature, temporarily disable if enabled
