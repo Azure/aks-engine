@@ -6412,7 +6412,10 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
-          "ipam": {\"type\": \"host-local\", \"subnet\": \"usePodCidr\"},
+          "ipam": {
+              "type": "host-local",
+              "subnet": "usePodCidr"
+          },
           "policy": {
               "type": "k8s"
           },
@@ -6947,7 +6950,7 @@ spec:
         - name: CALICO_IPV4POOL_IPIP
           value: "off"
         - name: FELIX_INTERFACEPREFIX
-          value: "value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}""
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         securityContext:
           privileged: true
         resources:
@@ -12164,7 +12167,10 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
-          "ipam": {\"type\": \"host-local\", \"subnet\": \"usePodCidr\"},
+          "ipam": {
+              "type": "host-local",
+              "subnet": "usePodCidr"
+          },
           "policy": {
               "type": "k8s"
           },
@@ -12684,7 +12690,7 @@ spec:
         - name: CALICO_IPV4POOL_IPIP
           value: "off"
         - name: FELIX_INTERFACEPREFIX
-          value: "value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}""
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         - name: FELIX_USAGEREPORTINGENABLED
           value: "{{ContainerConfig "usageReportingEnabled"}}"
         securityContext:
