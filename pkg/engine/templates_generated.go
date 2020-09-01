@@ -10332,7 +10332,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29603
             - --v=5
           resources:
@@ -10581,7 +10581,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29602
             - --v=5
           volumeMounts:
@@ -11740,7 +11740,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29613
             - --v=5
           resources:
@@ -11971,7 +11971,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29612
             - --v=5
           volumeMounts:
