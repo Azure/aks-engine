@@ -6412,10 +6412,12 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
+{{- if not IsAzureCNI}}
           "ipam": {
               "type": "host-local",
               "subnet": "usePodCidr"
           },
+{{- end}}
           "policy": {
               "type": "k8s"
           },
@@ -12165,10 +12167,12 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
+{{- if not IsAzureCNI}}
           "ipam": {
               "type": "host-local",
               "subnet": "usePodCidr"
           },
+{{- end}}
           "policy": {
               "type": "k8s"
           },
