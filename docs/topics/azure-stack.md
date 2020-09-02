@@ -172,7 +172,7 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 ### get-versions command
 
-The output of the `get-versions` command only pertains to Azure and not Azure Stack Hub clouds. The different upgrade paths can be found [here](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-upgrade#steps-to-upgrade-to-a-newer-kubernetes-version).
+The output of the `get-versions` command only pertains to Azure and not Azure Stack Hub clouds. The different upgrade paths can be found [here](https://docs.microsoft.com/en-us/azure-stack/user/kubernetes-aks-engine-release-notes?view=azs-2005#kubernetes-version-upgrade-path-in-aks-engine-0510).
 
 ### Upgrade from private-preview Kubernetes cluster with Windows nodes
 
