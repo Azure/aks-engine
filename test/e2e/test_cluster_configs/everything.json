@@ -64,7 +64,11 @@
 								"min-replicas": "1",
 								"nodes-per-replica": "8"
 							}
-						}
+						},
+						{
+							"name": "node-problem-detector",
+							"enabled": true
+						  }
 					],
 					"components": [
 						{
