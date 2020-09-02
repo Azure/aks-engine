@@ -814,6 +814,12 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"GetMode": func() string {
 			return addon.Mode
 		},
+		"GetClusterSubnet": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+		},
+		"IsAzureCNI": func() bool {
+			return cs.Properties.OrchestratorProfile.IsAzureCNI()
+		},
 	}
 }
 
