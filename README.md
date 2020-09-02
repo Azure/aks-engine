@@ -23,7 +23,7 @@ Want to get involved? The [community guide][community] covers everything you nee
 
 ## Support
 
-AKS Engine is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/aks-engine/issues), and if your issue isn't already represented please [open a new one](https://github.com/Azure/aks-engine/issues/new/choose). The AKS Engine project maintainers will respond to the best of their abilities.
+Please see our [support policy][support-policy].
 
 ## Code of conduct
 
@@ -39,6 +39,7 @@ For more information, please see the [telemetry documentation][telemetry].
 [developer-guide]: docs/community/developer-guide.md
 [docs]: docs/README.md
 [FAQ]: docs/faq.md
+[support-policy]: SUPPORT.md
 [tutorials]: docs/tutorials/README.md
 [telemetry]: docs/topics/telemetry.md
 [telemetry-config]: docs/topics/telemetry.md#configuration
