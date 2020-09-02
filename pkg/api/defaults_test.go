@@ -910,7 +910,7 @@ func TestNetworkPluginDefaults(t *testing.T) {
 
 func TestContainerRuntime(t *testing.T) {
 
-	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10"} {
+	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10", "19.03.12"} {
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
