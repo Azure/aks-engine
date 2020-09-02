@@ -468,8 +468,7 @@ spec:
       priorityClassName: system-node-critical
       initContainers:
 {{- if not IsAzureCNI}}
-      {{- /* Start of install-cni initContainer
-      This container installs the CNI binaries
+      {{- /* This container installs the CNI binaries
       and CNI network config file on each node. */}}
       - name: install-cni
         image: {{ContainerImage "calico-cni"}}
@@ -497,9 +496,8 @@ spec:
           name: cni-bin-dir
         - mountPath: /host/etc/cni/net.d
           name: cni-net-dir
-      {{- /* End of install-cni initContainer
 {{- end}}
-      Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
+      {{- /* Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
       to communicate with Felix over the Policy Sync API. */}}
       - name: flexvol-driver
         image: {{ContainerImage "calico-pod2daemon"}}
