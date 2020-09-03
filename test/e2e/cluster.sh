@@ -42,10 +42,6 @@ ${ADD_NODE_POOL_INPUT}
 END
 fi
 
-if [ -n "$PUBLIC_SSH_KEY_FILE" ]; then
-  PUBLIC_SSH_KEY=$(cat "${PUBLIC_SSH_KEY_FILE}")
-fi
-
 if [ -n "$PRIVATE_SSH_KEY_FILE" ]; then
   PRIVATE_SSH_KEY_FILE=$(realpath --relative-to=$(pwd) ${PRIVATE_SSH_KEY_FILE})
 fi
@@ -57,7 +53,7 @@ function tryExit {
 }
 
 function moveStageJunit {
-  if [ "${AZURE_ENV}" == "AzureStackCloud" ]; then
+  if [ "${AZURE_ENV}" == "AzureStackCloud" ] && [ "${SKIP_TEST}" == "false" ]; then
     sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/${1}-junit.xml
   fi
 }
@@ -110,7 +106,6 @@ docker run --rm \
 -e ORCHESTRATOR=kubernetes \
 -e ORCHESTRATOR_RELEASE="${ORCHESTRATOR_RELEASE}" \
 -e CREATE_VNET="${CREATE_VNET}" \
--e PUBLIC_SSH_KEY="${PUBLIC_SSH_KEY}" \
 -e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
 -e TIMEOUT="${E2E_TEST_TIMEOUT}" \
 -e LB_TIMEOUT="${LB_TEST_TIMEOUT}" \
@@ -336,7 +331,6 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
-    -e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
     -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
     -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
@@ -423,7 +417,6 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
       -e ORCHESTRATOR=kubernetes \
       -e NAME=$RESOURCE_GROUP \
-      -e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
       -e TIMEOUT=${E2E_TEST_TIMEOUT} \
       -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
       -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
@@ -499,7 +492,6 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
-    -e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
     -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
     -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
