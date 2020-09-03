@@ -53,8 +53,9 @@ function tryExit {
 }
 
 function renameResultsFile {
-  if [ "${AZURE_ENV}" == "AzureStackCloud" ] && [ "${SKIP_TEST}" == "false" ]; then
-    sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/${1}-junit.xml
+  JUNIT_PATH=$(pwd)/test/e2e/kubernetes/junit.xml
+  if [ "${AZURE_ENV}" == "AzureStackCloud" ] && [ -f ${JUNIT_PATH} ]; then
+    sudo mv ${JUNIT_PATH} $(pwd)/test/e2e/kubernetes/${1}-junit.xml
   fi
 }
 
