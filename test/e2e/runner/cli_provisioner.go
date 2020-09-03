@@ -92,8 +92,8 @@ func createSaveSSH(outputPath string, privateKeyName string, existingPrivateKeyP
 	keyPath := filepath.Join(outputPath, privateKeyName)
 	cmd := exec.Command("ssh-keygen", "-f", keyPath, "-q", "-N", "", "-b", "2048", "-t", "rsa")
 
-	if cli.Config.PrivateSSHKeyPath != "" {
-		err := os.Rename(cli.Config.PrivateSSHKeyPath, keyPath)
+	if existingPrivateKeyPath != "" {
+		err := os.Rename(existingPrivateKeyPath, keyPath)
 		if err != nil {
 			return "", errors.Wrapf(err, "Error while trying to move private ssh key")
 		}
@@ -106,7 +106,7 @@ func createSaveSSH(outputPath string, privateKeyName string, existingPrivateKeyP
 		return "", errors.Wrapf(err2, "Error while trying to generate ssh key\nOutput:%s", out)
 	}
 
-	if cli.Config.PrivateSSHKeyPath != "" {
+	if existingPrivateKeyPath != "" {
 		err3 := ioutil.WriteFile(keyPath+".pub", out, 0644)
 		if err3 != nil {
 			return "", errors.Wrapf(err3, "Error while trying to write public ssh key")
