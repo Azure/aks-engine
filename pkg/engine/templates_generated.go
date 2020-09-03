@@ -24183,6 +24183,8 @@ spec:
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
+        - name: etc-kubernetes-certs
+          mountPath: /etc/kubernetes/certs
         - name: var-lib-kubelet
           mountPath: /var/lib/kubelet
         - name: msi
@@ -24196,6 +24198,9 @@ spec:
     - name: etc-kubernetes
       hostPath:
         path: /etc/kubernetes
+    - name: etc-kubernetes-certs
+      hostPath:
+        path: /etc/kubernetes/certs
     - name: var-lib-kubelet
       hostPath:
         path: /var/lib/kubelet
