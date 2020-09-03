@@ -17757,8 +17757,8 @@ spec:
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
               mountPropagation: Bidirectional
-            - name: providers-dir
-              mountPath: /etc/kubernetes/secrets-store-csi-providers
+            - name: etc-kubernetes
+              mountPath: /etc/kubernetes
           resources:
             limits:
               cpu: {{ContainerCPULimits "secrets-store"}}
@@ -17797,9 +17797,9 @@ spec:
           hostPath:
             path: /var/lib/kubelet/plugins/csi-secrets-store/
             type: DirectoryOrCreate
-        - name: providers-dir
+        - name: etc-kubernetes
           hostPath:
-            path: /etc/kubernetes/secrets-store-csi-providers
+            path: /etc/kubernetes
             type: DirectoryOrCreate
       nodeSelector:
         kubernetes.io/os: linux
