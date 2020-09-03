@@ -28,12 +28,12 @@ const (
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
-	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.1.4"
+	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.1.7"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.6.1"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.6.1"
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200505.1"
 	gatekeeperImageReference                          string = "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.8"
-	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.2"
+	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector/node-problem-detector:v0.8.4"
 	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.5.0"
 	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
 	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.0.0"

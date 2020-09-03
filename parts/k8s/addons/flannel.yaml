@@ -28,7 +28,7 @@ data:
     }
   net-conf.json: |
     {
-      "Network": "<kubeClusterCidr>",
+      "Network": "{{GetClusterSubnet}}",
       "Backend": {
         "Type": "vxlan"
       }

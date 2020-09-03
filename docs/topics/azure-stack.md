@@ -9,9 +9,9 @@
   * [kubernetesConfig](#kubernetesConfig)
   * [customCloudProfile](#customCloudProfile)
   * [masterProfile](#masterProfile)
-  * [agentPoolProfiles](#agentPoolProfiles)ß
-* [Azure Stack Hub Instances Registered with Azure's China cloud](#azure-stack-instances-registered-with-azures-china-cloud)
-* [Disconnected Azure Stack Hub Instances](#disconnected-azure-stack-instances)
+  * [agentPoolProfiles](#agentPoolProfiles)
+* [Azure Stack Hub Instances Registered with Azure's China cloud](#azure-stack-hub-instances-registered-with-azures-china-cloud)
+* [Disconnected Azure Stack Hub Instances](#disconnected-azure-stack-hub-instances)
 * [Supported AKS Engine Versions](#supported-aks-engine-versions)
 * [Azure Monitor for containers](#azure-Monitor-for-containers)
 * [Known Issues and Limitations](#known-issues-and-limitations)
@@ -137,7 +137,8 @@ Each AKS Engine release is validated and tied to a specific version of the AKS B
 |----------------------------|--------------------|---------------------|-------|
 | [v0.43.1](https://github.com/Azure/aks-engine/releases/tag/v0.43.1)   | [AKS Base Ubuntu 16.04-LTS Image Distro, October 2019 (2019.10.24)](https://github.com/Azure/aks-engine/blob/v0.43.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201910_2019.10.24.txt) | 1.15.5, 1.15.4, 1.14.8, 1.14.7 |  |
 | [v0.48.0](https://github.com/Azure/aks-engine/releases/tag/v0.48.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, March 2020 (2020.03.19)](https://github.com/Azure/aks-engine/blob/v0.48.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202003_2020.03.19.txt) | 1.15.10, 1.14.7 |  |
-| [v0.51.0](https://github.com/Azure/aks-engine/releases/tag/v0.51.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2020 (2020.05.13)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202005_2020.05.13.txt), [AKS Base Windows Image (17763.1217.200513)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1217.200513.txt)  | 1.15.12, 1.16.8, 1.16.9 | API Model Samples ([Linux](../../examples/azure-stack/kubernetes-azurestack.json), [Windows](../../examples/azure-stack/kubernetes-windows.json)) |
+| [v0.51.0](https://github.com/Azure/aks-engine/releases/tag/v0.51.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2020 (2020.05.13)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202005_2020.05.13.txt), [AKS Base Windows Image (17763.1217.200513)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1217.200513.txt)  | 1.15.12, 1.16.8, 1.16.9 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.51.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.51.0/examples/azure-stack/kubernetes-windows.json)) |
+| [v0.55.0](https://github.com/Azure/aks-engine/releases/tag/v0.55.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2020 (2020.08.24)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202007_2020.08.24.txt), [AKS Base Windows Image (17763.1397.200820)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1397.200820.txt)  | 1.15.12, 1.16.14, 1.17.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-windows.json)) |
 
 
 ## Azure Monitor for containers
@@ -163,39 +164,19 @@ The list below includes the addons currently unsupported on Azure Stack Hub:
 * Rescheduler
 * SMB Flex Volume
 
-### Agent Nodes Internet Connectivity
-
-Your agent nodes may lose internet connectivity after all Kubernetes services of type `LoadBalancer` are deleted. You are not expected to experience this problem if no services of type `LoadBalancer` are ever created.
-
-To work around this issue, do not delete `LoadBalancer` services as part of your release pipeline or always keep a dummy service.
-
 ### Limited Number of Frontend Public IPs
 
 The `Basic` load balancer SKU available on Azure Stack Hub limits the number of frontend IPs to 5. That implies that each cluster's agents pool is limited to 5 public IPs.
 
 If you need to expose more than 5 services, then the recommendation is to route traffic to those services using an Ingress controller.
 
-### Single agent pool
-
-Currently, Azure Stack Hub only supports the `Basic` load balancer SKU.
-This SKU [limits](https://docs.microsoft.com/en-us/azure/load-balancer/concepts-limitations#skus)
-the backend pool endpoints to virtual machines in a single availability set (or virtual machine scale set).
-This implies that all replicas of a `LoadBalancer` service should be deployed on the same agent pool
-and it also implies that each individual cluster can either have a Linux `LoadBalancer` service or
-a Windows `LoadBalancer` service.
-
-You can force Kubernetes to create pods in a specific agent pool by adding [node selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) "`agentpool: MY_POOL_NAME`" in your pod template.
-
-```yaml
-nodeSelector:
-  agentpool: linuxpool
-```
-
-If a `LoadBalancer` service was already created in your cluster, you can find out which agent pool was selected as the load balancer's backend pool by inspecting the load balancer `backend pools` blade in the Azure Stack Hub portal. Once you have that information, you can specify the target agent pool by updating your deployment/pod yaml (as explained in the previous paragraph).
-
 ### get-versions command
 
-The output of the `get-versions` command only pertains to Azure and not Azure Stack Hub clouds. The different upgrade paths can be found [here](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-upgrade#steps-to-upgrade-to-a-newer-kubernetes-version).
+The output of the `get-versions` command only pertains to Azure and not Azure Stack Hub clouds. The different upgrade paths can be found [here](https://docs.microsoft.com/en-us/azure-stack/user/kubernetes-aks-engine-release-notes?view=azs-2005#kubernetes-version-upgrade-path-in-aks-engine-0510).
+
+### Upgrade from private-preview Kubernetes cluster with Windows nodes
+
+There is no official support for private-preview Kubernetes cluster with Windows nodes created with AKS Engine v0.43.1 to upgrade with AKS Engine v0.55.0. Users are encouraged to deploy new Kubernetes cluster with Windows nodes with the latest AKS Engine version.
 
 ## Frequently Asked Questions
 

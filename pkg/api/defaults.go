@@ -23,6 +23,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/versions"
 )
 
 // DistroValues is a list of currently supported distros
@@ -203,6 +204,17 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					}
 				}
 				o.KubernetesConfig.MobyVersion = DefaultMobyVersion
+			}
+
+			// Moby versions >= 19.03 depend on containerd packaging (instead of the moby packages supplying their own containerd)
+			// For that case we'll need to specify the containerd version.
+			if versions.GreaterThanOrEqualTo(o.KubernetesConfig.MobyVersion, "19.03") && (o.KubernetesConfig.ContainerdVersion == "" || isUpdate) {
+				if o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
+					log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
+				} else {
+					log.Warnf("Any new nodes will have containerd version %s\n", DefaultContainerdVersion)
+				}
+				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
 		case Containerd:
 			if o.KubernetesConfig.ContainerdVersion == "" || isUpdate {

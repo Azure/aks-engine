@@ -66,18 +66,9 @@
 							}
 						},
 						{
-							"name": "azure-arc-onboarding",
-							"enabled": true,
-							"config": {
-								"tenantID": "",
-								"subscriptionID": "",
-								"resourceGroup": "",
-								"clusterName": "",
-								"clientID": "",
-								"clientSecret": "",
-								"location": ""
-							}
-						}
+							"name": "node-problem-detector",
+							"enabled": true
+						  }
 					],
 					"components": [
 						{

@@ -287,7 +287,7 @@ spec:
         - name: MIC_POD_NAMESPACE
           valueFrom:
             fieldRef:
-              fieldPath: metadata.namespace                
+              fieldPath: metadata.namespace
         resources:
           requests:
             cpu: {{ContainerCPUReqs "mic"}}

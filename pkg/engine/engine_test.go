@@ -2495,6 +2495,8 @@ func TestGetAddonFuncMap(t *testing.T) {
 		expectedShouldEnableAzureFileCSISnapshotFeature   bool
 		expectedIsKubernetesVersionGeOneDotSixteenDotZero bool
 		expectedMode                                      string
+		expectedGetClusterSubnet                          string
+		expectedIsAzureCNI                                bool
 	}{
 		{
 			name: "coredns as an example",
@@ -2542,6 +2544,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 									},
 								},
 							},
+							ClusterSubnet: "10.239.0.0/16",
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -2573,7 +2576,9 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
-			expectedMode: api.AddonModeEnsureExists,
+			expectedMode:             api.AddonModeEnsureExists,
+			expectedGetClusterSubnet: "10.239.0.0/16",
+			expectedIsAzureCNI:       true,
 		},
 		{
 			name: "coredns as an example - Azure Stack",
@@ -2621,6 +2626,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 									},
 								},
 							},
+							ClusterSubnet: "10.239.0.0/16",
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -2656,7 +2662,9 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
-			expectedMode: api.AddonModeEnsureExists,
+			expectedMode:             api.AddonModeEnsureExists,
+			expectedGetClusterSubnet: "10.239.0.0/16",
+			expectedIsAzureCNI:       true,
 		},
 		{
 			name: "coredns as an example - StorageAccount",
@@ -2704,6 +2712,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 									},
 								},
 							},
+							ClusterSubnet: "10.239.0.0/16",
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -2735,7 +2744,9 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
-			expectedMode: api.AddonModeEnsureExists,
+			expectedMode:             api.AddonModeEnsureExists,
+			expectedGetClusterSubnet: "10.239.0.0/16",
+			expectedIsAzureCNI:       true,
 		},
 		{
 			name: "coredns as an example - CCM",
@@ -2784,6 +2795,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 									},
 								},
 							},
+							ClusterSubnet: "10.239.0.0/16",
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -2815,7 +2827,9 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
-			expectedMode: api.AddonModeEnsureExists,
+			expectedMode:             api.AddonModeEnsureExists,
+			expectedGetClusterSubnet: "10.239.0.0/16",
+			expectedIsAzureCNI:       true,
 		},
 		{
 			name: "coredns as an example - Availability Zones",
@@ -2865,6 +2879,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 									},
 								},
 							},
+							ClusterSubnet: "10.239.0.0/16",
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -2900,7 +2915,9 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
-			expectedMode: api.AddonModeEnsureExists,
+			expectedMode:             api.AddonModeEnsureExists,
+			expectedGetClusterSubnet: "10.239.0.0/16",
+			expectedIsAzureCNI:       true,
 		},
 		{
 			name: "coredns as an example - hybrid cluster",
@@ -2950,6 +2967,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 									},
 								},
 							},
+							ClusterSubnet: "10.239.0.0/16",
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -2984,7 +3002,96 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
-			expectedMode: api.AddonModeReconcile,
+			expectedMode:             api.AddonModeReconcile,
+			expectedGetClusterSubnet: "10.239.0.0/16",
+			expectedIsAzureCNI:       true,
+		},
+		{
+			name: "coredns as an example - kubenet",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeReconcile,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Location: "eastus2",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &api.KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(true),
+							NetworkPlugin:             api.NetworkPluginKubenet,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+							ClusterSubnet: "10.239.0.0/16",
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Windows,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
+						},
+					},
+				},
+			},
+			expectedImage:                          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:                        "100m",
+			expectedCPULimits:                      "100m",
+			expectedMemReqs:                        "300Mi",
+			expectedMemLimits:                      "300Mi",
+			expectedFoo:                            "bar",
+			expectedNeedsManagedDiskStorageClasses: true,
+			expectedUsesCloudControllerManager:     true,
+			expectedHasWindows:                     true,
+			expectedHasLinux:                       true,
+			expectedCSIControllerReplicas:          "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
+			expectedMode:             api.AddonModeReconcile,
+			expectedGetClusterSubnet: "10.239.0.0/16",
+			expectedIsAzureCNI:       false,
 		},
 	}
 
@@ -3092,6 +3199,16 @@ func TestGetAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedMode {
 				t.Errorf("expected funcMap invocation of GetMode to return %s, instead got %s", c.expectedMode, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetClusterSubnet"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetClusterSubnet {
+				t.Errorf("expected funcMap invocation of GetClusterSubnet to return %s, instead got %s", c.expectedGetClusterSubnet, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsAzureCNI"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsAzureCNI {
+				t.Errorf("expected funcMap invocation of IsAzureCNI to return %t, instead got %t", c.expectedIsAzureCNI, ret[0].Interface())
 			}
 		})
 	}

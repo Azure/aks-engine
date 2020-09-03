@@ -2,39 +2,42 @@
     "apiVersion": "vlabs",
     "properties": {
         "featureFlags": {
-            "enableIPv6DualStack": true
+            "enableIPv6Only": true
         },
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
-            "orchestratorRelease": "1.16",
+            "orchestratorRelease": "1.18",
             "kubernetesConfig": {
-                "clusterSubnet": "10.244.0.0/16,fc00::/8",
-                "serviceCidr": "10.0.0.0/16,fd00::/108",
-                "dnsServiceIP": "10.0.0.10",
-                "kubeProxyMode": "ipvs",
+                "loadBalancerSku": "Standard",
+                "excludeMasterFromStandardLB": true,
                 "networkPlugin": "kubenet",
                 "apiServerConfig": {
-                    "--feature-gates": "IPv6DualStack=true"
+                    "--bind-address": "::"
                 },
                 "kubeletConfig": {
-                    "--feature-gates": "IPv6DualStack=true"
+                    "--node-ip": "::"
                 },
                 "controllerManagerConfig": {
-                    "--feature-gates": "IPv6DualStack=true"
+                    "--bind-address": "::"
+                },
+                "schedulerConfig": {
+                    "--bind-address": "::"
                 }
             }
         },
         "masterProfile": {
             "count": 1,
-            "dnsPrefix": "",
-            "vmSize": "Standard_D2_v2"
+            "dnsPrefix": "ss-ipv601",
+            "vmSize": "Standard_D2_v3",
+            "distro": "ubuntu"
         },
         "agentPoolProfiles": [
             {
-                "name": "linuxpool1",
+                "name": "agentpool1",
                 "count": 2,
-                "vmSize": "Standard_D2_v2",
-                "availabilityProfile": "AvailabilitySet"
+                "vmSize": "Standard_D2_v3",
+                "availabilityProfile": "AvailabilitySet",
+                "distro": "ubuntu"
             }
         ],
         "linuxProfile": {

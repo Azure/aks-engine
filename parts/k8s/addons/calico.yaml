@@ -23,7 +23,12 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
-          "ipam": <calicoIPAMConfig>,
+{{- if not IsAzureCNI}}
+          "ipam": {
+              "type": "host-local",
+              "subnet": "usePodCidr"
+          },
+{{- end}}
           "policy": {
               "type": "k8s"
           },
@@ -392,7 +397,7 @@ spec:
         - name: USE_POD_CIDR
           value: "true"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
         # this opens a port on the host, which may need to be secured.
         #- name: TYPHA_PROMETHEUSMETRICSENABLED
@@ -525,7 +530,7 @@ spec:
         chosen from this range. Changing this value after installation will have
         no effect. This should fall within `--cluster-cidr`. */}}
         - name: CALICO_IPV4POOL_CIDR
-          value: "<kubeClusterCidr>"
+          value: "{{GetClusterSubnet}}"
         {{- /* Disable file logging so `kubectl logs` works. */}}
         - name: CALICO_DISABLE_FILE_LOGGING
           value: "true"
@@ -543,7 +548,7 @@ spec:
         - name: CALICO_IPV4POOL_IPIP
           value: "off"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         - name: FELIX_USAGEREPORTINGENABLED
           value: "{{ContainerConfig "usageReportingEnabled"}}"
         securityContext:

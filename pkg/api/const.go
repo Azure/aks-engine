@@ -346,7 +346,7 @@ const (
 	AzureCniPluginVerWindows = "v1.1.6"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.8.6"
+	CNIPluginVer = "v0.8.7"
 	// WindowsPauseImageVersion specifies version of Windows pause image
 	WindowsPauseImageVersion = "1.4.0"
 	// DefaultAlwaysPullWindowsPauseImage is the default windowsProfile.AlwaysPullWindowsPauseImage value
@@ -477,7 +477,7 @@ const (
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
 	DefaultMobyVersion = "19.03.12"
 	// DefaultContainerdVersion specifies the default containerd version to install.
-	DefaultContainerdVersion = "1.3.2"
+	DefaultContainerdVersion = "1.3.7"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.

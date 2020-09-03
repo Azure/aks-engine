@@ -22,6 +22,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/versions"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -1230,7 +1231,7 @@ func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
 
 func TestContainerRuntime(t *testing.T) {
 
-	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10"} {
+	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10", "19.03.11", "19.03.12"} {
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
@@ -1244,9 +1245,13 @@ func TestContainerRuntime(t *testing.T) {
 			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
 				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, DefaultMobyVersion)
 		}
-		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+		expectedContainerdVersion := ""
+		if versions.GreaterThanOrEqualTo(properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "19.03") {
+			expectedContainerdVersion = DefaultContainerdVersion
+		}
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != expectedContainerdVersion {
 			t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
-				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
+				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, expectedContainerdVersion)
 		}
 
 		mockCS = getMockBaseContainerService("1.10.13")
@@ -1262,9 +1267,13 @@ func TestContainerRuntime(t *testing.T) {
 			t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
 				properties.OrchestratorProfile.KubernetesConfig.MobyVersion, mobyVersion)
 		}
-		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+		expectedContainerdVersion = ""
+		if versions.GreaterThanOrEqualTo(properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "19.03") {
+			expectedContainerdVersion = DefaultContainerdVersion
+		}
+		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != expectedContainerdVersion {
 			t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
-				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
+				properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, expectedContainerdVersion)
 		}
 	}
 
@@ -1280,9 +1289,13 @@ func TestContainerRuntime(t *testing.T) {
 		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, DefaultMobyVersion)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
+	expectedContainerdVersion := ""
+	if versions.GreaterThanOrEqualTo(properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "19.03") {
+		expectedContainerdVersion = DefaultContainerdVersion
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != expectedContainerdVersion {
 		t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, "")
+			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, expectedContainerdVersion)
 	}
 
 	mockCS = getMockBaseContainerService("1.10.13")

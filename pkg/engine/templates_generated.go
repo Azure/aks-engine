@@ -6412,7 +6412,12 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
-          "ipam": <calicoIPAMConfig>,
+{{- if not IsAzureCNI}}
+          "ipam": {
+              "type": "host-local",
+              "subnet": "usePodCidr"
+          },
+{{- end}}
           "policy": {
               "type": "k8s"
           },
@@ -6783,7 +6788,7 @@ spec:
         - name: USE_POD_CIDR
           value: "true"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
         # this opens a port on the host, which may need to be secured.
         #- name: TYPHA_PROMETHEUSMETRICSENABLED
@@ -6853,8 +6858,8 @@ spec:
       terminationGracePeriodSeconds: 0
       priorityClassName: system-node-critical
       initContainers:
-      {{- /* Start of install-cni initContainer
-      This container installs the CNI binaries
+{{- if not IsAzureCNI}}
+      {{- /* This container installs the CNI binaries
       and CNI network config file on each node. */}}
       - name: install-cni
         image: {{ContainerImage "calico-cni"}}
@@ -6882,8 +6887,8 @@ spec:
           name: cni-bin-dir
         - mountPath: /host/etc/cni/net.d
           name: cni-net-dir
-      {{- /* End of install-cni initContainer
-      Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
+{{- end}}
+      {{- /* Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
       to communicate with Felix over the Policy Sync API. */}}
       - name: flexvol-driver
         image: {{ContainerImage "calico-pod2daemon"}}
@@ -6927,7 +6932,7 @@ spec:
         chosen from this range. Changing this value after installation will have
         no effect. This should fall within ` + "`" + `--cluster-cidr` + "`" + `. */}}
         - name: CALICO_IPV4POOL_CIDR
-          value: "<kubeClusterCidr>"
+          value: "{{GetClusterSubnet}}"
         {{- /* Disable file logging so ` + "`" + `kubectl logs` + "`" + ` works. */}}
         - name: CALICO_DISABLE_FILE_LOGGING
           value: "true"
@@ -6945,7 +6950,7 @@ spec:
         - name: CALICO_IPV4POOL_IPIP
           value: "off"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         securityContext:
           privileged: true
         resources:
@@ -7496,7 +7501,7 @@ spec:
         - name: MIC_POD_NAMESPACE
           valueFrom:
             fieldRef:
-              fieldPath: metadata.namespace                
+              fieldPath: metadata.namespace
         resources:
           requests:
             cpu: {{ContainerCPUReqs "mic"}}
@@ -10332,7 +10337,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29603
             - --v=5
           resources:
@@ -10581,7 +10586,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29602
             - --v=5
           volumeMounts:
@@ -11740,7 +11745,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29613
             - --v=5
           resources:
@@ -11971,7 +11976,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29612
             - --v=5
           volumeMounts:
@@ -12162,7 +12167,12 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": 1500,
-          "ipam": <calicoIPAMConfig>,
+{{- if not IsAzureCNI}}
+          "ipam": {
+              "type": "host-local",
+              "subnet": "usePodCidr"
+          },
+{{- end}}
           "policy": {
               "type": "k8s"
           },
@@ -12531,7 +12541,7 @@ spec:
         - name: USE_POD_CIDR
           value: "true"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
         # this opens a port on the host, which may need to be secured.
         #- name: TYPHA_PROMETHEUSMETRICSENABLED
@@ -12664,7 +12674,7 @@ spec:
         chosen from this range. Changing this value after installation will have
         no effect. This should fall within ` + "`" + `--cluster-cidr` + "`" + `. */}}
         - name: CALICO_IPV4POOL_CIDR
-          value: "<kubeClusterCidr>"
+          value: "{{GetClusterSubnet}}"
         {{- /* Disable file logging so ` + "`" + `kubectl logs` + "`" + ` works. */}}
         - name: CALICO_DISABLE_FILE_LOGGING
           value: "true"
@@ -12682,7 +12692,7 @@ spec:
         - name: CALICO_IPV4POOL_IPIP
           value: "off"
         - name: FELIX_INTERFACEPREFIX
-          value: "azv"
+          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
         - name: FELIX_USAGEREPORTINGENABLED
           value: "{{ContainerConfig "usageReportingEnabled"}}"
         securityContext:
@@ -15373,7 +15383,7 @@ data:
     }
   net-conf.json: |
     {
-      "Network": "<kubeClusterCidr>",
+      "Network": "{{GetClusterSubnet}}",
       "Backend": {
         "Type": "vxlan"
       }
@@ -16623,7 +16633,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-apiVersion: apiregistration.k8s.io/v1beta1
+apiVersion: apiregistration.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: APIService
 metadata:
   name: v1beta1.metrics.k8s.io
@@ -18328,6 +18338,7 @@ KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 ADDONS_DIR=/etc/kubernetes/addons
 POD_SECURITY_POLICY_SPEC=$ADDONS_DIR/pod-security-policy.yaml
 ADDON_MANAGER_SPEC=/etc/kubernetes/manifests/kube-addon-manager.yaml
+GET_KUBELET_LOGS="journalctl -u kubelet --no-pager"
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -18633,7 +18644,7 @@ installContainerd() {
     retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
-    apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
+    apt_get_install 20 30 120 moby-runc moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
   fi
 }
 ensureContainerd() {
@@ -18707,16 +18718,21 @@ ensureKubelet() {
 }
 
 ensureAddons() {
-  retrycmd 120 5 30 $KUBECTL get pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+{{- if IsDashboardAddonEnabled}}
+  retrycmd 120 5 30 $KUBECTL get namespace kubernetes-dashboard || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+{{- end}}
+{{- if IsAzurePolicyAddonEnabled}}
+  retrycmd 120 5 30 $KUBECTL get namespace gatekeeper-system || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+{{- end}}
 {{- if not HasCustomPodSecurityPolicy}}
-  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
   rm -Rf ${ADDONS_DIR}/init
 {{- end}}
   replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
   retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
   retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
-  exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -18791,11 +18807,11 @@ ensureK8sControlPlane() {
   if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
-  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}} $GET_KUBELET_LOGS
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit_cse {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}} $GET_KUBELET_LOGS
 }
 {{end}}
 ensureEtcd() {
@@ -19002,6 +19018,12 @@ cleanUpContainerd() {
 {{end}}
 removeEtcd() {
   rm -rf /usr/bin/etcd
+}
+exit_cse() {
+  local exit_code=$1
+  shift
+  $@ >> {{GetLinuxCSELogPath}} &
+  exit $exit_code
 }
 #EOF
 `)
@@ -19494,7 +19516,6 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
-
 #HELPERSEOF
 `)
 
@@ -19607,21 +19628,34 @@ removeMoby() {
 removeContainerd() {
   apt_get_purge moby-containerd || exit 27
 }
+mobyPkgVersion() {
+  dpkg -s "${1}" | grep "Version:" | awk '{ print $2 }' | cut -d '+' -f 1
+}
 installMoby() {
-  CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
-  if [[ $CURRENT_VERSION != "${MOBY_VERSION}" ]]; then
-    removeContainerd
+  install_pkgs=""
+  CURRENT_CONTAINERD_VERSION="$(mobyPkgVersion moby-containerd)"
+  if [ -n "${CONTAINERD_VERSION}" ] && [ ! "${CURRENT_CONTAINERD_VERSION}" = "${CONTAINERD_VERSION}" ]; then
+    install_pkgs+=" moby-containerd=${CONTAINERD_VERSION}*"
     removeMoby
+    removeContainerd
+  fi
+  CURRENT_ENGINE_VERSION="$(mobyPkgVersion moby-engine)"
+  if [ ! "${CURRENT_ENGINE_VERSION}" = "${MOBY_VERSION}" ]; then
+    install_pkgs+=" moby-engine=${MOBY_VERSION}*"
+    MOBY_CLI="${MOBY_VERSION}"
+    if [ "${MOBY_CLI}" = "3.0.4" ]; then
+      MOBY_CLI="3.0.3"
+    fi
+    install_pkgs+=" moby-cli=${MOBY_CLI}*"
+    removeMoby
+  fi
+  if [ -n "${install_pkgs}" ]; then
     retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
     retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
-    MOBY_CLI=${MOBY_VERSION}
-    if [[ ${MOBY_CLI} == "3.0.4" ]]; then
-      MOBY_CLI="3.0.3"
-    fi
-    apt_get_install 20 30 120 moby-engine=${MOBY_VERSION}* moby-cli=${MOBY_CLI}* --allow-downgrades || exit 27
+    apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
 }
 installBcc() {
@@ -19998,16 +20032,11 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
 time_metric "EnsureKubelet" ensureKubelet
-if [[ -n ${MASTER_NODE} ]]; then
 {{if IsAzurePolicyAddonEnabled}}
+if [[ -n ${MASTER_NODE} ]]; then
   time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
-{{end}}
-  if [ -f /var/run/reboot-required ]; then
-    time_metric "ReplaceAddonsInit" replaceAddonsInit
-  else
-    time_metric "EnsureAddons" ensureAddons
-  fi
 fi
+{{end}}
 time_metric "EnsureJournal" ensureJournal
 
 if [[ -n ${MASTER_NODE} ]]; then
@@ -20023,6 +20052,11 @@ if [[ -n ${MASTER_NODE} ]]; then
     fi
   fi
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
+  if [ -f /var/run/reboot-required ]; then
+    time_metric "ReplaceAddonsInit" replaceAddonsInit
+  else
+    time_metric "EnsureAddons" ensureAddons
+  fi
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
@@ -20495,6 +20529,9 @@ container_runtime_monitoring() {
       fi
       systemctl kill --kill-who=main "${container_runtime_name}"
       sleep 120
+      if ! systemctl is-active ${container_runtime_name}; then
+        systemctl start ${container_runtime_name}
+      fi
     else
       sleep "${SLEEP_SECONDS}"
     fi
@@ -20512,6 +20549,9 @@ kubelet_monitoring() {
       echo "Kubelet is unhealthy!"
       systemctl kill kubelet
       sleep 60
+      if ! systemctl is-active kubelet; then
+        systemctl start kubelet
+      fi
     else
       sleep "${SLEEP_SECONDS}"
     fi
@@ -21679,6 +21719,7 @@ write_files:
   owner: root
   content: |
     [Service]
+    Restart=always
     ExecStart=
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
@@ -21914,18 +21955,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
-{{end}}
-{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
-    {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico.yaml
-    {{else}}
-    sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
-    sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
-    {{end}}
-{{end}}
-{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
 {{end}}
     #EOF
 
@@ -22260,6 +22289,7 @@ write_files:
   owner: root
   content: |
     [Service]
+    Restart=always
     ExecStart=
     {{- if .IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
@@ -22953,12 +22983,17 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.3.2",
+      "defaultValue": "1.3.7",
       "metadata": {
         "description": "The Azure Moby build version"
       },
       "allowedValues": [
-         "1.3.2"
+         "1.3.2",
+         "1.3.3",
+         "1.3.4",
+         "1.3.5",
+         "1.3.6",
+         "1.3.7"
        ],
       "type": "string"
     },

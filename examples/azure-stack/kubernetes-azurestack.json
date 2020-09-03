@@ -4,8 +4,8 @@
     "properties": {
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
-            "orchestratorRelease": "1.15",
-            "orchestratorVersion": "1.15.12",
+            "orchestratorRelease": "1.17",
+            "orchestratorVersion": "1.17.11",
             "kubernetesConfig": {
                 "cloudProviderBackoff": true,
                 "cloudProviderBackoffRetries": 1,

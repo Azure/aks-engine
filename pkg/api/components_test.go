@@ -780,7 +780,6 @@ func TestSynthesizeComponentsConfig(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
 			synthesizeComponentsConfig(c.components, c.defaultComponent, c.isUpgrade)
 			i := GetComponentsIndexByName(c.components, common.ControllerManagerComponentName)
 			if !reflect.DeepEqual(c.components[i], c.expected) {

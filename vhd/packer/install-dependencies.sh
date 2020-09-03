@@ -80,6 +80,7 @@ installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
 MOBY_VERSION="19.03.12"
+CONTAINERD_VERSION="1.3.7"
 installMoby
 systemctl start docker
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -109,7 +110,7 @@ for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
 done
 
 CNI_PLUGIN_VERSIONS="
-0.8.6
+0.8.7
 "
 for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/cni-plugins/v${CNI_PLUGIN_VERSION}/binaries/cni-plugins-linux-amd64-v${CNI_PLUGIN_VERSION}.tgz"
@@ -300,7 +301,7 @@ for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
 done
 
 AZURE_NPM_VERSIONS="
-1.1.4
+1.1.7
 "
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-npm:v${AZURE_NPM_VERSION}"
@@ -364,17 +365,16 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.19.0-rc.4
+1.19.0
 1.18.8
 1.18.6
 1.17.11
 1.17.11-azs
 1.17.9
 1.17.9-azs
+1.16.15
 1.16.14
 1.16.14-azs
-1.16.13
-1.16.13-azs
 1.15.12
 1.15.12-azs
 1.15.11
@@ -403,10 +403,8 @@ done
 
 # Use kube-proxy image instead of hyperkube for kube-proxy container. Fixes #3529.
 KUBE_PROXY_VERSIONS="
+1.16.15
 1.16.14
-1.16.13
-1.16.12
-1.16.11
 "
 for KUBE_PROXY_VERSION in ${KUBE_PROXY_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kube-proxy:v${KUBE_PROXY_VERSION}"
@@ -510,10 +508,10 @@ for SNAPSHOT_CONTROLLER_VERSION in ${SNAPSHOT_CONTROLLER_VERSIONS}; do
 done
 
 NODE_PROBLEM_DETECTOR_VERSIONS="
-0.8.2
+0.8.4
 "
 for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
-  CONTAINER_IMAGE="k8s.gcr.io/node-problem-detector:v${NODE_PROBLEM_DETECTOR_VERSION}"
+  CONTAINER_IMAGE="k8s.gcr.io/node-problem-detector/node-problem-detector:v${NODE_PROBLEM_DETECTOR_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
