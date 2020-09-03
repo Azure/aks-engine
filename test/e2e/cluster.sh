@@ -52,7 +52,7 @@ function tryExit {
   fi
 }
 
-function moveStageJunit {
+function renameResultsFile {
   if [ "${AZURE_ENV}" == "AzureStackCloud" ] && [ "${SKIP_TEST}" == "false" ]; then
     sudo mv $(pwd)/test/e2e/kubernetes/junit.xml $(pwd)/test/e2e/kubernetes/${1}-junit.xml
   fi
@@ -158,7 +158,7 @@ docker run --rm \
 -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
 -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
 -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-"${DEV_IMAGE}" make test-kubernetes || tryExit && moveStageJunit "deploy"
+"${DEV_IMAGE}" make test-kubernetes || tryExit && renameResultsFile "deploy"
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
   # shellcheck disable=SC2012
@@ -292,7 +292,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "add-node-pool"
+    ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "add-node-pool"
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
@@ -366,7 +366,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "scale-down"
+    ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "scale-down"
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -452,7 +452,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
       -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
       -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-      ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "upgrade"
+      ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "upgrade"
   done
 fi
 
@@ -527,5 +527,5 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || tryExit && moveStageJunit "scale-up"
+    ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "scale-up"
 fi
