@@ -510,7 +510,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
 			"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
 			"systemStatsMonitor":  "/config/system-stats-monitor.json",
-			"versionLabel":        "v0.8.2",
+			"versionLabel":        "v0.8.4",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
