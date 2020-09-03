@@ -134,22 +134,6 @@ func (cli *CLIProvisioner) provision() error {
 		if err != nil {
 			return errors.Wrap(err, "Error while generating ssh keys")
 		}
-
-		privateKeyName := cli.Config.Name + "-ssh"
-		os.Mkdir(outputPath, 0755)
-		privateKeyPath := filepath.Join(outputPath, privateKeyName)
-		createPrivateKey := true
-		if cli.Config.PrivateSSHKeyPath != "" {
-			err := os.Rename(cli.Config.PrivateSSHKeyPath, privateKeyPath)
-			if err != nil {
-				return errors.Wrapf(err, "Error while trying to move private ssh key")
-			}
-			createPrivateKey = false
-		}
-		publicSSHKey, err2 := createSaveSSH(privateKeyPath, createPrivateKey)
-		if err2 != nil {
-			return errors.Wrap(err2, "Error while generating ssh keys")
-		}
 		os.Setenv("PUBLIC_SSH_KEY", publicSSHKey)
 	}
 
