@@ -80,6 +80,7 @@ type CustomCloudConfig struct {
 	PortalURL                    string `envconfig:"PORTAL_ENDPOINT" default:""`
 	TimeoutCommands              bool
 	CustomCloudName              string `envconfig:"CUSTOM_CLOUD_NAME"`
+	KeyVaultEndpoint             string `envconfig:"KEY_VAULT_ENDPOINT"`
 }
 
 // ArcOnboardingConfig holds the azure arc onboarding addon configuration

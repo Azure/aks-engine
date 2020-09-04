@@ -223,7 +223,7 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 					"resourceManagerEndpoint": "https://management.local.azurestack.external/",
 					"activeDirectoryEndpoint": "https://login.windows.net/",
 					"galleryEndpoint": "https://portal.local.azurestack.external:30015/",
-					"keyVaultEndpoint": "",
+					"keyVaultEndpoint": "https://vault.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189",
 					"graphEndpoint": "https://graph.windows.net/",
 					"storageEndpointSuffix": "local.azurestack.external",
 					"sqlDatabaseDNSSuffix": "",
