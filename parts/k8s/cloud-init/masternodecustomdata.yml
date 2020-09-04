@@ -172,6 +172,14 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+    {{- if EnableAggregatedAPIs}}
+- path: /etc/kubernetes/generate-proxy-certs.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "generateProxyCertsScript"}}
+    {{end}}
 {{end}}
 
 {{if IsAADPodIdentityAddonEnabled}}
@@ -314,15 +322,6 @@ write_files:
   owner: "root"
   content: |
     {{WrapAsParameter "clientCertificate"}}
-
-{{- if EnableAggregatedAPIs}}
-- path: /etc/kubernetes/generate-proxy-certs.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "generateProxyCertsScript"}}
-{{end}}
 
 {{- if HasCustomSearchDomain}}
 - path: {{GetCustomSearchDomainsCSEScriptFilepath}}

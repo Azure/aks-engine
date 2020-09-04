@@ -4,9 +4,7 @@ CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
-K8S_DOWNLOADS_DIR="/opt/kubernetes/downloads"
 APMZ_DOWNLOADS_DIR="/opt/apmz/downloads"
-BPFTRACE_DOWNLOADS_DIR="/opt/bpftrace/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
 
@@ -15,20 +13,20 @@ disableTimeSyncd() {
   retrycmd 120 5 25 systemctl disable systemd-timesyncd || exit 3
 }
 installEtcd() {
-  CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
-  if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
-    CLI_TOOL=$1
-    local path="/usr/bin"
-    CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
-    pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
+  local cli_tool=$1 v
+  v=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
+  if [[ $v != "${ETCD_VERSION}" ]]; then
+    cli_tool=$1
+    local path="/usr/bin" image=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
+    pullContainerImage $cli_tool ${image}
     removeEtcd
-    if [[ $CLI_TOOL == "docker" ]]; then
+    if [[ $cli_tool == "docker" ]]; then
       mkdir -p "$path"
-      docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd >"$path/etcd"
-      docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl >"$path/etcdctl"
+      docker run --rm --entrypoint cat ${image} /usr/local/bin/etcd >"$path/etcd"
+      docker run --rm --entrypoint cat ${image} /usr/local/bin/etcdctl >"$path/etcdctl"
     else
       tmpdir=/root/etcd${RANDOM}
-      img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
+      img unpack -o ${tmpdir} ${image}
       mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl ${path}
       rm -rf ${tmpdir}
     fi
@@ -38,7 +36,7 @@ installEtcd() {
 installDeps() {
   packages="apache2-utils apt-transport-https blobfuse=1.1.1 ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
-    retrycmd_no_stats 120 5 25 curl -fsSL ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
+    retrycmd_no_stats 120 5 25 curl -fsSL ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
     aptmarkWALinuxAgent hold
     packages+=" cgroup-lite ceph-common glusterfs-client"
@@ -96,38 +94,36 @@ mobyPkgVersion() {
   dpkg -s "${1}" | grep "Version:" | awk '{ print $2 }' | cut -d '+' -f 1
 }
 installMoby() {
-  install_pkgs=""
-  CURRENT_CONTAINERD_VERSION="$(mobyPkgVersion moby-containerd)"
-  if [ -n "${CONTAINERD_VERSION}" ] && [ ! "${CURRENT_CONTAINERD_VERSION}" = "${CONTAINERD_VERSION}" ]; then
+  local install_pkgs="" v cli_ver="${MOBY_VERSION}"
+  v="$(mobyPkgVersion moby-containerd)"
+  if [ -n "${CONTAINERD_VERSION}" ] && [ ! "${v}" = "${CONTAINERD_VERSION}" ]; then
     install_pkgs+=" moby-containerd=${CONTAINERD_VERSION}*"
     removeMoby
     removeContainerd
   fi
-  CURRENT_ENGINE_VERSION="$(mobyPkgVersion moby-engine)"
-  if [ ! "${CURRENT_ENGINE_VERSION}" = "${MOBY_VERSION}" ]; then
+  v="$(mobyPkgVersion moby-engine)"
+  if [ ! "${v}" = "${MOBY_VERSION}" ]; then
     install_pkgs+=" moby-engine=${MOBY_VERSION}*"
-    MOBY_CLI="${MOBY_VERSION}"
-    if [ "${MOBY_CLI}" = "3.0.4" ]; then
-      MOBY_CLI="3.0.3"
+    if [ "${cli_ver}" = "3.0.4" ]; then
+      cli_ver="3.0.3"
     fi
-    install_pkgs+=" moby-cli=${MOBY_CLI}*"
+    install_pkgs+=" moby-cli=${cli_ver}*"
     removeMoby
   fi
   if [ -n "${install_pkgs}" ]; then
-    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
 }
 installBcc() {
-  IOVISOR_KEY_TMP=/tmp/iovisor-release.key
-  IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
-  retrycmd_no_stats 120 5 25 curl -fsSL $IOVISOR_URL >$IOVISOR_KEY_TMP || exit 166
+  local key=/tmp/iovisor-release.key url=https://repo.iovisor.org/GPG-KEY
+  retrycmd_no_stats 120 5 25 curl -fsSL $url >$key || exit 166
   wait_for_apt_locks
-  retrycmd 30 5 30 apt-key add $IOVISOR_KEY_TMP || exit 167
+  retrycmd 30 5 30 apt-key add $key || exit 167
   echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" >/etc/apt/sources.list.d/iovisor.list
   apt_get_update || exit 99
   apt_get_install 120 5 25 bcc-tools libbcc-examples linux-headers-$(uname -r) || exit 168
@@ -143,107 +139,94 @@ downloadAzureCNI() {
   retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit 41
 }
 ensureAPMZ() {
-  local version=$1
-  local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+  local ver=$1 url="https://upstreamartifacts.azureedge.net/apmz/$ver/binaries/apmz_linux_amd64.tar.gz" fp="/usr/local/bin/apmz" d="$APMZ_DOWNLOADS_DIR/$ver" dest="$d/apmz.gz" bin_fp="$d/apmz_linux_amd64"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    apmz_filepath="/opt/bin/apmz"
+    fp="/opt/bin/apmz"
     export PATH="${PATH}:/opt/bin"
   fi
-  if [[ -f $apmz_filepath ]]; then
-    installed_version=$($apmz_filepath version)
-    if [[ $version == "$installed_version" ]]; then
+  if [[ -f $fp ]]; then
+    installed_ver=$($fp version)
+    if [[ $ver == "$installed_ver" ]]; then
       return
     fi
   fi
-  install_dir="$APMZ_DOWNLOADS_DIR/$version"
-  download_path="$install_dir/apmz.gz"
-  mkdir -p "$install_dir"
-  retrycmd_get_tarball 120 5 "$download_path" "${apmz_url}"
-  tar -xvf "$download_path" -C "$install_dir"
-  bin_path="$install_dir/apmz_linux_amd64"
-  chmod +x "$bin_path"
-  ln -Ffs "$bin_path" "$apmz_filepath"
+  mkdir -p "$d"
+  retrycmd_get_tarball 120 5 "$dest" "${url}"
+  tar -xvf "$dest" -C "$d"
+  chmod +x "$bin_fp"
+  ln -Ffs "$bin_fp" "$fp"
 }
 installBpftrace() {
-  local version="v0.9.4"
-  local bpftrace_bin="bpftrace"
-  local bpftrace_tools="bpftrace-tools.tar"
-  local bpftrace_url="https://upstreamartifacts.azureedge.net/$bpftrace_bin/$version"
-  local bpftrace_filepath="/usr/local/bin/$bpftrace_bin"
-  local tools_filepath="/usr/local/share/$bpftrace_bin"
+  local ver="v0.9.4" bin="bpftrace" tools="bpftrace-tools.tar" url="https://upstreamartifacts.azureedge.net/$bin/$ver" bpftrace_fp="/usr/local/bin/$bin" tools_fp="/usr/local/share/$bin" dest="$d/$tools"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    bpftrace_filepath="/opt/bin/$bpftrace_bin"
-    tools_filepath="/opt/share/$bpftrace_bin"
+    bpftrace_fp="/opt/bin/$bin"
+    tools_fp="/opt/share/$bin"
     export PATH="${PATH}:/opt/bin"
   fi
-  if [[ -f $bpftrace_filepath ]]; then
-    installed_version="$($bpftrace_bin -V | cut -d' ' -f2)"
-    if [[ $version == "$installed_version" ]]; then
+  if [[ -f $bpftrace_fp ]]; then
+    installed_ver="$($bin -V | cut -d' ' -f2)"
+    if [[ $ver == "$installed_ver" ]]; then
       return
     fi
-    rm "$bpftrace_filepath"
-    if [[ -d $tools_filepath ]]; then
-      rm -r "$tools_filepath"
+    rm "$bpftrace_fp"
+    if [[ -d $tools_fp ]]; then
+      rm -r "$tools_fp"
     fi
   fi
-  mkdir -p "$tools_filepath"
-  install_dir="$BPFTRACE_DOWNLOADS_DIR/$version"
-  mkdir -p "$install_dir"
-  download_path="$install_dir/$bpftrace_tools"
-  retrycmd 30 5 60 curl -fSL -o "$bpftrace_filepath" "$bpftrace_url/$bpftrace_bin" || exit 169
-  retrycmd 30 5 60 curl -fSL -o "$download_path" "$bpftrace_url/$bpftrace_tools" || exit 170
-  tar -xvf "$download_path" -C "$tools_filepath"
-  chmod +x "$bpftrace_filepath"
-  chmod -R +x "$tools_filepath/tools"
+  mkdir -p "$tools_fp"
+  d="/opt/bpftrace/downloads/$ver"
+  mkdir -p "$d"
+  retrycmd 30 5 60 curl -fSL -o "$bpftrace_fp" "$url/$bin" || exit 169
+  retrycmd 30 5 60 curl -fSL -o "$dest" "$url/$tools" || exit 170
+  tar -xvf "$dest" -C "$tools_fp"
+  chmod +x "$bpftrace_fp"
+  chmod -R +x "$tools_fp/tools"
 }
 installImg() {
   img_filepath=/usr/local/bin/img
   retrycmd_get_executable 120 5 $img_filepath "https://upstreamartifacts.azureedge.net/img/img-linux-amd64-v0.5.6" ls || exit 33
 }
 extractHyperkube() {
-  CLI_TOOL=$1
-  hyperkubePath="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
-  targetpath="/usr/local/bin"
+  local cli_tool=$1 fp="/home/hyperkube-downloads/${KUBERNETES_VERSION}" dest="/usr/local/bin"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    targetpath="/opt/bin"
+    dest="/opt/bin"
   fi
-  pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
-  if [[ $CLI_TOOL == "docker" ]]; then
-    mkdir -p "$hyperkubePath"
-    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp $targetpath/{kubelet,kubectl} $hyperkubePath"; then
-      mv "${hyperkubePath}/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
-      mv "${hyperkubePath}/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+  pullContainerImage $cli_tool ${HYPERKUBE_URL}
+  if [[ $cli_tool == "docker" ]]; then
+    mkdir -p "$fp"
+    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp $dest/{kubelet,kubectl} $fp"; then
+      mv "${fp}/kubelet" "${dest}/kubelet-${KUBERNETES_VERSION}"
+      mv "${fp}/kubectl" "${dest}/kubectl-${KUBERNETES_VERSION}"
       return
     else
-      docker run --rm -v $hyperkubePath:$hyperkubePath ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $hyperkubePath"
+      docker run --rm -v $fp:$fp ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $fp"
     fi
   else
-    img unpack -o "$hyperkubePath" ${HYPERKUBE_URL}
+    img unpack -o "$fp" ${HYPERKUBE_URL}
   fi
 
-  cp "${hyperkubePath}/hyperkube" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
-  mv "${hyperkubePath}/hyperkube" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+  cp "${fp}/hyperkube" "${dest}/kubelet-${KUBERNETES_VERSION}"
+  mv "${fp}/hyperkube" "${dest}/kubectl-${KUBERNETES_VERSION}"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    chmod a+x ${targetpath}/kubelet-${KUBERNETES_VERSION} ${targetpath}/kubectl-${KUBERNETES_VERSION}
+    chmod a+x ${dest}/kubelet-${KUBERNETES_VERSION} ${dest}/kubectl-${KUBERNETES_VERSION}
   fi
 }
 extractKubeBinaries() {
+  local dest="/opt/kubernetes/downloads" tmpDir=${KUBE_BINARY_URL##*/}
   KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"}
-  K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
-  mkdir -p "${K8S_DOWNLOADS_DIR}"
-  retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit 31
+  mkdir -p "${dest}"
+  retrycmd_get_tarball 120 5 "$dest/${tmpDir}" ${KUBE_BINARY_URL} || exit 31
   path=/usr/local/bin
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     path=/opt/bin
   fi
-  tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
+  tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$dest/${tmpDir}" \
     --strip-components=3 -C ${path} kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
-  rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
+  rm -f "$dest/${tmpDir}"
 }
 pullContainerImage() {
-  CLI_TOOL=$1
-  DOCKER_IMAGE_URL=$2
-  retrycmd 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit 35
+  local cli_tool=$1 url=$2
+  retrycmd 60 1 1200 $cli_tool pull $url || exit 35
 }
 overrideNetworkConfig() {
   CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"

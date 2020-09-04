@@ -43,6 +43,8 @@ copyPackerFiles() {
   KUBELET_SERVICE_DEST=/etc/systemd/system/kubelet.service
   DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_SRC=/home/packer/docker_clear_mount_propagation_flags.conf
   DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_DEST=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
+  GENERATE_PROXY_CERTS_SRC=/home/packer/generateproxycerts.sh
+  GENERATE_PROXY_CERTS_DEST=/etc/kubernetes/generate-proxy-certs.sh
   COLLECT_LOGS_SRC=/home/packer/collect-logs.sh
   COLLECT_LOGS_DEST=/opt/azure/containers/collect-logs.sh
   NOTICE_SRC=/home/packer/NOTICE.txt
@@ -71,6 +73,7 @@ copyPackerFiles() {
   cpAndMode $DOCKER_MONITOR_TIMER_SRC $DOCKER_MONITOR_TIMER_DEST 644
   cpAndMode $KUBELET_SERVICE_SRC $KUBELET_SERVICE_DEST 644
   cpAndMode $DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_SRC $DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_DEST 644
+  cpAndMode $GENERATE_PROXY_CERTS_SRC $GENERATE_PROXY_CERTS_DEST 744
   cpAndMode $COLLECT_LOGS_SRC $COLLECT_LOGS_DEST 744
   cpAndMode $NOTICE_SRC $NOTICE_DEST 444
 }
