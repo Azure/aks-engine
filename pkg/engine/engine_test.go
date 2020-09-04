@@ -1742,8 +1742,6 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				labelNodesSystemdService,
 				aptPreferences,
 				kubernetesHealthMonitorScript,
-				kubernetesKubeletMonitorSystemdService,
-				kubernetesDockerMonitorSystemdService,
 				kubernetesDockerMonitorSystemdTimer,
 				kubernetesDockerMonitorSystemdTimer,
 				dockerClearMountPropagationFlags,

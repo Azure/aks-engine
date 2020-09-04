@@ -240,6 +240,7 @@ func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
 		"--v":                                 "2",
 		"--volume-plugin-dir":                 "/etc/kubernetes/volumeplugins",
+		"--healthz-port":                      DefaultKubeletHealthzPort,
 	}
 }
 
@@ -293,6 +294,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		"--register-with-taints":              common.MasterNodeTaint,
 		"--v":                                 "2",
 		"--volume-plugin-dir":                 "/etc/kubernetes/volumeplugins",
+		"--healthz-port":                      DefaultKubeletHealthzPort,
 	}
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
