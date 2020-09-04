@@ -8,7 +8,7 @@
         "addons": [
           {
             "name": "kubernetes-dashboard",
-            "enabled": true
+            "enabled": false
           },
           {
             "name": "rescheduler",
