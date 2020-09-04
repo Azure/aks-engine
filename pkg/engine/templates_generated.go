@@ -19661,7 +19661,7 @@ downloadAzureCNI() {
   retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit 41
 }
 ensureAPMZ() {
-  local ver=$1 url="https://upstreamartifacts.azureedge.net/apmz/$ver/binaries/apmz_linux_amd64.tar.gz" fp="/usr/local/bin/apmz" d="$APMZ_DOWNLOADS_DIR/$ver" dest="$d/apmz.gz" bin_fp="$d/apmz_linux_amd64"
+  local ver=${1:"v0.5.1"} url="https://upstreamartifacts.azureedge.net/apmz/$ver/binaries/apmz_linux_amd64.tar.gz" fp="/usr/local/bin/apmz" d="$APMZ_DOWNLOADS_DIR/$ver" dest="$d/apmz.gz" bin_fp="$d/apmz_linux_amd64"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     fp="/opt/bin/apmz"
     export PATH="${PATH}:/opt/bin"
