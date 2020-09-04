@@ -7,10 +7,6 @@
         "clusterSubnet": "10.239.0.0/16",
         "addons": [
           {
-            "name": "tiller",
-            "enabled": true
-          },
-          {
             "name": "kubernetes-dashboard",
             "enabled": true
           },
