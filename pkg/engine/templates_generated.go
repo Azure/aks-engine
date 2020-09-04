@@ -20557,7 +20557,8 @@ kubelet_monitoring() {
 etcd_monitoring() {
   local -r max_seconds=10
   local output=""
-  local private_ip=$(hostname -i)
+  local private_ip
+  private_ip=$(hostname -i)
   local endpoint="https://${private_ip}:2379"
   while true; do
     if ! output=$(curl -s -S -m "${max_seconds}" --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines); then
