@@ -217,8 +217,8 @@ extractHyperkube() {
   fi
 }
 extractKubeBinaries() {
-  local dest="/opt/kubernetes/downloads" tmpDir=${KUBE_BINARY_URL##*/}
   KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"}
+  local dest="/opt/kubernetes/downloads" tmpDir=${KUBE_BINARY_URL##*/}
   mkdir -p "${dest}"
   retrycmd_get_tarball 120 5 "$dest/${tmpDir}" ${KUBE_BINARY_URL} || exit 31
   path=/usr/local/bin
