@@ -9,7 +9,7 @@ parameters:
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: unit_tests
-  timeoutInMinutes: 120
+  timeoutInMinutes: 140
   cancelTimeoutInMinutes: 5
   strategy:
     maxParallel: 0

@@ -5,5 +5,8 @@ After=docker.service
 Restart=always
 RestartSec=10
 RemainAfterExit=yes
+Environment=CONTAINER_RUNTIME={{GetContainerRuntime}}
 ExecStart=/usr/local/bin/health-monitor.sh container-runtime
+[Install]
+WantedBy=multi-user.target
 #EOF

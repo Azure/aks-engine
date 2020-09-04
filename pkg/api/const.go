@@ -454,6 +454,8 @@ const (
 	DefaultKubeletEventQPS = "0"
 	// DefaultKubeletCadvisorPort is 0, see --cadvisor-port at https://kubernetes.io/docs/reference/generated/kubelet/
 	DefaultKubeletCadvisorPort = "0"
+	// DefaultKubeletHealthzPort is the default /healthz port for the kubelet runtime
+	DefaultKubeletHealthzPort = "10248"
 	// DefaultJumpboxDiskSize specifies the default size for private cluster jumpbox OS disk in GB
 	DefaultJumpboxDiskSize = 30
 	// DefaultJumpboxUsername specifies the default admin username for the private cluster jumpbox

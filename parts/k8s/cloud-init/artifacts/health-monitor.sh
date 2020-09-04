@@ -7,28 +7,20 @@ set -o nounset
 set -o pipefail
 
 container_runtime_monitoring() {
-  local -r max_attempts=5
-  local attempt=1
-  local -r crictl="${KUBE_HOME}/bin/crictl"
-  local -r container_runtime_name="${CONTAINER_RUNTIME_NAME:-docker}"
+  local -r container_runtime_name="${CONTAINER_RUNTIME:-docker}"
   local healthcheck_command="docker ps"
-  if [[ ${CONTAINER_RUNTIME:-docker} != "docker" ]]; then
-    healthcheck_command="${crictl} pods"
+  if [[ ${CONTAINER_RUNTIME} == "containerd" ]]; then
+    healthcheck_command="ctr -n k8s.io containers ls"
   fi
 
-  until timeout 60 ${healthcheck_command} >/dev/null; do
-    if ((attempt == max_attempts)); then
-      echo "Max attempt ${max_attempts} reached! Proceeding to monitor container runtime healthiness."
-      break
-    fi
-    echo "$attempt initial attempt \"${healthcheck_command}\"! Trying again in $attempt seconds..."
-    sleep "$((2 ** attempt++))"
-  done
   while true; do
     if ! timeout 60 ${healthcheck_command} >/dev/null; then
       echo "Container runtime ${container_runtime_name} failed!"
       if [[ $container_runtime_name == "docker" ]]; then
         pkill -SIGUSR1 dockerd
+      fi
+      if [[ $container_runtime_name == "containerd" ]]; then
+        pkill -SIGUSR1 containerd
       fi
       systemctl kill --kill-who=main "${container_runtime_name}"
       sleep 120
@@ -47,7 +39,7 @@ kubelet_monitoring() {
   local -r max_seconds=10
   local output=""
   while true; do
-    if ! output=$(curl -m "${max_seconds}" -f -s -S http://127.0.0.1:10255/healthz 2>&1); then
+    if ! output=$(curl -m "${max_seconds}" -f -s -S http://127.0.0.1:${HEALTHZPORT}/healthz 2>&1); then
       echo $output
       echo "Kubelet is unhealthy!"
       systemctl kill kubelet
@@ -61,12 +53,31 @@ kubelet_monitoring() {
   done
 }
 
+etcd_monitoring() {
+  local -r max_seconds=10
+  local output=""
+  local private_ip=$(hostname -i)
+  local endpoint="https://${private_ip}:2379"
+  while true; do
+    if ! output=$(curl -s -S -m "${max_seconds}" --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines); then
+      echo $output
+      echo "etcd is unhealthy!"
+      systemctl kill etcd
+      sleep 60
+      if ! systemctl is-active etcd; then
+        systemctl start etcd
+      fi
+    else
+      sleep "${SLEEP_SECONDS}"
+    fi
+  done
+}
+
 if [[ $# -ne 1 ]]; then
   echo "Usage: health-monitor.sh <container-runtime/kubelet>"
   exit 1
 fi
 
-KUBE_HOME="/usr/local/bin"
 KUBE_ENV="/etc/default/kube-env"
 if [[ -e ${KUBE_ENV} ]]; then
   source "${KUBE_ENV}"
@@ -80,6 +91,8 @@ if [[ ${component} == "container-runtime" ]]; then
   container_runtime_monitoring
 elif [[ ${component} == "kubelet" ]]; then
   kubelet_monitoring
+elif [[ ${component} == "etcd" ]]; then
+  etcd_monitoring
 else
   echo "Health monitoring for component ${component} is not supported!"
 fi

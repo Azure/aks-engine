@@ -1,7 +1,7 @@
 #!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
+PRIVATE_IP=$(hostname -i | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
@@ -288,6 +288,11 @@ configureAzureCNI() {
     /sbin/ebtables -t nat --list
   fi
 }
+enableCRISystemdMonitor() {
+  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.timer || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart docker-monitor || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+}
 {{- if NeedsContainerd}}
 installContainerd() {
   local v
@@ -318,6 +323,7 @@ ensureContainerd() {
   wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/kubereserved-slice.conf|| exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   {{- end}}
   systemctlEnableAndStart containerd || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+  enableCRISystemdMonitor
 }
 {{end}}
 {{- if IsDockerContainerRuntime}}
@@ -342,10 +348,7 @@ ensureDocker() {
     fi
   done
   systemctlEnableAndStart docker || exit {{GetCSEErrorCode "ERR_DOCKER_START_FAIL"}}
-  {{/* Delay start of docker-monitor for 30 mins after booting */}}
-  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.timer || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  systemctlEnableAndStart docker-monitor.timer || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+  enableCRISystemdMonitor
 }
 {{end}}
 {{- if EnableEncryptionWithExternalKms}}
@@ -372,6 +375,8 @@ ensureKubelet() {
   wait_for_file 1200 1 /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
   {{- end}}
   systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  wait_for_file 1200 1 /etc/systemd/system/kubelet-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 }
 
 ensureAddons() {
@@ -471,6 +476,8 @@ ensureLabelExclusionForAzurePolicyAddon() {
 {{end}}
 ensureEtcd() {
   retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/etcd-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart etcd-monitor || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 createKubeManifestDir() {
   mkdir -p /etc/kubernetes/manifests
