@@ -19538,7 +19538,6 @@ installEtcd() {
   local cli_tool=$1 v
   v=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $v != "${ETCD_VERSION}" ]]; then
-    cli_tool=$1
     local path="/usr/bin" image=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
     pullContainerImage $cli_tool ${image}
     removeEtcd
@@ -19661,14 +19660,14 @@ downloadAzureCNI() {
   retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit 41
 }
 ensureAPMZ() {
-  local ver=${1:"v0.5.1"} url="https://upstreamartifacts.azureedge.net/apmz/$ver/binaries/apmz_linux_amd64.tar.gz" fp="/usr/local/bin/apmz" d="$APMZ_DOWNLOADS_DIR/$ver" dest="$d/apmz.gz" bin_fp="$d/apmz_linux_amd64"
+  local url="https://upstreamartifacts.azureedge.net/apmz/$ver/binaries/apmz_linux_amd64.tar.gz" fp="/usr/local/bin/apmz" d="$APMZ_DOWNLOADS_DIR/$ver" dest="$d/apmz.gz" bin_fp="$d/apmz_linux_amd64"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     fp="/opt/bin/apmz"
     export PATH="${PATH}:/opt/bin"
   fi
   if [[ -f $fp ]]; then
     installed_ver=$($fp version)
-    if [[ $ver == "$installed_ver" ]]; then
+    if [[ $1 == "$installed_ver" ]]; then
       return
     fi
   fi
