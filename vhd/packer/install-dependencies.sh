@@ -72,7 +72,8 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 Binaries:
 EOF
 
-ensureAPMZ "v0.5.1"
+apmz_version="v0.5.1"
+ensureAPMZ "${apmz_version}"
 echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 
 installBpftrace
