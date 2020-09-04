@@ -937,7 +937,7 @@ func TestK8sVars(t *testing.T) {
 	}
 }
 
-func k(t *testing.T) {
+func TestK8sVarsMastersOnly(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
 			ServicePrincipalProfile: &api.ServicePrincipalProfile{
