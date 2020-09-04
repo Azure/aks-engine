@@ -13,10 +13,10 @@ disableTimeSyncd() {
   retrycmd 120 5 25 systemctl disable systemd-timesyncd || exit 3
 }
 installEtcd() {
-  local cli_tool=$1 v
+  local  v
   v=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $v != "${ETCD_VERSION}" ]]; then
-    local path="/usr/bin" image=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
+    local cli_tool=$1 path="/usr/bin" image=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
     pullContainerImage $cli_tool ${image}
     removeEtcd
     if [[ $cli_tool == "docker" ]]; then
@@ -138,7 +138,7 @@ downloadAzureCNI() {
   retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit 41
 }
 ensureAPMZ() {
-  local ver=$1
+  local ver=$1 v
   local d="$APMZ_DOWNLOADS_DIR/$ver"
   local url="https://upstreamartifacts.azureedge.net/apmz/$ver/binaries/apmz_linux_amd64.tar.gz" fp="/usr/local/bin/apmz" dest="$d/apmz.gz" bin_fp="$d/apmz_linux_amd64"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
@@ -146,8 +146,8 @@ ensureAPMZ() {
     export PATH="${PATH}:/opt/bin"
   fi
   if [[ -f $fp ]]; then
-    installed_ver=$($fp version)
-    if [[ $ver == "$installed_ver" ]]; then
+    v=$($fp version)
+    if [[ $ver == "$v" ]]; then
       return
     fi
   fi
@@ -158,18 +158,18 @@ ensureAPMZ() {
   ln -Ffs "$bin_fp" "$fp"
 }
 installBpftrace() {
-  local ver="v0.9.4"
-  local bin="bpftrace"
-  local tools="bpftrace-tools.tar" url="https://upstreamartifacts.azureedge.net/$bin/$ver" bpftrace_fp="/usr/local/bin/$bin" tools_fp="/usr/local/share/$bin"
-  local dest="$d/$tools"
+  local ver="v0.9.4" v bin="bpftrace" tools="bpftrace-tools.tar"
+  local url="https://upstreamartifacts.azureedge.net/$bin/$ver"
+  local bpftrace_fp="/usr/local/bin/$bin"
+  local tools_fp="/usr/local/share/$bin"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     bpftrace_fp="/opt/bin/$bin"
     tools_fp="/opt/share/$bin"
     export PATH="${PATH}:/opt/bin"
   fi
   if [[ -f $bpftrace_fp ]]; then
-    installed_ver="$($bin -V | cut -d' ' -f2)"
-    if [[ $ver == "$installed_ver" ]]; then
+    v="$($bin -V | cut -d' ' -f2)"
+    if [[ $ver == "$v" ]]; then
       return
     fi
     rm "$bpftrace_fp"
@@ -178,11 +178,12 @@ installBpftrace() {
     fi
   fi
   mkdir -p "$tools_fp"
-  d="/opt/bpftrace/downloads/$ver"
-  mkdir -p "$d"
+  install_dir="/opt/bpftrace/downloads/$ver"
+  mkdir -p "$install_dir"
+  download_path="$install_dir/$tools"
   retrycmd 30 5 60 curl -fSL -o "$bpftrace_fp" "$url/$bin" || exit 169
-  retrycmd 30 5 60 curl -fSL -o "$dest" "$url/$tools" || exit 170
-  tar -xvf "$dest" -C "$tools_fp"
+  retrycmd 30 5 60 curl -fSL -o "$download_path" "$url/$tools" || exit 170
+  tar -xvf "$download_path" -C "$tools_fp"
   chmod +x "$bpftrace_fp"
   chmod -R +x "$tools_fp/tools"
 }
