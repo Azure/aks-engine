@@ -3847,6 +3847,7 @@ func TestSetCustomCloudProfileEnvironmentDefaults(t *testing.T) {
 		Name:                       "AzureStackCloud",
 		ManagementPortalURL:        "https://portal.testlocation.contoso.com/",
 		ServiceManagementEndpoint:  "https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7",
+		KeyVaultEndpoint:           "https://vault.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7",
 		ResourceManagerEndpoint:    fmt.Sprintf("https://management.%s.contoso.com/", location),
 		ActiveDirectoryEndpoint:    "https://adfs.testlocation.contoso.com/",
 		GalleryEndpoint:            "https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/",
