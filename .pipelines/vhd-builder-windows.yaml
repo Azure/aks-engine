@@ -114,19 +114,7 @@ jobs:
       path: 'windows-vhd-publishing-info.json'
     condition: eq(variables.COPY_VHD, 'True')
 
-  - script: |
-      SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      -e CLIENT_ID=${CLIENT_ID} \
-      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-      -e TENANT_ID=${TENANT_ID} \
-      -e SA_NAME=${SA_NAME} \
-      -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
-      ${DEIS_GO_DEV_IMAGE} make delete-sa
-    displayName: cleanup - delete temp storage account
-    condition: always()
+ 
 
   - script: |
       sudo chown -R $USER:$USER .
