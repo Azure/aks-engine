@@ -17759,9 +17759,11 @@ spec:
               mountPropagation: Bidirectional
             - name: providers-dir
               mountPath: /etc/kubernetes/secrets-store-csi-providers
+{{- if IsCustomCloudProfile}}
             - name: custom-environment
               mountPath: /etc/kubernetes/azurestackcloud.json
               readOnly: true
+{{end}}
           resources:
             limits:
               cpu: {{ContainerCPULimits "secrets-store"}}
@@ -17804,10 +17806,12 @@ spec:
           hostPath:
             path: /etc/kubernetes/secrets-store-csi-providers
             type: DirectoryOrCreate
+{{- if IsCustomCloudProfile}}
         - name: custom-environment
           hostPath:
             path: /etc/kubernetes/azurestackcloud.json
             type: FileOrCreate
+{{end}}
       nodeSelector:
         kubernetes.io/os: linux
 ---
