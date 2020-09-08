@@ -56,8 +56,8 @@ github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwc
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/devigned/pub v0.2.3 h1:GFdcC2zrTqPCh55DZvUF38mOi4HkYDkxaTtscLBTzoU=
-github.com/devigned/pub v0.2.3/go.mod h1:XLFqwlVUlxn4ALCFZpjZHqE7tK6vLBypht2PivPFRnM=
+github.com/devigned/pub v0.2.6 h1:NsjET4//z4WzjkhE6It4fgepqK2+2rFwaw6rZvqN1mY=
+github.com/devigned/pub v0.2.6/go.mod h1:XLFqwlVUlxn4ALCFZpjZHqE7tK6vLBypht2PivPFRnM=
 github.com/devigned/tab v0.0.1 h1:RFMMQ40ds0zAPabPGbNT7C269NbQQyStQUsKqxwm654=
 github.com/devigned/tab v0.0.1/go.mod h1:oVYrfgGyond090gxCvvbjZji79+peOiSV6vhZhKJM0Y=
 github.com/devigned/tab v0.1.1 h1:3mD6Kb1mUOYeLpJvTVSDwSg5ZsfSxfvxGRTxRsJsITA=

@@ -20,7 +20,7 @@ $(LOCALBIN)/golangci-lint:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.28.3
 
 $(LOCALBIN)/pub:
-	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...@v0.2.3
+	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...@v0.2.6
 
 $(LOCALBIN)/goveralls:
     GOBIN=$(LOCALBIN) $(GO) get github.com/mattn/goveralls
