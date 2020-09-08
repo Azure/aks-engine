@@ -255,8 +255,12 @@ function GenerateAzureStackCNIConfig
     $sdnNics = Get-Content $networkInterfacesFile `
         | ConvertFrom-Json `
         | Select-Object -ExpandProperty value `
-        | Where-Object { $localNics.Contains($_.properties.macAddress) } `
+        | Where-Object { $null -ne $_.properties.macAddress -and $localNics.Contains($_.properties.macAddress) } `
         | Where-Object { $_.properties.ipConfigurations.Count -gt 0}
+
+    if (!$sdnNics) {
+        throw 'Error extracting the SDN interfaces from the network interfaces file'
+    }
 
     $interfaces = @{
         Interfaces = @( $sdnNics | ForEach-Object { @{
