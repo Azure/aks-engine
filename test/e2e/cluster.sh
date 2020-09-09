@@ -11,6 +11,7 @@ AZURE_ENV="${AZURE_ENV:-AzurePublicCloud}"
 IDENTITY_SYSTEM="${IDENTITY_SYSTEM:-azure_ad}"
 ARC_LOCATION="eastus"
 GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST:-false}"
+TEST_PVC="${TEST_PVC:-false}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
@@ -55,7 +56,7 @@ function tryExit {
 function renameResultsFile {
   JUNIT_PATH=$(pwd)/test/e2e/kubernetes/junit.xml
   if [ "${AZURE_ENV}" == "AzureStackCloud" ] && [ -f ${JUNIT_PATH} ]; then
-    sudo mv ${JUNIT_PATH} $(pwd)/test/e2e/kubernetes/${1}-junit.xml
+    mv ${JUNIT_PATH} $(pwd)/test/e2e/kubernetes/${1}-junit.xml
   fi
 }
 
@@ -133,6 +134,7 @@ docker run --rm \
 -e CUSTOM_HYPERKUBE_IMAGE="${CUSTOM_HYPERKUBE_IMAGE}" \
 -e CUSTOM_KUBE_PROXY_IMAGE="${CUSTOM_KUBE_PROXY_IMAGE}" \
 -e IS_JENKINS="${IS_JENKINS}" \
+-e TEST_PVC="${TEST_PVC}" \
 -e SKIP_TEST="${SKIP_TESTS}" \
 -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
@@ -269,6 +271,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e TEST_PVC="${TEST_PVC}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_ADD_POOL} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     -e API_PROFILE="${API_PROFILE}" \
@@ -343,6 +346,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e TEST_PVC="${TEST_PVC}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     -e API_PROFILE="${API_PROFILE}" \
@@ -429,6 +433,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
       -e GINKGO_SKIP="${SKIP_AFTER_UPGRADE}" \
       -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+      -e TEST_PVC="${TEST_PVC}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_UPGRADE} \
       -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
       -e API_PROFILE="${API_PROFILE}" \
@@ -504,6 +509,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e TEST_PVC="${TEST_PVC}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     -e API_PROFILE="${API_PROFILE}" \
