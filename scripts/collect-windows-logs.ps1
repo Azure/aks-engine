@@ -33,6 +33,22 @@ if (Test-Path $containerd) {
   }
 }
 
+$networkInterfaces = "c:\k\network-interfaces.json"
+if (Test-Path $networkInterfaces) {
+  $tempFile = Copy-Item $networkInterfaces $lockedTemp -PassThru -ErrorAction Ignore
+  if ($tempFile) {
+    $paths += $tempFile
+  }
+}
+
+$interfaces = "c:\k\interfaces.json.json"
+if (Test-Path $interfaces) {
+  $tempFile = Copy-Item $interfaces $lockedTemp -PassThru -ErrorAction Ignore
+  if ($tempFile) {
+    $paths += $tempFile
+  }
+}
+
 Write-Host "Exporting ETW events to CSV files"
 $scm = Get-WinEvent -FilterHashtable @{logname = 'System'; ProviderName = 'Service Control Manager' } | Where-Object { $_.Message -Like "*docker*" -or $_.Message -Like "*kub*" } | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
 # 2004 = resource exhaustion, other 5 events related to reboots

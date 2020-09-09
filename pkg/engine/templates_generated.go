@@ -19244,7 +19244,7 @@ configureAzureStackInterfaces() {
 
   if [[ -z $SDN_INTERFACES ]]; then
       echo "Error extracting the SDN interfaces from the network interfaces file"
-      exit 122
+      exit 123
   fi
 
   AZURE_CNI_CONFIG=$(echo ${SDN_INTERFACES} | jq "{Interfaces: [.[] | {MacAddress: .properties.macAddress, IsPrimary: .properties.primary, IPSubnets: [{Prefix: .properties.ipConfigurations[0].properties.subnet.id, IPAddresses: .properties.ipConfigurations | [.[] | {Address: .properties.privateIPAddress, IsPrimary: .properties.primary}]}]}]}")
@@ -19260,7 +19260,7 @@ configureAzureStackInterfaces() {
 
     if [[ -z $SUBNET_PREFIX ]]; then
       echo "Error fetching the subnet address prefix for a subnet ID"
-      exit 123
+      exit 122
     fi
 
     # shellcheck disable=SC2001
