@@ -56,7 +56,7 @@
       }
     },
     "masterProfile": {
-      "count": 5,
+      "count": 3,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v3",
       "OSDiskSizeGB": 200,
