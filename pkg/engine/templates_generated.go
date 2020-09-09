@@ -24229,8 +24229,6 @@ spec:
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
-        - name: etc-kubernetes-certs
-          mountPath: /etc/kubernetes/certs
         - name: etc-ssl-certs
           mountPath: /etc/ssl/certs
         - name: var-lib-kubelet
@@ -24246,9 +24244,6 @@ spec:
     - name: etc-kubernetes
       hostPath:
         path: /etc/kubernetes
-    - name: etc-kubernetes-certs
-      hostPath:
-        path: /etc/kubernetes/certs
     - name: etc-ssl-certs
       hostPath:
         path: /etc/ssl/certs
