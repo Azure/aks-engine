@@ -9,7 +9,7 @@
 # - DEIS_GO_DEV_IMAGE - Dev container image ID
 # - PACKER_VM_SIZE - VM Size to be used during packer build operation
 # - STORAGE_ACCT_BLOB_URL - Url to blob storage container used to copy image to in preparation for publishing
-# - STORAGE_ACCT_SAS_TOKEN - SAS token with permission to write to CLASSIC_BLOB containers
+# - STORAGE_ACCT_SAS_TOKEN - SAS token with permission to write to CLASSIC_BLOB container
 # - SUBSCRIPTION_ID - Subscription ID used by the pipeline
 # - TENANT_ID - Tenant Id used for service principal login
 
