@@ -20374,9 +20374,8 @@ var _k8sCloudInitArtifactsEtcdService = []byte(`[Unit]
 Description=etcd - highly-available key value store
 Documentation=https://github.com/coreos/etcd
 Documentation=man:etcd
-After=network.target
-Wants=network-online.target
-RequiresMountsFor=/var/lib/etcddisk
+After=network.target var-lib-etcddisk.mount
+Wants=network-online.target var-lib-etcddisk.mount
 [Service]
 Environment=DAEMON_ARGS=
 Environment=ETCD_NAME=%H
@@ -20385,10 +20384,12 @@ EnvironmentFile=-/etc/default/%p
 Type=notify
 User=etcd
 PermissionsStartOnly=true
+ExecStartPre=/bin/mountpoint -q /var/lib/etcddisk
 ExecStart=/usr/bin/etcd $DAEMON_ARGS
 Restart=always
 [Install]
-WantedBy=multi-user.target`)
+WantedBy=multi-user.target
+`)
 
 func k8sCloudInitArtifactsEtcdServiceBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsEtcdService, nil
