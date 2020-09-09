@@ -41,7 +41,7 @@ if (Test-Path $networkInterfaces) {
   }
 }
 
-$interfaces = "c:\k\interfaces.json.json"
+$interfaces = "c:\k\interfaces.json"
 if (Test-Path $interfaces) {
   $tempFile = Copy-Item $interfaces $lockedTemp -PassThru -ErrorAction Ignore
   if ($tempFile) {
