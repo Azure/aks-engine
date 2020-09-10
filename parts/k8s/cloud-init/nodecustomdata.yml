@@ -498,6 +498,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+            After=kubelet.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh kubelet
@@ -506,6 +507,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+            After=docker.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime

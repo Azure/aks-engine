@@ -7,28 +7,28 @@ set -o nounset
 set -o pipefail
 
 container_runtime_monitoring() {
-  local -r container_runtime_name="${CONTAINER_RUNTIME:-docker}"
-  local healthcheck_command="docker ps"
+  local -r cri_name="${CONTAINER_RUNTIME:-docker}"
+  local cmd="docker ps"
   if [[ ${CONTAINER_RUNTIME} == "containerd" ]]; then
-    healthcheck_command="ctr -n k8s.io containers ls"
+    cmd="ctr -n k8s.io containers ls"
   fi
 
   while true; do
-    if ! timeout 60 ${healthcheck_command} >/dev/null; then
-      echo "Container runtime ${container_runtime_name} failed!"
-      if [[ $container_runtime_name == "docker" ]]; then
+    if ! timeout 60 ${cmd} >/dev/null; then
+      echo "Container runtime ${cri_name} failed!"
+      if [[ $cri_name == "docker" ]]; then
         pkill -SIGUSR1 dockerd
       fi
-      if [[ $container_runtime_name == "containerd" ]]; then
+      if [[ $cri_name == "containerd" ]]; then
         pkill -SIGUSR1 containerd
       fi
-      systemctl kill --kill-who=main "${container_runtime_name}"
+      systemctl kill --kill-who=main "${cri_name}"
       sleep 120
-      if ! systemctl is-active ${container_runtime_name}; then
-        systemctl start ${container_runtime_name}
+      if ! systemctl is-active ${cri_name}; then
+        systemctl start ${cri_name}
       fi
     else
-      sleep "${SLEEP_SECONDS}"
+      sleep "${SLEEP_TIME}"
     fi
   done
 }
@@ -48,7 +48,7 @@ kubelet_monitoring() {
         systemctl start kubelet
       fi
     else
-      sleep "${SLEEP_SECONDS}"
+      sleep "${SLEEP_TIME}"
     fi
   done
 }
@@ -69,7 +69,7 @@ etcd_monitoring() {
         systemctl start etcd
       fi
     else
-      sleep "${SLEEP_SECONDS}"
+      sleep "${SLEEP_TIME}"
     fi
   done
 }
@@ -79,12 +79,7 @@ if [[ $# -ne 1 ]]; then
   exit 1
 fi
 
-KUBE_ENV="/etc/default/kube-env"
-if [[ -e ${KUBE_ENV} ]]; then
-  source "${KUBE_ENV}"
-fi
-
-SLEEP_SECONDS=10
+SLEEP_TIME=10
 component=$1
 echo "Start kubernetes health monitoring for ${component}"
 
