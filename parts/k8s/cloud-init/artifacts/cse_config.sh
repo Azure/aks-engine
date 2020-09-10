@@ -289,7 +289,6 @@ configureAzureCNI() {
   fi
 }
 enableCRISystemdMonitor() {
-  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.timer || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   wait_for_file 1200 1 /etc/systemd/system/docker-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart docker-monitor || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
