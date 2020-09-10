@@ -77,27 +77,13 @@ Set-AzureCNIConfig
     if ($IsDualStackEnabled){
         $subnetToPass = $KubeClusterCIDR -split ","
         $exceptionAddresses = @($subnetToPass[0], $MasterSubnet)
-
-        if ($VNetCIDR.Contains(",")) {
-            $vnetCIDRs = $VNetCIDR -split ","
-            foreach ($cidr in $vnetCIDRs) {
-                $exceptionAddresses += $cidr
-            }
-        } else {
-            $exceptionAddresses += $VNetCIDR
-        }
     }
     else {
         $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet)
-
-        if ($VNetCIDR.Contains(",")) {
-            $vnetCIDRs = $VNetCIDR -split ","
-            foreach ($cidr in $vnetCIDRs) {
-                $exceptionAddresses += $cidr
-            }
-        } else {
-            $exceptionAddresses += $VNetCIDR
-        }
+    }
+    $vnetCIDRs = $VNetCIDR -split ","
+    foreach ($cidr in $vnetCIDRs) {
+        $exceptionAddresses += $cidr
     }
 
     $fileName  = [Io.path]::Combine("$AzureCNIConfDir", "10-azure.conflist")
