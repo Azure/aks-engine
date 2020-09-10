@@ -3,7 +3,7 @@
         Used to produce Windows AKS images.
 
     .DESCRIPTION
-        This script is used by packer to produce Windows AKS images.
+        This script is used by packer to produce Windows AKS image.
 #>
 
 param()
