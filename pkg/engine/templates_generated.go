@@ -24479,10 +24479,14 @@ Set-AzureCNIConfig
     # Fill in DNS information for kubernetes.
     if ($IsDualStackEnabled){
         $subnetToPass = $KubeClusterCIDR -split ","
-        $exceptionAddresses = @($subnetToPass[0], $MasterSubnet, $VNetCIDR)
+        $exceptionAddresses = @($subnetToPass[0], $MasterSubnet)
     }
     else {
-        $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
+        $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet)
+    }
+    $vnetCIDRs = $VNetCIDR -split ","
+    foreach ($cidr in $vnetCIDRs) {
+        $exceptionAddresses += $cidr
     }
 
     $fileName  = [Io.path]::Combine("$AzureCNIConfDir", "10-azure.conflist")
