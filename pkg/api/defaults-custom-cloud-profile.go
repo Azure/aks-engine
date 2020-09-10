@@ -114,6 +114,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 				env.ResourceManagerVMDNSSuffix = fmt.Sprintf("cloudapp.%s", azsFQDNSuffix)
 				env.StorageEndpointSuffix = fmt.Sprintf("%s.%s", cs.Location, azsFQDNSuffix)
 				env.KeyVaultDNSSuffix = fmt.Sprintf("vault.%s.%s", cs.Location, azsFQDNSuffix)
+				env.KeyVaultEndpoint = strings.Replace(env.ServiceManagementEndpoint, "https://management.", "https://vault.", 1)
 			} else if env.ResourceManagerVMDNSSuffix == "" || env.StorageEndpointSuffix == "" || env.KeyVaultDNSSuffix == "" {
 				// Non-AzureStack CustomCloud MUST provide suffixes
 				return fmt.Errorf("Non-AzureStack CustomCloudProfile MUST provide ResourceManagerVMDNSSuffix, StorageEndpointSuffix, KeyVaultDNSSuffix")
