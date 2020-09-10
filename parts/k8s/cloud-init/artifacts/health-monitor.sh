@@ -7,8 +7,7 @@ set -o nounset
 set -o pipefail
 
 container_runtime_monitoring() {
-  local -r cri_name="${CONTAINER_RUNTIME:-docker}"
-  local cmd="docker ps"
+  local cri_name="${CONTAINER_RUNTIME:-docker}" cmd="docker ps"
   if [[ ${CONTAINER_RUNTIME} == "containerd" ]]; then
     cmd="ctr -n k8s.io containers ls"
   fi
@@ -36,8 +35,7 @@ container_runtime_monitoring() {
 kubelet_monitoring() {
   echo "Wait for 2 minutes for kubelet to be functional"
   sleep 120
-  local -r max_seconds=10
-  local output=""
+  local max_seconds=10 output=""
   while true; do
     if ! output=$(curl -m "${max_seconds}" -f -s -S http://127.0.0.1:${HEALTHZPORT}/healthz 2>&1); then
       echo $output
@@ -54,10 +52,8 @@ kubelet_monitoring() {
 }
 
 etcd_monitoring() {
-  local -r max_seconds=10
-  local output=""
-  local private_ip
-  private_ip=$(hostname -i)
+  local max_seconds=10 output=""
+  local private_ip=$(hostname -I | cut -d' ' -f1)
   local endpoint="https://${private_ip}:2379"
   while true; do
     if ! output=$(curl -s -S -m "${max_seconds}" --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines); then
