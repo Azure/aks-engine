@@ -104,7 +104,6 @@ const (
 	kubernetesHealthMonitorScript      = "k8s/cloud-init/artifacts/health-monitor.sh"
 	// kubernetesKubeletMonitorSystemdTimer     = "k8s/cloud-init/artifacts/kubelet-monitor.timer" // TODO enable
 	kubernetesKubeletMonitorSystemdService   = "k8s/cloud-init/artifacts/kubelet-monitor.service"
-	kubernetesDockerMonitorSystemdTimer      = "k8s/cloud-init/artifacts/docker-monitor.timer"
 	kubernetesDockerMonitorSystemdService    = "k8s/cloud-init/artifacts/docker-monitor.service"
 	etcdMonitorSystemdService                = "k8s/cloud-init/artifacts/etcd-monitor.service"
 	labelNodesScript                         = "k8s/cloud-init/artifacts/label-nodes.sh"

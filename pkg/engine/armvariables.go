@@ -157,7 +157,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
 		"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
-		"dockerMonitorSystemdTimer":    getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs),
 	}
 
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName) {

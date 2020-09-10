@@ -21646,13 +21646,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-- path: /etc/systemd/system/docker-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -22244,13 +22237,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
-
-- path: /etc/systemd/system/docker-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
