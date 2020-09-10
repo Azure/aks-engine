@@ -283,7 +283,7 @@ for RESCHEDULER_VERSION in ${RESCHEDULER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-VIRTUAL_KUBELET_VERSIONS="latest"
+VIRTUAL_KUBELET_VERSIONS="1.2.1.2"
 for VIRTUAL_KUBELET_VERSION in ${VIRTUAL_KUBELET_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/virtual-kubelet/virtual-kubelet:${VIRTUAL_KUBELET_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
