@@ -3,7 +3,6 @@ ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
-  echo "Already ran to success exiting..."
   exit 0
 fi
 
@@ -64,12 +63,10 @@ time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
 {{- if HasVHDDistroNodes}}
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
-  echo "detected golden image pre-install"
   time_metric "CleanUpContainerImages" cleanUpContainerImages
   FULL_INSTALL_REQUIRED=false
 else
   if [[ ${IS_VHD} == true ]]; then
-    echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
     exit {{GetCSEErrorCode "ERR_VHD_FILE_NOT_FOUND"}}
   fi
   FULL_INSTALL_REQUIRED=true
@@ -90,8 +87,6 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
   {{- if not IsDockerContainerRuntime}}
   time_metric "InstallImg" installImg
   {{end}}
-else
-  echo "Golden image; skipping dependencies installation"
 fi
 {{end}}
 
@@ -121,11 +116,11 @@ fi
 
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   {{- if IsDockerContainerRuntime}}
-  CLI_TOOL="docker"
+  cli_tool="docker"
   {{else}}
-  CLI_TOOL="img"
+  cli_tool="img"
   {{end}}
-  time_metric "InstallEtcd" installEtcd $CLI_TOOL
+  time_metric "InstallEtcd" installEtcd $cli_tool
 fi
 
 {{/* this will capture the amount of time to install of the network plugin during cse */}}
@@ -314,7 +309,7 @@ else
   fi
 fi
 
-echo "Custom script finished successfully"
+echo "CSE finished successfully"
 echo $(date),$(hostname), endcustomscript >>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww >/opt/azure/provision-ps.log &

@@ -193,6 +193,11 @@
         },
         {
             "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/generateproxycerts.sh",
+            "destination": "/home/packer/generateproxycerts.sh"
+        },
+        {
+            "type": "file",
             "source": "vhd/notice/notice.txt",
             "destination": "/home/packer/NOTICE.txt"
         },

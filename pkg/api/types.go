@@ -2516,7 +2516,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"CONTAINERD_DOWNLOAD_URL_BASE":         cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase,
 		"KMS_PROVIDER_VAULT_NAME":              input.ClusterKeyVaultName,
 		"IS_HOSTED_MASTER":                     strconv.FormatBool(cs.Properties.IsHostedMasterProfile()),
-		"IS_IPV6_DUALSTACK_FEATURE_ENABLED":    strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
+		"IPV6_DUALSTACK_ENABLED":               strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"IS_IPV6_ENABLED":                      strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"AUTHENTICATION_METHOD":                cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"IDENTITY_SYSTEM":                      cs.Properties.GetCustomCloudIdentitySystem(),
@@ -2524,7 +2524,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
 		"CUSTOM_HYPERKUBE_IMAGE":               kubernetesConfig.CustomHyperkubeImage,
-		"MICROSOFT_APT_REPO":                   kubernetesConfig.MicrosoftAptRepositoryURL,
+		"MS_APT_REPO":                          kubernetesConfig.MicrosoftAptRepositoryURL,
 	}
 
 	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {

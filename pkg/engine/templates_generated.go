@@ -18352,10 +18352,11 @@ ADDON_MANAGER_SPEC=/etc/kubernetes/manifests/kube-addon-manager.yaml
 GET_KUBELET_LOGS="journalctl -u kubelet --no-pager"
 
 systemctlEnableAndStart() {
+  local ret
   systemctl_restart 100 5 30 $1
-  RESTART_STATUS=$?
+  ret=$?
   systemctl status $1 --no-pager -l >/var/log/azure/$1-status.log
-  if [ $RESTART_STATUS -ne 0 ]; then
+  if [ $ret -ne 0 ]; then
     return 1
   fi
   if ! retrycmd 120 5 25 systemctl enable $1; then
@@ -18387,52 +18388,47 @@ configureEtcdUser(){
   id etcd
 }
 configureSecrets(){
-  APISERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/apiserver.key"
-  touch "${APISERVER_PRIVATE_KEY_PATH}"
-  CA_PRIVATE_KEY_PATH="/etc/kubernetes/certs/ca.key"
-  touch "${CA_PRIVATE_KEY_PATH}"
-  ETCD_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdserver.key"
-  touch "${ETCD_SERVER_PRIVATE_KEY_PATH}"
+  local apiserver_key="/etc/kubernetes/certs/apiserver.key" ca_key="/etc/kubernetes/certs/ca.key" etcdserver_key="/etc/kubernetes/certs/etcdserver.key"
+  touch "${apiserver_key}"
+  touch "${ca_key}"
+  touch "${etcdserver_key}"
   if [[ -z ${COSMOS_URI} ]]; then
-    chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
+    chown etcd:etcd "${etcdserver_key}"
   fi
-  ETCD_CLIENT_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdclient.key"
-  touch "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-  ETCD_PEER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
-  touch "${ETCD_PEER_PRIVATE_KEY_PATH}"
+  local etcdclient_key="/etc/kubernetes/certs/etcdclient.key" etcdpeer_key="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
+  touch "${etcdclient_key}"
+  touch "${etcdpeer_key}"
   if [[ -z ${COSMOS_URI} ]]; then
-    chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
+    chown etcd:etcd "${etcdpeer_key}"
   fi
-  chmod 0600 "${APISERVER_PRIVATE_KEY_PATH}" "${CA_PRIVATE_KEY_PATH}" "${ETCD_SERVER_PRIVATE_KEY_PATH}" "${ETCD_CLIENT_PRIVATE_KEY_PATH}" "${ETCD_PEER_PRIVATE_KEY_PATH}"
-  chown root:root "${APISERVER_PRIVATE_KEY_PATH}" "${CA_PRIVATE_KEY_PATH}" "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-  ETCD_SERVER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdserver.crt"
-  touch "${ETCD_SERVER_CERTIFICATE_PATH}"
-  ETCD_CLIENT_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdclient.crt"
-  touch "${ETCD_CLIENT_CERTIFICATE_PATH}"
-  ETCD_PEER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.crt"
-  touch "${ETCD_PEER_CERTIFICATE_PATH}"
-  chmod 0644 "${ETCD_SERVER_CERTIFICATE_PATH}" "${ETCD_CLIENT_CERTIFICATE_PATH}" "${ETCD_PEER_CERTIFICATE_PATH}"
-  chown root:root "${ETCD_SERVER_CERTIFICATE_PATH}" "${ETCD_CLIENT_CERTIFICATE_PATH}" "${ETCD_PEER_CERTIFICATE_PATH}"
+  chmod 0600 "${apiserver_key}" "${ca_key}" "${etcdserver_key}" "${etcdclient_key}" "${etcdpeer_key}"
+  chown root:root "${apiserver_key}" "${ca_key}" "${etcdclient_key}"
+  local etcdserver_crt="/etc/kubernetes/certs/etcdserver.crt" etcdclient_crt="/etc/kubernetes/certs/etcdclient.crt" etcdpeer_crt="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.crt"
+  touch "${etcdserver_crt}"
+  touch "${etcdclient_crt}"
+  touch "${etcdpeer_crt}"
+  chmod 0644 "${etcdserver_crt}" "${etcdclient_crt}" "${etcdpeer_crt}"
+  chown root:root "${etcdserver_crt}" "${etcdclient_crt}" "${etcdpeer_crt}"
 
   set +x
-  echo "${APISERVER_PRIVATE_KEY}" | base64 --decode >"${APISERVER_PRIVATE_KEY_PATH}"
-  echo "${CA_PRIVATE_KEY}" | base64 --decode >"${CA_PRIVATE_KEY_PATH}"
-  echo "${ETCD_SERVER_PRIVATE_KEY}" | base64 --decode >"${ETCD_SERVER_PRIVATE_KEY_PATH}"
-  echo "${ETCD_CLIENT_PRIVATE_KEY}" | base64 --decode >"${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-  echo "${ETCD_PEER_KEY}" | base64 --decode >"${ETCD_PEER_PRIVATE_KEY_PATH}"
-  echo "${ETCD_SERVER_CERTIFICATE}" | base64 --decode >"${ETCD_SERVER_CERTIFICATE_PATH}"
-  echo "${ETCD_CLIENT_CERTIFICATE}" | base64 --decode >"${ETCD_CLIENT_CERTIFICATE_PATH}"
-  echo "${ETCD_PEER_CERT}" | base64 --decode >"${ETCD_PEER_CERTIFICATE_PATH}"
+  echo "${APISERVER_PRIVATE_KEY}" | base64 --decode >"${apiserver_key}"
+  echo "${CA_PRIVATE_KEY}" | base64 --decode >"${ca_key}"
+  echo "${ETCD_SERVER_PRIVATE_KEY}" | base64 --decode >"${etcdserver_key}"
+  echo "${ETCD_CLIENT_PRIVATE_KEY}" | base64 --decode >"${etcdclient_key}"
+  echo "${ETCD_PEER_KEY}" | base64 --decode >"${etcdpeer_key}"
+  echo "${ETCD_SERVER_CERTIFICATE}" | base64 --decode >"${etcdserver_crt}"
+  echo "${ETCD_CLIENT_CERTIFICATE}" | base64 --decode >"${etcdclient_crt}"
+  echo "${ETCD_PEER_CERT}" | base64 --decode >"${etcdpeer_crt}"
 }
 configureEtcd() {
   set -x
 
-  ETCD_SETUP_FILE=/opt/azure/containers/setup-etcd.sh
-  wait_for_file 1200 1 $ETCD_SETUP_FILE || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
-  $ETCD_SETUP_FILE >/opt/azure/containers/setup-etcd.log 2>&1
-  RET=$?
-  if [ $RET -ne 0 ]; then
-    exit $RET
+  local ret f=/opt/azure/containers/setup-etcd.sh
+  wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
+  $f >/opt/azure/containers/setup-etcd.log 2>&1
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    exit $ret
   fi
 
   if [[ -z ${ETCDCTL_ENDPOINTS} ]]; then
@@ -18474,59 +18470,56 @@ ensureAuditD() {
   fi
 }
 ensureCron() {
-  local CRON_SERVICE=/lib/systemd/system/cron.service
-  if [[ -f ${CRON_SERVICE} ]]; then
-    if ! grep -q 'Restart=' ${CRON_SERVICE}; then
-      sed -i 's/\[Service\]/[Service]\nRestart=always/' ${CRON_SERVICE}
+  local s=/lib/systemd/system/cron.service
+  if [[ -f ${s} ]]; then
+    if ! grep -q 'Restart=' ${s}; then
+      sed -i 's/\[Service\]/[Service]\nRestart=always/' ${s}
       systemctlEnableAndStart cron
     fi
   fi
 }
 generateAggregatedAPICerts() {
-  AGGREGATED_API_CERTS_SETUP_FILE=/etc/kubernetes/generate-proxy-certs.sh
-  wait_for_file 1200 1 $AGGREGATED_API_CERTS_SETUP_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  $AGGREGATED_API_CERTS_SETUP_FILE
+  local f=/etc/kubernetes/generate-proxy-certs.sh
+  wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  $f
 }
 configureKubeletServerCert() {
-  KUBELET_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/kubeletserver.key"
-  KUBELET_SERVER_CERT_PATH="/etc/kubernetes/certs/kubeletserver.crt"
+  local kubeletserver_key="/etc/kubernetes/certs/kubeletserver.key" kubeletserver_crt="/etc/kubernetes/certs/kubeletserver.crt"
 
-  openssl genrsa -out $KUBELET_SERVER_PRIVATE_KEY_PATH 2048
-  openssl req -new -x509 -days 7300 -key $KUBELET_SERVER_PRIVATE_KEY_PATH -out $KUBELET_SERVER_CERT_PATH -subj "/CN=${NODE_NAME}"
+  openssl genrsa -out $kubeletserver_key 2048
+  openssl req -new -x509 -days 7300 -key $kubeletserver_key -out $kubeletserver_crt -subj "/CN=${NODE_NAME}"
 }
 configureK8s() {
-  KUBELET_PRIVATE_KEY_PATH="/etc/kubernetes/certs/client.key"
-  touch "${KUBELET_PRIVATE_KEY_PATH}"
-  APISERVER_PUBLIC_KEY_PATH="/etc/kubernetes/certs/apiserver.crt"
-  touch "${APISERVER_PUBLIC_KEY_PATH}"
-  chmod 0600 "${KUBELET_PRIVATE_KEY_PATH}"
-  chmod 0644 "${APISERVER_PUBLIC_KEY_PATH}"
-  chown root:root "${KUBELET_PRIVATE_KEY_PATH}" "${APISERVER_PUBLIC_KEY_PATH}"
+  local client_key="/etc/kubernetes/certs/client.key" apiserver_crt="/etc/kubernetes/certs/apiserver.crt" azure_json="/etc/kubernetes/azure.json"
+  touch "${client_key}"
+  touch "${apiserver_crt}"
+  chmod 0600 "${client_key}"
+  chmod 0644 "${apiserver_crt}"
+  chown root:root "${client_key}" "${apiserver_crt}"
 
   set +x
-  echo "${KUBELET_PRIVATE_KEY}" | base64 --decode >"${KUBELET_PRIVATE_KEY_PATH}"
-  echo "${APISERVER_PUBLIC_KEY}" | base64 --decode >"${APISERVER_PUBLIC_KEY_PATH}"
+  echo "${KUBELET_PRIVATE_KEY}" | base64 --decode >"${client_key}"
+  echo "${APISERVER_PUBLIC_KEY}" | base64 --decode >"${apiserver_crt}"
   configureKubeletServerCert
-  AZURE_JSON_PATH="/etc/kubernetes/azure.json"
   if [[ -n ${MASTER_NODE} ]]; then
     if [[ ${ENABLE_AGGREGATED_APIS} == True ]]; then
       generateAggregatedAPICerts
     fi
   else
     {{- /* If we are a node vm then we only proceed w/ local azure.json configuration if cloud-init has pre-paved that file */}}
-    wait_for_file 1 1 $AZURE_JSON_PATH || return
+    wait_for_file 1 1 $azure_json || return
   fi
 
   {{/* Perform the required JSON escaping */}}
-  SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
-  SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
-  cat <<EOF >"${AZURE_JSON_PATH}"
+  local sp_secret=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
+  sp_secret=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
+  cat <<EOF >"${azure_json}"
 {
     "cloud":"{{GetTargetEnvironment}}",
     "tenantId": "${TENANT_ID}",
     "subscriptionId": "${SUBSCRIPTION_ID}",
     "aadClientId": "${SERVICE_PRINCIPAL_CLIENT_ID}",
-    "aadClientSecret": "${SERVICE_PRINCIPAL_CLIENT_SECRET}",
+    "aadClientSecret": "${sp_secret}",
     "resourceGroup": "${RESOURCE_GROUP}",
     "location": "${LOCATION}",
     "vmType": "${VM_TYPE}",
@@ -18562,8 +18555,8 @@ configureK8s() {
 EOF
   set -x
   if [[ ${CLOUDPROVIDER_BACKOFF_MODE} == "v2" ]]; then
-    sed -i "/cloudProviderBackoffExponent/d" $AZURE_JSON_PATH
-    sed -i "/cloudProviderBackoffJitter/d" $AZURE_JSON_PATH
+    sed -i "/cloudProviderBackoffExponent/d" $azure_json
+    sed -i "/cloudProviderBackoffJitter/d" $azure_json
   fi
 }
 
@@ -18619,7 +18612,7 @@ configureAzureCNI() {
   if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
     mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
     chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-    if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" == "true" ]]; then
+    if [[ "${IPV6_DUALSTACK_ENABLED}" == "true" ]]; then
       echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
     fi
     if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
@@ -18638,8 +18631,9 @@ configureAzureCNI() {
 }
 {{- if NeedsContainerd}}
 installContainerd() {
-  CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-  if [[ $CURRENT_VERSION != "${CONTAINERD_VERSION}" ]]; then
+  local v
+  v=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
+  if [[ $v != "${CONTAINERD_VERSION}" ]]; then
     os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
     if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
       url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
@@ -18650,9 +18644,9 @@ installContainerd() {
     fi
     removeMoby
     removeContainerd
-    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 moby-runc moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
@@ -18669,18 +18663,18 @@ ensureContainerd() {
 {{end}}
 {{- if IsDockerContainerRuntime}}
 ensureDocker() {
-  DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
-  wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/docker.service.d/exec_start.conf || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   usermod -aG docker ${ADMINUSER}
-  DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
+  if [[ $OS != $FLATCAR_OS_NAME ]]; then
+    wait_for_file 1200 1 /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  fi
   {{- if HasKubeReservedCgroup}}
-  DOCKER_SLICE_FILE=/etc/systemd/system/docker.service.d/kubereserved-slice.conf
-  wait_for_file 1200 1 $DOCKER_SLICE_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/docker.service.d/kubereserved-slice.conf || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   {{- end}}
-  DOCKER_JSON_FILE=/etc/docker/daemon.json
+  local daemon_json=/etc/docker/daemon.json
   for i in $(seq 1 1200); do
-    if [ -s $DOCKER_JSON_FILE ]; then
-      jq '.' <$DOCKER_JSON_FILE && break
+    if [ -s $daemon_json ]; then
+      jq '.' <$daemon_json && break
     fi
     if [ $i -eq 1200 ]; then
       exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
@@ -18690,10 +18684,8 @@ ensureDocker() {
   done
   systemctlEnableAndStart docker || exit {{GetCSEErrorCode "ERR_DOCKER_START_FAIL"}}
   {{/* Delay start of docker-monitor for 30 mins after booting */}}
-  DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
-  wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_TIMER_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  DOCKER_MONITOR_SYSTEMD_FILE=/etc/systemd/system/docker-monitor.service
-  wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.timer || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart docker-monitor.timer || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 {{end}}
@@ -18713,17 +18705,12 @@ ensureDHCPv6() {
 ensureKubelet() {
   wait_for_file 1200 1 /etc/sysctl.d/11-aks-engine.conf || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sysctl_reload 10 5 120 || exit {{GetCSEErrorCode "ERR_SYSCTL_RELOAD"}}
-  KUBELET_DEFAULT_FILE=/etc/default/kubelet
-  wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  KUBECONFIG_FILE=/var/lib/kubelet/kubeconfig
-  wait_for_file 1200 1 $KUBECONFIG_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
-  wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/default/kubelet || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /var/lib/kubelet/kubeconfig || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /opt/azure/containers/kubelet.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   {{- if HasKubeReservedCgroup}}
-  KUBERESERVED_SLICE_FILE=/etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
-  wait_for_file 1200 1 $KUBERESERVED_SLICE_FILE || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}
-  KUBELET_SLICE_FILE=/etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
-  wait_for_file 1200 1 $KUBELET_SLICE_FILE || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
+  wait_for_file 1200 1 /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}
+  wait_for_file 1200 1 /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
   {{- end}}
   systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 }
@@ -18771,10 +18758,8 @@ replaceAddonsInit() {
   sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
 }
 ensureLabelNodes() {
-  LABEL_NODES_SCRIPT_FILE=/opt/azure/containers/label-nodes.sh
-  wait_for_file 1200 1 $LABEL_NODES_SCRIPT_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  LABEL_NODES_SYSTEMD_FILE=/etc/systemd/system/label-nodes.service
-  wait_for_file 1200 1 $LABEL_NODES_SYSTEMD_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /opt/azure/containers/label-nodes.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/label-nodes.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart label-nodes || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 {{- if IsAADPodIdentityAddonEnabled}}
@@ -18794,7 +18779,7 @@ ensureJournal() {
   systemctlEnableAndStart systemd-journald || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 installKubeletAndKubectl() {
-  binPath=/usr/local/bin
+  local binPath=/usr/local/bin
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     binPath=/opt/bin
   fi
@@ -18829,22 +18814,21 @@ ensureEtcd() {
   retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
 }
 createKubeManifestDir() {
-  KUBEMANIFESTDIR=/etc/kubernetes/manifests
-  mkdir -p $KUBEMANIFESTDIR
+  mkdir -p /etc/kubernetes/manifests
 }
 writeKubeConfig() {
-  local DIR=/home/$ADMINUSER/.kube
-  local FILE=$DIR/config
+  local d=/home/$ADMINUSER/.kube
+  local f=$d/config
 {{- if HasBlockOutboundInternet}}
-  local SERVER=https://localhost
+  local server=https://localhost
 {{else}}
-  local SERVER=$KUBECONFIG_SERVER
+  local server=$KUBECONFIG_SERVER
 {{- end}}
-  mkdir -p $DIR
-  touch $FILE
-  chown $ADMINUSER:$ADMINUSER $DIR $FILE
-  chmod 700 $DIR
-  chmod 600 $FILE
+  mkdir -p $d
+  touch $f
+  chown $ADMINUSER:$ADMINUSER $d $f
+  chmod 700 $d
+  chmod 600 $f
   set +x
   echo "
 ---
@@ -18852,7 +18836,7 @@ apiVersion: v1
 clusters:
 - cluster:
     certificate-authority-data: \"$CA_CERTIFICATE\"
-    server: $SERVER
+    server: $server
   name: \"$MASTER_FQDN\"
 contexts:
 - context:
@@ -18866,40 +18850,37 @@ users:
   user:
     client-certificate-data: \"$KUBECONFIG_CERTIFICATE\"
     client-key-data: \"$KUBECONFIG_KEY\"
-" >$FILE
+" >$f
   set -x
 }
 {{- if IsClusterAutoscalerAddonEnabled}}
 configClusterAutoscalerAddon() {
-  CLUSTER_AUTOSCALER_ADDON_FILE=$ADDONS_DIR/cluster-autoscaler.yaml
-  wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-  sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-  sed -i "s|<subID>|$(echo $SUBSCRIPTION_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-  sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-  sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
+  local f=$ADDONS_DIR/cluster-autoscaler.yaml
+  wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $f
+  sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $f
+  sed -i "s|<subID>|$(echo $SUBSCRIPTION_ID | base64)|g" $f
+  sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $f
+  sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $f
 }
 {{end}}
 {{- if IsACIConnectorAddonEnabled}}
 configACIConnectorAddon() {
-  ACI_CONNECTOR_CREDENTIALS=$(printf '{"clientId": "%s", "clientSecret": "%s", "tenantId": "%s", "subscriptionId": "%s", "activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/", "activeDirectoryGraphResourceId": "https://graph.windows.net/", "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/", "galleryEndpointUrl": "https://gallery.azure.com/", "managementEndpointUrl": "https://management.core.windows.net/"}' "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
-
+  local creds key cert f=$ADDONS_DIR/aci-connector-deployment.yaml
+  creds=$(printf '{"clientId": "%s", "clientSecret": "%s", "tenantId": "%s", "subscriptionId": "%s", "activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/", "activeDirectoryGraphResourceId": "https://graph.windows.net/", "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/", "galleryEndpointUrl": "https://gallery.azure.com/", "managementEndpointUrl": "https://management.core.windows.net/"}' "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
   openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -keyout /etc/kubernetes/certs/aci-connector-key.pem -out /etc/kubernetes/certs/aci-connector-cert.pem -subj "/C=US/ST=CA/L=virtualkubelet/O=virtualkubelet/OU=virtualkubelet/CN=virtualkubelet"
-  ACI_CONNECTOR_KEY=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
-  ACI_CONNECTOR_CERT=$(base64 /etc/kubernetes/certs/aci-connector-cert.pem -w0)
-
-  ACI_CONNECTOR_ADDON_FILE=$ADDONS_DIR/aci-connector-deployment.yaml
-  wait_for_file 1200 1 $ACI_CONNECTOR_ADDON_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|<creds>|$ACI_CONNECTOR_CREDENTIALS|g" $ACI_CONNECTOR_ADDON_FILE
-  sed -i "s|<rgName>|$RESOURCE_GROUP|g" $ACI_CONNECTOR_ADDON_FILE
-  sed -i "s|<cert>|$ACI_CONNECTOR_CERT|g" $ACI_CONNECTOR_ADDON_FILE
-  sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
+  key=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
+  cert=$(base64 /etc/kubernetes/certs/aci-connector-cert.pem -w0)
+  wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  sed -i "s|<creds>|$creds|g" $f
+  sed -i "s|<rgName>|$RESOURCE_GROUP|g" $f
+  sed -i "s|<cert>|$cert|g" $f
+  sed -i "s|<key>|$key|g" $f
 }
 {{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
-  AZURE_POLICY_ADDON_FILE=$ADDONS_DIR/azure-policy-deployment.yaml
-  sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
+  sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $ADDONS_DIR/azure-policy-deployment.yaml
 }
 {{end}}
 configAddons() {
@@ -18924,13 +18905,12 @@ configAddons() {
 {{- if HasNSeriesSKU}}
 {{- /* installNvidiaDrivers is idempotent, it will uninstall itself if it is already installed, and then install anew */}}
 installNvidiaDrivers() {
-  NVIDIA_DKMS_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
-  KERNEL_NAME=$(uname -r)
-  if [ -d $NVIDIA_DKMS_DIR ]; then
-    dkms remove -m nvidia -v $GPU_DV -k $KERNEL_NAME
+  local d="/var/lib/dkms/nvidia/${GPU_DV}" k log_file="/var/log/nvidia-installer-$(date +%s).log"
+  k=$(uname -r)
+  if [ -d $d ]; then
+    dkms remove -m nvidia -v $GPU_DV -k $k
   fi
-  local log_file="/var/log/nvidia-installer-$(date +%s).log"
-  sh $GPU_DEST/nvidia-drivers-$GPU_DV -s -k=$KERNEL_NAME --log-file-name=$log_file -a --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
+  sh $GPU_DEST/nvidia-drivers-$GPU_DV -s -k=$k --log-file-name=$log_file -a --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
 }
 configGPUDrivers() {
   {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
@@ -18940,7 +18920,7 @@ configGPUDrivers() {
   retrycmd_no_stats 120 5 25 update-initramfs -u || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   wait_for_apt_locks
   {{/* if the unattened upgrade is turned on, and it may takes 10 min to finish the installation, and we use the 1 second just to try to get the lock more aggressively */}}
-  retrycmd 600 1 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  retrycmd 600 1 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VER}+${NVIDIA_DOCKER_SUFFIX}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   tmpDir=$GPU_DEST/tmp
   (
     set -e -o pipefail
@@ -18972,11 +18952,9 @@ ensureGPUDrivers() {
 installSGXDrivers() {
   [[ $UBUNTU_RELEASE == "18.04" || $UBUNTU_RELEASE == "16.04" ]] || exit 92
 
-  local packages="make gcc dkms"
+  local packages="make gcc dkms" oe_dir="/opt/azure/containers/oe"
   wait_for_apt_locks
   retrycmd 30 5 3600 apt-get -y install "$packages" || exit 90
-
-  local oe_dir=/opt/azure/containers/oe
   rm -rf ${oe_dir}
   mkdir -p ${oe_dir}
   pushd ${oe_dir} || exit
@@ -19320,7 +19298,7 @@ fi
 export GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
-NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+NVIDIA_CONTAINER_RUNTIME_VER=2.0.0
 NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
 
 configure_prerequisites() {
@@ -19551,9 +19529,7 @@ CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
-K8S_DOWNLOADS_DIR="/opt/kubernetes/downloads"
 APMZ_DOWNLOADS_DIR="/opt/apmz/downloads"
-BPFTRACE_DOWNLOADS_DIR="/opt/bpftrace/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
 
@@ -19562,20 +19538,19 @@ disableTimeSyncd() {
   retrycmd 120 5 25 systemctl disable systemd-timesyncd || exit 3
 }
 installEtcd() {
-  CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
-  if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
-    CLI_TOOL=$1
-    local path="/usr/bin"
-    CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
-    pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
+  local  v
+  v=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
+  if [[ $v != "${ETCD_VERSION}" ]]; then
+    local cli_tool=$1 path="/usr/bin" image=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
+    pullContainerImage $cli_tool ${image}
     removeEtcd
-    if [[ $CLI_TOOL == "docker" ]]; then
+    if [[ $cli_tool == "docker" ]]; then
       mkdir -p "$path"
-      docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd >"$path/etcd"
-      docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl >"$path/etcdctl"
+      docker run --rm --entrypoint cat ${image} /usr/local/bin/etcd >"$path/etcd"
+      docker run --rm --entrypoint cat ${image} /usr/local/bin/etcdctl >"$path/etcdctl"
     else
       tmpdir=/root/etcd${RANDOM}
-      img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
+      img unpack -o ${tmpdir} ${image}
       mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl ${path}
       rm -rf ${tmpdir}
     fi
@@ -19585,7 +19560,7 @@ installEtcd() {
 installDeps() {
   packages="apache2-utils apt-transport-https blobfuse=1.1.1 ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
-    retrycmd_no_stats 120 5 25 curl -fsSL ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
+    retrycmd_no_stats 120 5 25 curl -fsSL ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
     aptmarkWALinuxAgent hold
     packages+=" cgroup-lite ceph-common glusterfs-client"
@@ -19643,38 +19618,36 @@ mobyPkgVersion() {
   dpkg -s "${1}" | grep "Version:" | awk '{ print $2 }' | cut -d '+' -f 1
 }
 installMoby() {
-  install_pkgs=""
-  CURRENT_CONTAINERD_VERSION="$(mobyPkgVersion moby-containerd)"
-  if [ -n "${CONTAINERD_VERSION}" ] && [ ! "${CURRENT_CONTAINERD_VERSION}" = "${CONTAINERD_VERSION}" ]; then
+  local install_pkgs="" v cli_ver="${MOBY_VERSION}"
+  v="$(mobyPkgVersion moby-containerd)"
+  if [ -n "${CONTAINERD_VERSION}" ] && [ ! "${v}" = "${CONTAINERD_VERSION}" ]; then
     install_pkgs+=" moby-containerd=${CONTAINERD_VERSION}*"
     removeMoby
     removeContainerd
   fi
-  CURRENT_ENGINE_VERSION="$(mobyPkgVersion moby-engine)"
-  if [ ! "${CURRENT_ENGINE_VERSION}" = "${MOBY_VERSION}" ]; then
+  v="$(mobyPkgVersion moby-engine)"
+  if [ ! "${v}" = "${MOBY_VERSION}" ]; then
     install_pkgs+=" moby-engine=${MOBY_VERSION}*"
-    MOBY_CLI="${MOBY_VERSION}"
-    if [ "${MOBY_CLI}" = "3.0.4" ]; then
-      MOBY_CLI="3.0.3"
+    if [ "${cli_ver}" = "3.0.4" ]; then
+      cli_ver="3.0.3"
     fi
-    install_pkgs+=" moby-cli=${MOBY_CLI}*"
+    install_pkgs+=" moby-cli=${cli_ver}*"
     removeMoby
   fi
   if [ -n "${install_pkgs}" ]; then
-    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
     retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl ${MICROSOFT_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
 }
 installBcc() {
-  IOVISOR_KEY_TMP=/tmp/iovisor-release.key
-  IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
-  retrycmd_no_stats 120 5 25 curl -fsSL $IOVISOR_URL >$IOVISOR_KEY_TMP || exit 166
+  local key=/tmp/iovisor-release.key url=https://repo.iovisor.org/GPG-KEY
+  retrycmd_no_stats 120 5 25 curl -fsSL $url >$key || exit 166
   wait_for_apt_locks
-  retrycmd 30 5 30 apt-key add $IOVISOR_KEY_TMP || exit 167
+  retrycmd 30 5 30 apt-key add $key || exit 167
   echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" >/etc/apt/sources.list.d/iovisor.list
   apt_get_update || exit 99
   apt_get_install 120 5 25 bcc-tools libbcc-examples linux-headers-$(uname -r) || exit 168
@@ -19690,107 +19663,100 @@ downloadAzureCNI() {
   retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit 41
 }
 ensureAPMZ() {
-  local version=$1
-  local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+  local ver=$1 v
+  local d="$APMZ_DOWNLOADS_DIR/$ver"
+  local url="https://upstreamartifacts.azureedge.net/apmz/$ver/binaries/apmz_linux_amd64.tar.gz" fp="/usr/local/bin/apmz" dest="$d/apmz.gz" bin_fp="$d/apmz_linux_amd64"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    apmz_filepath="/opt/bin/apmz"
+    fp="/opt/bin/apmz"
     export PATH="${PATH}:/opt/bin"
   fi
-  if [[ -f $apmz_filepath ]]; then
-    installed_version=$($apmz_filepath version)
-    if [[ $version == "$installed_version" ]]; then
+  if [[ -f $fp ]]; then
+    v=$($fp version)
+    if [[ $ver == "$v" ]]; then
       return
     fi
   fi
-  install_dir="$APMZ_DOWNLOADS_DIR/$version"
-  download_path="$install_dir/apmz.gz"
-  mkdir -p "$install_dir"
-  retrycmd_get_tarball 120 5 "$download_path" "${apmz_url}"
-  tar -xvf "$download_path" -C "$install_dir"
-  bin_path="$install_dir/apmz_linux_amd64"
-  chmod +x "$bin_path"
-  ln -Ffs "$bin_path" "$apmz_filepath"
+  mkdir -p "$d"
+  retrycmd_get_tarball 120 5 "$dest" "${url}"
+  tar -xvf "$dest" -C "$d"
+  chmod +x "$bin_fp"
+  ln -Ffs "$bin_fp" "$fp"
 }
 installBpftrace() {
-  local version="v0.9.4"
-  local bpftrace_bin="bpftrace"
-  local bpftrace_tools="bpftrace-tools.tar"
-  local bpftrace_url="https://upstreamartifacts.azureedge.net/$bpftrace_bin/$version"
-  local bpftrace_filepath="/usr/local/bin/$bpftrace_bin"
-  local tools_filepath="/usr/local/share/$bpftrace_bin"
+  local ver="v0.9.4" v bin="bpftrace" tools="bpftrace-tools.tar"
+  local url="https://upstreamartifacts.azureedge.net/$bin/$ver"
+  local bpftrace_fp="/usr/local/bin/$bin"
+  local tools_fp="/usr/local/share/$bin"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    bpftrace_filepath="/opt/bin/$bpftrace_bin"
-    tools_filepath="/opt/share/$bpftrace_bin"
+    bpftrace_fp="/opt/bin/$bin"
+    tools_fp="/opt/share/$bin"
     export PATH="${PATH}:/opt/bin"
   fi
-  if [[ -f $bpftrace_filepath ]]; then
-    installed_version="$($bpftrace_bin -V | cut -d' ' -f2)"
-    if [[ $version == "$installed_version" ]]; then
+  if [[ -f $bpftrace_fp ]]; then
+    v="$($bin -V | cut -d' ' -f2)"
+    if [[ $ver == "$v" ]]; then
       return
     fi
-    rm "$bpftrace_filepath"
-    if [[ -d $tools_filepath ]]; then
-      rm -r "$tools_filepath"
+    rm "$bpftrace_fp"
+    if [[ -d $tools_fp ]]; then
+      rm -r "$tools_fp"
     fi
   fi
-  mkdir -p "$tools_filepath"
-  install_dir="$BPFTRACE_DOWNLOADS_DIR/$version"
+  mkdir -p "$tools_fp"
+  install_dir="/opt/bpftrace/downloads/$ver"
   mkdir -p "$install_dir"
-  download_path="$install_dir/$bpftrace_tools"
-  retrycmd 30 5 60 curl -fSL -o "$bpftrace_filepath" "$bpftrace_url/$bpftrace_bin" || exit 169
-  retrycmd 30 5 60 curl -fSL -o "$download_path" "$bpftrace_url/$bpftrace_tools" || exit 170
-  tar -xvf "$download_path" -C "$tools_filepath"
-  chmod +x "$bpftrace_filepath"
-  chmod -R +x "$tools_filepath/tools"
+  download_path="$install_dir/$tools"
+  retrycmd 30 5 60 curl -fSL -o "$bpftrace_fp" "$url/$bin" || exit 169
+  retrycmd 30 5 60 curl -fSL -o "$download_path" "$url/$tools" || exit 170
+  tar -xvf "$download_path" -C "$tools_fp"
+  chmod +x "$bpftrace_fp"
+  chmod -R +x "$tools_fp/tools"
 }
 installImg() {
   img_filepath=/usr/local/bin/img
   retrycmd_get_executable 120 5 $img_filepath "https://upstreamartifacts.azureedge.net/img/img-linux-amd64-v0.5.6" ls || exit 33
 }
 extractHyperkube() {
-  CLI_TOOL=$1
-  hyperkubePath="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
-  targetpath="/usr/local/bin"
+  local cli_tool=$1 fp="/home/hyperkube-downloads/${KUBERNETES_VERSION}" dest="/usr/local/bin"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    targetpath="/opt/bin"
+    dest="/opt/bin"
   fi
-  pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
-  if [[ $CLI_TOOL == "docker" ]]; then
-    mkdir -p "$hyperkubePath"
-    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp $targetpath/{kubelet,kubectl} $hyperkubePath"; then
-      mv "${hyperkubePath}/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
-      mv "${hyperkubePath}/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+  pullContainerImage $cli_tool ${HYPERKUBE_URL}
+  if [[ $cli_tool == "docker" ]]; then
+    mkdir -p "$fp"
+    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp $dest/{kubelet,kubectl} $fp"; then
+      mv "${fp}/kubelet" "${dest}/kubelet-${KUBERNETES_VERSION}"
+      mv "${fp}/kubectl" "${dest}/kubectl-${KUBERNETES_VERSION}"
       return
     else
-      docker run --rm -v $hyperkubePath:$hyperkubePath ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $hyperkubePath"
+      docker run --rm -v $fp:$fp ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $fp"
     fi
   else
-    img unpack -o "$hyperkubePath" ${HYPERKUBE_URL}
+    img unpack -o "$fp" ${HYPERKUBE_URL}
   fi
 
-  cp "${hyperkubePath}/hyperkube" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
-  mv "${hyperkubePath}/hyperkube" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+  cp "${fp}/hyperkube" "${dest}/kubelet-${KUBERNETES_VERSION}"
+  mv "${fp}/hyperkube" "${dest}/kubectl-${KUBERNETES_VERSION}"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    chmod a+x ${targetpath}/kubelet-${KUBERNETES_VERSION} ${targetpath}/kubectl-${KUBERNETES_VERSION}
+    chmod a+x ${dest}/kubelet-${KUBERNETES_VERSION} ${dest}/kubectl-${KUBERNETES_VERSION}
   fi
 }
 extractKubeBinaries() {
   KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"}
-  K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
-  mkdir -p "${K8S_DOWNLOADS_DIR}"
-  retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit 31
+  local dest="/opt/kubernetes/downloads" tmpDir=${KUBE_BINARY_URL##*/}
+  mkdir -p "${dest}"
+  retrycmd_get_tarball 120 5 "$dest/${tmpDir}" ${KUBE_BINARY_URL} || exit 31
   path=/usr/local/bin
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     path=/opt/bin
   fi
-  tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
+  tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$dest/${tmpDir}" \
     --strip-components=3 -C ${path} kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
-  rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
+  rm -f "$dest/${tmpDir}"
 }
 pullContainerImage() {
-  CLI_TOOL=$1
-  DOCKER_IMAGE_URL=$2
-  retrycmd 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit 35
+  local cli_tool=$1 url=$2
+  retrycmd 60 1 1200 $cli_tool pull $url || exit 35
 }
 overrideNetworkConfig() {
   CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"
@@ -19824,7 +19790,6 @@ ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
-  echo "Already ran to success exiting..."
   exit 0
 fi
 
@@ -19885,12 +19850,10 @@ time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
 {{- if HasVHDDistroNodes}}
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
-  echo "detected golden image pre-install"
   time_metric "CleanUpContainerImages" cleanUpContainerImages
   FULL_INSTALL_REQUIRED=false
 else
   if [[ ${IS_VHD} == true ]]; then
-    echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
     exit {{GetCSEErrorCode "ERR_VHD_FILE_NOT_FOUND"}}
   fi
   FULL_INSTALL_REQUIRED=true
@@ -19911,8 +19874,6 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
   {{- if not IsDockerContainerRuntime}}
   time_metric "InstallImg" installImg
   {{end}}
-else
-  echo "Golden image; skipping dependencies installation"
 fi
 {{end}}
 
@@ -19942,11 +19903,11 @@ fi
 
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   {{- if IsDockerContainerRuntime}}
-  CLI_TOOL="docker"
+  cli_tool="docker"
   {{else}}
-  CLI_TOOL="img"
+  cli_tool="img"
   {{end}}
-  time_metric "InstallEtcd" installEtcd $CLI_TOOL
+  time_metric "InstallEtcd" installEtcd $cli_tool
 fi
 
 {{/* this will capture the amount of time to install of the network plugin during cse */}}
@@ -20135,7 +20096,7 @@ else
   fi
 fi
 
-echo "Custom script finished successfully"
+echo "CSE finished successfully"
 echo $(date),$(hostname), endcustomscript >>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww >/opt/azure/provision-ps.log &
@@ -20307,13 +20268,9 @@ add_if_not_exists() {
   grep -qxF "${1}" "${2}" || echo "${1}" >>"${2}"
 }
 
-echo "Configuring dhcpv6 ..."
-
 touch /etc/dhcp/dhclient6.conf && add_if_not_exists "timeout 10;" ${DHCLIENT6_CONF_FILE} && \
   add_if_not_exists "${NETWORK_CONFIGURATION}" ${CLOUD_INIT_CFG} && \
   sudo ifdown eth0 && sudo ifup eth0
-
-echo "Configuration complete"
 #EOF
 `)
 
@@ -20407,8 +20364,6 @@ func k8sCloudInitArtifactsEtcdService() (*asset, error) {
 
 var _k8sCloudInitArtifactsGenerateproxycertsSh = []byte(`#!/bin/bash
 
-source {{GetCSEHelpersScriptFilepath}}
-
 PROXY_CA_KEY="${PROXY_CA_KEY:=/tmp/proxy-client-ca.key}"
 PROXY_CRT="${PROXY_CRT:=/tmp/proxy-client-ca.crt}"
 PROXY_CLIENT_KEY="${PROXY_CLIENT_KEY:=/tmp/proxy-client.key}"
@@ -20449,7 +20404,6 @@ write_certs_to_disk() {
   ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only >$K8S_PROXY_CA_CRT_FILEPATH
   ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_KEY --print-value-only >$K8S_PROXY_KEY_FILEPATH
   ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_CERT --print-value-only >$K8S_PROXY_CRT_FILEPATH
-  {{- /* Remove whitespace padding at beginning of 1st line */}}
   sed -i '1s/\s//' $K8S_PROXY_CA_CRT_FILEPATH $K8S_PROXY_CRT_FILEPATH $K8S_PROXY_KEY_FILEPATH
   chmod 600 $K8S_PROXY_KEY_FILEPATH
 }
@@ -20465,7 +20419,6 @@ is_etcd_healthy() {
   done
 }
 is_etcd_healthy
-{{- /* lock file to enable "only 1 master generates certs" */}}
 rm -f "${PROXY_CERT_LOCK_FILE}"
 mkfifo "${PROXY_CERT_LOCK_FILE}"
 
@@ -21672,6 +21625,14 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+    {{- if EnableAggregatedAPIs}}
+- path: /etc/kubernetes/generate-proxy-certs.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "generateProxyCertsScript"}}
+    {{end}}
 {{end}}
 
 {{if IsAADPodIdentityAddonEnabled}}
@@ -21814,15 +21775,6 @@ write_files:
   owner: "root"
   content: |
     {{WrapAsParameter "clientCertificate"}}
-
-{{- if EnableAggregatedAPIs}}
-- path: /etc/kubernetes/generate-proxy-certs.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "generateProxyCertsScript"}}
-{{end}}
 
 {{- if HasCustomSearchDomain}}
 - path: {{GetCustomSearchDomainsCSEScriptFilepath}}

@@ -193,6 +193,11 @@
         },
         {
             "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/generateproxycerts.sh",
+            "destination": "/home/packer/generateproxycerts.sh"
+        },
+        {
+            "type": "file",
             "source": "scripts/collect-logs.sh",
             "destination": "/home/packer/collect-logs.sh"
         },
