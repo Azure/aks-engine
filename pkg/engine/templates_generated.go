@@ -17759,6 +17759,11 @@ spec:
               mountPropagation: Bidirectional
             - name: providers-dir
               mountPath: /etc/kubernetes/secrets-store-csi-providers
+{{- if IsCustomCloudProfile}}
+            - name: custom-environment
+              mountPath: /etc/kubernetes/azurestackcloud.json
+              readOnly: true
+{{end}}
           resources:
             limits:
               cpu: {{ContainerCPULimits "secrets-store"}}
@@ -17801,6 +17806,12 @@ spec:
           hostPath:
             path: /etc/kubernetes/secrets-store-csi-providers
             type: DirectoryOrCreate
+{{- if IsCustomCloudProfile}}
+        - name: custom-environment
+          hostPath:
+            path: /etc/kubernetes/azurestackcloud.json
+            type: FileOrCreate
+{{end}}
       nodeSelector:
         kubernetes.io/os: linux
 ---
@@ -24218,8 +24229,8 @@ spec:
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
-        - name: etc-kubernetes-certs
-          mountPath: /etc/kubernetes/certs
+        - name: etc-ssl-certs
+          mountPath: /etc/ssl/certs
         - name: var-lib-kubelet
           mountPath: /var/lib/kubelet
         - name: msi
@@ -24233,9 +24244,9 @@ spec:
     - name: etc-kubernetes
       hostPath:
         path: /etc/kubernetes
-    - name: etc-kubernetes-certs
+    - name: etc-ssl-certs
       hostPath:
-        path: /etc/kubernetes/certs
+        path: /etc/ssl/certs
     - name: var-lib-kubelet
       hostPath:
         path: /var/lib/kubelet

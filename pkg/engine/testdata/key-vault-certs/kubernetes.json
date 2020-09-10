@@ -49,7 +49,7 @@
             "containers": [
               {
                 "name": "aci-connector",
-                "image": "microsoft/virtual-kubelet:latest",
+                "image": "mcr.microsoft.com/oss/virtual-kubelet/virtual-kubelet:latest",
                 "cpuRequests": "50m",
                 "memoryRequests": "150Mi",
                 "cpuLimits": "50m",

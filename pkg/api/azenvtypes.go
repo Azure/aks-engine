@@ -87,13 +87,13 @@ const (
 )
 
 var (
-	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
+	// DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
 		KubernetesImageBase:                  "k8s.gcr.io/",
 		TillerImageBase:                      "mcr.microsoft.com/",
-		ACIConnectorImageBase:                "microsoft/",
+		ACIConnectorImageBase:                "mcr.microsoft.com/oss/virtual-kubelet/",
 		NVIDIAImageBase:                      "mcr.microsoft.com/",
-		CalicoImageBase:                      "calico/",
+		CalicoImageBase:                      "mcr.microsoft.com/oss/calico/",
 		AzureCNIImageBase:                    "mcr.microsoft.com/containernetworking/",
 		MCRKubernetesImageBase:               "mcr.microsoft.com/",
 		EtcdDownloadURLBase:                  "mcr.microsoft.com/oss/etcd-io/",
@@ -172,7 +172,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1604-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.08.24",
+		ImageVersion:   "2020.09.08",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -180,7 +180,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.08.24",
+		ImageVersion:   "2020.09.08",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
