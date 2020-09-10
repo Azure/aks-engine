@@ -81,7 +81,7 @@ Follow the README at https://github.com/virtual-kubelet/virtual-kubelet for exam
 |os|no|operating system (Linux/Windows)|"Linux"|
 |taint|no|apply taint to node, making scheduling explicit|"azure.com/aci"|
 |name|no|container name|"aci-connector"|
-|image|no|image|"microsoft/virtual-kubelet:latest"|
+|image|no|image|"mcr.microsoft.com/oss/virtual-kubelet/virtual-kubelet:latest"|
 |cpuRequests|no|cpu requests for the container|"50m"|
 |memoryRequests|no|memory requests for the container|"150Mi"|
 |cpuLimits|no|cpu limits for the container|"50m"|
