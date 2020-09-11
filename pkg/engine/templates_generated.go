@@ -79,7 +79,6 @@
 // ../../parts/k8s/cloud-init/artifacts/default-grub
 // ../../parts/k8s/cloud-init/artifacts/dhcpv6.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.service
-// ../../parts/k8s/cloud-init/artifacts/docker-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf
 // ../../parts/k8s/cloud-init/artifacts/enable-dhcpv6.sh
 // ../../parts/k8s/cloud-init/artifacts/etc-issue
@@ -20228,30 +20227,6 @@ func k8sCloudInitArtifactsDockerMonitorService() (*asset, error) {
 	return a, nil
 }
 
-var _k8sCloudInitArtifactsDockerMonitorTimer = []byte(`[Unit]
-Description=a timer that delays docker-monitor from starting too soon after boot
-[Timer]
-OnBootSec=5min
-[Install]
-WantedBy=multi-user.target
-#EOF
-`)
-
-func k8sCloudInitArtifactsDockerMonitorTimerBytes() ([]byte, error) {
-	return _k8sCloudInitArtifactsDockerMonitorTimer, nil
-}
-
-func k8sCloudInitArtifactsDockerMonitorTimer() (*asset, error) {
-	bytes, err := k8sCloudInitArtifactsDockerMonitorTimerBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/docker-monitor.timer", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf = []byte(`[Service]
 MountFlags=shared
 #EOF
@@ -29320,7 +29295,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/default-grub":                              k8sCloudInitArtifactsDefaultGrub,
 	"k8s/cloud-init/artifacts/dhcpv6.service":                            k8sCloudInitArtifactsDhcpv6Service,
 	"k8s/cloud-init/artifacts/docker-monitor.service":                    k8sCloudInitArtifactsDockerMonitorService,
-	"k8s/cloud-init/artifacts/docker-monitor.timer":                      k8sCloudInitArtifactsDockerMonitorTimer,
 	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf": k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
 	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                          k8sCloudInitArtifactsEnableDhcpv6Sh,
 	"k8s/cloud-init/artifacts/etc-issue":                                 k8sCloudInitArtifactsEtcIssue,
@@ -29520,7 +29494,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
 				"dhcpv6.service":         {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
 				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
-				"docker-monitor.timer":   {k8sCloudInitArtifactsDockerMonitorTimer, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
 				"enable-dhcpv6.sh":                          {k8sCloudInitArtifactsEnableDhcpv6Sh, map[string]*bintree{}},
 				"etc-issue":                                 {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},
