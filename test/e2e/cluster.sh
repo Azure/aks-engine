@@ -11,6 +11,7 @@ AZURE_ENV="${AZURE_ENV:-AzurePublicCloud}"
 IDENTITY_SYSTEM="${IDENTITY_SYSTEM:-azure_ad}"
 ARC_LOCATION="eastus"
 GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST:-false}"
+TEST_PVC="${TEST_PVC:-false}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
@@ -41,6 +42,23 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
 ${ADD_NODE_POOL_INPUT}
 END
 fi
+
+if [ -n "$PRIVATE_SSH_KEY_FILE" ]; then
+  PRIVATE_SSH_KEY_FILE=$(realpath --relative-to=$(pwd) ${PRIVATE_SSH_KEY_FILE})
+fi
+
+function tryExit {
+  if [ "${AZURE_ENV}" != "AzureStackCloud" ]; then
+    exit 1
+  fi
+}
+
+function renameResultsFile {
+  JUNIT_PATH=$(pwd)/test/e2e/kubernetes/junit.xml
+  if [ "${AZURE_ENV}" == "AzureStackCloud" ] && [ -f ${JUNIT_PATH} ]; then
+    mv ${JUNIT_PATH} $(pwd)/test/e2e/kubernetes/${1}-junit.xml
+  fi
+}
 
 echo "Running E2E tests against a cluster built with the following API model:"
 cat ${TMP_DIR}/apimodel-input.json
@@ -90,6 +108,7 @@ docker run --rm \
 -e ORCHESTRATOR=kubernetes \
 -e ORCHESTRATOR_RELEASE="${ORCHESTRATOR_RELEASE}" \
 -e CREATE_VNET="${CREATE_VNET}" \
+-e PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE}" \
 -e TIMEOUT="${E2E_TEST_TIMEOUT}" \
 -e LB_TIMEOUT="${LB_TEST_TIMEOUT}" \
 -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
@@ -115,6 +134,7 @@ docker run --rm \
 -e CUSTOM_HYPERKUBE_IMAGE="${CUSTOM_HYPERKUBE_IMAGE}" \
 -e CUSTOM_KUBE_PROXY_IMAGE="${CUSTOM_KUBE_PROXY_IMAGE}" \
 -e IS_JENKINS="${IS_JENKINS}" \
+-e TEST_PVC="${TEST_PVC}" \
 -e SKIP_TEST="${SKIP_TESTS}" \
 -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
@@ -141,7 +161,7 @@ docker run --rm \
 -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
 -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
 -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-"${DEV_IMAGE}" make test-kubernetes || exit 1
+"${DEV_IMAGE}" make test-kubernetes || tryExit && renameResultsFile "deploy"
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
   # shellcheck disable=SC2012
@@ -160,6 +180,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
   fi
 
   if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
+      PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE:-_output/${RESOURCE_GROUP}-ssh}"
       docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
@@ -170,7 +191,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --ssh-host $API_SERVER \
-      --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
+      --linux-ssh-private-key $PRIVATE_SSH_KEY_FILE \
       --linux-script ./scripts/collect-logs.sh
       # TODO remove --linux-script once collect-logs.sh is part of the VHD
   fi
@@ -184,18 +205,21 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       done
     done
   fi
-  git reset --hard
-  git remote rm $UPGRADE_FORK
-  git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
-  git fetch --prune $UPGRADE_FORK
-  git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
-  git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
-  git pull
-  git log -1
-  docker run --rm \
-    -v $(pwd):${WORK_DIR} \
-    -w ${WORK_DIR} \
-    "${DEV_IMAGE}" make build-binary > /dev/null 2>&1 || exit 1
+  
+  if [ "${UPGRADE_CLUSTER}" = "true" ]; then
+    git reset --hard
+    git remote rm $UPGRADE_FORK
+    git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
+    git fetch --prune $UPGRADE_FORK
+    git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
+    git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
+    git pull
+    git log -1
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      "${DEV_IMAGE}" make build-binary > /dev/null 2>&1 || exit 1
+  fi
 else
   exit 0
 fi
@@ -247,6 +271,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e TEST_PVC="${TEST_PVC}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_ADD_POOL} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     -e API_PROFILE="${API_PROFILE}" \
@@ -271,7 +296,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || exit 1
+    ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "add-node-pool"
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
@@ -321,6 +346,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e TEST_PVC="${TEST_PVC}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     -e API_PROFILE="${API_PROFILE}" \
@@ -345,7 +371,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || exit 1
+    ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "scale-down"
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
@@ -407,6 +433,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
       -e GINKGO_SKIP="${SKIP_AFTER_UPGRADE}" \
       -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+      -e TEST_PVC="${TEST_PVC}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_UPGRADE} \
       -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
       -e API_PROFILE="${API_PROFILE}" \
@@ -431,7 +458,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
       -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
       -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-      ${DEV_IMAGE} make test-kubernetes || exit 1
+      ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "upgrade"
   done
 fi
 
@@ -482,6 +509,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST}" \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e TEST_PVC="${TEST_PVC}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     -e API_PROFILE="${API_PROFILE}" \
@@ -506,5 +534,5 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_CLIENT_SECRET=${ARC_CLIENT_SECRET:-$AZURE_CLIENT_SECRET} \
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
-    ${DEV_IMAGE} make test-kubernetes || exit 1
+    ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "scale-up"
 fi

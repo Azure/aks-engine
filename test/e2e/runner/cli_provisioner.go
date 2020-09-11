@@ -87,15 +87,31 @@ func (cli *CLIProvisioner) Run() error {
 	return errors.New("Unable to run provisioner")
 }
 
-func createSaveSSH(outputPath string, privateKeyName string) (string, error) {
+func createSaveSSH(outputPath string, privateKeyName string, existingPrivateKeyPath string) (string, error) {
 	os.Mkdir(outputPath, 0755)
 	keyPath := filepath.Join(outputPath, privateKeyName)
 	cmd := exec.Command("ssh-keygen", "-f", keyPath, "-q", "-N", "", "-b", "2048", "-t", "rsa")
+
+	var err error
+	if existingPrivateKeyPath != "" {
+		err = os.Rename(existingPrivateKeyPath, keyPath)
+		if err != nil {
+			return "", errors.Wrapf(err, "Error while trying to move private ssh key")
+		}
+		cmd = exec.Command("ssh-keygen", "-y", "-f", keyPath)
+	}
 
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", errors.Wrapf(err, "Error while trying to generate ssh key\nOutput:%s", out)
+	}
+
+	if existingPrivateKeyPath != "" {
+		err = ioutil.WriteFile(keyPath+".pub", out, 0644)
+		if err != nil {
+			return "", errors.Wrapf(err, "Error while trying to write public ssh key")
+		}
 	}
 
 	os.Chmod(keyPath, 0600)
@@ -115,7 +131,7 @@ func (cli *CLIProvisioner) provision() error {
 
 	outputPath := filepath.Join(cli.Config.CurrentWorkingDir, "_output")
 	if !cli.Config.UseDeployCommand {
-		publicSSHKey, err := createSaveSSH(outputPath, cli.Config.Name+"-ssh")
+		publicSSHKey, err := createSaveSSH(outputPath, cli.Config.Name+"-ssh", cli.Config.PrivateSSHKeyPath)
 		if err != nil {
 			return errors.Wrap(err, "Error while generating ssh keys")
 		}
