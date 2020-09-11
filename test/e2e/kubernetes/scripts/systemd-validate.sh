@@ -1,15 +1,15 @@
 #!/bin/bash
 
 set -x
-if ! [[ $(sudo journalctl -b -u kubelet-monitor | grep ": Started " | wc -l) == 1 ]]; then
+if ! [[ $(sudo journalctl -b -u kubelet-monitor | grep -c ": Started ") == 1 ]]; then
   exit 1
 fi
 if sudo kill $(pgrep etcd); then
-  if ! [[ $(sudo journalctl -b -u etcd-monitor | grep ": Started " | wc -l) == 1 ]]; then
+  if ! [[ $(sudo journalctl -b -u etcd-monitor | grep -c ": Started ") == 1 ]]; then
     exit 1
   fi
 fi
-if ! [[ $(sudo journalctl -b -u docker-monitor | grep ": Started " | wc -l) == 1 ]]; then
+if ! [[ $(sudo journalctl -b -u docker-monitor | grep -c ": Started ") == 1 ]]; then
   exit 1
 fi
 MAX_ATTEMPTS=10
