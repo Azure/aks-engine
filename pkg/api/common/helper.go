@@ -52,6 +52,11 @@ var (
 		"Standard_NC24rs_v3": true,
 		"Standard_ND40s_v3":  true,
 		"Standard_ND40rs_v2": true,
+		// T4
+		"Standard_NC4as_T4_v3":  true,
+		"Standard_NC8as_T4_v3":  true,
+		"Standard_NC16as_T4_v3": true,
+		"Standard_NC64as_T4_v3": true,
 	}
 )
 
