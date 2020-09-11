@@ -484,11 +484,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
         echo "" >> /etc/environment
     fi
   {{- if IsMasterVirtualMachineScaleSets}}
+    source {{GetCSEHelpersScriptFilepath}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT

@@ -22,6 +22,14 @@ NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VER=2.0.0
 NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
+PRIVATE_IP=$(ip -4 addr show eth0 | grep -Po '(?<=inet )[\d.]+')
+if [[ $PRIVATE_IP == "" ]]; then
+  PRIVATE_IP=$(ip -4 addr show azure0 | grep -Po '(?<=inet )[\d.]+')
+fi
+if [[ $PRIVATE_IP == "" ]]; then
+  PRIVATE_IP=$(hostname -i)
+fi
+export PRIVATE_IP
 
 configure_prerequisites() {
   ip_forward_path=/proc/sys/net/ipv4/ip_forward

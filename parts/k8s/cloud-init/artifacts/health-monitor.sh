@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source {{GetCSEHelpersScriptFilepath}}
 
 {{- /* This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh */}}
 {{- /* and has been modified for aks-engine. */}}
@@ -61,8 +62,7 @@ kubelet_monitoring() {
 etcd_monitoring() {
   sleep 300 {{/* Wait for 5 minutes for etcd to be functional/stable */}}
   local max_seconds=10 output=""
-  local private_ip=$(hostname -I | cut -d' ' -f1)
-  local endpoint="https://${private_ip}:2379"
+  local endpoint="https://${PRIVATE_IP}:2379"
   local monitor_cmd="curl -s -S -m ${max_seconds} --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines"
   while true; do
     if ! output=$(${monitor_cmd}); then

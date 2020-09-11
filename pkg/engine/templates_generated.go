@@ -18343,9 +18343,6 @@ func k8sCloudInitArtifactsCisSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-PRIVATE_IP=$(ip -4 addr show eth0 | grep -Po '(?<=inet )[\d.]+')
-ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
-ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 ADDONS_DIR=/etc/kubernetes/addons
 POD_SECURITY_POLICY_SPEC=$ADDONS_DIR/pod-security-policy.yaml
@@ -18424,7 +18421,7 @@ configureSecrets(){
 configureEtcd() {
   set -x
 
-  local ret f=/opt/azure/containers/setup-etcd.sh
+  local ret f=/opt/azure/containers/setup-etcd.sh etcd_peer_url="https://${PRIVATE_IP}:2380"
   wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
   $f >/opt/azure/containers/setup-etcd.log 2>&1
   ret=$?
@@ -18450,7 +18447,7 @@ configureEtcd() {
       sleep 1
     fi
   done
-  retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
+  retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${etcd_peer_url} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
 }
 ensureNTP() {
   systemctlEnableAndStart ntp || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
@@ -18824,7 +18821,8 @@ ensureLabelExclusionForAzurePolicyAddon() {
 }
 {{end}}
 ensureEtcd() {
-  retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
+  local etcd_client_url="https://${PRIVATE_IP}:2379"
+  retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${etcd_client_url}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
   wait_for_file 1200 1 /etc/systemd/system/etcd-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart etcd-monitor || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
@@ -19315,6 +19313,14 @@ NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VER=2.0.0
 NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
+PRIVATE_IP=$(ip -4 addr show eth0 | grep -Po '(?<=inet )[\d.]+')
+if [[ $PRIVATE_IP == "" ]]; then
+  PRIVATE_IP=$(ip -4 addr show azure0 | grep -Po '(?<=inet )[\d.]+')
+fi
+if [[ $PRIVATE_IP == "" ]]; then
+  PRIVATE_IP=$(hostname -i)
+fi
+export PRIVATE_IP
 
 configure_prerequisites() {
   ip_forward_path=/proc/sys/net/ipv4/ip_forward
@@ -20507,6 +20513,7 @@ func k8sCloudInitArtifactsGenerateproxycertsSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsHealthMonitorSh = []byte(`#!/usr/bin/env bash
+source {{GetCSEHelpersScriptFilepath}}
 
 {{- /* This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh */}}
 {{- /* and has been modified for aks-engine. */}}
@@ -20569,8 +20576,7 @@ kubelet_monitoring() {
 etcd_monitoring() {
   sleep 300 {{/* Wait for 5 minutes for etcd to be functional/stable */}}
   local max_seconds=10 output=""
-  local private_ip=$(hostname -I | cut -d' ' -f1)
-  local endpoint="https://${private_ip}:2379"
+  local endpoint="https://${PRIVATE_IP}:2379"
   local monitor_cmd="curl -s -S -m ${max_seconds} --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines"
   while true; do
     if ! output=$(${monitor_cmd}); then
@@ -22006,11 +22012,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
         echo "" >> /etc/environment
     fi
   {{- if IsMasterVirtualMachineScaleSets}}
+    source {{GetCSEHelpersScriptFilepath}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
