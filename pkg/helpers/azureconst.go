@@ -1698,17 +1698,17 @@ func GetSizeMap() string {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_NC4as_T4_v3": {
-			"storageAccountType": "Premium_LRS"
-		},
-		"Standard_NC8as_T4_v3": {
-			"storageAccountType": "Premium_LRS"
-		},
-		"Standard_NC16as_T4_v3": {
-			"storageAccountType": "Premium_LRS"
-		},
-		"Standard_NC64as_T4_v3": {
-			"storageAccountType": "Premium_LRS"
-		}
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NC8as_T4_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NC16as_T4_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NC64as_T4_v3": {
+      "storageAccountType": "Premium_LRS"
+    }
    }
 `
 }
