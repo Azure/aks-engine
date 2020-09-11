@@ -1,7 +1,7 @@
 #!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
+PRIVATE_IP=$(ip -4 addr show eth0 | grep -Po '(?<=inet )[\d.]+')
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
@@ -368,6 +368,14 @@ ensureKubelet() {
   sysctl_reload 10 5 120 || exit {{GetCSEErrorCode "ERR_SYSCTL_RELOAD"}}
   wait_for_file 1200 1 /etc/default/kubelet || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   wait_for_file 1200 1 /var/lib/kubelet/kubeconfig || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  if [[ -n ${MASTER_NODE} ]]; then
+{{- if IsMasterVirtualMachineScaleSets}}
+    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig" || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
+    local f=/etc/kubernetes/manifests/kube-apiserver.yaml
+    wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" $f
+  fi
   wait_for_file 1200 1 /opt/azure/containers/kubelet.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   {{- if HasKubeReservedCgroup}}
   wait_for_file 1200 1 /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}

@@ -18343,7 +18343,7 @@ func k8sCloudInitArtifactsCisSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
+PRIVATE_IP=$(ip -4 addr show eth0 | grep -Po '(?<=inet )[\d.]+')
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
@@ -18710,6 +18710,14 @@ ensureKubelet() {
   sysctl_reload 10 5 120 || exit {{GetCSEErrorCode "ERR_SYSCTL_RELOAD"}}
   wait_for_file 1200 1 /etc/default/kubelet || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   wait_for_file 1200 1 /var/lib/kubelet/kubeconfig || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  if [[ -n ${MASTER_NODE} ]]; then
+{{- if IsMasterVirtualMachineScaleSets}}
+    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig" || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
+    local f=/etc/kubernetes/manifests/kube-apiserver.yaml
+    wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" $f
+  fi
   wait_for_file 1200 1 /opt/azure/containers/kubelet.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   {{- if HasKubeReservedCgroup}}
   wait_for_file 1200 1 /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}
@@ -20500,13 +20508,14 @@ func k8sCloudInitArtifactsGenerateproxycertsSh() (*asset, error) {
 
 var _k8sCloudInitArtifactsHealthMonitorSh = []byte(`#!/usr/bin/env bash
 
-# This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh
-# and has been modified for aks-engine.
+{{- /* This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh */}}
+{{- /* and has been modified for aks-engine. */}}
 
 set -o nounset
 set -o pipefail
 
 container_runtime_monitoring() {
+  sleep 300 {{/* Wait for 5 minutes for CRI to be functional/stable */}}
   local cri_name="${CONTAINER_RUNTIME:-docker}" cmd="docker ps"
   if [[ ${CONTAINER_RUNTIME} == "containerd" ]]; then
     cmd="ctr -n k8s.io containers ls"
@@ -20515,16 +20524,19 @@ container_runtime_monitoring() {
   while true; do
     if ! timeout 60 ${cmd} >/dev/null; then
       echo "Container runtime ${cri_name} failed!"
-      if [[ $cri_name == "docker" ]]; then
-        pkill -SIGUSR1 dockerd
-      fi
-      if [[ $cri_name == "containerd" ]]; then
-        pkill -SIGUSR1 containerd
-      fi
-      systemctl kill --kill-who=main "${cri_name}"
-      sleep 120
-      if ! systemctl is-active ${cri_name}; then
-        systemctl start ${cri_name}
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! timeout 60 ${cmd} >/dev/null; then
+        if [[ $cri_name == "docker" ]]; then
+          pkill -SIGUSR1 dockerd
+        fi
+        if [[ $cri_name == "containerd" ]]; then
+          pkill -SIGUSR1 containerd
+        fi
+        systemctl kill --kill-who=main "${cri_name}"
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active ${cri_name}; then
+          systemctl start ${cri_name}
+        fi
       fi
     else
       sleep "${SLEEP_TIME}"
@@ -20533,17 +20545,20 @@ container_runtime_monitoring() {
 }
 
 kubelet_monitoring() {
-  echo "Wait for 2 minutes for kubelet to be functional"
-  sleep 120
+  sleep 300 {{/* Wait for 5 minutes for kubelet to be functional/stable */}}
   local max_seconds=10 output=""
+  local monitor_cmd="curl -m ${max_seconds} -f -s -S http://127.0.0.1:${HEALTHZPORT}/healthz"
   while true; do
-    if ! output=$(curl -m "${max_seconds}" -f -s -S http://127.0.0.1:${HEALTHZPORT}/healthz 2>&1); then
+    if ! output=$(${monitor_cmd} 2>&1); then
       echo $output
       echo "Kubelet is unhealthy!"
-      systemctl kill kubelet
-      sleep 60
-      if ! systemctl is-active kubelet; then
-        systemctl start kubelet
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! output=$(${monitor_cmd} 2>&1); then
+        systemctl kill kubelet
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active kubelet; then
+          systemctl start kubelet
+        fi
       fi
     else
       sleep "${SLEEP_TIME}"
@@ -20552,17 +20567,22 @@ kubelet_monitoring() {
 }
 
 etcd_monitoring() {
+  sleep 300 {{/* Wait for 5 minutes for etcd to be functional/stable */}}
   local max_seconds=10 output=""
   local private_ip=$(hostname -I | cut -d' ' -f1)
   local endpoint="https://${private_ip}:2379"
+  local monitor_cmd="curl -s -S -m ${max_seconds} --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines"
   while true; do
-    if ! output=$(curl -s -S -m "${max_seconds}" --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines); then
+    if ! output=$(${monitor_cmd}); then
       echo $output
       echo "etcd is unhealthy!"
-      systemctl kill etcd
-      sleep 60
-      if ! systemctl is-active etcd; then
-        systemctl start etcd
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! output=$(${monitor_cmd}); then
+        systemctl kill etcd
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active etcd; then
+          systemctl start etcd
+        fi
       fi
     else
       sleep "${SLEEP_TIME}"
@@ -21957,16 +21977,10 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
       mount --bind $MOUNT_DIR $MOUNT_DIR
     fi
     mount --make-shared $MOUNT_DIR
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-{{- if IsMasterVirtualMachineScaleSets}}
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-{{end}}
 {{- if gt .MasterProfile.Count 1}}
     {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
@@ -24259,6 +24273,7 @@ spec:
     - name: auditlog
       hostPath:
         path: /var/log/kubeaudit
+#EOF
 `)
 
 func k8sManifestsKubernetesmasterKubeApiserverYamlBytes() ([]byte, error) {

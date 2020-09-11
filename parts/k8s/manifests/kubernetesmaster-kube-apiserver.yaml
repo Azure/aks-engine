@@ -48,3 +48,4 @@ spec:
     - name: auditlog
       hostPath:
         path: /var/log/kubeaudit
+#EOF
