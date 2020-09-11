@@ -1,66 +1,58 @@
 #!/bin/bash
 
 set -x
-if ! [[ $(sudo journalctl -b -u kubelet-monitor | grep -c ": Started ") == 1 ]]; then
-  exit 1
-fi
-if sudo kill $(pgrep etcd); then
-  if ! [[ $(sudo journalctl -b -u etcd-monitor | grep -c ": Started ") == 1 ]]; then
-    exit 1
-  fi
-fi
-if ! [[ $(sudo journalctl -b -u docker-monitor | grep -c ": Started ") == 1 ]]; then
-  exit 1
-fi
 MAX_ATTEMPTS=10
-sudo kill $(pgrep kubelet)
-sleep 10
-ATTEMPT=1
-until sudo systemctl is-active kubelet; do
-  if ((ATTEMPT == MAX_ATTEMPTS)); then
+SLEEP_BETWEEN_PHASES=10
+
+wait_systemd() {
+  local attempt=1
+  until sudo systemctl is-active $1; do
+  if ((attempt == MAX_ATTEMPTS)); then
     exit 1
   fi
   sleep "$((2 ** ATTEMPT++))"
 done
+}
+
+service_started_only_once() {
+  if ! [[ $(sudo journalctl -b -u ${1} | grep -c ": Started ") == 1 ]]; then
+    exit 1
+  fi
+}
+
+# Validate that the monitor services themselves are stable
+service_started_only_once "kubelet-monitor"
+if sudo kill $(pgrep etcd); then
+  service_started_only_once "etcd-monitor"
+fi
+service_started_only_once "docker-monitor"
+
+# manually kill kubelet
+sudo kill $(pgrep kubelet)
+sleep $SLEEP_BETWEEN_PHASES
+wait_systemd "kubelet" # validate that systemd brought the kubelet service back online
+
 if apt list --installed | grep moby-engine; then
   CONTAINER_RUNTIME=docker
 else
   CONTAINER_RUNTIME=containerd
 fi
-ATTEMPT=1
-until sudo systemctl is-active $CONTAINER_RUNTIME; do
-  if ((ATTEMPT == MAX_ATTEMPTS)); then
-    exit 1
-  fi
-  sleep "$((2 ** ATTEMPT++))"
-done
+wait_systemd $CONTAINER_RUNTIME
+
+# manually kill the cri
 if [ $CONTAINER_RUNTIME == "docker" ]; then
   sudo kill -9 $(pgrep docker)
 else
   sudo kill -9 $(pgrep containerd)
 fi
-sleep 10
-ATTEMPT=1
-until sudo systemctl is-active $CONTAINER_RUNTIME; do
-  if ((ATTEMPT == MAX_ATTEMPTS)); then
-    exit 1
-  fi
-  sleep "$((2 ** ATTEMPT++))"
-done
+sleep $SLEEP_BETWEEN_PHASES
+wait_systemd $CONTAINER_RUNTIME # validate that systemd brought the cri service back online
+
+# if I have an etcd binary that means I'm running etcd (control plane VM)
 if sudo kill $(pgrep etcd); then
-  sleep 10
-  ATTEMPT=1
-  until sudo systemctl is-active etcd; do
-    if ((ATTEMPT == MAX_ATTEMPTS)); then
-      exit 1
-    fi
-    sleep "$((2 ** ATTEMPT++))"
-  done
+  sleep $SLEEP_BETWEEN_PHASES
+  wait_systemd "etcd" # validate that systemd brought the etcd service back online
 fi
-ATTEMPT=1
-until sudo systemctl is-active kubelet; do
-  if ((ATTEMPT == MAX_ATTEMPTS)); then
-    exit 1
-  fi
-  sleep "$((2 ** ATTEMPT++))"
-done
+sleep $SLEEP_BETWEEN_PHASES
+
+wait_systemd "kubelet" # after all this nonsense let's verify that the kubelet systemd service is online
