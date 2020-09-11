@@ -13,7 +13,7 @@ if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
 fi
 DOCKER=/usr/bin/docker
 if [[ $UBUNTU_RELEASE == "18.04" ]]; then
-  export GPU_DV=418.126.02
+  export GPU_DV=450.51.06
 else
   export GPU_DV=418.40.04
 fi
