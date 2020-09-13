@@ -9,7 +9,7 @@
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"loadBalancerSku": "Basic",
-					"etcdVersion": "3.3.15",
+					"etcdVersion": "3.3.22",
 					"privateCluster": {
 						"enabled": true,
 						"jumpboxProfile": {

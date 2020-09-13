@@ -1434,7 +1434,7 @@ func TestEtcdVersion(t *testing.T) {
 	}
 
 	// These versions are all greater than default
-	for _, etcdVersion := range []string{"3.4.0", "99.99"} {
+	for _, etcdVersion := range []string{"3.5.0", "99.99"} {
 		// Upgrade scenario should always keep the user-configured etcd version if it is greater than default
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties

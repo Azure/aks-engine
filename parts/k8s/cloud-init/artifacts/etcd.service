@@ -6,8 +6,6 @@ After=network.target var-lib-etcddisk.mount
 Wants=network-online.target var-lib-etcddisk.mount
 [Service]
 Environment=DAEMON_ARGS=
-Environment=ETCD_NAME=%H
-Environment=ETCD_DATA_DIR=
 EnvironmentFile=-/etc/default/%p
 Type=notify
 User=etcd
