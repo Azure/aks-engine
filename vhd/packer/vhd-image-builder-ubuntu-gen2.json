@@ -158,11 +158,6 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/kms.service",
-            "destination": "/home/packer/kms.service"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/health-monitor.sh",
             "destination": "/home/packer/health-monitor.sh"
         },
