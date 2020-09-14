@@ -188,6 +188,36 @@ Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW) {
 if ($global:NetworkPlugin -eq "azure") {
     Write-Host "NetworkPlugin azure, starting kubelet."
 
+    Write-Host "Cleaning stale CNI data"
+    # Kill all cni instances & stale data left by cni
+    # Cleanup all files related to cni
+    taskkill /IM azure-vnet.exe /f
+    taskkill /IM azure-vnet-ipam.exe /f
+    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
+    if ((Test-Path $cnijson)) {
+        Remove-Item $cnijson
+    }
+    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
+    if ((Test-Path $cnilock)) {
+        Remove-Item $cnilock
+    }
+    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json")
+    if ((Test-Path $cnijson)) {
+        Remove-Item $cnijson
+    }
+    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json.lock")
+    if ((Test-Path $cnilock)) {
+        Remove-Item $cnilock
+    }
+    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
+    if ((Test-Path $cnijson)) {
+        Remove-Item $cnijson
+    }
+    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
+    if ((Test-Path $cnilock)) {
+        Remove-Item $cnilock
+    }
+
     # startup the service
 
     # Find if network created by CNI exists, if yes, remove it
@@ -201,34 +231,6 @@ if ($global:NetworkPlugin -eq "azure") {
 
         Write-Host "Cleaning up old HNS network found"
         Remove-HnsNetwork $hnsNetwork
-        # Kill all cni instances & stale data left by cni
-        # Cleanup all files related to cni
-        taskkill /IM azure-vnet.exe /f
-        taskkill /IM azure-vnet-ipam.exe /f
-        $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
-        if ((Test-Path $cnijson)) {
-            Remove-Item $cnijson
-        }
-        $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
-        if ((Test-Path $cnilock)) {
-            Remove-Item $cnilock
-        }
-        $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json")
-        if ((Test-Path $cnijson)) {
-            Remove-Item $cnijson
-        }
-        $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json.lock")
-        if ((Test-Path $cnilock)) {
-            Remove-Item $cnilock
-        }
-        $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
-        if ((Test-Path $cnijson)) {
-            Remove-Item $cnijson
-        }
-        $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
-        if ((Test-Path $cnilock)) {
-            Remove-Item $cnilock
-        }
     }
 
     # Restart Kubeproxy, which would wait, until the network is created
