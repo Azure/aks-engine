@@ -104,6 +104,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "4h",
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
+		"--healthz-port":                      DefaultKubeletHealthzPort,
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS or

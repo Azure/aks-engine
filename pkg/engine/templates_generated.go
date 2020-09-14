@@ -79,11 +79,11 @@
 // ../../parts/k8s/cloud-init/artifacts/default-grub
 // ../../parts/k8s/cloud-init/artifacts/dhcpv6.service
 // ../../parts/k8s/cloud-init/artifacts/docker-monitor.service
-// ../../parts/k8s/cloud-init/artifacts/docker-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf
 // ../../parts/k8s/cloud-init/artifacts/enable-dhcpv6.sh
 // ../../parts/k8s/cloud-init/artifacts/etc-issue
 // ../../parts/k8s/cloud-init/artifacts/etc-issue.net
+// ../../parts/k8s/cloud-init/artifacts/etcd-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
 // ../../parts/k8s/cloud-init/artifacts/generateproxycerts.sh
 // ../../parts/k8s/cloud-init/artifacts/health-monitor.sh
@@ -18342,9 +18342,6 @@ func k8sCloudInitArtifactsCisSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
-ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
-ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 ADDONS_DIR=/etc/kubernetes/addons
 POD_SECURITY_POLICY_SPEC=$ADDONS_DIR/pod-security-policy.yaml
@@ -18423,7 +18420,7 @@ configureSecrets(){
 configureEtcd() {
   set -x
 
-  local ret f=/opt/azure/containers/setup-etcd.sh
+  local ret f=/opt/azure/containers/setup-etcd.sh etcd_peer_url="https://${PRIVATE_IP}:2380"
   wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
   $f >/opt/azure/containers/setup-etcd.log 2>&1
   ret=$?
@@ -18449,7 +18446,7 @@ configureEtcd() {
       sleep 1
     fi
   done
-  retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
+  retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${etcd_peer_url} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
 }
 ensureNTP() {
   systemctlEnableAndStart ntp || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
@@ -18629,6 +18626,10 @@ configureAzureCNI() {
     /sbin/ebtables -t nat --list
   fi
 }
+enableCRISystemdMonitor() {
+  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart docker-monitor || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+}
 {{- if NeedsContainerd}}
 installContainerd() {
   local v
@@ -18659,6 +18660,7 @@ ensureContainerd() {
   wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/kubereserved-slice.conf|| exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   {{- end}}
   systemctlEnableAndStart containerd || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+  enableCRISystemdMonitor
 }
 {{end}}
 {{- if IsDockerContainerRuntime}}
@@ -18683,10 +18685,7 @@ ensureDocker() {
     fi
   done
   systemctlEnableAndStart docker || exit {{GetCSEErrorCode "ERR_DOCKER_START_FAIL"}}
-  {{/* Delay start of docker-monitor for 30 mins after booting */}}
-  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.timer || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  wait_for_file 1200 1 /etc/systemd/system/docker-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  systemctlEnableAndStart docker-monitor.timer || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+  enableCRISystemdMonitor
 }
 {{end}}
 {{- if EnableEncryptionWithExternalKms}}
@@ -18707,12 +18706,24 @@ ensureKubelet() {
   sysctl_reload 10 5 120 || exit {{GetCSEErrorCode "ERR_SYSCTL_RELOAD"}}
   wait_for_file 1200 1 /etc/default/kubelet || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   wait_for_file 1200 1 /var/lib/kubelet/kubeconfig || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  if [[ -n ${MASTER_NODE} ]]; then
+{{- if IsMasterVirtualMachineScaleSets}}
+    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig" || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
+    local f=/etc/kubernetes/manifests/kube-apiserver.yaml
+    wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" $f
+  fi
   wait_for_file 1200 1 /opt/azure/containers/kubelet.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   {{- if HasKubeReservedCgroup}}
   wait_for_file 1200 1 /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}
   wait_for_file 1200 1 /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
   {{- end}}
   systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- if HasKubeletHealthZPort}}
+  wait_for_file 1200 1 /etc/systemd/system/kubelet-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
 }
 
 ensureAddons() {
@@ -18811,7 +18822,10 @@ ensureLabelExclusionForAzurePolicyAddon() {
 }
 {{end}}
 ensureEtcd() {
-  retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
+  local etcd_client_url="https://${PRIVATE_IP}:2379"
+  retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${etcd_client_url}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/etcd-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart etcd-monitor || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 createKubeManifestDir() {
   mkdir -p /etc/kubernetes/manifests
@@ -19300,6 +19314,11 @@ NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VER=2.0.0
 NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
+PRIVATE_IP=$( (ip -br -4 addr show eth0 || ip -br -4 addr show azure0) | grep -Po '\d+\.\d+\.\d+\.\d+')
+if ! [[ $(echo -n "$PRIVATE_IP" | grep -c '^') == 1 ]]; then
+  PRIVATE_IP=$(hostname -i)
+fi
+export PRIVATE_IP
 
 configure_prerequisites() {
   ip_forward_path=/proc/sys/net/ipv4/ip_forward
@@ -20186,7 +20205,10 @@ After=docker.service
 Restart=always
 RestartSec=10
 RemainAfterExit=yes
+Environment=CONTAINER_RUNTIME={{GetContainerRuntime}}
 ExecStart=/usr/local/bin/health-monitor.sh container-runtime
+[Install]
+WantedBy=multi-user.target
 #EOF
 `)
 
@@ -20201,30 +20223,6 @@ func k8sCloudInitArtifactsDockerMonitorService() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/docker-monitor.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sCloudInitArtifactsDockerMonitorTimer = []byte(`[Unit]
-Description=a timer that delays docker-monitor from starting too soon after boot
-[Timer]
-OnBootSec=30min
-[Install]
-WantedBy=multi-user.target
-#EOF
-`)
-
-func k8sCloudInitArtifactsDockerMonitorTimerBytes() ([]byte, error) {
-	return _k8sCloudInitArtifactsDockerMonitorTimer, nil
-}
-
-func k8sCloudInitArtifactsDockerMonitorTimer() (*asset, error) {
-	bytes, err := k8sCloudInitArtifactsDockerMonitorTimerBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/docker-monitor.timer", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -20323,6 +20321,34 @@ func k8sCloudInitArtifactsEtcIssueNet() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/etc-issue.net", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsEtcdMonitorService = []byte(`[Unit]
+Description=a script that checks etcd health and restarts if needed
+After=etcd.service
+[Service]
+Restart=always
+RestartSec=10
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/health-monitor.sh etcd
+[Install]
+WantedBy=multi-user.target
+#EOF
+`)
+
+func k8sCloudInitArtifactsEtcdMonitorServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsEtcdMonitorService, nil
+}
+
+func k8sCloudInitArtifactsEtcdMonitorService() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsEtcdMonitorServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/etcd-monitor.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -20461,80 +20487,95 @@ func k8sCloudInitArtifactsGenerateproxycertsSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsHealthMonitorSh = []byte(`#!/usr/bin/env bash
+source {{GetCSEHelpersScriptFilepath}}
 
-# This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh
-# and has been modified for aks-engine.
+{{- /* This script originated at https://github.com/kubernetes/kubernetes/blob/master/cluster/gce/gci/health-monitor.sh */}}
+{{- /* and has been modified for aks-engine. */}}
 
 set -o nounset
 set -o pipefail
 
 container_runtime_monitoring() {
-  local -r max_attempts=5
-  local attempt=1
-  local -r crictl="${KUBE_HOME}/bin/crictl"
-  local -r container_runtime_name="${CONTAINER_RUNTIME_NAME:-docker}"
-  local healthcheck_command="docker ps"
-  if [[ ${CONTAINER_RUNTIME:-docker} != "docker" ]]; then
-    healthcheck_command="${crictl} pods"
+  sleep 300 {{/* Wait for 5 minutes for CRI to be functional/stable */}}
+  local cri_name="${CONTAINER_RUNTIME:-docker}" cmd="docker ps"
+  if [[ ${CONTAINER_RUNTIME} == "containerd" ]]; then
+    cmd="ctr -n k8s.io containers ls"
   fi
 
-  until timeout 60 ${healthcheck_command} >/dev/null; do
-    if ((attempt == max_attempts)); then
-      echo "Max attempt ${max_attempts} reached! Proceeding to monitor container runtime healthiness."
-      break
-    fi
-    echo "$attempt initial attempt \"${healthcheck_command}\"! Trying again in $attempt seconds..."
-    sleep "$((2 ** attempt++))"
-  done
   while true; do
-    if ! timeout 60 ${healthcheck_command} >/dev/null; then
-      echo "Container runtime ${container_runtime_name} failed!"
-      if [[ $container_runtime_name == "docker" ]]; then
-        pkill -SIGUSR1 dockerd
-      fi
-      systemctl kill --kill-who=main "${container_runtime_name}"
-      sleep 120
-      if ! systemctl is-active ${container_runtime_name}; then
-        systemctl start ${container_runtime_name}
+    if ! timeout 60 ${cmd} >/dev/null; then
+      echo "Container runtime ${cri_name} failed!"
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! timeout 60 ${cmd} >/dev/null; then
+        if [[ $cri_name == "docker" ]]; then
+          pkill -SIGUSR1 dockerd
+        fi
+        if [[ $cri_name == "containerd" ]]; then
+          pkill -SIGUSR1 containerd
+        fi
+        systemctl kill --kill-who=main "${cri_name}"
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active ${cri_name}; then
+          systemctl start ${cri_name}
+        fi
       fi
     else
-      sleep "${SLEEP_SECONDS}"
+      sleep "${SLEEP_TIME}"
     fi
   done
 }
 
 kubelet_monitoring() {
-  echo "Wait for 2 minutes for kubelet to be functional"
-  sleep 120
-  local -r max_seconds=10
-  local output=""
+  sleep 300 {{/* Wait for 5 minutes for kubelet to be functional/stable */}}
+  local max_seconds=10 output=""
+  local monitor_cmd="curl -m ${max_seconds} -f -s -S http://127.0.0.1:${HEALTHZPORT}/healthz"
   while true; do
-    if ! output=$(curl -m "${max_seconds}" -f -s -S http://127.0.0.1:10255/healthz 2>&1); then
+    if ! output=$(${monitor_cmd} 2>&1); then
       echo $output
       echo "Kubelet is unhealthy!"
-      systemctl kill kubelet
-      sleep 60
-      if ! systemctl is-active kubelet; then
-        systemctl start kubelet
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! output=$(${monitor_cmd} 2>&1); then
+        systemctl kill kubelet
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active kubelet; then
+          systemctl start kubelet
+        fi
       fi
     else
-      sleep "${SLEEP_SECONDS}"
+      sleep "${SLEEP_TIME}"
+    fi
+  done
+}
+
+etcd_monitoring() {
+  sleep 300 {{/* Wait for 5 minutes for etcd to be functional/stable */}}
+  local max_seconds=10 output=""
+  local endpoint="https://${PRIVATE_IP}:2379"
+  local monitor_cmd="curl -s -S -m ${max_seconds} --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${endpoint}/v2/machines"
+  while true; do
+    if ! output=$(${monitor_cmd}); then
+      echo $output
+      echo "etcd is unhealthy!"
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! output=$(${monitor_cmd}); then
+        systemctl kill etcd
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active etcd; then
+          systemctl start etcd
+        fi
+      fi
+    else
+      sleep "${SLEEP_TIME}"
     fi
   done
 }
 
 if [[ $# -ne 1 ]]; then
-  echo "Usage: health-monitor.sh <container-runtime/kubelet>"
+  echo "Usage: health-monitor.sh <container-runtime|kubelet|etcd>"
   exit 1
 fi
 
-KUBE_HOME="/usr/local/bin"
-KUBE_ENV="/etc/default/kube-env"
-if [[ -e ${KUBE_ENV} ]]; then
-  source "${KUBE_ENV}"
-fi
-
-SLEEP_SECONDS=10
+SLEEP_TIME=10
 component=$1
 echo "Start kubernetes health monitoring for ${component}"
 
@@ -20542,6 +20583,8 @@ if [[ ${component} == "container-runtime" ]]; then
   container_runtime_monitoring
 elif [[ ${component} == "kubelet" ]]; then
   kubelet_monitoring
+elif [[ ${component} == "etcd" ]]; then
+  etcd_monitoring
 else
   echo "Health monitoring for component ${component} is not supported!"
 fi
@@ -20602,10 +20645,15 @@ var _k8sCloudInitArtifactsKubeletMonitorService = []byte(`[Unit]
 Description=a script that checks kubelet health and restarts if needed
 After=kubelet.service
 [Service]
+Environment=HEALTHZPORT={{GetKubeletHealthZPort}}
 Restart=always
 RestartSec=10
 RemainAfterExit=yes
-ExecStart=/usr/local/bin/health-monitor.sh kubelet`)
+ExecStart=/usr/local/bin/health-monitor.sh kubelet
+[Install]
+WantedBy=multi-user.target
+#EOF
+`)
 
 func k8sCloudInitArtifactsKubeletMonitorServiceBytes() ([]byte, error) {
 	return _k8sCloudInitArtifactsKubeletMonitorService, nil
@@ -21563,14 +21611,6 @@ write_files:
   {{end}}
 {{end}}
 
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
-
-{{- if not .MasterProfile.IsVHDDistro}}
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
@@ -21578,19 +21618,28 @@ write_files:
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
+{{- if HasKubeletHealthZPort}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
+{{- end}}
 
-- path: /etc/systemd/system/docker-monitor.timer
+- path: /etc/systemd/system/etcd-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+    {{CloudInitData "etcdMonitorSystemdService"}}
+
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
@@ -21599,6 +21648,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
 
+{{- if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/label-nodes.sh
   permissions: "0744"
   encoding: gzip
@@ -21907,16 +21957,10 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
       mount --bind $MOUNT_DIR $MOUNT_DIR
     fi
     mount --make-shared $MOUNT_DIR
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-{{- if IsMasterVirtualMachineScaleSets}}
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-{{end}}
 {{- if gt .MasterProfile.Count 1}}
     {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
@@ -21942,11 +21986,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
         echo "" >> /etc/environment
     fi
   {{- if IsMasterVirtualMachineScaleSets}}
+    source {{GetCSEHelpersScriptFilepath}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
@@ -22156,38 +22200,32 @@ write_files:
   {{end}}
 {{end}}
 
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
-
-{{- if not .IsVHDDistro}}
-    {{- if .IsFlatcar}}
-- path: /opt/bin/health-monitor.sh
-    {{else}}
-- path: /usr/local/bin/health-monitor.sh
-    {{- end}}
-  permissions: "0544"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
-
+{{- if HasKubeletHealthZPort}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
+{{- end}}
 
-- path: /etc/systemd/system/docker-monitor.timer
+{{- if .IsFlatcar}}
+- path: /opt/bin/health-monitor.sh
+{{else}}
+- path: /usr/local/bin/health-monitor.sh
+{{- end}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "healthMonitorScript"}}
+
+- path: /etc/systemd/system/kubelet.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+    {{CloudInitData "kubeletSystemdService"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
@@ -22196,6 +22234,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
 
+{{- if not .IsVHDDistro}}
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
@@ -22535,6 +22574,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+            After=kubelet.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh kubelet
@@ -22543,6 +22583,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+            After=docker.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime
@@ -24212,6 +24253,7 @@ spec:
     - name: auditlog
       hostPath:
         path: /var/log/kubeaudit
+#EOF
 `)
 
 func k8sManifestsKubernetesmasterKubeApiserverYamlBytes() ([]byte, error) {
@@ -29253,11 +29295,11 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/default-grub":                              k8sCloudInitArtifactsDefaultGrub,
 	"k8s/cloud-init/artifacts/dhcpv6.service":                            k8sCloudInitArtifactsDhcpv6Service,
 	"k8s/cloud-init/artifacts/docker-monitor.service":                    k8sCloudInitArtifactsDockerMonitorService,
-	"k8s/cloud-init/artifacts/docker-monitor.timer":                      k8sCloudInitArtifactsDockerMonitorTimer,
 	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf": k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
 	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                          k8sCloudInitArtifactsEnableDhcpv6Sh,
 	"k8s/cloud-init/artifacts/etc-issue":                                 k8sCloudInitArtifactsEtcIssue,
 	"k8s/cloud-init/artifacts/etc-issue.net":                             k8sCloudInitArtifactsEtcIssueNet,
+	"k8s/cloud-init/artifacts/etcd-monitor.service":                      k8sCloudInitArtifactsEtcdMonitorService,
 	"k8s/cloud-init/artifacts/etcd.service":                              k8sCloudInitArtifactsEtcdService,
 	"k8s/cloud-init/artifacts/generateproxycerts.sh":                     k8sCloudInitArtifactsGenerateproxycertsSh,
 	"k8s/cloud-init/artifacts/health-monitor.sh":                         k8sCloudInitArtifactsHealthMonitorSh,
@@ -29452,11 +29494,11 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
 				"dhcpv6.service":         {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
 				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
-				"docker-monitor.timer":   {k8sCloudInitArtifactsDockerMonitorTimer, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
 				"enable-dhcpv6.sh":                          {k8sCloudInitArtifactsEnableDhcpv6Sh, map[string]*bintree{}},
 				"etc-issue":                                 {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},
 				"etc-issue.net":                             {k8sCloudInitArtifactsEtcIssueNet, map[string]*bintree{}},
+				"etcd-monitor.service":                      {k8sCloudInitArtifactsEtcdMonitorService, map[string]*bintree{}},
 				"etcd.service":                              {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
 				"generateproxycerts.sh":                     {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
 				"health-monitor.sh":                         {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},

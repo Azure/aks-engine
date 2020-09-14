@@ -78,7 +78,7 @@ var (
 	stabilityCommandTimeout         time.Duration
 	env                             azure.Environment
 	azureClient                     *armhelpers.AzureClient
-	firstMasterRegexStr             = fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix)
+	firstMasterRegexStr             = fmt.Sprintf("^%s-.*-0", common.LegacyControlPlaneVMPrefix)
 )
 
 var _ = BeforeSuite(func() {

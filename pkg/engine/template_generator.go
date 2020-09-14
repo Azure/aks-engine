@@ -305,6 +305,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return kc.GetOrderedKubeletConfigStringForPowershell()
 		},
+		"GetKubeletHealthZPort": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--healthz-port"]
+		},
+		"HasKubeletHealthZPort": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--healthz-port"] != ""
+		},
 		"HasKubeReservedCgroup": func() bool {
 			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
 			return kc != nil && kc.KubeReservedCgroup != ""
@@ -724,6 +730,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
+		},
+		"GetContainerRuntime": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime
 		},
 		"GetDockerConfig": func(hasGPU bool) string {
 			val, err := getDockerConfig(cs, hasGPU)

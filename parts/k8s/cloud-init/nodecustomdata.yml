@@ -117,38 +117,32 @@ write_files:
   {{end}}
 {{end}}
 
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
-
-{{- if not .IsVHDDistro}}
-    {{- if .IsFlatcar}}
-- path: /opt/bin/health-monitor.sh
-    {{else}}
-- path: /usr/local/bin/health-monitor.sh
-    {{- end}}
-  permissions: "0544"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
-
+{{- if HasKubeletHealthZPort}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
+{{- end}}
 
-- path: /etc/systemd/system/docker-monitor.timer
+{{- if .IsFlatcar}}
+- path: /opt/bin/health-monitor.sh
+{{else}}
+- path: /usr/local/bin/health-monitor.sh
+{{- end}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "healthMonitorScript"}}
+
+- path: /etc/systemd/system/kubelet.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+    {{CloudInitData "kubeletSystemdService"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
@@ -157,6 +151,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
 
+{{- if not .IsVHDDistro}}
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
@@ -496,6 +491,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+            After=kubelet.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh kubelet
@@ -504,6 +500,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+            After=docker.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime

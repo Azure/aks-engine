@@ -197,6 +197,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedIsPodSecurityPolicyAddonEnabled bool
 		expectedGetEtcdStorageLimitGB           int
 		expectedGetLinuxCSELogPath              string
+		expectedGetKubeletHealthZPort           string
+		expectedHasKubeletHealthZPort           bool
+		expectedGetContainerRuntime             string
 	}{
 		{
 			name: "1.15 release",
@@ -232,6 +235,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetCSEErrorCodeVals:          []int{-1},
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "1.16 release",
@@ -266,6 +270,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "1.17 release",
@@ -300,6 +305,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "1.17 release w/ VHD distro",
@@ -337,6 +343,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVHDDistroForAllNodes:       true,
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "custom search domain",
@@ -378,6 +385,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "custom nodes DNS",
@@ -417,6 +425,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "1.17 release with custom kube images",
@@ -454,6 +463,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "china cloud",
@@ -489,6 +499,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "german cloud",
@@ -524,6 +535,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "usgov cloud",
@@ -559,6 +571,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "Azure Stack",
@@ -598,6 +611,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "N series SKU",
@@ -633,6 +647,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "AvailabilitySet pool",
@@ -666,6 +681,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedIsVirtualMachineScaleSets:    false,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "managed identity enabled",
@@ -701,6 +717,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedUseManagedIdentity:           true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "PrivateAzureRegistryServer",
@@ -738,6 +755,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:       "",
 			expectedIsVirtualMachineScaleSets:     true,
 			expectedGetLinuxCSELogPath:            linuxCSELogPath,
+			expectedGetContainerRuntime:           api.Docker,
 		},
 		{
 			name: "cluster-init config",
@@ -779,6 +797,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasClusterInitComponent:      true,
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "sysctl config",
@@ -836,6 +855,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 			expectedGetSysctlDConfigKeyVals: `net.core.message_burst = 80
     net.core.message_cost = 40
     net.core.somaxconn = 16384
@@ -885,6 +905,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasKubeReservedCgroup:        true,
 			expectedGetKubeReservedCgroup:        "kubereserved",
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "custom pod-security-policy via addon",
@@ -929,6 +950,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasCustomPodSecurityPolicy:      true,
 			expectedIsPodSecurityPolicyAddonEnabled: true,
 			expectedGetLinuxCSELogPath:              linuxCSELogPath,
+			expectedGetContainerRuntime:             api.Docker,
 		},
 		{
 			name: "kubernetes-dashboard addon enabled",
@@ -971,6 +993,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedIsDashboardAddonEnabled:      true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "deprecated custom pod-security-policy",
@@ -1011,6 +1034,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedHasCustomPodSecurityPolicy:   true,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "1.17 release",
@@ -1047,6 +1071,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetEtcdStorageLimitGB:        8589934592,
 			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
 		},
 		{
 			name: "pod-security-policy addon enabled",
@@ -1089,6 +1114,47 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:       true,
 			expectedIsPodSecurityPolicyAddonEnabled: true,
 			expectedGetLinuxCSELogPath:              linuxCSELogPath,
+			expectedGetContainerRuntime:             api.Docker,
+		},
+		{
+			name: "kubelet healthz port",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubeletConfig: map[string]string{
+								"--healthz-port": "12345",
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
+			expectedGetKubeletHealthZPort:        "12345",
+			expectedHasKubeletHealthZPort:        true,
 		},
 	}
 
@@ -1266,6 +1332,21 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetLinuxCSELogPath {
 				t.Errorf("expected funcMap invocation of GetLinuxCSELogPath to return %s, instead got %s", c.expectedGetLinuxCSELogPath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetKubeletHealthZPort"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetKubeletHealthZPort {
+				t.Errorf("expected funcMap invocation of GetKubeletHealthZPort to return %s, instead got %s", c.expectedGetKubeletHealthZPort, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasKubeletHealthZPort"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasKubeletHealthZPort {
+				t.Errorf("expected funcMap invocation of HasKubeletHealthZPort to return %t, instead got %t", c.expectedHasKubeletHealthZPort, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetContainerRuntime"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetContainerRuntime {
+				t.Errorf("expected funcMap invocation of GetContainerRuntime to return %s, instead got %s", c.expectedGetContainerRuntime, ret[0].Interface())
 			}
 		})
 	}

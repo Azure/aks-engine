@@ -109,14 +109,6 @@ write_files:
   {{end}}
 {{end}}
 
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
-
-{{- if not .MasterProfile.IsVHDDistro}}
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
@@ -124,19 +116,28 @@ write_files:
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
+{{- if HasKubeletHealthZPort}}
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
+{{- end}}
 
-- path: /etc/systemd/system/docker-monitor.timer
+- path: /etc/systemd/system/etcd-monitor.service
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
+    {{CloudInitData "etcdMonitorSystemdService"}}
+
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
@@ -145,6 +146,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
 
+{{- if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/label-nodes.sh
   permissions: "0744"
   encoding: gzip
@@ -453,16 +455,10 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
       mount --bind $MOUNT_DIR $MOUNT_DIR
     fi
     mount --make-shared $MOUNT_DIR
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-{{- if IsMasterVirtualMachineScaleSets}}
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-{{end}}
 {{- if gt .MasterProfile.Count 1}}
     {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
@@ -488,11 +484,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
         echo "" >> /etc/environment
     fi
   {{- if IsMasterVirtualMachineScaleSets}}
+    source {{GetCSEHelpersScriptFilepath}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
