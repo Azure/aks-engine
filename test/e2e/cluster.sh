@@ -180,7 +180,6 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
   fi
 
   if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
-      PRIVATE_SSH_KEY_FILE="${PRIVATE_SSH_KEY_FILE:-_output/${RESOURCE_GROUP}-ssh}"
       docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
@@ -191,7 +190,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --ssh-host $API_SERVER \
-      --linux-ssh-private-key $PRIVATE_SSH_KEY_FILE \
+      --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
       --linux-script ./scripts/collect-logs.sh
       # TODO remove --linux-script once collect-logs.sh is part of the VHD
   fi
