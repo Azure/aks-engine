@@ -171,7 +171,7 @@ func (uc *upgradeCmd) loadCluster() error {
 	}
 
 	// Use the Windows VHD associated with the aks-engine version if upgradeWindowsVHD is set to "true"
-	if uc.upgradeWindowsVHD {
+	if uc.upgradeWindowsVHD && uc.containerService.Properties.WindowsProfile != nil {
 		windowsProfile := uc.containerService.Properties.WindowsProfile
 		if windowsProfile.WindowsPublisher == api.AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == api.AKSWindowsServer2019OSImageConfig.ImageOffer {
 			windowsProfile.ImageVersion = api.AKSWindowsServer2019OSImageConfig.ImageVersion
