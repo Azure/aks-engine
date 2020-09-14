@@ -20571,7 +20571,7 @@ etcd_monitoring() {
 }
 
 if [[ $# -ne 1 ]]; then
-  echo "Usage: health-monitor.sh <container-runtime/kubelet>"
+  echo "Usage: health-monitor.sh <container-runtime|kubelet|etcd>"
   exit 1
 fi
 
