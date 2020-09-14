@@ -203,7 +203,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		}
 
 		// Unless distro is defined, default distro is configured by defaults#setAgentProfileDefaults
-		//   Ignores Windows OS
 		if !(agentProfile.OSType == api.Windows) {
 			if agentProfile.ImageRef != nil {
 				addValue(parametersMap, fmt.Sprintf("%sosImageName", agentProfile.Name), agentProfile.ImageRef.Name)
