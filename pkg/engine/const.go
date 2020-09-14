@@ -113,7 +113,6 @@ const (
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
 	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
-	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
 	aptPreferences                           = "k8s/cloud-init/artifacts/apt-preferences"
 	dockerClearMountPropagationFlags         = "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf"
 	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
@@ -277,6 +276,8 @@ const (
 	addonManagerComponentSourceFilename                string = "kubernetesmaster-kube-addon-manager.yaml"
 	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
 	clusterInitComponentDestinationFilename            string = "cluster-init.yaml"
+	azureKMSComponentSourceFilename                    string = "kubernetesmaster-azure-kubernetes-kms.yaml"
+	azureKMSComponentDestinationFilename               string = "kube-azure-kms.yaml"
 )
 
 const linuxCSELogPath string = "/var/log/azure/cluster-provision.log"

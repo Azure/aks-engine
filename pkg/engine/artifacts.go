@@ -56,6 +56,11 @@ func kubernetesComponentSettingsInit(p *api.Properties) map[string]kubernetesCom
 			base64Data:      k.GetComponentData(common.ClusterInitComponentName),
 			destinationFile: clusterInitComponentDestinationFilename,
 		},
+		common.AzureKMSProviderComponentName: {
+			sourceFile:      azureKMSComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.AzureKMSProviderComponentName),
+			destinationFile: azureKMSComponentDestinationFilename,
+		},
 	}
 }
 

@@ -304,6 +304,8 @@ const (
 	AddonManagerComponentName = "kube-addon-manager"
 	// ClusterInitComponentName is the name of the cluster-init component
 	ClusterInitComponentName = "cluster-init"
+	// AzureKMSProviderComponentName is the name of the azure-kms-provider component
+	AzureKMSProviderComponentName = "azure-kms-provider"
 )
 
 const WindowsArtifactComponentName = "windowszip"

@@ -61,6 +61,7 @@ const (
 	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.13"
 	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
 	azureArcOnboardingImageReference                  string = "arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0"
+	azureKMSProviderImageReference                    string = "k8s/kms/keyvault:v0.0.9"
 )
 
 var kubernetesImageBaseDefaultImages = map[string]map[string]string{
@@ -525,6 +526,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
+			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 		}
 	case "1.18":
 		ret = map[string]string{
@@ -609,6 +611,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
+			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 		}
 	case "1.17":
 		ret = map[string]string{
@@ -691,6 +694,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
+			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 		}
 	case "1.16":
 		ret = map[string]string{
@@ -769,6 +773,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
+			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 		}
 	case "1.15":
 		ret = map[string]string{
@@ -843,6 +848,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 			common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
+			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 		}
 	case "1.14":
 		ret = map[string]string{
@@ -916,6 +922,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 		}
 	case "1.13":
 		ret = map[string]string{
@@ -988,6 +995,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 		}
 	case "1.12":
 		ret = map[string]string{

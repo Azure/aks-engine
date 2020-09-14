@@ -29,8 +29,6 @@ copyPackerFiles() {
   CIS_DEST=/opt/azure/containers/provision_cis.sh
   APT_PREFERENCES_SRC=/home/packer/apt-preferences
   APT_PREFERENCES_DEST=/etc/apt/preferences
-  KMS_SERVICE_SRC=/home/packer/kms.service
-  KMS_SERVICE_DEST=/etc/systemd/system/kms.service
   HEALTH_MONITOR_SRC=/home/packer/health-monitor.sh
   HEALTH_MONITOR_DEST=/usr/local/bin/health-monitor.sh
   DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_SRC=/home/packer/docker_clear_mount_propagation_flags.conf
@@ -58,7 +56,6 @@ copyPackerFiles() {
   cpAndMode $LABEL_NODES_SERVICE_SRC $LABEL_NODES_SERVICE_DEST 644
   cpAndMode $CIS_SRC $CIS_DEST 744
   cpAndMode $APT_PREFERENCES_SRC $APT_PREFERENCES_DEST 644
-  cpAndMode $KMS_SERVICE_SRC $KMS_SERVICE_DEST 644
   cpAndMode $HEALTH_MONITOR_SRC $HEALTH_MONITOR_DEST 544
   cpAndMode $DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_SRC $DOCKER_CLEAR_MOUNT_PROPAGATION_FLAGS_DEST 644
   cpAndMode $GENERATE_PROXY_CERTS_SRC $GENERATE_PROXY_CERTS_DEST 744

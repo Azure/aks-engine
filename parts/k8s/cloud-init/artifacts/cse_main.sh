@@ -205,12 +205,6 @@ time_metric "EnsureContainerd" ensureContainerd
 time_metric "ConfigPrivateClusterHosts" configPrivateClusterHosts
 {{end}}
 
-{{- if EnableEncryptionWithExternalKms}}
-if [[ -n ${MASTER_NODE} && ${KMS_PROVIDER_VAULT_NAME} != "" ]]; then
-  time_metric "EnsureKMS" ensureKMS
-fi
-{{end}}
-
 {{/* configure and enable dhcpv6 for ipv6 features */}}
 {{- if IsIPv6Enabled}}
 time_metric "EnsureDHCPv6" ensureDHCPv6
