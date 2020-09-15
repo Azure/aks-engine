@@ -231,7 +231,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			// added into the ExceptionList of Windows nodes. Otherwise, the default value `10.0.0.0/8` will
 			// be added into the ExceptionList and it does not work if users use other ip address ranges.
 			// All agent pools in the same cluster share a same VnetCidrs so we only need to set the first non-empty VnetCidrs.
-			addValue(parametersMap, "vnetCidr", agentProfile.VnetCidrs[0])
+			addValue(parametersMap, "vnetCidr", strings.Join(agentProfile.VnetCidrs, ","))
 			isSetVnetCidrs = true
 		}
 	}
