@@ -233,8 +233,8 @@ func (uc *updateCmd) run(cmd *cobra.Command, args []string) error {
 		for _, vmss := range vmssListPage.Values() {
 			vmssName := *vmss.Name
 			if sc.agentPool.OSType == api.Windows {
-				possibleIndex, err := strconv.Atoi(vmssName[len(vmssName)-2:])
-				if err != nil {
+				possibleIndex, nameMungingErr := strconv.Atoi(vmssName[len(vmssName)-2:])
+				if nameMungingErr != nil {
 					continue
 				}
 				if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, possibleIndex) == vmssName) {
