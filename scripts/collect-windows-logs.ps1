@@ -1,6 +1,6 @@
 $ProgressPreference = "SilentlyContinue"
 
-$lockedFiles = "kubelet.err.log", "kubelet.log", "kubeproxy.log", "kubeproxy.err.log", "azure-vnet-telemetry.log", "azure-vnet.log"
+$lockedFiles = "kubelet.err.log", "kubelet.log", "kubeproxy.log", "kubeproxy.err.log", "azure-vnet-telemetry.log", "azure-vnet.log", "network-interfaces.json", "interfaces.json"
 
 $timeStamp = get-date -format 'yyyyMMdd-hhmmss'
 $zipName = "$env:computername-$($timeStamp)_logs.zip"
@@ -28,22 +28,6 @@ $lockedFiles | Foreach-Object {
 $containerd = "C:\ProgramData\containerd\root\panic.log"
 if (Test-Path $containerd) {
   $tempfile = Copy-Item $containerd $lockedTemp -Passthru -ErrorAction Ignore
-  if ($tempFile) {
-    $paths += $tempFile
-  }
-}
-
-$networkInterfaces = "c:\k\network-interfaces.json"
-if (Test-Path $networkInterfaces) {
-  $tempFile = Copy-Item $networkInterfaces $lockedTemp -PassThru -ErrorAction Ignore
-  if ($tempFile) {
-    $paths += $tempFile
-  }
-}
-
-$interfaces = "c:\k\interfaces.json"
-if (Test-Path $interfaces) {
-  $tempFile = Copy-Item $interfaces $lockedTemp -PassThru -ErrorAction Ignore
   if ($tempFile) {
     $paths += $tempFile
   }
