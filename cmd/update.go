@@ -20,7 +20,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
-	v1 "k8s.io/api/core/v1"
 )
 
 type updateCmd struct {
@@ -41,9 +40,7 @@ type updateCmd struct {
 	nameSuffix       string
 	agentPoolIndex   int
 	logger           *log.Entry
-	apiserverURL     string
 	kubeconfig       string
-	nodes            []v1.Node
 }
 
 const (
@@ -255,7 +252,10 @@ func (uc *updateCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	sc.run(cmd, args)
+	err := sc.run(cmd, args)
+	if err != nil {
+		return errors.Wrap(err, "aks-engine update failed")
+	}
 
 	return uc.saveAPIModel()
 }
