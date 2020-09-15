@@ -85,7 +85,7 @@ func toImageConfig(distro api.Distro) api.AzureOSImageConfig {
 	case api.Flatcar:
 		return api.FlatcarImageConfig
 	case api.AKSUbuntu1604:
-		return api.AKSUbuntu1604OSImageConfig
+		return api.AzureStackAKSUbuntu1604OSImageConfig
 	case api.AKSUbuntu1804:
 		return api.AKSUbuntu1804OSImageConfig
 	case api.ACC1604:

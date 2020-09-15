@@ -220,12 +220,7 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 		}
 
 		if p.IsAzureStackCloud() {
-			azureCustomCloudSpec.OSImageConfig[AKSUbuntu1604] = AzureOSImageConfig{
-				ImageOffer:     "aks",
-				ImageSku:       "aks-engine-ubuntu-1604-202007",
-				ImagePublisher: "microsoft-aks",
-				ImageVersion:   "2020.09.14",
-			}
+			azureCustomCloudSpec.OSImageConfig[AKSUbuntu1604] = AzureStackAKSUbuntu1604OSImageConfig
 		}
 		// Kubernetes only understand AzureStackCloud environment (AzureCloudSpecEnvMap is only accessed using AzureStackCloud for custom clouds)
 		AzureCloudSpecEnvMap[AzureStackCloud] = azureCustomCloudSpec
