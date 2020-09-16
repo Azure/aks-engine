@@ -18261,6 +18261,44 @@ Set-AzureCNIConfig
     if ($IsAzureStack) {
         Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
     }
+    
+    $aclRule1 = [PSCustomObject]@{
+        Type = 'ACL'
+        Protocols = '6'
+        Action = 'Block'
+        Direction = 'Out'
+        RemoteAddresses = '168.63.129.16/32'
+        RemotePorts = '80'
+        Priority = 200
+        RuleType = 'Switch'
+    }
+    $aclRule2 = [PSCustomObject]@{
+        Type = 'ACL'
+        Action = 'Allow'
+        Direction = 'In'
+        Priority = 65500
+    }
+    $aclRule3 = [PSCustomObject]@{
+        Type = 'ACL'
+        Action = 'Allow'
+        Direction = 'Out'
+        Priority = 65500
+    }
+    $jsonContent = [PSCustomObject]@{
+        Name = 'EndpointPolicy'
+        Value = $aclRule1
+    }
+    $configJson.plugins[0].AdditionalArgs += $jsonContent
+    $jsonContent = [PSCustomObject]@{
+        Name = 'EndpointPolicy'
+        Value = $aclRule2
+    }
+    $configJson.plugins[0].AdditionalArgs += $jsonContent
+    $jsonContent = [PSCustomObject]@{
+        Name = 'EndpointPolicy'
+        Value = $aclRule3
+    }
+    $configJson.plugins[0].AdditionalArgs += $jsonContent
 
     $configJson | ConvertTo-Json -depth 20 | Out-File -encoding ASCII -filepath $fileName
 }
