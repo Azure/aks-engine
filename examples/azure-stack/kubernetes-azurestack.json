@@ -15,7 +15,6 @@
                 "cloudProviderRateLimitBucket": 150,
                 "cloudProviderRateLimitQPSWrite": 25,
                 "cloudProviderRateLimitBucketWrite": 30,
-                "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
                 "useInstanceMetadata": false,
                 "networkPlugin": "kubenet",
                 "kubeletConfig": {
@@ -39,7 +38,7 @@
             "dnsPrefix": "",
             "distro": "aks-ubuntu-16.04",
             "count": 3,
-            "vmSize": "Standard_D2_v2"
+            "vmSize": "Standard_DS2_v2"
         },
         "agentPoolProfiles": [
             {
