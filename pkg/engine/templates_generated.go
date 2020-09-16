@@ -19238,7 +19238,12 @@ configureAzureStackInterfaces() {
 
   mapfile -t local_interfaces < <(cat /sys/class/net/*/address | tr -d : | sed 's/.*/\U&/g')
 
-  SDN_INTERFACES=$(jq ".value | map(select(.properties.macAddress | inside(\"${local_interfaces[*]}\"))) | map(select((.properties.ipConfigurations | length) > 0))" ${NETWORK_INTERFACES_FILE})
+  SDN_INTERFACES=$(jq ".value | map(select(.properties != null) | select(.properties.macAddress != null) | select(.properties.macAddress | inside(\"${local_interfaces[*]}\"))) | map(select((.properties.ipConfigurations | length) > 0))" ${NETWORK_INTERFACES_FILE})
+
+  if [[ -z $SDN_INTERFACES ]]; then
+      echo "Error extracting the SDN interfaces from the network interfaces file"
+      exit 123
+  fi
 
   AZURE_CNI_CONFIG=$(echo ${SDN_INTERFACES} | jq "{Interfaces: [.[] | {MacAddress: .properties.macAddress, IsPrimary: .properties.primary, IPSubnets: [{Prefix: .properties.ipConfigurations[0].properties.subnet.id, IPAddresses: .properties.ipConfigurations | [.[] | {Address: .properties.privateIPAddress, IsPrimary: .properties.primary}]}]}]}")
 
@@ -24658,8 +24663,12 @@ function GenerateAzureStackCNIConfig
     $sdnNics = Get-Content $networkInterfacesFile ` + "`" + `
         | ConvertFrom-Json ` + "`" + `
         | Select-Object -ExpandProperty value ` + "`" + `
-        | Where-Object { $localNics.Contains($_.properties.macAddress) } ` + "`" + `
+        | Where-Object { $null -ne $_.properties.macAddress -and $localNics.Contains($_.properties.macAddress) } ` + "`" + `
         | Where-Object { $_.properties.ipConfigurations.Count -gt 0}
+
+    if (!$sdnNics) {
+        throw 'Error extracting the SDN interfaces from the network interfaces file'
+    }
 
     $interfaces = @{
         Interfaces = @( $sdnNics | ForEach-Object { @{
