@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -257,28 +256,5 @@ func (uc *updateCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "aks-engine update failed")
 	}
 
-	return uc.saveAPIModel()
-}
-
-func (uc *updateCmd) saveAPIModel() error {
-	var err error
-	apiloader := &api.Apiloader{
-		Translator: &i18n.Translator{
-			Locale: uc.locale,
-		},
-	}
-
-	b, err := apiloader.SerializeContainerService(uc.containerService, uc.apiVersion)
-
-	if err != nil {
-		return err
-	}
-
-	f := helpers.FileSaver{
-		Translator: &i18n.Translator{
-			Locale: uc.locale,
-		},
-	}
-	dir, file := filepath.Split(uc.apiModelPath)
-	return f.SaveFile(dir, file, b)
+	return nil
 }
