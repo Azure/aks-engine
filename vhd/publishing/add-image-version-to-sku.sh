@@ -52,7 +52,7 @@ image_version="${vhd_version}.${version_date}"
 # generate media name
 # Media name must be under 63 characters
 sku_prefix=$(< $SKU_INFO jq -r ".sku_prefix")
-media_name="${sku_prefix}-${image_version}"
+media_name="aks-windows-${sku_prefix}-${image_version}"
 if [ "${#media_name}" -ge 63 ]; then
 	echo "$media_name should be under 63 characters"
 	exit 1
@@ -87,3 +87,4 @@ sku=$(< $SKU_INFO jq -r ".sku_id")
 
 # TODO: Update pub versions put to take in version.json as a file
 (set -x ; pub versions put corevm -p $publisher -o aks-windows -s $sku --version $image_version --vhd-uri $vhd_url --media-name $media_name --label "AKS Base Image for Windows" --desc "AKS Base Image for Windows" --published-date "$published_date")
+
