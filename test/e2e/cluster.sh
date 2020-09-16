@@ -336,6 +336,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
         --auth-method client_secret \
         --client-id ${AZURE_CLIENT_ID} \
         --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+      az vmss list -g $RESOURCE_GROUP --query '[].sku' | grep $NODE_VM_UPGRADE_SKU || exit 1
     fi
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
