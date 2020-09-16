@@ -503,7 +503,7 @@ const (
 // WindowsProfile defaults
 // TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
 const (
-	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.2"
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.3"
 )
 
 const (
