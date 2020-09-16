@@ -1,6 +1,7 @@
 {
 	"env": {
 		"SCALE_CLUSTER": true,
+		"UPDATE_NODE_POOLS": true,
 		"UPGRADE_CLUSTER": true,
 		"GET_CLUSTER_LOGS": true,
 		"GINKGO_SKIP_AFTER_SCALE_DOWN": "should report all nodes in a Ready state",
