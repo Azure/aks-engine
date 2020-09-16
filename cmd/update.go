@@ -246,7 +246,7 @@ func (uc *updateCmd) run(cmd *cobra.Command, args []string) error {
 				sc.newDesiredAgentCount = int(*vmss.Sku.Capacity)
 				uc.agentPool.Count = sc.newDesiredAgentCount
 			} else {
-				return errors.Wrap(err, fmt.Sprintf("failed to detect find VMSS matching node pool %s in resource group %s", sc.agentPoolToScale, sc.resourceGroupName))
+				return errors.Wrap(err, fmt.Sprintf("failed to find VMSS matching node pool %s in resource group %s", sc.agentPoolToScale, sc.resourceGroupName))
 			}
 		}
 	}
