@@ -12,6 +12,17 @@ And read this for faster PR reviews: https://github.com/kubernetes/community/blo
 **Issue Fixed**:
 <!-- If this PR fixes GitHub issue 1234, add "Fixes #1234" to the next line. -->
 
+**Credit Where Due**:
+
+Does this change contain code from or inspired by another project?
+
+- [ ] No
+- [ ] Yes
+
+If "Yes," did you notify that project's maintainers and provide attribution?
+
+- [ ] No
+- [ ] Yes
 
 **Requirements**:
 <!-- Put an "X" character inside the brackets of each completed task. Some may be optional depending on the PR. -->
