@@ -34,6 +34,10 @@ Flags:
 Use "aks-engine [command] --help" for more information about a command.
 ```
 
+## Operational Cluster Commands
+
+These commands are provided by AKS Engine in order to create and maintain Kubernetes clusters. Note: there is no `aks-engine` command to delete a cluster; to delete a Kubernetes cluster created by AKS Engine, you must delete the resource group that contains cluster resources. If the resource group can't be deleted because it contains other, non-Kubernetes-relate Azure resources, then you must manually delete the Virtual Machine and/or Virtual Machine Scale Set (VMSS), Disk, Network Interface, Network Security Group, Public IP Address, Virtual Network, Load Balancer, and all other resources specified in the aks-engine-generated ARM template. Because manually deleting resources is tedious and requires following serial dependencies in the correct order, it is recommended that you dedicate a resource group for the Azure resources that AKS Engine will create to run your Kubernetes cluster. If you're running more than one cluster, we recommend a dedicated resource group per cluster.
+
 ### `aks-engine deploy`
 
 The `aks-engine deploy` command will create a new cluster from scratch, using an API model (cluster definition) file as input to define the desired cluster configuration and shape, into the subscription, region, and resource group you provide, using credentials that you provide. Use this command to create a new cluster.
@@ -147,7 +151,7 @@ Global Flags:
 The `aks-engine addpool` command will add a new node pool to an existing AKS Engine-created cluster. Using a JSON file to define a brand new node pool, and referencing the aks-engine-generated `apimodel.json`, you can add new nodes to your cluster. Use this command to add a specific number of brand new nodes using a discrete configuration compared to existing nodes participating in your cluster.
 
 ```sh
-$ bin/aks-engine addpool --help
+$ aks-engine addpool --help
 Add a node pool to an existing AKS Engine-created Kubernetes cluster by referencing a new agentpoolProfile spec
 
 Usage:
@@ -175,10 +179,10 @@ Global Flags:
 
 ### `aks-engine upgrade`
 
-The `aks-engine upgrade` command is designed to orchestrate a Kubernetes version upgrade across your existing cluster nodes. Use this command to upgrade the Kubernetes version running your control plane, and optionally on all your nodes as well.
+The `aks-engine upgrade` command orchestrates a Kubernetes version upgrade across your existing cluster nodes. Use this command to upgrade the Kubernetes version running your control plane, and optionally on all your nodes as well.
 
 ```sh
-$ bin/aks-engine upgrade --help
+$ aks-engine upgrade --help
 Upgrade an existing AKS Engine-created Kubernetes cluster, one node at a time
 
 Usage:
@@ -205,6 +209,37 @@ Flags:
   -k, --upgrade-version string      desired kubernetes version (required)
       --upgrade-windows-vhd         upgrade image reference of the Windows nodes (default true)
       --vm-timeout int              how long to wait for each vm to be upgraded in minutes (default -1)
+
+Global Flags:
+      --debug   enable verbose debug logs
+```
+
+## Generate an ARM Template
+
+AKS Engine also provides a command to generate a reusable ARM template only, without creating any actual Azure resources.
+
+### `aks-engine generate`
+
+The `aks-engine generate` command is similar to `aks-engine deploy`: it uses an API model (cluster definition) file as input to define the desired cluster configuration and shape of a new Kubernetes cluster. Unlike `deploy`, `aks-engine generate` does not actually submit any operational requests to Azure, but is instead used to generate a reusable ARM template which may be deployed at a later time. Use this command as a part of a workflow that creates one or more Kubernetes clusters via an ARM group deployment that takes an ARM template as input (e.g., `az group deployment create` using the standard `az` Azure CLI).
+
+```sh
+$ aks-engine generate --help
+Generates an Azure Resource Manager template, parameters file and other assets for a cluster
+
+Usage:
+  aks-engine generate [flags]
+
+Flags:
+  -m, --api-model string             path to your cluster definition file
+      --ca-certificate-path string   path to the CA certificate to use for Kubernetes PKI assets
+      --ca-private-key-path string   path to the CA private key to use for Kubernetes PKI assets
+      --client-id string             client id
+      --client-secret string         client secret
+  -h, --help                         help for generate
+      --no-pretty-print              skip pretty printing the output
+  -o, --output-directory string      output directory (derived from FQDN if absent)
+      --parameters-only              only output parameters files
+      --set stringArray              set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
 
 Global Flags:
       --debug   enable verbose debug logs
