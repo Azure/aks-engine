@@ -38,14 +38,31 @@ function Disable-WindowsUpdates {
 
 function Get-ContainerImages {
     param (
-        $containerRuntime
+        $containerRuntime,
+        $windowsServerVersion
     )
-    $imagesToPull = @(
-        "mcr.microsoft.com/windows/servercore:ltsc2019",
-        "mcr.microsoft.com/windows/nanoserver:1809",
-        "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
-        "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64",
-        "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64")
+
+    switch ($windowsServerVersion)
+    {
+        '2019' {
+            $imagesToPull = @(
+                "mcr.microsoft.com/windows/servercore:ltsc2019",
+                "mcr.microsoft.com/windows/nanoserver:1809",
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
+                "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64",
+                "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64")
+        }
+        '2004' {
+            $imagesToPull = @(
+                "mcr.microsoft.com/windows/servercore:2004",
+                "mcr.microsoft.com/windows/nanoserver:2004",
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
+        }
+        default { 
+            $imagesToPull = @()
+        }
+    }
+
 
     if ($containerRuntime -eq 'containerd') {
         foreach ($image in $imagesToPull) {
@@ -177,19 +194,36 @@ function Install-Docker {
     Start-Service docker
 }
 
-
 function Install-OpenSSH {
     Write-Log "Installing OpenSSH Server"
     Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 }
 
 function Install-WindowsPatches {
-    # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
-    # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
+    param (
+        $windowsServerVersion
+    )
+    
+    switch ($windowsServerVersion)
+    {
+        '2019' {
+            # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
+            # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-    # KB4558998 contains August 11, 2020 cumulative updates for Windows Server 2019
-    # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4565349
-    $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2020/08/windows10.0-kb4565349-x64_919b9f31d4ccfa91183fbb9bab8c2975529e66b6.msu")
+            # KB4558998 contains August 11, 2020 cumulative updates for Windows Server 2019
+            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4565349
+            $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2020/08/windows10.0-kb4565349-x64_919b9f31d4ccfa91183fbb9bab8c2975529e66b6.msu")
+        }
+        '2004' {
+            # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932
+            # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
+
+            $patchUrls = @()
+        }
+        default {
+            $patchUrls = @()
+        }
+    }
 
     foreach ($patchUrl in $patchUrls) {
         $pathOnly = $patchUrl.Split("?")[0]
@@ -209,7 +243,7 @@ function Install-WindowsPatches {
                         Write-Log "Finished install of $fileName"
                     }
                     3010 {
-                        WRite-Log "Finished install of $fileName. Reboot required"
+                        Write-Log "Finished install of $fileName. Reboot required"
                     }
                     default {
                         Write-Log "Error during install of $fileName. ExitCode: $($proc.ExitCode)"
@@ -279,13 +313,21 @@ if (-not ($validContainerRuntimes -contains $containerRuntime)) {
     exit 1
 }
 
+$windowsServerVersion = $env:WindowsServerVersion
+$validWindowsServerContainers = @('2019', '2004')
+if (-not ($validWindowsServerContainers -contains $windowsServerVersion))
+{
+    Write-Host "Unsupported Windows Server version: $windowsServerVersion"
+    exit 1
+}
+
 switch ($env:ProvisioningPhase) {
     "1" {
         Write-Log "Performing actions for provisioning phase 1"
         Set-WinRmServiceDelayedStart
         Set-AllowedSecurityProtocols
         Disable-WindowsUpdates
-        Install-WindowsPatches
+        Install-WindowsPatches -WindowsServerVersion $windowsServerVersion
         Update-DefenderSignatures
         Install-OpenSSH
         Update-WindowsFeatures
@@ -298,7 +340,7 @@ switch ($env:ProvisioningPhase) {
         if ($containerRuntime -eq 'containerd') {
             Install-ContainerD
         }
-        Get-ContainerImages -containerRuntime $containerRuntime
+        Get-ContainerImages -containerRuntime $containerRuntime -WindowsServerVersion $windowsServerVersion
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
     }
