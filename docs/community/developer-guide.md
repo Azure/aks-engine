@@ -71,6 +71,7 @@ Available Commands:
   help          Help about any command
   rotate-certs  Rotate certificates on an existing AKS Engine-created Kubernetes cluster
   scale         Scale an existing AKS Engine-created Kubernetes cluster
+  update        Update an existing AKS Engine-created VMSS node pool
   upgrade       Upgrade an existing AKS Engine-created Kubernetes cluster
   version       Print the version of aks-engine
 

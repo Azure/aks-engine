@@ -44,6 +44,12 @@ type scaleCmd struct {
 	agentPoolToScale     string
 	masterFQDN           string
 
+	// lib input
+	updateVMSSModel bool
+	validateCmd     bool
+	loadAPIModel    bool
+	persistAPIModel bool
+
 	// derived
 	containerService *api.ContainerService
 	apiVersion       string
@@ -67,7 +73,12 @@ const (
 
 // NewScaleCmd run a command to upgrade a Kubernetes cluster
 func newScaleCmd() *cobra.Command {
-	sc := scaleCmd{}
+	sc := scaleCmd{
+		validateCmd:     true,
+		updateVMSSModel: false,
+		loadAPIModel:    true,
+		persistAPIModel: true,
+	}
 
 	scaleCmd := &cobra.Command{
 		Use:   scaleName,
@@ -141,6 +152,7 @@ func (sc *scaleCmd) load() error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
+	sc.updateVMSSModel = true
 
 	if sc.apiModelPath == "" {
 		sc.apiModelPath = filepath.Join(sc.deploymentDirectory, apiModelFilename)
@@ -236,11 +248,15 @@ func (sc *scaleCmd) load() error {
 }
 
 func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
-	if err := sc.validate(cmd); err != nil {
-		return errors.Wrap(err, "failed to validate scale command")
+	if sc.validateCmd {
+		if err := sc.validate(cmd); err != nil {
+			return errors.Wrap(err, "failed to validate scale command")
+		}
 	}
-	if err := sc.load(); err != nil {
-		return errors.Wrap(err, "failed to load existing container service")
+	if sc.loadAPIModel {
+		if err := sc.load(); err != nil {
+			return errors.Wrap(err, "failed to load existing container service")
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -382,7 +398,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
-			return sc.saveAPIModel()
+			if sc.persistAPIModel {
+				return sc.saveAPIModel()
+			}
 		}
 	} else {
 		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); err = vmssListPage.NextWithContext(ctx) {
@@ -409,7 +427,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 				if vmss.Sku != nil {
 					currentNodeCount = int(*vmss.Sku.Capacity)
-					if int(*vmss.Sku.Capacity) == sc.newDesiredAgentCount {
+					if int(*vmss.Sku.Capacity) == sc.newDesiredAgentCount && !sc.updateVMSSModel {
 						sc.printScaleTargetEqualsExisting(currentNodeCount)
 						return nil
 					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
@@ -533,7 +551,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return sc.saveAPIModel()
+	if sc.persistAPIModel {
+		return sc.saveAPIModel()
+	}
+	return nil
 }
 
 func (sc *scaleCmd) saveAPIModel() error {

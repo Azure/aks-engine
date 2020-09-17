@@ -7,6 +7,7 @@ TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
 WORK_DIR="/aks-engine"
 MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
+NODE_VM_UPGRADE_SKU="${NODE_VM_UPGRADE_SKU:-Standard_D4_v3}"
 AZURE_ENV="${AZURE_ENV:-AzurePublicCloud}"
 IDENTITY_SYSTEM="${IDENTITY_SYSTEM:-azure_ad}"
 ARC_LOCATION="eastus"
@@ -204,7 +205,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       done
     done
   fi
-  
+
   if [ "${UPGRADE_CLUSTER}" = "true" ]; then
     git reset --hard
     git remote rm $UPGRADE_FORK
@@ -299,7 +300,44 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
+  nodepools=$(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json)
+  for ((i = 0; i <= ${#nodepools[@]}; ++i)); do
+    if [ -n "$UPDATE_NODE_POOLS" ]; then
+      nodepool=$(jq -r --arg i $i '. | .properties.agentPoolProfiles[$i | tonumber].name' < _output/$RESOURCE_GROUP/apimodel.json)
+      # modify the master VM SKU to simulate vertical vm scaling via upgrade
+      docker run --rm \
+        -v $(pwd):${WORK_DIR} \
+        -w ${WORK_DIR} \
+        -e RESOURCE_GROUP=$RESOURCE_GROUP \
+        -e NODE_VM_UPGRADE_SKU=$NODE_VM_UPGRADE_SKU \
+        ${DEV_IMAGE} \
+        /bin/bash -c "jq --arg sku \"$NODE_VM_UPGRADE_SKU\" --arg i $i '. | .properties.agentPoolProfiles[$i | tonumber].vmSize = \$sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-update.json" || exit 1
+      docker run --rm \
+        -v $(pwd):${WORK_DIR} \
+        -w ${WORK_DIR} \
+        -e RESOURCE_GROUP=$RESOURCE_GROUP \
+        ${DEV_IMAGE} \
+        /bin/bash -c "mv _output/$RESOURCE_GROUP/apimodel-update.json _output/$RESOURCE_GROUP/apimodel.json" || exit 1
+      docker run --rm \
+        -v $(pwd):${WORK_DIR} \
+        -v /etc/ssl/certs:/etc/ssl/certs \
+        -w ${WORK_DIR} \
+        -e RESOURCE_GROUP=$RESOURCE_GROUP \
+        -e REGION=$REGION \
+        -e UPDATE_POOL_NAME=$UPDATE_POOL_NAME \
+        ${DEV_IMAGE} \
+        ./bin/aks-engine update \
+        --azure-env ${AZURE_ENV} \
+        --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+        --api-model _output/$RESOURCE_GROUP/apimodel.json \
+        --node-pool $nodepool \
+        --location $REGION \
+        --resource-group $RESOURCE_GROUP \
+        --auth-method client_secret \
+        --client-id ${AZURE_CLIENT_ID} \
+        --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+      az vmss list -g $RESOURCE_GROUP --subscription ${AZURE_SUBSCRIPTION_ID} --query '[].sku' | grep $NODE_VM_UPGRADE_SKU || exit 1
+    fi
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -v /etc/ssl/certs:/etc/ssl/certs \
