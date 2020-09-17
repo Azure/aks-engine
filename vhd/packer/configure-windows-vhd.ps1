@@ -187,8 +187,9 @@ function Install-WindowsPatches {
     # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
     # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-    # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4570333 - Sept 2020 updates for Windows Server 2019
-    $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2020/09/windows10.0-kb4570333-x64_8c3c376b98addc84ef5c6c59de3b59cb33436fee.msu")
+    # KB4558998 contains August 11, 2020 cumulative updates for Windows Server 2019
+    # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4565349
+    $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2020/08/windows10.0-kb4565349-x64_919b9f31d4ccfa91183fbb9bab8c2975529e66b6.msu")
 
     foreach ($patchUrl in $patchUrls) {
         $pathOnly = $patchUrl.Split("?")[0]
