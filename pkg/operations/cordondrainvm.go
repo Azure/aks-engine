@@ -4,6 +4,9 @@
 package operations
 
 import (
+	"context"
+	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -40,11 +43,12 @@ func SafelyDrainNode(az armhelpers.AKSEngineClient, logger *log.Entry, apiserver
 	if err != nil {
 		return err
 	}
-	return SafelyDrainNodeWithClient(client, logger, nodeName, timeout)
+	_, err = SafelyDrainNodeWithClient(client, logger, nodeName, timeout)
+	return err
 }
 
 // SafelyDrainNodeWithClient safely drains a node so that it can be deleted from the cluster
-func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.Entry, nodeName string, timeout time.Duration) error {
+func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.Entry, nodeName string, timeout time.Duration) ([]v1.Pod, error) {
 	nodeName = strings.ToLower(nodeName)
 	//Mark the node unschedulable
 	var node *v1.Node
@@ -52,7 +56,7 @@ func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.E
 	for i := 0; i < cordonMaxRetries; i++ {
 		node, err = client.GetNode(nodeName)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		node.Spec.Unschedulable = true
 		node, err = client.UpdateNode(node)
@@ -63,22 +67,25 @@ func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.E
 				logger.Infof("Node %s got an error suggesting a concurrent modification. Will retry to cordon", nodeName)
 				continue
 			}
-			return err
+			return nil, err
 		}
 		break
 	}
 	logger.Infof("Node %s has been marked unschedulable.", nodeName)
 
+	// Sleep one minute so that the node update event can be logged.
+	time.Sleep(time.Second * 60)
+
 	//Evict pods in node
 	drainOp := &drainOperation{client: client, node: node, logger: logger, timeout: timeout}
-	return drainOp.deleteOrEvictPodsSimple()
+	pods, err := drainOp.getPodsForDeletion()
+	if err != nil {
+		return nil, err
+	}
+	return pods, drainOp.deleteOrEvictPodsSimple(pods)
 }
 
-func (o *drainOperation) deleteOrEvictPodsSimple() error {
-	pods, err := o.getPodsForDeletion()
-	if err != nil {
-		return err
-	}
+func (o *drainOperation) deleteOrEvictPodsSimple(pods []v1.Pod) error {
 	if len(pods) > 0 {
 		o.logger.WithFields(log.Fields{
 			"prefix": "drain",
@@ -88,7 +95,7 @@ func (o *drainOperation) deleteOrEvictPodsSimple() error {
 		o.logger.Infof("Node %s has no scheduled pods", o.node.Name)
 	}
 
-	err = o.deleteOrEvictPods(pods)
+	err := o.deleteOrEvictPods(pods)
 	if err != nil {
 		pendingPods, newErr := o.getPodsForDeletion()
 		if newErr != nil {
@@ -227,4 +234,155 @@ func (o *drainOperation) deletePods(pods []v1.Pod) error {
 	}
 	_, err := o.client.WaitForDelete(o.logger, pods, false)
 	return err
+}
+
+func podOwnedByStatefulSet(pod v1.Pod) bool {
+	ownerReferences := pod.ObjectMeta.OwnerReferences
+
+	if ownerReferences == nil {
+		return false
+	}
+
+	for _, owenerReference := range ownerReferences {
+		if owenerReference.Kind == "StatefulSet" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func waitForVolumesAttachedForPod(ctx context.Context, cancel context.CancelFunc, doneCh chan struct{}, pod v1.Pod, client armhelpers.KubernetesClient, logger *log.Entry, interval time.Duration) {
+	defer func() {
+		doneCh <- struct{}{}
+	}()
+
+	namespace := pod.Namespace
+	podName := pod.Name
+	logger.Infof("Start monitoring volume attachment for Pod %s...", podName)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Infof("Volume checking for Pod %s is canceled.", podName)
+			return
+		default:
+			time.Sleep(interval)
+			logger.Debugf("Sleep %s...", interval)
+
+			if !podOwnedByStatefulSet(pod) {
+				logger.Infof("Pod %s is not owned by StatefulSet, skip the volume attachment monitoring.", podName)
+				return
+			}
+
+			podAfterDrain, _ := client.GetPod(namespace, podName)
+
+			if podAfterDrain == nil || len(podAfterDrain.Status.Conditions) == 0 {
+				logger.Debugf("Pod %s is not scheduled yet.", podName)
+				continue
+			}
+
+			firstCondition := podAfterDrain.Status.Conditions[0]
+			if string(firstCondition.Type) == "PodScheduled" && firstCondition.Reason == "Unschedulable" {
+				logger.Infof("Pod %s cannot not be scheduled: %s Stop monitoring volume attachment.", podName, firstCondition.Message)
+				if match, _ := regexp.MatchString("0/[0-9]+ nodes are available:.*exceed max volume count", firstCondition.Message); match {
+					logger.Info("Nodes exceed max volume count, cancelling the volume attachment monitoring.")
+					cancel()
+				}
+				return
+			}
+
+			nodeName := podAfterDrain.Spec.NodeName
+			node, err := client.GetNode(nodeName)
+			if err != nil {
+				logger.Errorf("Failed to get node '%s': %s", nodeName, err.Error())
+				return
+			}
+
+			done := true
+			provisioner := "kubernetes.io/azure-disk"
+			logger.Debugf("Found new pod %s scheduled on node '%s'", podName, nodeName)
+			for _, volume := range podAfterDrain.Spec.Volumes {
+				pvcSpec := volume.VolumeSource.PersistentVolumeClaim
+				if pvcSpec != nil {
+					pvc, err := client.GetPersistentVolumeClaim(namespace, pvcSpec.ClaimName)
+					if err != nil {
+						logger.Errorf("Failed to get PVC %s in namespace %s: %s", pvcSpec.ClaimName, namespace, err.Error())
+						return
+					}
+
+					pv, err := client.GetPersistentVolume(pvc.Spec.VolumeName)
+					if err != nil {
+						logger.Errorf("Failed to get PV %s: %s", pvc.Spec.VolumeName, err.Error())
+						return
+					}
+
+					logger.Debugf("Pod %s is using PV %s on node '%s'", podName, pv.Name, nodeName)
+					if pv.ObjectMeta.Annotations["pv.kubernetes.io/provisioned-by"] == provisioner {
+						attached := false
+						for _, volumeAttached := range node.Status.VolumesAttached {
+							if string(volumeAttached.Name) == provisioner+"/"+pv.Spec.AzureDisk.DataDiskURI {
+								logger.Debugf("Volume %s is attached to node %s.", pv.Spec.AzureDisk.DataDiskURI, nodeName)
+								attached = true
+								break
+							}
+						}
+
+						if !attached {
+							logger.Debugf("Volume %s is not attached to node %s yet.", pv.Spec.AzureDisk.DataDiskURI, nodeName)
+							done = false
+							break
+						}
+					}
+				}
+			}
+
+			if !done {
+				logger.Debugf("Not all volumes for Pod %s are attached to new node %s.", podName, nodeName)
+				continue
+			} else {
+				logger.Infof("All volumes for Pod %s are attached to new node %s.", podName, nodeName)
+				return
+			}
+		}
+	}
+}
+
+// WaitForDisksAttached waits for disks are re-attached to new nodes and volumes are ready to be used by pods.
+func WaitForDisksAttached(podsForDeletion []v1.Pod, client armhelpers.KubernetesClient, logger *log.Entry, args ...time.Duration) error {
+	if len(podsForDeletion) == 0 {
+		return nil
+	}
+
+	timeout := time.Hour * 1
+	interval := time.Minute * 1
+	if len(args) > 0 {
+		timeout = args[0]
+	}
+	if len(args) > 1 {
+		interval = args[1]
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	doneCh := make(chan struct{}, len(podsForDeletion))
+
+	for _, pod := range podsForDeletion {
+		go waitForVolumesAttachedForPod(ctx, cancel, doneCh, pod, client, logger, interval)
+	}
+
+	doneCount := 0
+	for {
+		select {
+		case <-doneCh:
+			doneCount++
+			if doneCount == len(podsForDeletion) {
+				logger.Info("Volume attachment check is done.")
+				cancel()
+				return nil
+			}
+		case <-time.After(timeout):
+			err := fmt.Errorf("Volume attachment check time out")
+			logger.Errorf(err.Error())
+			cancel()
+		}
+	}
 }

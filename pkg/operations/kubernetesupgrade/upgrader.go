@@ -654,12 +654,15 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			}
 
 			ku.logger.Infof("Draining node %s", vmToUpgrade.Name)
-			err = operations.SafelyDrainNodeWithClient(
+			podsForDeletion, err := operations.SafelyDrainNodeWithClient(
 				client,
 				ku.logger,
 				vmToUpgrade.Name,
 				cordonDrainTimeout,
 			)
+			if err == nil && ku.ClusterTopology.DataModel.Properties.IsAzureStackCloud() {
+				err = operations.WaitForDisksAttached(podsForDeletion, client, ku.logger)
+			}
 			if err != nil {
 				ku.logger.Errorf("Error draining VM in VMSS: %v", err)
 				// Continue even if there's an error in draining the node.
@@ -801,7 +804,10 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	} else {
 		cordonDrainTimeout = *ku.cordonDrainTimeout
 	}
-	err := operations.SafelyDrainNodeWithClient(client, ku.logger, newNodeName, cordonDrainTimeout)
+	podsForDeletion, err := operations.SafelyDrainNodeWithClient(client, ku.logger, newNodeName, cordonDrainTimeout)
+	if err == nil && ku.ClusterTopology.DataModel.Properties.IsAzureStackCloud() {
+		err = operations.WaitForDisksAttached(podsForDeletion, client, ku.logger)
+	}
 	if err != nil {
 		ku.logger.Warningf("Error draining agent VM %s. Proceeding with copying node properties. Error: %v", newNodeName, err)
 	}
