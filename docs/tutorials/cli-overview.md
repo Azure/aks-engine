@@ -36,7 +36,7 @@ Use "aks-engine [command] --help" for more information about a command.
 
 ### `aks-engine deploy`
 
-The `aks-engine deploy` command will create a new cluster from scratch, using an API model (cluster definition) file as input to define the desired cluster configuration and shape, into the subscription, region, and resource group you provide, using credentials that you provide.
+The `aks-engine deploy` command will create a new cluster from scratch, using an API model (cluster definition) file as input to define the desired cluster configuration and shape, into the subscription, region, and resource group you provide, using credentials that you provide. Use this command to create a new cluster.
 
 ```sh
 $ aks-engine deploy --help
@@ -73,7 +73,7 @@ Global Flags:
 
 ### `aks-engine scale`
 
-The `aks-engine scale` command will scale (in or out) a specific node pool participating in a Kubernetes cluster created by AKS Engine.
+The `aks-engine scale` command will scale (in or out) a specific node pool participating in a Kubernetes cluster created by AKS Engine. Use this command to manually scale a node pool to a specific number of nodes.
 
 ```sh
 $ aks-engine scale --help
@@ -108,3 +108,104 @@ The `scale` command has limitations for scaling in (reducing the number of nodes
 
 - It accepts a new, desired node count; it does not accept a list of specific nodes to remove from the pool.
 - For VMSS-backed node pools, the removed nodes will not be cordoned and drained prior to being removed, which means any running workloads on nodes-to-be-removed will be disrupted without warning, and temporary operational impact is to be expected.
+
+We generally recommend that you manage node pool scaling dynamically using the `cluster-autoscaler` project. More documentation about `cluster-autoscaler` is [here](../../examples/addons/cluster-autoscaler/README.md), including how to automatically install and configure it at cluster creation time as an AKS Engine addon.
+
+### `aks-engine update`
+
+The `aks-engine update` command will update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. The updated node configuration will not take affect on any existing nodes, but will be applied to all future, new nodes created by VMSS scale out operations. Use this command to update the node configuration (OS configuration, VM SKU, Kubernetes kubelet configuration) of an existing node pool.
+
+```sh
+$ aks-engine update --help
+Update an existing AKS Engine-created VMSS node pool in a Kubernetes cluster by updating its VMSS model
+
+Usage:
+  aks-engine update [flags]
+
+Flags:
+  -m, --api-model string            path to the generated apimodel.json file
+      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --azure-env string            the target Azure cloud (default "AzurePublicCloud")
+      --certificate-path string     path to client certificate (used with --auth-method=client_certificate)
+      --client-id string            client id (used with --auth-method=[client_secret|client_certificate])
+      --client-secret string        client secret (used with --auth-method=client_secret)
+  -h, --help                        help for update
+      --identity-system azure_ad    identity system (default:azure_ad, `adfs`) (default "azure_ad")
+      --language string             language to return error messages in (default "en-us")
+  -l, --location string             location the cluster is deployed in
+      --node-pool string            node pool to scale
+      --private-key-path string     path to private key (used with --auth-method=client_certificate)
+  -g, --resource-group string       the resource group where the cluster is deployed
+  -s, --subscription-id string      azure subscription id (required)
+
+Global Flags:
+      --debug   enable verbose debug logs
+```
+
+### `aks-engine addpool`
+
+The `aks-engine addpool` command will add a new node pool to an existing AKS Engine-created cluster. Using a JSON file to define a brand new node pool, and referencing the aks-engine-generated `apimodel.json`, you can add new nodes to your cluster. Use this command to add a specific number of brand new nodes using a discrete configuration compared to existing nodes participating in your cluster.
+
+```sh
+$ bin/aks-engine addpool --help
+Add a node pool to an existing AKS Engine-created Kubernetes cluster by referencing a new agentpoolProfile spec
+
+Usage:
+  aks-engine addpool [flags]
+
+Flags:
+  -m, --api-model string            path to the generated apimodel.json file
+      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --azure-env string            the target Azure cloud (default "AzurePublicCloud")
+      --certificate-path string     path to client certificate (used with --auth-method=client_certificate)
+      --client-id string            client id (used with --auth-method=[client_secret|client_certificate])
+      --client-secret string        client secret (used with --auth-method=client_secret)
+  -h, --help                        help for addpool
+      --identity-system azure_ad    identity system (default:azure_ad, `adfs`) (default "azure_ad")
+      --language string             language to return error messages in (default "en-us")
+  -l, --location string             location the cluster is deployed in
+  -p, --node-pool string            path to a JSON file that defines the new node pool spec
+      --private-key-path string     path to private key (used with --auth-method=client_certificate)
+  -g, --resource-group string       the resource group where the cluster is deployed
+  -s, --subscription-id string      azure subscription id (required)
+
+Global Flags:
+      --debug   enable verbose debug logs
+```
+
+### `aks-engine upgrade`
+
+The `aks-engine upgrade` command is designed to orchestrate a Kubernetes version upgrade across your existing cluster nodes. Use this command to upgrade the Kubernetes version running your control plane, and optionally on all your nodes as well.
+
+```sh
+$ bin/aks-engine upgrade --help
+Upgrade an existing AKS Engine-created Kubernetes cluster, one node at a time
+
+Usage:
+  aks-engine upgrade [flags]
+
+Flags:
+  -m, --api-model string            path to the generated apimodel.json file
+      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --azure-env string            the target Azure cloud (default "AzurePublicCloud")
+      --certificate-path string     path to client certificate (used with --auth-method=client_certificate)
+      --client-id string            client id (used with --auth-method=[client_secret|client_certificate])
+      --client-secret string        client secret (used with --auth-method=client_secret)
+      --control-plane-only          upgrade control plane VMs only, do not upgrade node pools
+      --cordon-drain-timeout int    how long to wait for each vm to be cordoned in minutes (default -1)
+  -f, --force                       force upgrading the cluster to desired version. Allows same version upgrades and downgrades.
+  -h, --help                        help for upgrade
+      --identity-system azure_ad    identity system (default:azure_ad, `adfs`) (default "azure_ad")
+  -b, --kubeconfig string           the path of the kubeconfig file
+      --language string             language to return error messages in (default "en-us")
+  -l, --location string             location the cluster is deployed in (required)
+      --private-key-path string     path to private key (used with --auth-method=client_certificate)
+  -g, --resource-group string       the resource group where the cluster is deployed (required)
+  -s, --subscription-id string      azure subscription id (required)
+  -k, --upgrade-version string      desired kubernetes version (required)
+      --upgrade-windows-vhd         upgrade image reference of the Windows nodes (default true)
+      --vm-timeout int              how long to wait for each vm to be upgraded in minutes (default -1)
+
+Global Flags:
+      --debug   enable verbose debug logs
+```
