@@ -4,7 +4,7 @@ This page provides help with the most common questions about AKS Engine.
 
 ### What's the Difference Between AKS and AKS Engine?
 
-Azure Kubernetes Service ([AKS][]) is a Microsoft Azure service that supports fully managed Kubernetes clusters. [AKS Engine][] is an Azure open source project that creates Kubernetes clusters with your custom requirements. AKS uses AKS Engine internally, but they are not the same.
+Azure Kubernetes Service ([AKS][]) is a Microsoft Azure service that supports fully managed Kubernetes clusters. [AKS Engine][] is an Azure open source project that allows you to create your own Kubernetes clusters with lots of user-configurable options, but with no official Azure support.
 
 AKS clusters can be created in the Azure portal or with `az aks create` in the [Azure command-line tool][]. AKS Engine clusters can be created with `aks-engine deploy` (`aks-engine` is the AKS Engine command-line tool), or by generating ARM templates with `aks-engine generate` and deploying them as a separate step using the `az` command-line tool (e.g., `az group deployement create`).
 
