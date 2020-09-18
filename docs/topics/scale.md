@@ -12,7 +12,7 @@ The `aks-engine scale` command can increase or decrease the number of nodes in a
 
 Also note that for VMSS-backed node pools (the current AKS Engine default), scale "in" operations will *not* cordon and drain nodes before they are removed. This is because for VMSS node pools `aks-engine scale` is simply a thin wrapper around the VMSS API, and the VMSS API doesn't have any awareness of the Kubernetes application layer in order to cordon an drain nodes prior to removing instances from the VMSS. For this reason, again, we recommend using `cluster-autoscaler` with VMSS node pools for clusters with regular, period scaling requirements in both directions (both "in" and "out").
 
-The example below will assume you have a cluster deployed, and that the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`. It will also assume there is a node pool named "agentpool1" in your cluster.
+The example below will assume you have a cluster deployed, and that the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`. It will also assume that there is a node pool named "agentpool1" in your cluster.
 
 To scale the cluster you will run a command like:
 

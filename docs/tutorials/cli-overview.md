@@ -148,6 +148,8 @@ Global Flags:
       --debug   enable verbose debug logs
 ```
 
+Detailed documentation on `aks-engine update` can be found [here](../topics/update.md).
+
 ### `aks-engine addpool`
 
 The `aks-engine addpool` command will add a new node pool to an existing AKS Engine-created cluster. Using a JSON file to define a brand new node pool, and referencing the aks-engine-generated `apimodel.json`, you can add new nodes to your cluster. Use this command to add a specific number of brand new nodes using a discrete configuration compared to existing nodes participating in your cluster.
