@@ -43,7 +43,6 @@
             "winrm_username": "packer",
             "azure_tags": {
                 "os": "Windows",
-                "windowsVersion": "{{user `windows-server-version`}}",
                 "now": "{{user `create_time`}}",
                 "createdBy": "aks-engine-vhd-pipeline"
             }
