@@ -54,10 +54,52 @@
         "description": "Password for the Windows Swarm Agent Virtual Machines."
       }
     },
+    "agentWindowsImageName": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Image name when specifying a Windows image reference."
+      }
+    },
+    "agentWindowsImageResourceGroup": {
+      "defaultValue": "",
+      "type": "string",
+      "metadata": {
+        "description": "Resource group when specifying a Windows image reference."
+      }
+    },
+    "agentWindowsVersion": {
+      "defaultValue": "latest",
+      "metadata": {
+        "description": "Version of the Windows Server OS image to use for the agent virtual machines."
+      },
+      "type": "string"
+    },
     "agentWindowsSourceUrl": {
       "defaultValue": "",
       "metadata": {
         "description": "The source of the generalized blob which will be used to create a custom windows image for the agent virtual machines."
+      },
+      "type": "string"
+    },
+    "agentWindowsPublisher": {
+      "defaultValue": "MicrosoftWindowsServer",
+      "metadata": {
+        "description": "The publisher of windows image for the agent virtual machines."
+      },
+      "type": "string"
+    },
+    "agentWindowsOffer": {
+      "defaultValue": "WindowsServerSemiAnnual",
+      "metadata": {
+        "description": "The offer of windows image for the agent virtual machines."
+      },
+      "type": "string"
+    },
+    "agentWindowsSku": {
+      "defaultValue": "Datacenter-Core-1809-with-Containers-smalldisk",
+      "metadata": {
+        "description": "The SKU of windows image for the agent virtual machines."
       },
       "type": "string"
     },

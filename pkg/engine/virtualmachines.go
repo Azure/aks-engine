@@ -498,25 +498,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile := compute.StorageProfile{}
 
 	if profile.IsWindows() {
-		imageRef := profile.ImageRef
-		if profile.HasImageRef() {
-			if profile.HasImageGallery() {
-				storageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
-				}
-			} else {
-				storageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
-				}
-			}
-		} else {
-			storageProfile.ImageReference = &compute.ImageReference{
-				Offer:     to.StringPtr(fmt.Sprintf("[variables('%sosImageOffer')]", profile.Name)),
-				Publisher: to.StringPtr(fmt.Sprintf("[variables('%sosImagePublisher')]", profile.Name)),
-				Sku:       to.StringPtr(fmt.Sprintf("[variables('%sosImageSKU')]", profile.Name)),
-				Version:   to.StringPtr(fmt.Sprintf("[variables('%sosImageVersion')]", profile.Name)),
-			}
-		}
+		storageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
 
 		if profile.HasDisks() {
 			storageProfile.DataDisks = getArmDataDisks(profile)
