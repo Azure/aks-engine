@@ -30,7 +30,7 @@
             "os_type": "Windows",
             "image_publisher": "{{user `image_publisher`}}",
             "image_offer": "{{user `image_offer`}}",
-            "image_sku": "{{user `image_sku`}",
+            "image_sku": "{{user `image_sku`}}",
             "image_version": "{{user `image_version`}}",
             "resource_group_name": "{{user `resource_group_name`}}",
             "capture_container_name": "aksengine-vhds-windows-{{user `windows_server_version`}}",
