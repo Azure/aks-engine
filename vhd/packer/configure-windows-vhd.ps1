@@ -42,8 +42,7 @@ function Get-ContainerImages {
         $windowsServerVersion
     )
 
-    switch ($windowsServerVersion)
-    {
+    switch ($windowsServerVersion) {
         '2019' {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:ltsc2019",
@@ -56,7 +55,7 @@ function Get-ContainerImages {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:2004",
                 "mcr.microsoft.com/windows/nanoserver:2004",
-                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0")
         }
         default { 
             $imagesToPull = @()
@@ -163,7 +162,7 @@ function Install-ContainerD {
     New-Item -ItemType Directory $installDir -Force | Out-Null
     Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $tarPath
     tar -xzf $tarPath --strip=1 -C $installDir
-    Remove-Item -Path $tarPath | Out-null
+    Remove-Item -Path $tarPath | Out-Null
 
     $newPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine) + ";$installDir"
     [Environment]::SetEnvironmentVariable("Path", $newPath, [EnvironmentVariableTarget]::Machine)
@@ -187,7 +186,7 @@ function Install-Docker {
     $defaultDockerVersion = "19.03.11"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
-    Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-null
+    Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
     $package = Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $defaultDockerVersion
     Write-Log "Installing Docker version $($package.Version)"
     $package | Install-Package -Force | Out-Null
@@ -203,9 +202,8 @@ function Install-WindowsPatches {
     param (
         $windowsServerVersion
     )
-    
-    switch ($windowsServerVersion)
-    {
+
+    switch ($windowsServerVersion) {
         '2019' {
             # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
@@ -236,7 +234,7 @@ function Install-WindowsPatches {
                 Write-Log "Downloading windows patch from $pathOnly to $fullPath"
                 Invoke-WebRequest -UseBasicParsing $patchUrl -OutFile $fullPath
                 Write-Log "Starting install of $fileName"
-                $proc = Start-Process -Passthru -FilePath wusa.exe -ArgumentList "$fullPath /quiet /norestart"
+                $proc = Start-Process -PassThru -FilePath wusa.exe -ArgumentList "$fullPath /quiet /norestart"
                 Wait-Process -InputObject $proc
                 switch ($proc.ExitCode) {
                     0 {
@@ -315,8 +313,7 @@ if (-not ($validContainerRuntimes -contains $containerRuntime)) {
 
 $windowsServerVersion = $env:WindowsServerVersion
 $validWindowsServerContainers = @('2019', '2004')
-if (-not ($validWindowsServerContainers -contains $windowsServerVersion))
-{
+if (-not ($validWindowsServerContainers -contains $windowsServerVersion)) {
     Write-Host "Unsupported Windows Server version: $windowsServerVersion"
     exit 1
 }
