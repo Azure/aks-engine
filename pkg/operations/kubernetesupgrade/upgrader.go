@@ -33,13 +33,13 @@ type Upgrader struct {
 	Translator *i18n.Translator
 	logger     *logrus.Entry
 	ClusterTopology
-	Client             armhelpers.AKSEngineClient
-	kubeConfig         string
-	stepTimeout        *time.Duration
-	cordonDrainTimeout *time.Duration
-	AKSEngineVersion   string
-	CurrentVersion     string
-	ControlPlaneOnly   bool
+	Client              armhelpers.AKSEngineClient
+	kubeConfig          string
+	stepTimeout         *time.Duration
+	cordonDrainTimeout  *time.Duration
+	AKSEngineVersion    string
+	CurrentVersion      string
+	ControlPlaneOnly    bool
 	AgentPoolsToUpgrade map[string]bool
 }
 
@@ -77,28 +77,20 @@ func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clus
 
 // RunUpgrade runs the upgrade pipeline
 func (ku *Upgrader) RunUpgrade() error {
-<<<<<<< HEAD
 	controlPlaneUpgradeTimeout := perNodeUpgradeTimeout
 	if ku.ClusterTopology.DataModel.Properties.MasterProfile.Count > 0 {
 		controlPlaneUpgradeTimeout = perNodeUpgradeTimeout * time.Duration(ku.ClusterTopology.DataModel.Properties.MasterProfile.Count)
 	}
 	ctxControlPlane, cancelControlPlane := context.WithTimeout(context.Background(), controlPlaneUpgradeTimeout)
 	defer cancelControlPlane()
-	if err := ku.upgradeMasterNodes(ctxControlPlane); err != nil {
-		return err
+	if ku.AgentPoolsToUpgrade[MasterPoolName] {
+		if err := ku.upgradeMasterNodes(ctxControlPlane); err != nil {
+			return err
+		}
 	}
 
 	ku.handleUnreconcilableAddons()
 
-=======
-	ctx, cancel := context.WithTimeout(context.Background(), clusterUpgradeTimeout)
-	defer cancel()
-	if ku.AgentPoolsToUpgrade[MasterPoolName] {
-		if err := ku.upgradeMasterNodes(ctx); err != nil {
-			return err
-		}
-	}
->>>>>>> wip
 	if ku.ControlPlaneOnly {
 		return nil
 	}
