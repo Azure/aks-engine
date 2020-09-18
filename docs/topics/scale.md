@@ -2,17 +2,17 @@
 
 ## Prerequisites
 
-All the commands in this guide require both the Azure `az` CLI tool and the `aks-engine` binary tool. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing if you're creating your first Kubernetes cluster using aks-engine.
+All the commands in this guide require both the Azure `az` CLI tool and the `aks-engine` binary tool. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing if you're creating a Kubernetes cluster using AKS Engine for the first time.
 
-This guide assumes you already have deployed a cluster using `aks-engine`. For more details on how to do that see [deploy](deploy.md) or [generate](generate.md).
+This guide assumes you already have a running cluster deployed using the `aks-engine` CLI. For more details on how to do that see [deploy](deploy.md) or [generate](generate.md).
 
 ## Scale
 
-The `aks-engine scale` command can increase or decrease the number of nodes in an existing agent pool in an AKS Engine-created Kubernetes cluster. The command takes a desired node count, which means that you don't have any control over the naming of any new nodes, if the desired count is greater than the current number of nodes in the target pool (though generally new nodes are named incrementally from the "last" node); and you don't have any control over which nodes will be removed, if the desired node count is less than the current number of nodes in the target pool. For clusters that are relatively "static", using `aks-engine scale` may be appropriate. For highly dynamic clusters that want to take advantage of real-time, load-derived scaling, we recommend the `cluster-autoscaler` project, which we document [here](../../examples/addons/cluster-autoscaler/README.md).
+The `aks-engine scale` command can increase or decrease the number of nodes in an existing agent pool in an AKS Engine-created Kubernetes cluster. The command takes a desired node count, which means that you don't have any control over the naming of any new nodes, if the desired count is greater than the current number of nodes in the target pool (though generally new nodes are named incrementally from the "last" node); and you don't have any control over which nodes will be removed, if the desired node count is less than the current number of nodes in the target pool. For clusters that are relatively "static", using `aks-engine scale` may be appropriate. For highly dynamic clusters that want to take advantage of real-time, load-derived scaling, we recommend running `cluster-autoscaler` in your cluster, which we document [here](../../examples/addons/cluster-autoscaler/README.md).
 
-Also note that for VMSS-backed node pools (the current AKS Engine default), scale in operations will *not* cordon and drain nodes before they are removed. This is because for VMSS node pools `aks-engine scale` is simply a thin wrapper around the VMSS API, and the VMSS API doesn't have any functionality to communicate with the Kubernetes application layer and cordon an drain nodes prior to removing instances from the VMSS. For this reason, again, we recommend using `cluster-autoscaler` with VMSS node pools.
+Also note that for VMSS-backed node pools (the current AKS Engine default), scale "in" operations will *not* cordon and drain nodes before they are removed. This is because for VMSS node pools `aks-engine scale` is simply a thin wrapper around the VMSS API, and the VMSS API doesn't have any awareness of the Kubernetes application layer in order to cordon an drain nodes prior to removing instances from the VMSS. For this reason, again, we recommend using `cluster-autoscaler` with VMSS node pools for clusters with regular, period scaling requirements in both directions (both "in" and "out").
 
-The example below will assume you have a cluster deployed and the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`. It will also assume there is a node pool named "agentpool1" in your cluster.
+The example below will assume you have a cluster deployed, and that the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`. It will also assume there is a node pool named "agentpool1" in your cluster.
 
 To scale the cluster you will run a command like:
 
@@ -30,7 +30,7 @@ This command will re-use the `apimodel.json` file inside the output directory as
 ### Parameters
 
 |Parameter|Required|Description|
-|---|---|---|
+|-----------------|---|---|
 |--subscription-id|yes|The subscription id the cluster is deployed in.|
 |--resource-group|yes|The resource group the cluster is deployed in.|
 |--location|yes|The location the resource group is in.|
@@ -48,7 +48,7 @@ This command will re-use the `apimodel.json` file inside the output directory as
 
 ### What version of aks-engine should I use to run `aks-engine scale` operations?
 
-As a general rule, we recommend that the latest released version of AKS Engine be used to scale out node pools. This is because the latest released version will have recent security updates and bug fixes to the OS layer, as well as critical system components like the container runtime. This may yield a heterogeneous node pool, but those differences should not produce functional regressions; rather, they will ensure that a higher proportion of nodes in that pool are running the latest, validated bits. For example, here's an overview of a cluster originally built with 2 nodes in the pool "agentpool1" from `aks-engine` version `v0.52.1`, and then scaled out to 10 nodes using `aks-engine` v0.56.0:
+As a general rule, we recommend that the latest released version of AKS Engine be used to scale out node pools. This is because the latest released version will have recent security updates and bug fixes to the OS layer, as well as critical system components like the container runtime. This may yield a heterogeneous node pool, but those differences should not introduce functional regressions; rather, they will ensure that a higher proportion of nodes in that pool are running the latest, validated bits. For example, here's an overview of a cluster originally built with 2 nodes in the pool "agentpool1" from `aks-engine` version `v0.52.1`, and then scaled out to 10 nodes using `aks-engine` v0.56.0:
 
 ```
 $ kubectl get nodes -o wide
