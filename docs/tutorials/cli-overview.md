@@ -115,6 +115,8 @@ The `scale` command has limitations for scaling in (reducing the number of nodes
 
 We generally recommend that you manage node pool scaling dynamically using the `cluster-autoscaler` project. More documentation about `cluster-autoscaler` is [here](../../examples/addons/cluster-autoscaler/README.md), including how to automatically install and configure it at cluster creation time as an AKS Engine addon.
 
+Detailed documentation on `aks-engine scale` can be found [here](../topics/scale.md).
+
 ### `aks-engine update`
 
 The `aks-engine update` command will update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. The updated node configuration will not take affect on any existing nodes, but will be applied to all future, new nodes created by VMSS scale out operations. Use this command to update the node configuration (OS configuration, VM SKU, Kubernetes kubelet configuration) of an existing node pool.
