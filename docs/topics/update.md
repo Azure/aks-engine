@@ -38,10 +38,23 @@ The above operation will complete rather quickly, as it is only updating the VMS
 |--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_princpal/client_certificate|
 |--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_princpal|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
-|--node-pool|yes|RWhich node pool should be updated.|
+|--node-pool|yes|Which node pool should be updated.|
 |--auth-method|no|The authentication method used. Default value is `client_secret`. Other supported values are: `cli`, `client_certificate`, and `device`.|
 |--language|no|Language to return error message in. Default value is "en-us").|
 
 ## Frequently Asked Questions
 
 ### Why would I use update instead of upgrade to upgrade a VMSS node pool?
+
+The `aks-engine upgrade` command actually replaces existing nodes with new nodes, one-at-a-time. Such an approach is appropriate if you are absolutely confident that the outcome of such an operation will be successful, and that confidence can only be attained by staging a full end-to-end operation that simulates the series of operations in your production environment. In other words:
+
+1. Create a cluster with a specific configuration in a specific cloud environment + region using a specific version of `aks-engine`.
+  - All of the above must exactly match the original configuration + `aks-engine` version used to create your cluster initially.
+2. Do something like the above for every `aks-engine` operation performed the time when your cluster was originally created and now
+3. Run `aks-engine upgrade` with your desired upgrade configuration.
+
+Because `aks-engine upgrade` is a destructive operation, and there is no definitive "undo" or "rollback", then if #3 above fails for any reason, in order to continue experimenting in your staging environment, you will have to re-stage the entire cluster + set of operations each time, until you land upon a repeatedly working `aks-engine upgrade` scenario that you confidently apply against your production scenario.
+
+The above is a time consuming and imperfect workflow, and so `aks-engine update` is an alternative approach that allows more flexibility. For example:
+
+- Because `aks-engine update` is merely a VMSS model update against a single node pool and not a "whole cluster", destructive operation, the viability of an updated node pool can be tested piecemeal, without affecting existing production traffic.
