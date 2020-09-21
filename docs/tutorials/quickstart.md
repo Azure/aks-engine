@@ -1,6 +1,6 @@
 # Quickstart Guide
 
-AKS Engine (`aks-engine`) generates ARM (Azure Resource Manager) templates for Kubernetes clusters on Microsoft Azure. The input to the `aks-engine` binary is a cluster definition JSON file (referred to throughout the docs interchangeably as either "cluster config", "cluster definition", or "API model") which describes the desired cluster configuration, including enabled or disabled features, for both the control plane running on "master" VMs and one or more node pools (referred to throughout the docs interchangeably as either "node pools" or "agent pools").
+AKS Engine (`aks-engine`) generates ARM (Azure Resource Manager) templates, and also deploys them via ARM to Microsoft Azure cloud environments. The input to the `aks-engine` command line tool is a cluster definition JSON file (referred to throughout the docs interchangeably as either "API model", "cluster config", or "cluster definition") which describes the desired cluster configuration, including enabled or disabled features, for both the control plane running on "master" VMs and one or more node pools.
 
 ## Prerequisites
 
@@ -11,24 +11,24 @@ The following prerequisites are required:
 
 <a href="#install-aks-engine"></a>
 
-## Install the `aks-engine` binary
+## Install the `aks-engine` command line tool
 
 Binary downloads for the latest version of AKS Engine are available [on Github](https://github.com/Azure/aks-engine/releases/latest). Download the package for your operating system, and extract the `aks-engine` binary (and optionally integrate it to your `$PATH` for more convenient CLI usage).
 
-You can also choose to install the `aks-engine` binary using [gofish][gofish-about]. To do so, execute the command `gofish install aks-engine`. You can install gofish following the [instructions][gofish-install] for your OS.
+You can also choose to install `aks-engine` using [gofish][gofish-about]. To do so, execute the command `gofish install aks-engine`. You can install gofish following the [instructions][gofish-install] for your OS.
 
-On macOS, you can install the `aks-engine` binary with [Homebrew][homebrew]. Run the command `brew install Azure/aks-engine/aks-engine` to do so. You can install Homebrew following these [instructions][homebrew-install].
+On macOS, you can install `aks-engine` with [Homebrew][homebrew]. Run the command `brew install Azure/aks-engine/aks-engine` to do so. You can install Homebrew following these [instructions][homebrew-install].
 
 On Windows, you can install `aks-engine.exe` via [Chocolatey][choco] by executing the command `choco install aks-engine`. You can install Chocolatey following these [instructions][choco-install]. You can also install `aks-engine.exe` via [Scoop][scoop] by executing the command `scoop install aks-engine`. You can install Scoop following these [instructions][scoop-install].
 
-On Linux, if you prefer, you can install the `aks-engine` binary via install script doing:
+On Linux, if you prefer, you can install `aks-engine` via install script doing:
 ```bash
 $ curl -o get-akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get-akse.sh
 $ chmod 700 get-akse.sh
 $ ./get-akse.sh
 ```
 
-If you would prefer to build the `aks-engine` binary from source, or if you're interested in contributing to AKS Engine, see [the developer guide][developer-guide] for more information.
+If you would prefer to build `aks-engine` from source, or if you're interested in contributing to AKS Engine, see [the developer guide][developer-guide] for more information.
 
 ## Completion
 
