@@ -187,9 +187,15 @@ We actually recommend that you *only* use `aks-engine upgrade --control-plane-on
 
 ### What should I upgrade first, my control plane nodes, or my worker nodes?
 
-If following our guidance you employ `aks-engine upgrade --control-plane-only` to upgrade your control plane distinctly from your worker nodes, and a combination of `aks-engine addpool` and `aks-engine update` to upgrade worker nodes, the natural question is: which should I do first? Is it better to run a newer version of Kubernetes on the control plane, serving API requests from older clients? Or is it better to run the newer Kubernetes bits on the worker nodes, and rely upon making control plane requests against an older API version?
+tl;dr *Upgrade your control plane first!*
 
-// TODO answer this question!
+If following our guidance you employ `aks-engine upgrade --control-plane-only` to upgrade your control plane distinctly from your worker nodes, and a combination of `aks-engine addpool` and `aks-engine update` to upgrade worker nodes, the natural question is: which should I do first?
+
+The Kubernetes project publishes that the control plane may be up to 2 versions higher than kubelet, but not vice versa. What this means is that you should not run a newer version of Kubernetes on a node than is running on the control plane. Relevant documentation:
+
+- https://kubernetes.io/docs/setup/release/version-skew-policy/
+
+[Another example from the kubeadm community project](https://v1-18.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/) outlines its upgrade process, which specifies upgrading the control plane first.
 
 ### Can I use `aks-engine upgrade --control-plane-only` to change the control plane configuration irrespective of updating the Kubernetes version?
 
