@@ -45,3 +45,5 @@ A more detailed walk-through of `aks-engine deploy` is in the [quickstart guide]
 ## Frequently Asked Questions
 
 ### Can I re-run `aks-engine deploy` on an existing cluster?
+
+Under the hood, `aks-engine deploy` generates ARM template data based on API model input, and then sends that template to the ARM API as a group deployment. While it is technically possible to "redo" an `aks-engine deploy` command on an existing cluster by passing in the

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-All documentation is these guides assumes you have already downloaded both the Azure CLI and `aks-engine`. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing.
+All documentation in these guides assumes you have already downloaded both the Azure CLI and `aks-engine`. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing.
 
 This guide assumes you already have deployed a cluster using `aks-engine`. For more details on how to do that see [deploy](../tutorials/quickstart.md#deploy).
 

@@ -3370,6 +3370,21 @@ func ExampleProperties_validateLocation() {
 	// level=warning msg="No \"location\" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only"
 }
 
+func ExampleProperties_validateMasterProfile() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(false)
+	cs.Properties.MasterProfile.Count = 1
+	if err := cs.Properties.validateMasterProfile(false); err != nil {
+		log.Errorf("shouldn't error with 1 control plane VM, got %s", err.Error())
+	}
+	// Output:
+	// level=warning msg="Running only 1 control plane VM not recommended for production clusters, use 3 or 5 for control plane redundancy"
+}
+
 func ExampleProperties_validateZones() {
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&log.TextFormatter{

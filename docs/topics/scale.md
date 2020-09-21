@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-All documentation is these guides assumes you have already downloaded both the Azure `az` CLI tool and the `aks-engine` binary tool. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing if you're creating a Kubernetes cluster using AKS Engine for the first time.
+All documentation in these guides assumes you have already downloaded both the Azure `az` CLI tool and the `aks-engine` binary tool. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing if you're creating a Kubernetes cluster using AKS Engine for the first time.
 
 This guide assumes you already have a running cluster deployed using the `aks-engine` CLI. For more details on how to do that see [deploy](create_new_clusters.md#deploy) or [generate](generate.md).
 
@@ -45,6 +45,10 @@ This command will re-use the `apimodel.json` file inside the output directory as
 |--language|no|Language to return error message in. Default value is "en-us").|
 
 ## Frequently Asked Questions
+
+### Is it possible to scale control plane VMs?
+
+It is not possible to increase or decrease *the number* of VMs that run the control plane. However, you may increase or decrease the *size* of the VM by modifying the `"vmSize"` property of the `masterProfile` in your cluster API model, and then run `aks-engine upgrade --control-plane-only`. See [the upgrade documentation](upgrade.md) for more information.
 
 ### What version of aks-engine should I use to run `aks-engine scale` operations?
 
