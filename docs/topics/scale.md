@@ -4,7 +4,7 @@
 
 All documentation in these guides assumes you have already downloaded both the Azure `az` CLI tool and the `aks-engine` binary tool. Follow the [quickstart guide](../tutorials/quickstart.md) before continuing if you're creating a Kubernetes cluster using AKS Engine for the first time.
 
-This guide assumes you already have a running cluster deployed using the `aks-engine` CLI. For more details on how to do that see [deploy](create_new_clusters.md#deploy) or [generate](generate.md).
+This guide assumes you already have a running cluster deployed using the `aks-engine` CLI. For more details on how to do that see [deploy](creating_new_clusters.md#deploy) or [generate](generate.md).
 
 ## Scale
 
