@@ -75,7 +75,7 @@ Global Flags:
       --debug   enable verbose debug logs
 ```
 
-Detailed documentation on `aks-engine deploy` can be found [here](../topics/deploy.md).
+Detailed documentation on `aks-engine deploy` can be found [here](../topics/create_new_clusters.md#deploy).
 
 ### `aks-engine scale`
 

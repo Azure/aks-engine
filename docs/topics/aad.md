@@ -20,7 +20,7 @@ You also need to delegate permission to the application as follows:
 
 
 ## Deployment
-Follow the [deployment steps](../tutorials/deploy.md). In step #4, add the following under 'properties' section:
+Follow the [deployment steps]([../tutorials/quickstart.md#deploy]). In step #4, add the following under 'properties' section:
 ```json
 "aadProfile": {
     "serverAppID": "",
