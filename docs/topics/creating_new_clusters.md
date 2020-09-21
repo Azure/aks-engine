@@ -14,7 +14,7 @@ $ aks-engine deploy --subscription-id $SUBSCRIPTION_ID \
     --client-secret $SERVICE_PRINCIPAL_PASSWORD
 ```
 
-`aks-engine deploy` is a long-running operation that creates Azure resources (e.g., Virtual Machine and/or Virtual Machine Scale Set (VMSS), Disk, Network Interface, Network Security Group, Public IP Address, Virtual Network, Load Balancer, and others) that will underly a Kubernetes cluster. All deployed VMs will be configured to run Kubernetes bootstrap script appropriate to the desired cluster configuration. The outcome of a successful `aks-engine deploy` operation is a fully operational Kubernetes cluster, ready for use immediately.
+`aks-engine deploy` is a long-running operation that creates Azure resources (e.g., Virtual Machine and/or Virtual Machine Scale Set (VMSS), Disk, Network Interface, Network Security Group, Public IP Address, Virtual Network, Load Balancer, and others) that will underly a Kubernetes cluster. All deployed VMs will be configured to run Kubernetes bootstrap scripts appropriate for the desired cluster configuration. The outcome of a successful `aks-engine deploy` operation is a fully operational Kubernetes cluster, ready for use immediately.
 
 A more detailed walk-through of `aks-engine deploy` is in the [quickstart guide](../tutorials/quickstart.md#deploy)
 
@@ -44,6 +44,6 @@ A more detailed walk-through of `aks-engine deploy` is in the [quickstart guide]
 
 ## Frequently Asked Questions
 
-### Can I re-run `aks-engine deploy` on an existing cluster?
+### Can I re-run `aks-engine deploy` on an existing cluster to update the cluster configuration?
 
-Under the hood, `aks-engine deploy` generates ARM template data based on API model input, and then sends that template to the ARM API as a group deployment. While it is technically possible to "redo" an `aks-engine deploy` command on an existing cluster by passing in the
+No. See [addpool](addpool.md), [update](update.md), [scale](scale.md), and [upgrade](upgrade.md) for documentation describing how to continue to use AKS Engine to maintain your cluster configuration over time.

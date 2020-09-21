@@ -190,3 +190,29 @@ We actually recommend that you *only* use `aks-engine upgrade --control-plane-on
 If following our guidance you employ `aks-engine upgrade --control-plane-only` to upgrade your control plane distinctly from your worker nodes, and a combination of `aks-engine addpool` and `aks-engine update` to upgrade worker nodes, the natural question is: which should I do first? Is it better to run a newer version of Kubernetes on the control plane, serving API requests from older clients? Or is it better to run the newer Kubernetes bits on the worker nodes, and rely upon making control plane requests against an older API version?
 
 // TODO answer this question!
+
+### Can I use `aks-engine upgrade --control-plane-only` to change the control plane configuration irrespective of updating the Kubernetes version?
+
+Yes, but with caveats. Essentially you may use the `aks-engine upgrade --control-plane-only` functionality to replace your control plane VMs, one-at-a-time, with newer VMs rendered from updated API model configuration. You should always stage such changes, however, by building a staging cluster (reproducing at a minimum the version of `aks-engine` used to build your production cluster, and the API model JSON used as input; in a best-case scenario it will be in the same location as well, as different Azure location can have subtle differences). Here are a few useful possibilities that will work:
+
+- Updating the VM SKU by changing the `properties.masterProfile.vmSize` value
+- *Certain* configurable/tuneable kubelet properties in `properties.masterProfile.kubernetesConfig.kubeletConfig`, e.g.:
+  - `"--feature-gates"`
+  - `"--node-status-update-frequency"`
+  - `"--pod-max-pids"`
+  - `"--register-with-taints"`
+  - `"--image-gc-high-threshold"` or `"--image-gc-low-threshold"`
+  Generally, don't change any listening ports or filepaths, as those may have static dependencies elsewhere.
+- Again, *certain* configurable/tuneable kubelet properties in:
+  - `properties.orchestratorProfile.kubernetesConfig.controllerManagerConfig`
+  - `properties.orchestratorProfile.kubernetesConfig.cloudControllerManagerConfig`
+  - `properties.orchestratorProfile.kubernetesConfig.apiServerConfig`
+  - `properties.orchestratorProfile.kubernetesConfig.schedulerConfig`
+- Control plane VM runtime kernel configuration via `properties.masterProfile.kubernetesConfig.sysctldConfig`
+
+You *may not* change the following values, doing so may break your cluster!
+
+- DO NOT CHANGE the number of VMs in your control plane via `masterProfile.count`
+- DO NOT CHANGE the static IP address range of your control plane via `masterProfile.firstConsecutiveStaticIP`
+
+These types of configuration changes are advanced, only do this if you're a confident, expert Kubernetes cluster administrator!
