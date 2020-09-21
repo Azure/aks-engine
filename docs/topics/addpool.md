@@ -261,4 +261,49 @@ k8s-pool3-26196714-vmss000009      Ready    agent    64m   v1.18.8   10.240.1.15
 
 Final note: don't forget to remove the "pool1" `agentPoolProfile` JSON object from your API model!
 
-### How do I integrate any added node pools into an existing cluster-autoscaler configuration?
+### How do I integrate any added VMSS node pools into an existing cluster-autoscaler configuration?
+
+If you're running the AKS Engine `cluster-autoscaler` addon, or running your own spec based on the [upstream examples](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md), you'll have a `cluster-autoscaler` Deployment resource installed on your cluster. The examples below will assume that the `cluster-autoscaler` componentry is installed in the `kube-system` namespace.
+
+First, you'll need to know the VMSS name of your new node pool. Here's how to do that using the `az` CLI tool:
+
+```sh
+$ az vmss list -g kubernetes-westus2-1838 -o table
+Name                          ResourceGroup             Location    Zones    Capacity    Overprovision    UpgradePolicy
+----------------------------  ------------------------  ----------  -------  ----------  ---------------  ---------------
+k8s-newpool-1838-vmss         kubernetes-westus2-1838   westus2     1 2      1           False            Manual
+k8s-pool1-1838-vmss           kubernetes-westus2-1838   westus2     1 2      1           False            Manual
+```
+
+Now, edit the `cluster-autoscaler` deployment:
+
+```sh
+$ kubectl edit deployment -n kube-system cluster-autoscaler
+```
+
+The above will open up the YAML spec in your default editor (e.g., `vim`). What we want to do is to modify the `cluster-autoscaler` runtime command arguments, so that your new VMSS node pool is enabled for cluster-autoscaler. Specifically, you want to look for one or more lines in the YAML file that look like this:
+
+```
+- --nodes=1:9:k8s-pool1-1838-vmss
+```
+
+And then add a new line below, using the identical indentation, with the new pool. So the changes should look like this:
+
+```
+- --nodes=1:9:k8s-pool1-1838-vmss
+- --nodes=1:9:k8s-newpool1-1838-vmss
+```
+
+Again, refer to the [cluster-api documentation](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md) for how to configure your VMSS node pools in Azure; the above example declares that cluster-autoscaler is enabled for the VMSS node pools `k8s-pool1-26196714-vmss` and `k8s-newpool1-26196714-vmss` running in your cluster, with a minimum node count of `1`, and a maximum node count of `9`, for both pools. After you save and exit from your editor, the `cluster-autoscaler` deployment should delete the existing pod, and create a new one, with the modified changes.
+
+If you're running cluster-autoscaler via the AKS Engine addon, and *if* you have explicitly configured the AKS Engine `cluster-autoscaler` addon to a mode of `Reconcile`, then you won't we able to simply edit the deployment spec on the cluster; instead you'll have to hop onto each control plane VM and manually edit the spec under `/etc/kubernetes/addons/cluster-autoscaler.yaml`. This is not a common situation, and one that would only occur because of an explicit configuration in the API model, such as:
+
+```
+        "addons": [
+          {
+            "name": "cluster-autoscaler",
+            "enabled": true,
+            "mode": "Reconcile"
+		  }
+		]
+```
