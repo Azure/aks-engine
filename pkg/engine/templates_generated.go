@@ -8654,7 +8654,6 @@ subjects:
 - kind: ServiceAccount
   name: persistent-volume-binder
   namespace: kube-system
-{{- if IsKubernetesVersionGe "1.15.0"}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
 kind: ClusterRole
@@ -8682,7 +8681,6 @@ subjects:
 - kind: ServiceAccount
   name: azure-cloud-provider
   namespace: kube-system
-{{- end}}
 {{- if UsesCloudControllerManager}}
 ---
 apiVersion: storage.k8s.io/v1
@@ -8699,9 +8697,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
-  {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{- end}}
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -8724,9 +8720,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
-  {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{- end}}
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -8749,9 +8743,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
-  {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{- end}}
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -8772,9 +8764,7 @@ provisioner: file.csi.azure.com
 parameters:
   skuName: Standard_LRS
 reclaimPolicy: Delete
-  {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{- end}}
 volumeBindingMode: Immediate
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}
@@ -17002,12 +16992,9 @@ subjects:
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: {{if IsKubernetesVersionGe "1.15.0"}}ClusterRoleBinding{{else}}RoleBinding{{end}}
+kind: ClusterRoleBinding
 metadata:
   name: default:privileged
-{{- if not (IsKubernetesVersionGe "1.15.0")}}
-  namespace: kube-system
-{{end}}
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
@@ -17016,13 +17003,8 @@ roleRef:
   name: psp:privileged
 subjects:
 - kind: Group
-  name: {{if IsKubernetesVersionGe "1.15.0"}}system:authenticated{{else}}system:masters{{end}}
+  name: system:authenticated
   apiGroup: rbac.authorization.k8s.io
-{{- if not (IsKubernetesVersionGe "1.15.0")}}
-- kind: Group
-  name: system:serviceaccounts:kube-system
-  apiGroup: rbac.authorization.k8s.io
-{{end}}
 - kind: Group
   name: system:nodes
   apiGroup: rbac.authorization.k8s.io
