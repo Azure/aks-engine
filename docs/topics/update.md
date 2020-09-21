@@ -46,7 +46,7 @@ The above operation will complete rather quickly, as it is only updating the VMS
 
 ### Why would I use update instead of upgrade to upgrade a VMSS node pool?
 
-The `aks-engine upgrade` command actually replaces existing nodes with new nodes, one-at-a-time. Such an approach is appropriate if you are absolutely confident that the outcome of such an operation will be successful, and that confidence can only be attained by staging a full end-to-end operation that simulates the series of operations in your production environment. In other words:
+The `aks-engine upgrade` command actually replaces existing nodes with new nodes, one-at-a-time. Such an approach is appropriate if you are  confident that the outcome of such an operation will be successful. We recommend to attain that confidence by staging a series of full end-to-end operations simulating the series of operations in your production environment. In other words:
 
 1. Create a cluster with a specific configuration in a specific cloud environment + region using a specific version of `aks-engine`.
   - All of the above must exactly match the original configuration + `aks-engine` version used to create your cluster initially.
@@ -58,3 +58,4 @@ Because `aks-engine upgrade` is a destructive operation, and there is no definit
 The above is a time consuming and imperfect workflow, and so `aks-engine update` is an alternative approach that allows more flexibility. For example:
 
 - Because `aks-engine update` is merely a VMSS model update against a single node pool and not a "whole cluster", destructive operation, the viability of an updated node pool can be tested piecemeal, without affecting existing production traffic.
+- In the event that the updated VMSS model produces undesirable new nodes, you may "undo" or "roll back" this model update change to the last known good VMSS model by running an `aks-engine update` operation using an older, known-working version of AKS Engine (for example, if you've never run `aks-engine update` before, you would use the version of AKS Engine you used to deploy your cluster originally) with an API model specification that has been tested as working.
