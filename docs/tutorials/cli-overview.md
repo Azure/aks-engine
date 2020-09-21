@@ -75,6 +75,8 @@ Global Flags:
       --debug   enable verbose debug logs
 ```
 
+Detailed documentation on `aks-engine deploy` can be found [here](../topics/deploy.md).
+
 ### `aks-engine scale`
 
 The `aks-engine scale` command will scale (in or out) a specific node pool participating in a Kubernetes cluster created by AKS Engine. Use this command to manually scale a node pool to a specific number of nodes.
@@ -181,6 +183,8 @@ Global Flags:
       --debug   enable verbose debug logs
 ```
 
+Detailed documentation on `aks-engine addpool` can be found [here](../topics/addpool.md).
+
 ### `aks-engine upgrade`
 
 The `aks-engine upgrade` command orchestrates a Kubernetes version upgrade across your existing cluster nodes. Use this command to upgrade the Kubernetes version running your control plane, and optionally on all your nodes as well.
@@ -218,6 +222,8 @@ Global Flags:
       --debug   enable verbose debug logs
 ```
 
+Detailed documentation on `aks-engine upgrade` can be found [here](../topics/upgrade.md).
+
 ## Generate an ARM Template
 
 AKS Engine also provides a command to generate a reusable ARM template only, without creating any actual Azure resources.
@@ -248,3 +254,5 @@ Flags:
 Global Flags:
       --debug   enable verbose debug logs
 ```
+
+Detailed documentation on `aks-engine generate` can be found [here](../topics/generate.md).
