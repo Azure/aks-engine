@@ -255,4 +255,4 @@ Global Flags:
       --debug   enable verbose debug logs
 ```
 
-Detailed documentation on `aks-engine generate` can be found [here](../topics/generate.md).
+Detailed documentation on `aks-engine generate` can be found [here](../topics/creating_new_clusters.md#generate).

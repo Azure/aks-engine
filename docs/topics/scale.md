@@ -35,8 +35,8 @@ This command will re-use the `apimodel.json` file inside the output directory as
 |--resource-group|yes|The resource group the cluster is deployed in.|
 |--location|yes|The location the resource group is in.|
 |--api-model|yes|Relative path to the generated API model for the cluster.|
-|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_princpal/client_certificate|
-|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_princpal|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
 |--node-pool|depends|Required if there is more than one node pool. Which node pool should be scaled.|
 |--new-node-count|yes|Desired number of nodes in the node pool.|

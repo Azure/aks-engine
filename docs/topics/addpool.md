@@ -58,8 +58,8 @@ Some important considerations:
 |--resource-group|yes|The resource group the cluster is deployed in.|
 |--location|yes|The location the resource group is in.|
 |--api-model|yes|Relative path to the generated API model for the cluster.|
-|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_princpal/client_certificate|
-|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_princpal|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
 |--node-pool|yes|Path to JSON file expressing the `agentPoolProfile` spec of the new node pool.|
 |--auth-method|no|The authentication method used. Default value is `client_secret`. Other supported values are: `cli`, `client_certificate`, and `device`.|

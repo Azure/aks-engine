@@ -34,13 +34,40 @@ A more detailed walk-through of `aks-engine deploy` is in the [quickstart guide]
 |--set|no|Set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2).|
 |--ca-certificate-path|no|Path to the CA certificate to use for Kubernetes PKI assets.|
 |--ca-private-key-path|no|Path to the CA private key to use for Kubernetes PKI assets.|
-|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_princpal/client_certificate|
-|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_princpal|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
 |--identity-system|no|Identity system (default is azure_ad)|
 |--auth-method|no|The authentication method used. Default value is `client_secret`. Other supported values are: `cli`, `client_certificate`, and `device`.|
 |--private-key-path|no|Path to private key (used with --auth-method=client_certificate).|
 |--language|no|Language to return error message in. Default value is "en-us").|
+
+## Generate
+
+The `aks-engine generate` command will generate artifacts that you can use to implement your own cluster create workflows. Like `aks-engine deploy`, you define an API model (cluster definition) as a JSON file, and then pass in a reference to it, as well as appropriate Azure credentials, to a command statement like this:
+
+```sh
+$ aks-engine generate --api-model ./my-cluster-definition.json  \
+    --output-directory ./cluster_artifacts
+```
+
+The above command assumes that the API model at the relative filepath `./my-cluster-definition.json` contains a fully populated cluster definition, including service principal credentials, and a DNS prefix to identify the cluster with a name.
+
+### Parameters
+
+|Parameter|Required|Description|
+|-----------------|---|---|
+|--api-model|yes|Relative path to the API model (cluster definition) that declares the desired cluster configuration.|
+|--output-directory|no|Output directory (derived from FQDN if absent) to persist cluster configuration artifacts to.|
+|--set|no|Set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2).|
+|--ca-certificate-path|no|Path to the CA certificate to use for Kubernetes PKI assets.|
+|--ca-private-key-path|no|Path to the CA private key to use for Kubernetes PKI assets.|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
+|--parameters-only|no|Only output parameters files.|
+|--no-pretty-print|no|Skip pretty printing the output.|
+
+As mentioned above, `aks-engine generate` expects all cluster definition data to be present in the API model JSON file. You may actually inject data into the API model at runtime by invoking the command and including that data in the `--set` argument interface. For example, this command will produce artifacts that can be used to deploy a fully functional Kubernetes cluster based on the AKS Engine defaults (the `examples/kubernetes.json` file will build a "default" single master, 2 node cluster) using your
 
 ## Frequently Asked Questions
 
