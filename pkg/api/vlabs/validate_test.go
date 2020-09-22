@@ -1436,6 +1436,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 	t.Run("ServicePrincipalProfile with secret should pass", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
+		}
 
 		if err := cs.Validate(false); err != nil {
 			t.Errorf("should not error %v", err)
@@ -1451,6 +1454,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 			SecretName:    "secret-name",
 			SecretVersion: "version",
 		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
+		}
 		if err := cs.Validate(false); err != nil {
 			t.Errorf("should not error %v", err)
 		}
@@ -1463,6 +1469,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:    "/subscriptions/SUB-ID/resourceGroups/RG-NAME/providers/Microsoft.KeyVault/vaults/KV-NAME",
 			SecretName: "secret-name",
+		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
 		}
 
 		if err := cs.Validate(false); err != nil {
@@ -1478,6 +1487,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 			VaultID:    "/subscriptions/SUB-ID/resourceGroups/RG-NAME/providers/Microsoft.KeyVault/vaults/KV-NAME",
 			SecretName: "secret-name",
 		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
+		}
 
 		if err := cs.Validate(false); err == nil {
 			t.Error("error should have occurred")
@@ -1491,6 +1503,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:    "randomID",
 			SecretName: "secret-name",
+		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
 		}
 
 		if err := cs.Validate(false); err == nil || err.Error() != "service principal client keyvault secret reference is of incorrect format" {
@@ -2314,7 +2329,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error on azure-policy with managed identity",
@@ -2581,7 +2596,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	// Basic test with UseManagedIdentity
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		NetworkPlugin:      "azure",
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		Addons: []KubernetesAddon{
 			{
 				Name:    "appgw-ingress",
@@ -3092,7 +3107,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 				OrchestratorRelease: test.orchestratorRelease,
 				OrchestratorType:    Kubernetes,
 				KubernetesConfig: &KubernetesConfig{
-					UseManagedIdentity: test.useManagedIdentity,
+					UseManagedIdentity: to.BoolPtr(test.useManagedIdentity),
 					UserAssignedID:     test.userAssignedID,
 				},
 			}

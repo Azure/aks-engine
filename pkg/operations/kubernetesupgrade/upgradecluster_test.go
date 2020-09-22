@@ -225,7 +225,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should return error message when failing to delete role assignment during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.18.9", 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -619,7 +619,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should leave platform fault domain count nil", func() {
 			cs := api.CreateMockContainerService("testcluster", "1.18.9", 3, 2, false)
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 			cs.Properties.MasterProfile.AvailabilityProfile = "AvailabilitySet"
 			uc := UpgradeCluster{
 				Translator: &i18n.Translator{},
@@ -652,7 +652,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		cs.Properties.AgentPoolProfiles[0].AvailabilityProfile = api.VirtualMachineScaleSets
 		cs.Properties.AgentPoolProfiles[0].StorageProfile = "ManagedDisks"
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -712,7 +712,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	It("Should not fail if no managed identity is returned by azure during upgrade operation", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.18.9", 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),

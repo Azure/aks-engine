@@ -707,7 +707,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						KubernetesConfig: &api.KubernetesConfig{
 							ContainerRuntime:        api.Docker,
 							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
-							UseManagedIdentity:      true,
+							UseManagedIdentity:      to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{

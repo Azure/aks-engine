@@ -168,8 +168,8 @@ func TestK8sVars(t *testing.T) {
 		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
 		"routeTableName":                            "[concat(variables('masterVMNamePrefix'),'routetable')]",
 		"scope":                                     "[resourceGroup().id]",
-		"servicePrincipalClientId":                  "[parameters('servicePrincipalClientId')]",
-		"servicePrincipalClientSecret":              "[parameters('servicePrincipalClientSecret')]",
+		"servicePrincipalClientId":                  "msi",
+		"servicePrincipalClientSecret":              "msi",
 		"singleQuote":                               "'",
 		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
@@ -180,7 +180,7 @@ func TestK8sVars(t *testing.T) {
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
 		"useInstanceMetadata":                       "true",
-		"useManagedIdentityExtension":               "false",
+		"useManagedIdentityExtension":               "true",
 		"userAssignedClientID":                      "",
 		"userAssignedID":                            "",
 		"userAssignedIDReference":                   "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
@@ -245,25 +245,7 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	// Test with MSI
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-	varMap, err = GetKubernetesVariables(cs)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expectedMap["servicePrincipalClientId"] = "msi"
-	expectedMap["servicePrincipalClientSecret"] = "msi"
-	expectedMap["useManagedIdentityExtension"] = "true"
-	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]"
-
-	diff = cmp.Diff(varMap, expectedMap)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-
-	// Test with ubuntu 16.04 distro
+	// Test with ubuntu 16.04 distro and UseManagedIdentity disabled
 	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
 		{
 			Name:    common.PodSecurityPolicyAddonName,
@@ -271,7 +253,7 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(false)
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
@@ -524,7 +506,7 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	// Test with HostedMaster + MSI
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
@@ -1053,8 +1035,8 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
 		"routeTableName":                            "[concat(variables('masterVMNamePrefix'),'routetable')]",
 		"scope":                                     "[resourceGroup().id]",
-		"servicePrincipalClientId":                  "[parameters('servicePrincipalClientId')]",
-		"servicePrincipalClientSecret":              "[parameters('servicePrincipalClientSecret')]",
+		"servicePrincipalClientId":                  "msi",
+		"servicePrincipalClientSecret":              "msi",
 		"singleQuote":                               "'",
 		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
@@ -1065,7 +1047,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
 		"useInstanceMetadata":                       "true",
-		"useManagedIdentityExtension":               "false",
+		"useManagedIdentityExtension":               "true",
 		"userAssignedClientID":                      "",
 		"userAssignedID":                            "",
 		"userAssignedIDReference":                   "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
