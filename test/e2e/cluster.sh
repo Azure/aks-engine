@@ -302,8 +302,8 @@ fi
 if [ "${SCALE_CLUSTER}" = "true" ]; then
   nodepools=$(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json)
   for ((i = 0; i <= ${#nodepools[@]}; ++i)); do
-    if [ -n "$UPDATE_NODE_POOLS" ]; then
-      nodepool=$(jq -r --arg i $i '. | .properties.agentPoolProfiles[$i | tonumber].name' < _output/$RESOURCE_GROUP/apimodel.json)
+    nodepool=$(jq -r --arg i $i '. | .properties.agentPoolProfiles[$i | tonumber].name' < _output/$RESOURCE_GROUP/apimodel.json)
+    if [ "${UPDATE_NODE_POOLS}" = "true" ]; then
       # modify the master VM SKU to simulate vertical vm scaling via upgrade
       docker run --rm \
         -v $(pwd):${WORK_DIR} \
