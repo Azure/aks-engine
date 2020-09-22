@@ -177,7 +177,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
-		if !cs.Properties.IsHostedMasterProfile() &&
+		if !isUpgrade && !isScale &&
+			!cs.Properties.IsHostedMasterProfile() &&
 			!cs.Properties.IsCustomCloudProfile() &&
 			!cs.Properties.MasterProfile.IsVirtualMachineScaleSets() &&
 			o.KubernetesConfig.UseManagedIdentity == nil {

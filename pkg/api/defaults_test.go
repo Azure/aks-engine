@@ -817,6 +817,24 @@ func TestDefaultUseManagedIdentity(t *testing.T) {
 		t.Errorf("expected UseManagedIdentity to be false by default in VMSS control plane context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
 	}
 
+	isUpgrade = true
+	isScale = false
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil {
+		t.Errorf("expected UseManagedIdentity to be unchanged by default in upgrade context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	isUpgrade = false
+	isScale = true
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil {
+		t.Errorf("expected UseManagedIdentity to be unchanged by default in scale context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
 	mockCS = getMockBaseContainerService("1.18.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(false)
