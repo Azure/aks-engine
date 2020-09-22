@@ -790,6 +790,25 @@ func TestDiskCachingTypes(t *testing.T) {
 	}
 }
 
+func TestDefaultUseManagedIdentity(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	isUpgrade := false
+	isScale := false
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if !to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity to be true by default, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(false)
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity=false config to be honored by defaults enforcement, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+}
+
 func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties

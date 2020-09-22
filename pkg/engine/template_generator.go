@@ -373,7 +373,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 		},
 		"UseManagedIdentity": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)

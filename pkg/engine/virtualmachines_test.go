@@ -127,7 +127,7 @@ func TestCreateVirtualMachines(t *testing.T) {
 	// Now test with ManagedIdentity, Availability Zones, and StorageAccount
 
 	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooAssignedID"
 	cs.Properties.MasterProfile.AvailabilityZones = []string{"barZone"}
 	cs.Properties.MasterProfile.StorageProfile = api.StorageAccount
