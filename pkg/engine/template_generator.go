@@ -912,6 +912,10 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsGuardAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.GuardAddonName)
 		},
+		"GetGuardCertificate": func(certificateName string) string {
+			guard := cs.Properties.OrchestratorProfile.KubernetesConfig.GetAddonByName(common.GuardAddonName)
+			return base64.StdEncoding.EncodeToString([]byte(guard.Config[certificateName]))
+		},
 	}
 }
 

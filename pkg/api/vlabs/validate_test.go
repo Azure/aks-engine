@@ -5544,7 +5544,7 @@ func TestValidateGuardIntergration(t *testing.T) {
 
 	t.Run("incomplete guard intergration config", func(t *testing.T) {
 		err := addon.validateGuardAddonConfig()
-		expected := errors.New("guard addon configuration must have a 'location' property; guard addon configuration must have a 'tenantID' property; guard addon configuration must have a 'subscriptionID' property; guard addon configuration must have a 'resourceGroup' property; guard addon configuration must have a 'clusterName' property; guard addon configuration must have a 'clientID' property; guard addon configuration must have a 'clientSecret' property")
+		expected := errors.New("guard addon configuration must have a 'location' property; guard addon configuration must have a 'tenantID' property; guard addon configuration must have a 'subscriptionID' property; guard addon configuration must have a 'resourceGroup' property; guard addon configuration must have a 'clusterName' property; guard addon configuration must have a 'clientID' property; guard addon configuration must have a 'clientSecret' property; guard addon configuration must have a 'guardCACertificate' property; guard addon configuration must have a 'guardCACertificateKey' property; guard addon configuration must have a 'guardClientCertificate' property; guard addon configuration must have a 'guardClientCertificateKey' property; guard addon configuration must have a 'guardServerCertificate' property; guard addon configuration must have a 'guardServerCertificateKey' property")
 		if !helpers.EqualError(err, expected) {
 			t.Errorf("expected error: %v, got: %v", expected, err)
 		}
@@ -5558,6 +5558,12 @@ func TestValidateGuardIntergration(t *testing.T) {
 	addon.Config["clusterName"] = "clusterName"
 	addon.Config["clientID"] = "clientID"
 	addon.Config["clientSecret"] = "clientSecret"
+	addon.Config["guardCACertificate"] = "guardCACertificate"
+	addon.Config["guardCACertificateKey"] = "guardCACertificateKey"
+	addon.Config["guardClientCertificate"] = "guardClientCertificate"
+	addon.Config["guardClientCertificateKey"] = "guardClientCertificateKey"
+	addon.Config["guardServerCertificate"] = "guardServerCertificate"
+	addon.Config["guardServerCertificateKey"] = "guardServerCertificateKey"
 
 	t.Run("complete connected cluster profile", func(t *testing.T) {
 		err := addon.validateGuardAddonConfig()

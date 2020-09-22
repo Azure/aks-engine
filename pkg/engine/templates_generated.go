@@ -15527,106 +15527,189 @@ func k8sAddonsFlannelYaml() (*asset, error) {
 }
 
 var _k8sAddonsGuardYaml = []byte(`apiVersion: v1
-kind: Secret
-metadata:
-  name: guard-intergration
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-data:
-  TENANT_ID: {{ContainerConfigBase64 "tenantID"}}
-  SUBSCRIPTION_ID: {{ContainerConfigBase64 "subscriptionID"}}
-  RESOURCE_GROUP: {{ContainerConfigBase64 "resourceGroup"}}
-  CONNECTED_CLUSTER: {{ContainerConfigBase64 "clusterName"}}
-  LOCATION: {{ContainerConfigBase64 "location"}}
-  CLIENT_ID: {{ContainerConfigBase64 "clientID"}}
-  CLIENT_SECRET: {{ContainerConfigBase64 "clientSecret"}}
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: guard-intergration
-  namespace: kube-system
+  creationTimestamp: null
   labels:
+    app: guard
     addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: guard
+  namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  labels:
+    app: guard
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: guard
+  namespace: kube-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: guardRoleBinding
+  creationTimestamp: null
   labels:
+    app: guard
     addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: guard
+  namespace: kube-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cluster-admin
+  name: guard
 subjects:
-  - kind: ServiceAccount
-    name: guard-intergration
-    namespace: kube-system
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: guard-intergration
+- kind: ServiceAccount
+  name: guard
   namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
   labels:
+    app: guard
     addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: guard
+  namespace: kube-system
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guard
+  strategy: {}
   template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+      creationTimestamp: null
+      labels:
+        app: guard
     spec:
-      volumes:
-      - name: guard-manifests
-        hostPath:
-          path: /etc/kubernetes
-      serviceAccountName: guard-intergration
-      nodeSelector:
-        kubernetes.io/arch: amd64
-        kubernetes.io/os: linux
       containers:
-      - name: guard-intergration
-        image: {{ContainerImage "guard"}}
-        volumeMounts:
-        - name: guard-manifests
-          mountPath: /etc/kubernetes
+      - args:
+        - run
+        - --v=3
+        - --tls-ca-file=/etc/guard/pki/ca.crt
+        - --tls-cert-file=/etc/guard/pki/tls.crt
+        - --tls-private-key-file=/etc/guard/pki/tls.key
+        - --auth-providers=Azure
+        - --azure.client-id={{GetGuardProperty "clientID"}}
+        - --azure.tenant-id={{GetGuardProperty "tenantID"}}
+        - --azure.auth-mode=obo
+        - --azure.use-group-uid=true
+        - --azure.graph-call-on-overage-claim=true
+        - --azure.verify-clientID=false
+        - --authz-providers=Azure,azure
+        - --azure.authz-mode=arc
+        - --azure.resource-id=/subscriptions/{{GetGuardProperty "subscriptionID"}}/resourceGroups/{{GetGuardProperty "resourceGroup"}}/providers/Microsoft.Kubernetes/connectedClusters/{{GetGuardProperty "clusterName"}}
+        - --azure.arm-call-limit=2000
+        - --azure.skip-authz-check=
+        - --azure.authz-resolve-group-memberships=false
+        - --azure.skip-authz-for-non-aad-users=true
+        - --azure.allow-nonres-discovery-path-access=true
         env:
-        - name: TENANT_ID
+        - name: AZURE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: guard-intergration
-              key: TENANT_ID
-        - name: SUBSCRIPTION_ID
-          valueFrom:
-            secretKeyRef:
-              name: guard-intergration
-              key: SUBSCRIPTION_ID
-        - name: RESOURCE_GROUP
-          valueFrom:
-            secretKeyRef:
-              name: guard-intergration
-              key: RESOURCE_GROUP
-        - name: CONNECTED_CLUSTER
-          valueFrom:
-            secretKeyRef:
-              name: guard-intergration
-              key: CONNECTED_CLUSTER
-        - name: LOCATION
-          valueFrom:
-            secretKeyRef:
-              name: guard-intergration
-              key: LOCATION
-        - name: CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: guard-intergration
-              key: CLIENT_ID
-        - name: CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: guard-intergration
-              key: CLIENT_SECRET
-      restartPolicy: Never
-  backoffLimit: 4
+              key: client-secret
+              name: guard-azure-auth
+        image: appscode/guard:v0.6.1
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 30
+        name: guard
+        ports:
+        - containerPort: 8443
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 30
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/guard/pki
+          name: guard-pki
+        - mountPath: /etc/guard/auth/azure
+          name: guard-azure-auth
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      serviceAccountName: guard
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      volumes:
+      - name: guard-pki
+        secret:
+          defaultMode: 365
+          secretName: guard-pki
+      - name: guard-azure-auth
+        secret:
+          defaultMode: 365
+          secretName: guard-azure-auth
+status: {}
+---
+apiVersion: v1
+data:
+  ca.crt: {{ContainerConfigBase64 "guardCACertificate"}}
+  tls.crt: {{ContainerConfigBase64 "guardServerCertificate"}}
+  tls.key: {{ContainerConfigBase64 "guardServerCertificateKey"}}
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    app: guard
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: guard-pki
+  namespace: kube-system
+---
+apiVersion: v1
+data:
+  client-secret: {{ContainerConfigBase64 "clientSecret"}}
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    app: guard
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: guard-azure-auth
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: guard
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: guard
+  namespace: kube-system
+spec:
+  ports:
+  - name: api
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: guard
+  type: ClusterIP
+status:
+  loadBalancer: {}
 `)
 
 func k8sAddonsGuardYamlBytes() ([]byte, error) {
@@ -22125,15 +22208,50 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
 
 {{- if IsGuardAddonEnabled}}
+- path: /etc/kubernetes/guard/pki/ca.crt
+  permissions: "0644"
+  encoding: "base64"
+  owner: root
+  content: |
+    {{GetGuardCertificate "guardCACertificate"}}
+
+- path: /etc/kubernetes/guard/pki/azure@azure.crt
+  permissions: "0644"
+  encoding: "base64"
+  owner: root
+  content: |
+    {{GetGuardCertificate "guardClientCertificate"}}
+
+- path: /etc/kubernetes/guard/pki/azure@azure.key
+  permissions: "0644"
+  encoding: "base64"
+  owner: root
+  content: |
+    {{GetGuardCertificate "guardClientCertificateKey"}}
+
 - path: /etc/kubernetes/guard/guard-authn-webhook.yaml
   permissions: "0644"
   owner: root
   content: |
     apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority: /etc/kubernetes/guard/pki/ca.crt
+        server: https://guard.svc:443/tokenreviews
+      name: guard-server
+    contexts:
+    - context:
+        cluster: guard-server
+        user: azure@azure
+      name: webhook
+    current-context: webhook
     kind: Config
-    clusters: []
-    contexts: []
-    users: [] 
+    preferences: {}
+    users:
+    - name: azure@azure
+      user:
+        client-certificate: /etc/kubernetes/guard/pki/azure@azure.crt
+        client-key: /etc/kubernetes/guard/pki/azure@azure.key
 #EOF
 
 - path: /etc/kubernetes/guard/guard-authz-webhook.yaml
@@ -22141,10 +22259,24 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: |
     apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority: /etc/kubernetes/guard/pki/ca.crt
+        server: https://guard.svc:443/subjectaccessreviews
+      name: guard-server
+    contexts:
+    - context:
+        cluster: guard-server
+        user: azure@azure
+      name: webhook
+    current-context: webhook
     kind: Config
-    clusters: []
-    contexts: []
-    users: [] 
+    preferences: {}
+    users:
+    - name: azure@azure
+      user:
+        client-certificate: /etc/kubernetes/guard/pki/azure@azure.crt
+        client-key: /etc/kubernetes/guard/pki/azure@azure.key
 #EOF
 {{end}}
 

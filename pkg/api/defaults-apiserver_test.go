@@ -529,3 +529,47 @@ func TestAPIServerAnonymousAuth(t *testing.T) {
 			"1.15.12", a["--anonymous-auth"])
 	}
 }
+
+func TestAPIServerWebhookAuth(t *testing.T) {
+	// Validate webhook auth default is false
+	cs := CreateMockContainerService("testcluster", "1.15.12", 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--authorization-mode"] != "Node,RBAC" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--anonymous-auth"])
+	}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.GuardAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--v"] != "9" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--v"])
+	}
+	if a["--authentication-token-webhook-config-file"] != "/etc/kubernetes/guard/guard-authn-webhook.yaml" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--authentication-token-webhook-config-file"])
+	}
+	if a["--authorization-webhook-config-file"] != "/etc/kubernetes/guard/guard-authz-webhook.yaml" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--authorization-webhook-config-file"])
+	}
+	if a["--authentication-token-webhook-cache-ttl"] != "5m0s" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--authorization-mode"])
+	}
+	if a["--authorization-mode"] != "Node,Webhook,RBAC" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--authorization-mode"])
+	}
+	if a["--runtime-config"] != "authentication.k8s.io/v1beta1=true,authorization.k8s.io/v1beta1=true" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--runtime-config"])
+	}
+}

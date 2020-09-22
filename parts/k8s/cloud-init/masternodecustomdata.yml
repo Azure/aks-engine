@@ -530,6 +530,79 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+{{- if IsGuardAddonEnabled}}
+- path: /etc/kubernetes/guard/pki/ca.crt
+  permissions: "0644"
+  encoding: "base64"
+  owner: root
+  content: |
+    {{GetGuardCertificate "guardCACertificate"}}
+
+- path: /etc/kubernetes/guard/pki/azure@azure.crt
+  permissions: "0644"
+  encoding: "base64"
+  owner: root
+  content: |
+    {{GetGuardCertificate "guardClientCertificate"}}
+
+- path: /etc/kubernetes/guard/pki/azure@azure.key
+  permissions: "0644"
+  encoding: "base64"
+  owner: root
+  content: |
+    {{GetGuardCertificate "guardClientCertificateKey"}}
+
+- path: /etc/kubernetes/guard/guard-authn-webhook.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority: /etc/kubernetes/guard/pki/ca.crt
+        server: https://guard.svc:443/tokenreviews
+      name: guard-server
+    contexts:
+    - context:
+        cluster: guard-server
+        user: azure@azure
+      name: webhook
+    current-context: webhook
+    kind: Config
+    preferences: {}
+    users:
+    - name: azure@azure
+      user:
+        client-certificate: /etc/kubernetes/guard/pki/azure@azure.crt
+        client-key: /etc/kubernetes/guard/pki/azure@azure.key
+#EOF
+
+- path: /etc/kubernetes/guard/guard-authz-webhook.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority: /etc/kubernetes/guard/pki/ca.crt
+        server: https://guard.svc:443/subjectaccessreviews
+      name: guard-server
+    contexts:
+    - context:
+        cluster: guard-server
+        user: azure@azure
+      name: webhook
+    current-context: webhook
+    kind: Config
+    preferences: {}
+    users:
+    - name: azure@azure
+      user:
+        client-certificate: /etc/kubernetes/guard/pki/azure@azure.crt
+        client-key: /etc/kubernetes/guard/pki/azure@azure.key
+#EOF
+{{end}}
+
 disk_setup:
   /dev/disk/azure/scsi1/lun0:
     table_type: gpt

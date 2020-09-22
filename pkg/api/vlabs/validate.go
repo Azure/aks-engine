@@ -2132,6 +2132,24 @@ func (a *KubernetesAddon) validateGuardAddonConfig() error {
 	if a.Config["clientSecret"] == "" {
 		err = append(err, "guard addon configuration must have a 'clientSecret' property")
 	}
+	if a.Config["guardCACertificate"] == "" {
+		err = append(err, "guard addon configuration must have a 'guardCACertificate' property")
+	}
+	if a.Config["guardCACertificateKey"] == "" {
+		err = append(err, "guard addon configuration must have a 'guardCACertificateKey' property")
+	}
+	if a.Config["guardClientCertificate"] == "" {
+		err = append(err, "guard addon configuration must have a 'guardClientCertificate' property")
+	}
+	if a.Config["guardClientCertificateKey"] == "" {
+		err = append(err, "guard addon configuration must have a 'guardClientCertificateKey' property")
+	}
+	if a.Config["guardServerCertificate"] == "" {
+		err = append(err, "guard addon configuration must have a 'guardServerCertificate' property")
+	}
+	if a.Config["guardServerCertificateKey"] == "" {
+		err = append(err, "guard addon configuration must have a 'guardServerCertificateKey' property")
+	}
 	if len(err) > 0 {
 		return fmt.Errorf(strings.Join(err, "; "))
 	}
