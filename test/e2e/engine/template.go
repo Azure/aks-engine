@@ -139,7 +139,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		isAzureStackCloud = true
 	}
 
-	if config.ClientID != "" && config.ClientSecret != "" {
+	if config.ClientID != "" && config.ClientSecret != "" && !prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 		if !prop.IsAzureStackCloud() {
 			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
 				ClientID: config.ClientID,

@@ -235,3 +235,12 @@ func GetEnglishOrderedQuotedListWithOxfordCommas(l []string) string {
 	}
 	return ret
 }
+
+func IsStringInStringSlice(s string, sl []string) bool {
+	for _, str := range sl {
+		if s == str {
+			return true
+		}
+	}
+	return false
+}

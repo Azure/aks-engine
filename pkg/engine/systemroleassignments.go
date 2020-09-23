@@ -5,10 +5,12 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -88,13 +90,21 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 		dependenciesToMasterVms[masterIdx] = fmt.Sprintf("[concat(variables('masterVMNamePrefix'), %d)]", masterIdx)
 	}
 
-	var roleAssignmentsForAllAgentPools = make([]DeploymentWithResourceGroupARM, len(agentPoolProfiles))
+	roleAssignmentsForAllAgentPools := []DeploymentWithResourceGroupARM{}
 
 	// The following is based on:
 	// * https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/role-based-access-control/role-assignments-template.md#create-a-role-assignment-at-a-resource-scope
 	// * https://github.com/Azure/azure-quickstart-templates/blob/master/201-rbac-builtinrole-multipleVMs/azuredeploy.json#L79
-	for agentPoolIdx, agentPool := range agentPoolProfiles {
+	found := []string{}
+	for _, agentPool := range agentPoolProfiles {
 		var roleAssignments = make([]interface{}, masterProfile.Count)
+		subnetElements := strings.Split(agentPool.VnetSubnetID, "/")
+		vnet := strings.Join(subnetElements[:9], "/")
+		if helpers.IsStringInStringSlice(vnet, found) {
+			continue
+		} else {
+			found = append(found, vnet)
+		}
 
 		for masterIdx := 0; masterIdx < masterProfile.Count; masterIdx++ {
 			masterVMReference := fmt.Sprintf("reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), %d)), '2017-03-30', 'Full').identity.principalId", masterIdx)
@@ -146,7 +156,7 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 			},
 		}
 
-		roleAssignmentsForAllAgentPools[agentPoolIdx] = roleAssignmentsForAgentPoolSubDeployment
+		roleAssignmentsForAllAgentPools = append(roleAssignmentsForAllAgentPools, roleAssignmentsForAgentPoolSubDeployment)
 	}
 
 	return roleAssignmentsForAllAgentPools

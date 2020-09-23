@@ -636,3 +636,49 @@ func TestGetLogAnalyticsWorkspaceDomain(t *testing.T) {
 		}
 	}
 }
+
+func TestIsStringInStringSlice(t *testing.T) {
+	cases := []struct {
+		name        string
+		stringSlice []string
+		str         string
+		expected    bool
+	}{
+		{
+			name:        "single string in slice, search for string in slice",
+			stringSlice: []string{"/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME"},
+			str:         "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME",
+			expected:    true,
+		},
+		{
+			name:        "single string in slice, search for string not in slice",
+			stringSlice: []string{"/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME"},
+			str:         "foo",
+			expected:    false,
+		},
+		{
+			name:        "many strings in slice, search for string in slice",
+			stringSlice: []string{"foo", "bar", "baz"},
+			str:         "bar",
+			expected:    true,
+		},
+		{
+			name:        "many strings in slice, search for string not in slice",
+			stringSlice: []string{"foo", "bar", "baz", "123456789"},
+			str:         "12345678",
+			expected:    false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			result := IsStringInStringSlice(c.str, c.stringSlice)
+			if c.expected != result {
+				t.Errorf("expected IsStringInStringSlice to return %t, instead got %t", c.expected, result)
+			}
+		})
+	}
+
+}
