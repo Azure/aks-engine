@@ -10,7 +10,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -95,19 +94,30 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 	// The following is based on:
 	// * https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/role-based-access-control/role-assignments-template.md#create-a-role-assignment-at-a-resource-scope
 	// * https://github.com/Azure/azure-quickstart-templates/blob/master/201-rbac-builtinrole-multipleVMs/azuredeploy.json#L79
-	found := []string{}
+
+	// We're gonna keep track of distinct VNETs in use across all our node pools;
+	//   we only want to define master VM --> VNET role assignments once per VNET.
+	// If our cluster configuration includes more than one pool sharing a common VNET,
+	//   we define the master VM --> VNET role assignments (one per master VM) just once for those pools
+	var vnetInCluster = struct{}{}
+	vnets := make(map[string]struct{})
 	for _, agentPool := range agentPoolProfiles {
 		var roleAssignments = make([]interface{}, masterProfile.Count)
 		subnetElements := strings.Split(agentPool.VnetSubnetID, "/")
+		// We expect a very specific string format for the VnetSubnetID property;
+		//   if it can't be split into at least 9 "/"-delimited elements,
+		//   then we should assume that our role assignment composition below will be malformed,
+		//   and so we simply skip assigning a role assigment for this pool.
+		// This should never happen, but this defensive posture ensures no code panic execution path
+		//   // when we statically grab the first 9 elements (`subnetElements[:9]` below)
 		if len(subnetElements) < 9 {
 			continue
 		}
-		vnet := strings.Join(subnetElements[:9], "/")
-		if helpers.IsStringInStringSlice(vnet, found) {
+		vnetResourceURI := strings.Join(subnetElements[:9], "/")
+		if _, ok := vnets[vnetResourceURI]; ok {
 			continue
-		} else {
-			found = append(found, vnet)
 		}
+		vnets[vnetResourceURI] = vnetInCluster
 
 		for masterIdx := 0; masterIdx < masterProfile.Count; masterIdx++ {
 			masterVMReference := fmt.Sprintf("reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), %d)), '2017-03-30', 'Full').identity.principalId", masterIdx)
