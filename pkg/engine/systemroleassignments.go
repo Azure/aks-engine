@@ -99,6 +99,9 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 	for _, agentPool := range agentPoolProfiles {
 		var roleAssignments = make([]interface{}, masterProfile.Count)
 		subnetElements := strings.Split(agentPool.VnetSubnetID, "/")
+		if len(subnetElements) < 9 {
+			continue
+		}
 		vnet := strings.Join(subnetElements[:9], "/")
 		if helpers.IsStringInStringSlice(vnet, found) {
 			continue
