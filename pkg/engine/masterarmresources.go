@@ -122,26 +122,27 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]")
 	}
 
-	var vnetInCluster = struct{}{}
-	vnets := make(map[string]struct{})
-	for _, agentPool := range cs.Properties.AgentPoolProfiles {
-		subnetElements := strings.Split(agentPool.VnetSubnetID, "/")
-		if len(subnetElements) < 9 {
-			continue
+	var hasDistinctControlPlaneVNET bool
+	if cs.Properties.MasterProfile.IsCustomVNET() {
+		var controlPlaneVNETResourceURI string
+		controlPlaneSubnetElements := strings.Split(cs.Properties.MasterProfile.VnetSubnetID, "/")
+		if len(controlPlaneSubnetElements) >= 9 {
+			controlPlaneVNETResourceURI = strings.Join(controlPlaneSubnetElements[:9], "/")
 		}
-		vnetResourceURI := strings.Join(subnetElements[:9], "/")
-		if _, ok := vnets[vnetResourceURI]; ok {
-			continue
+		if controlPlaneVNETResourceURI != "" {
+			for _, agentPool := range cs.Properties.AgentPoolProfiles {
+				subnetElements := strings.Split(agentPool.VnetSubnetID, "/")
+				if len(subnetElements) < 9 {
+					continue
+				}
+				if strings.Join(subnetElements[:9], "/") != controlPlaneVNETResourceURI {
+					hasDistinctControlPlaneVNET = true
+				}
+			}
 		}
-		vnets[vnetResourceURI] = vnetInCluster
-	}
-	var controlPlaneVNETResourceURI string
-	controlPlaneSubnetElements := strings.Split(cs.Properties.MasterProfile.VnetSubnetID, "/")
-	if len(controlPlaneSubnetElements) >= 9 {
-		controlPlaneVNETResourceURI = strings.Join(controlPlaneSubnetElements[:9], "/")
 	}
 	// If the control plane is in a discrete VNET
-	if _, ok := vnets[controlPlaneVNETResourceURI]; !ok {
+	if hasDistinctControlPlaneVNET {
 		// TODO: This is only necessary if the resource group of the masters is different from the RG of the node pool
 		// subnet. But when we generate the template we don't know to which RG it will be deployed to. To solve this we
 		// would have to add the necessary condition into the template. For the resources we can use the `condition` field
