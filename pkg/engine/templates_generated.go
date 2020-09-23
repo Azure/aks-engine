@@ -21026,6 +21026,7 @@ wait_for_apt_locks
 retrycmd 10 5 120 apt-get -y install realmd sssd sssd-tools samba-common samba samba-common python2.7 samba-libs packagekit
 wait_for_apt_locks
 echo "{{GetSearchDomainRealmPassword}}" | realm join -U {{GetSearchDomainRealmUser}}@$(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/) $(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/)
+#EOF
 `)
 
 func k8sCloudInitArtifactsSetupCustomSearchDomainsShBytes() ([]byte, error) {
