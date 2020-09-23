@@ -10,7 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -33,6 +33,7 @@ func createVMASRoleAssignment() SystemRoleAssignmentARM {
 	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{
 		RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
 		PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset'))), '2017-03-30', 'Full').identity.principalId]"),
+		PrincipalType:    authorization.ServicePrincipal,
 	}
 	return systemRoleAssignment
 }
@@ -57,6 +58,7 @@ func createAgentVMASSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleA
 	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{
 		RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 		PrincipalID:      to.StringPtr(fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachines/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset'))), '2017-03-30', 'Full').identity.principalId]", profile.Name)),
+		PrincipalType:    authorization.ServicePrincipal,
 	}
 
 	return systemRoleAssignment
@@ -77,6 +79,7 @@ func createAgentVMSSSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleA
 	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{
 		RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 		PrincipalID:      to.StringPtr(fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%[1]sVMNamePrefix')), '2017-03-30', 'Full').identity.principalId]", profile.Name)),
+		PrincipalType:    authorization.ServicePrincipal,
 	}
 
 	return systemRoleAssignment

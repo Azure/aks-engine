@@ -10,7 +10,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb"
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
-	sysauth "github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 
@@ -116,7 +115,7 @@ type StorageAccountARM struct {
 // SystemRoleAssignmentARM embeds the ARMResource type in authorization.SystemRoleAssignment(2018-01-01-preview).
 type SystemRoleAssignmentARM struct {
 	ARMResource
-	sysauth.RoleAssignment
+	authorization.RoleAssignment
 }
 
 // VirtualNetworkARM embeds the ARMResource type in network.VirtualNetwork.

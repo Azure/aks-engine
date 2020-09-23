@@ -9,7 +9,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -35,6 +35,7 @@ func TestCreateVmasRoleAssignment(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
 				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset'))), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalType:    authorization.ServicePrincipal,
 			},
 		},
 	}
@@ -70,6 +71,7 @@ func TestCreateAgentVmasSysRoleAssignment(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('fooprofileVMNamePrefix'), copyIndex(variables('fooprofileOffset'))), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalType:    authorization.ServicePrincipal,
 			},
 		},
 	}
@@ -102,6 +104,7 @@ func TestCreateAgentVmssSysRoleAssignment(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('fooprofileVMNamePrefix')), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalType:    authorization.ServicePrincipal,
 			},
 		},
 	}
