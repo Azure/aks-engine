@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
-$global:containerdPackageUrl = "https://marosset.blob.core.windows.net/pub/containerd/containerd-0.0.87-public.zip"
+$global:containerdPackageUrl = "https://github.com/containerd/containerd/releases/download/v1.4.1/containerd-1.4.1-windows-amd64.tar.gz"
 
 function Write-Log($Message) {
     $msg = $message | Timestamp
@@ -38,14 +38,30 @@ function Disable-WindowsUpdates {
 
 function Get-ContainerImages {
     param (
-        $containerRuntime
+        $containerRuntime,
+        $windowsServerVersion
     )
-    $imagesToPull = @(
-        "mcr.microsoft.com/windows/servercore:ltsc2019",
-        "mcr.microsoft.com/windows/nanoserver:1809",
-        "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
-        "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64",
-        "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64")
+
+    switch ($windowsServerVersion) {
+        '2019' {
+            $imagesToPull = @(
+                "mcr.microsoft.com/windows/servercore:ltsc2019",
+                "mcr.microsoft.com/windows/nanoserver:1809",
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
+                "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64",
+                "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64")
+        }
+        '2004' {
+            $imagesToPull = @(
+                "mcr.microsoft.com/windows/servercore:2004",
+                "mcr.microsoft.com/windows/nanoserver:2004",
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0")
+        }
+        default { 
+            $imagesToPull = @()
+        }
+    }
+
 
     if ($containerRuntime -eq 'containerd') {
         foreach ($image in $imagesToPull) {
@@ -138,13 +154,13 @@ function Install-ContainerD {
     Write-Log "Getting containerD binaries from $global:containerdPackageUrl"
 
     $installDir = "c:\program files\containerd"
-    $zipPath = [IO.Path]::Combine($installDir, "containerd.zip")
+    $tarPath = [IO.Path]::Combine($installDir, "containerd.tar.gz")
 
     Write-Log "Installing containerd to $installDir"
     New-Item -ItemType Directory $installDir -Force | Out-Null
-    Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $zipPath
-    Expand-Archive -Path $zipPath -DestinationPath $installDir
-    Remove-Item -Path $zipPath | Out-null
+    Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $tarPath
+    tar -xzf $tarPath --strip=1 -C $installDir
+    Remove-Item -Path $tarPath | Out-Null
 
     $newPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine) + ";$installDir"
     [Environment]::SetEnvironmentVariable("Path", $newPath, [EnvironmentVariableTarget]::Machine)
@@ -168,13 +184,12 @@ function Install-Docker {
     $defaultDockerVersion = "19.03.11"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
-    Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-null
+    Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
     $package = Find-Package -Name Docker -ProviderName DockerMsftProvider -RequiredVersion $defaultDockerVersion
     Write-Log "Installing Docker version $($package.Version)"
     $package | Install-Package -Force | Out-Null
     Start-Service docker
 }
-
 
 function Install-OpenSSH {
     Write-Log "Installing OpenSSH Server"
@@ -182,12 +197,29 @@ function Install-OpenSSH {
 }
 
 function Install-WindowsPatches {
-    # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
-    # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
+    param (
+        $windowsServerVersion
+    )
 
-    # KB4558998 contains August 11, 2020 cumulative updates for Windows Server 2019
-    # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4565349
-    $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2020/08/windows10.0-kb4565349-x64_919b9f31d4ccfa91183fbb9bab8c2975529e66b6.msu")
+    switch ($windowsServerVersion) {
+        '2019' {
+            # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
+            # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
+
+            # KB4558998 contains August 11, 2020 cumulative updates for Windows Server 2019
+            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4565349
+            $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2020/08/windows10.0-kb4565349-x64_919b9f31d4ccfa91183fbb9bab8c2975529e66b6.msu")
+        }
+        '2004' {
+            # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932
+            # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
+
+            $patchUrls = @()
+        }
+        default {
+            $patchUrls = @()
+        }
+    }
 
     foreach ($patchUrl in $patchUrls) {
         $pathOnly = $patchUrl.Split("?")[0]
@@ -200,14 +232,14 @@ function Install-WindowsPatches {
                 Write-Log "Downloading windows patch from $pathOnly to $fullPath"
                 Invoke-WebRequest -UseBasicParsing $patchUrl -OutFile $fullPath
                 Write-Log "Starting install of $fileName"
-                $proc = Start-Process -Passthru -FilePath wusa.exe -ArgumentList "$fullPath /quiet /norestart"
+                $proc = Start-Process -PassThru -FilePath wusa.exe -ArgumentList "$fullPath /quiet /norestart"
                 Wait-Process -InputObject $proc
                 switch ($proc.ExitCode) {
                     0 {
                         Write-Log "Finished install of $fileName"
                     }
                     3010 {
-                        WRite-Log "Finished install of $fileName. Reboot required"
+                        Write-Log "Finished install of $fileName. Reboot required"
                     }
                     default {
                         Write-Log "Error during install of $fileName. ExitCode: $($proc.ExitCode)"
@@ -277,13 +309,20 @@ if (-not ($validContainerRuntimes -contains $containerRuntime)) {
     exit 1
 }
 
+$windowsServerVersion = $env:WindowsServerVersion
+$validWindowsServerContainers = @('2019', '2004')
+if (-not ($validWindowsServerContainers -contains $windowsServerVersion)) {
+    Write-Host "Unsupported Windows Server version: $windowsServerVersion"
+    exit 1
+}
+
 switch ($env:ProvisioningPhase) {
     "1" {
         Write-Log "Performing actions for provisioning phase 1"
         Set-WinRmServiceDelayedStart
         Set-AllowedSecurityProtocols
         Disable-WindowsUpdates
-        Install-WindowsPatches
+        Install-WindowsPatches -WindowsServerVersion $windowsServerVersion
         Update-DefenderSignatures
         Install-OpenSSH
         Update-WindowsFeatures
@@ -296,7 +335,7 @@ switch ($env:ProvisioningPhase) {
         if ($containerRuntime -eq 'containerd') {
             Install-ContainerD
         }
-        Get-ContainerImages -containerRuntime $containerRuntime
+        Get-ContainerImages -containerRuntime $containerRuntime -WindowsServerVersion $windowsServerVersion
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
     }

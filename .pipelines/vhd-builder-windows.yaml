@@ -40,6 +40,7 @@ jobs:
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
       -e CONTAINER_RUNTIME=$(CONTAINER_RUNTIME) \
+      -e WINDOWS-SERVER-VERSION=2019 \
       ${DEIS_GO_DEV_IMAGE} make run-packer-windows
     displayName: Building windows VHD
 
@@ -49,7 +50,7 @@ jobs:
       -w /go/src/github.com/Azure/aks-engine \
       ${DEIS_GO_DEV_IMAGE} make all
     displayName: build aks-engine-test - make all
-    condition: eq(variables.COPY_VHD, 'False')
+    condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
 
   - script: |
       OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
@@ -68,7 +69,7 @@ jobs:
       -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
       ${DEIS_GO_DEV_IMAGE} make test-kubernetes
     displayName: run e2e tests
-    condition: eq(variables.COPY_VHD, 'False')
+    condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
 
   - task: PublishPipelineArtifact@1
     inputs:
@@ -90,7 +91,7 @@ jobs:
       -e VHD_NAME=${VHD_NAME} \
       ${DEIS_GO_DEV_IMAGE} make az-copy
     displayName: Copying resource to Classic Storage Account
-    condition: eq(variables.COPY_VHD, 'True')
+    condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
 
   - script: |
       OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
@@ -106,13 +107,13 @@ jobs:
       -e VHD_NAME=${VHD_NAME} \
       ${DEIS_GO_DEV_IMAGE} make windows-vhd-publishing-info
     displayName: Generating publishing info for Windows VHD
-    condition: eq(variables.COPY_VHD, 'True')
+    condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
 
   - task: PublishPipelineArtifact@1
     inputs:
       artifact: 'publishing-info'
       path: 'windows-vhd-publishing-info.json'
-    condition: eq(variables.COPY_VHD, 'True')
+    condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
 
   - script: |
       SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \

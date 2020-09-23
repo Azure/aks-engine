@@ -5,7 +5,7 @@ build-packer-ubuntu-gen2:
 	@packer build -var-file=vhd/packer/settings.json vhd/packer/vhd-image-builder-ubuntu-gen2.json
 
 build-packer-windows:
-	@packer build -var-file=vhd/packer/settings.json vhd/packer/windows-vhd-builder.json
+	@packer build -var-file=vhd/packer/settings.json -var-file=vhd/packer/windows-${WINDOWS-SERVER-VERSION}-vars.json vhd/packer/windows-vhd-builder.json
 
 init-packer:
 	@./vhd/packer/init-variables.sh
