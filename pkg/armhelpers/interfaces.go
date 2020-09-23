@@ -117,6 +117,9 @@ type AKSEngineClient interface {
 	// DeployTemplate can deploy a template into Azure ARM
 	DeployTemplate(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}) (resources.DeploymentExtended, error)
 
+	// DeployTemplateWithRetry can deploy a template into Azure ARM, retrying up to a timeout
+	DeployTemplateWithRetry(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}, sleep, timeout time.Duration) (resources.DeploymentExtended, error)
+
 	// EnsureResourceGroup ensures the specified resource group exists in the specified location
 	EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error)
 

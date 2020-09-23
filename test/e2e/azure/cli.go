@@ -295,6 +295,36 @@ func (a *Account) CreateDeployment(name string, e *engine.Engine) error {
 	return nil
 }
 
+// CreateDeploymentWithRetry will submit an ARM deployment, retrying if error up to a timeout
+func (a *Account) CreateDeploymentWithRetry(name string, e *engine.Engine, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentCreateDeploymentWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- a.CreateDeployment(name, e)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateDeploymentWithRetryError = result
+			if mostRecentCreateDeploymentWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("CreateDeploymentWithRetry timed out: %s\n", mostRecentCreateDeploymentWithRetryError)
+		}
+	}
+}
+
 // CreateVnet will create a vnet in a resource group
 func (a *Account) CreateVnet(vnet, addressPrefixes string) error {
 	var cmd *exec.Cmd

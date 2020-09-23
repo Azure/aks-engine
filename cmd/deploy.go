@@ -448,12 +448,14 @@ func (dc *deployCmd) run() error {
 
 	deploymentSuffix := dc.random.Int31()
 
-	if res, err := dc.client.DeployTemplate(
+	if res, err := dc.client.DeployTemplateWithRetry(
 		cx,
 		dc.resourceGroup,
 		fmt.Sprintf("%s-%d", dc.resourceGroup, deploymentSuffix),
 		templateJSON,
 		parametersJSON,
+		10*time.Second,
+		60*time.Minute,
 	); err != nil {
 		if res.Response.Response != nil && res.Body != nil {
 			defer res.Body.Close()
