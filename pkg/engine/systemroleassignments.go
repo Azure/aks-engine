@@ -123,7 +123,7 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 						},
 					*/
 				},
-				// Reference to the subnet of the worker VMs:
+				// Reference to the VNET of the worker VMs:
 				RoleAssignment: authorization.RoleAssignment{
 					Name: to.StringPtr(fmt.Sprintf("[concat(variables('%sVnet'), '/Microsoft.Authorization/', guid(uniqueString(%s)))]", agentPool.Name, masterVMReference)),
 					Type: to.StringPtr("Microsoft.Network/virtualNetworks/providers/roleAssignments"),
