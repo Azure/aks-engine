@@ -87,8 +87,14 @@ function Get-FilesToCacheOnVHD
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.2/windowszip/v1.18.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
+<<<<<<< HEAD
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.33/binaries/azure-vnet-cni-windows-amd64-v1.0.33.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.3/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.3.zip"
+=======
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.3/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.3.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.6/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.6.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.7/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.7.zip"
+>>>>>>> e1dad078d... chore: update azure cni to 1.1.7 (#3864)
         )
     }
 
