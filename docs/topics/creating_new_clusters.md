@@ -120,16 +120,6 @@ Or, system-assigned identity enabled:
 }
 ```
 
-You can also assign the required values via the command line statement to a "generic" cluster configuration, such as the `examples/kubernetes.json` API model published in the public `aks-engine` repo. For example:
-
-```sh
-$ $ bin/aks-engine generate --api-model ./examples/kubernetes.json      --output-directory ./cluster_artifacts     --set masterProfile.dnsPrefix=my-cluster,orchestratorProfile.kubernetesConfig.useManagedIdentity=true,linuxProfile.ssh.publicKeys[0].keyData=$(cat ~/.ssh/id_rsa.pub)
-INFO[0000] new API model file has been generated during merge: /var/folders/jq/t_y8l4556rv__mzvjhkd61n00000gp/T/mergedApiModel831700038
-WARN[0000] No "location" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only
-INFO[0000] Generating assets into ./cluster_artifacts...
-WARN[0000] containerd will be upgraded to version 1.3.7
-```
-
 ### Parameters
 
 |Parameter|Required|Description|
@@ -144,7 +134,17 @@ WARN[0000] containerd will be upgraded to version 1.3.7
 |--parameters-only|no|Only output parameters files.|
 |--no-pretty-print|no|Skip pretty printing the output.|
 
-As mentioned above, `aks-engine generate` expects all cluster definition data to be present in the API model JSON file. You may actually inject data into the API model at runtime by invoking the command and including that data in the `--set` argument interface. For example, this command will produce artifacts that can be used to deploy a fully functional Kubernetes cluster based on the AKS Engine defaults (the `examples/kubernetes.json` file will build a "default" single master, 2 node cluster) using your
+As mentioned above, `aks-engine generate` expects all cluster definition data to be present in the API model JSON file. You may actually inject data into the API model at runtime by invoking the command and including that data in the `--set` argument interface. For example, this command will produce artifacts that can be used to deploy a fully functional Kubernetes cluster based on the AKS Engine defaults (the `examples/kubernetes.json` file will build a "default" single master, 2 node cluster):
+
+```sh
+$ bin/aks-engine generate --api-model ./examples/kubernetes.json \
+  --output-directory ./cluster_artifacts \
+  --set masterProfile.dnsPrefix=my-cluster,orchestratorProfile.kubernetesConfig.useManagedIdentity=true,linuxProfile.ssh.publicKeys[0].keyData=$(cat ~/.ssh/id_rsa.pub)
+INFO[0000] new API model file has been generated during merge: /var/folders/jq/t_y8l4556rv__mzvjhkd61n00000gp/T/mergedApiModel831700038
+WARN[0000] No "location" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only
+INFO[0000] Generating assets into ./cluster_artifacts...
+WARN[0000] containerd will be upgraded to version 1.3.7
+```
 
 ## Frequently Asked Questions
 
