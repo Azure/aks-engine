@@ -5,6 +5,7 @@
 package azure
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -278,16 +279,27 @@ func (a *Account) CreateDeployment(name string, e *engine.Engine) error {
 		}
 	}()
 
-	cmd := exec.Command("az", "deployment", "group", "create",
+	azArgsStringSlice := []string{"deployment", "group", "create",
 		"--name", d.Name,
 		"--resource-group", a.ResourceGroup.Name,
 		"--template-file", e.Config.GeneratedTemplatePath,
-		"--parameters", e.Config.GeneratedParametersPath)
+		"--parameters", e.Config.GeneratedParametersPath}
+	cmd := exec.Command("az", azArgsStringSlice...)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("\nError from deployment for %s in resource group %s:%s\n", d.Name, a.ResourceGroup.Name, err)
 		log.Printf("Command Output: %s\n", out)
+		if bytes.Contains(out, []byte("PrincipalNotFound")) {
+			for err != nil {
+				cmd = exec.Command("az", azArgsStringSlice...)
+				util.PrintCommand(cmd)
+				out, err = cmd.CombinedOutput()
+				if err != nil {
+					log.Printf("Command Output: %s\n", out)
+				}
+			}
+		}
 		return err
 	}
 	quit <- true
