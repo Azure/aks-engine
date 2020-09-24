@@ -51,7 +51,84 @@ $ aks-engine generate --api-model ./my-cluster-definition.json  \
     --output-directory ./cluster_artifacts
 ```
 
-The above command assumes that the API model at the relative filepath `./my-cluster-definition.json` contains a minimally populated cluster definition, including service principal credentials, and a DNS prefix to identify the cluster with a name.
+The above command assumes that the API model at the relative filepath `./my-cluster-definition.json` contains a minimally populated cluster definition. At a minimum is needed:
+
+1. In order to grant the required service privileges to Kubernetes runtime processes, you need either:
+
+Service Principal credentials in order to grant Azure privileges to the relevent Kubernetes runtime processes:
+```json
+{
+...
+  "properties": {
+...
+    "servicePrincipalProfile": {
+      "clientId": "<service principal ID>",
+      "secret": "<service principal password>"
+    }
+...
+}
+```
+
+Or, system-assigned identity enabled:
+```json
+{
+...
+  "properties": {
+...
+    "orchestratorProfile": {
+      "kubernetesConfig": {
+        "useManagedIdentity": true
+        ...
+      }
+      ...
+    }
+...
+}
+```
+
+2. To uniquely identify the cluster, you need a cluster name:
+```json
+{
+...
+  "properties": {
+...
+    "masterProfile": {
+      "dnsPrefix": "<name of cluster>"
+      ...
+    }
+...
+}
+```
+
+3. To enable interactive login to node VMs via ssh key exchange, you need to provide a public key:
+```json
+{
+...
+  "properties": {
+...
+    "linuxProfile": {
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": "<public key data>"
+          }
+        ]
+      }
+      ...
+    }
+...
+}
+```
+
+You can also assign the required values via the command line statement to a "generic" cluster configuration, such as the `examples/kubernetes.json` API model published in the public `aks-engine` repo. For example:
+
+```sh
+$ $ bin/aks-engine generate --api-model ./examples/kubernetes.json      --output-directory ./cluster_artifacts     --set masterProfile.dnsPrefix=my-cluster,orchestratorProfile.kubernetesConfig.useManagedIdentity=true,linuxProfile.ssh.publicKeys[0].keyData=$(cat ~/.ssh/id_rsa.pub)
+INFO[0000] new API model file has been generated during merge: /var/folders/jq/t_y8l4556rv__mzvjhkd61n00000gp/T/mergedApiModel831700038
+WARN[0000] No "location" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only
+INFO[0000] Generating assets into ./cluster_artifacts...
+WARN[0000] containerd will be upgraded to version 1.3.7
+```
 
 ### Parameters
 
