@@ -260,3 +260,58 @@ Detailed documentation on `aks-engine generate` can be found [here](../topics/cr
 ### `aks-engine rotate-certs`
 
 The `aks-engine rotate-certs` command is currently experimental and not recommended for use on production clusters.
+
+### `aks-engine get-logs`
+
+The `aks-engine get-logs` can conveniently collect Linux host VM logs from your Linux node VMs for local troubleshooting. *This command does not support Windows nodes*. The command assumes that your node VMs have an sshd listener on port 22, that all nodes share a common ssh keypair for interactive login, and that a public endpoint exists on one of the control plane VMs for accommodating SSH agent key forwarding.
+
+```sh
+$ aks-engine get-logs --help
+Usage:
+  aks-engine get-logs [flags]
+
+Flags:
+  -m, --api-model string               path to the generated apimodel.json file (required)
+      --control-plane-only             get logs from control plane VMs only
+  -h, --help                           help for get-logs
+      --linux-script string            path to the log collection script to execute on the cluster's Linux nodes (required)
+      --linux-ssh-private-key string   path to a valid private SSH key to access the cluster's Linux nodes (required)
+  -l, --location string                Azure location where the cluster is deployed (required)
+  -o, --output-directory string        collected logs destination directory, derived from --api-model if missing
+      --ssh-host string                FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)
+
+Global Flags:
+      --debug   enable verbose debug logs
+```
+
+The `aks-engine` codebase contains a working log retrieval script in `scripts/collect-logs.sh`, so you can use it to quickly gather logs from your node VMs:
+
+```sh
+$ git clone https://github.com/Azure/aks-engine.git && cd aks-engine
+Cloning into 'aks-engine'...
+remote: Enumerating objects: 44, done.
+remote: Counting objects: 100% (44/44), done.
+remote: Compressing objects: 100% (42/42), done.
+remote: Total 92107 (delta 13), reused 15 (delta 1), pack-reused 92063
+Receiving objects: 100% (92107/92107), 92.86 MiB | 7.27 MiB/s, done.
+Resolving deltas: 100% (64711/64711), done.
+$ EXPORT LATEST_AKS_ENGINE_RELEASE=v0.56.0
+$ git checkout $LATEST_AKS_ENGINE_RELEASE
+Note: checking out 'v0.56.0'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at 666073d49 chore: updating Windows VHD with new cached artifacts (#3843)
+$ bin/aks-engine get-logs --api-model _output/$CLUSTER_NAME/apimodel.json --location $CLUSTER_NAME --linux-ssh-private-key _output/$CLUSTER_NAME-ssh --linux-script ./scripts/collect-logs.sh --ssh-host $CLUSTER_NAME.$LOCATION.cloudapp.azure.com
+...
+INFO[0062] Logs downloaded to _output/<name of cluster>/_logs
+```
+
+The following example assumes that the `$CLUSTER_NAME` environment variable is assigned to the value of the cluster name (`properties.masterProfile.dnsPrefix` in the cluster API model), and that `$LOCATION` is assigned to the location string of the resource group that your cluster was created into.
