@@ -122,27 +122,8 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]")
 	}
 
-	var hasDistinctControlPlaneVNET bool
-	if cs.Properties.MasterProfile.IsCustomVNET() {
-		var controlPlaneVNETResourceURI string
-		controlPlaneSubnetElements := strings.Split(cs.Properties.MasterProfile.VnetSubnetID, "/")
-		if len(controlPlaneSubnetElements) >= 9 {
-			controlPlaneVNETResourceURI = strings.Join(controlPlaneSubnetElements[:9], "/")
-		}
-		if controlPlaneVNETResourceURI != "" {
-			for _, agentPool := range cs.Properties.AgentPoolProfiles {
-				subnetElements := strings.Split(agentPool.VnetSubnetID, "/")
-				if len(subnetElements) < 9 {
-					continue
-				}
-				if strings.Join(subnetElements[:9], "/") != controlPlaneVNETResourceURI {
-					hasDistinctControlPlaneVNET = true
-				}
-			}
-		}
-	}
 	// If the control plane is in a discrete VNET
-	if hasDistinctControlPlaneVNET {
+	if hasDistinctControlPlaneVNET(cs) {
 		// TODO: This is only necessary if the resource group of the masters is different from the RG of the node pool
 		// subnet. But when we generate the template we don't know to which RG it will be deployed to. To solve this we
 		// would have to add the necessary condition into the template. For the resources we can use the `condition` field
@@ -230,4 +211,34 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	masterResources = append(masterResources, masterVmss)
 
 	return masterResources
+}
+
+// hasDistinctControlPlaneVNET returns whether or not the VNET config of the control plane is distinct from any one node pool
+// If the VnetSubnetID string is malformed in either the MasterProfile or any AgentPoolProfile, we return false
+func hasDistinctControlPlaneVNET(cs *api.ContainerService) bool {
+	var controlPlaneVNETResourceURI string
+	if cs.Properties.MasterProfile.VnetSubnetID != "" {
+		controlPlaneSubnetElements := strings.Split(cs.Properties.MasterProfile.VnetSubnetID, "/")
+		if len(controlPlaneSubnetElements) >= 9 {
+			controlPlaneVNETResourceURI = strings.Join(controlPlaneSubnetElements[:9], "/")
+		} else {
+			return false
+		}
+	}
+	for _, agentPool := range cs.Properties.AgentPoolProfiles {
+		if agentPool.VnetSubnetID != "" {
+			nodePoolSubnetElements := strings.Split(agentPool.VnetSubnetID, "/")
+			if len(nodePoolSubnetElements) < 9 {
+				return false
+			}
+			if strings.Join(nodePoolSubnetElements[:9], "/") != controlPlaneVNETResourceURI {
+				return true
+			}
+		} else {
+			if cs.Properties.MasterProfile.VnetSubnetID != "" {
+				return true
+			}
+		}
+	}
+	return false
 }

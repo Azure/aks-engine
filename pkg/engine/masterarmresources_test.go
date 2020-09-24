@@ -853,3 +853,167 @@ func TestCreateKubernetesMasterResourcesVMSS(t *testing.T) {
 		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
 	}
 }
+
+func TestHasDistinctControlPlaneVNET(t *testing.T) {
+	testcases := []struct {
+		name     string
+		cs       *api.ContainerService
+		expected bool
+	}{
+		{
+			name: "No VNET specified",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					MasterProfile: &api.MasterProfile{},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name: "agentpool1",
+						},
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "Control Plane has VNET",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					MasterProfile: &api.MasterProfile{
+						VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name: "agentpool1",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "Node pool has VNET",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					MasterProfile: &api.MasterProfile{},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:         "agentpool1",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "VNET is shared",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					MasterProfile: &api.MasterProfile{
+						VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:         "agentpool1",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool2",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+						},
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "Heterogeneous VNETs",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					MasterProfile: &api.MasterProfile{
+						VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME1/subnets/SUBNET_NAME",
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:         "agentpool1",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool2",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME3/subnets/SUBNET_NAME",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "Same node pool VNETs, different control plane VNET",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					MasterProfile: &api.MasterProfile{
+						VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME1/subnets/SUBNET_NAME",
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:         "agentpool1",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool2",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool3",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool4",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "All have the same VNET except one node pool",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					MasterProfile: &api.MasterProfile{
+						VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:         "agentpool1",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool2",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool3",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME1/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool4",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+						{
+							Name:         "agentpool5",
+							VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+	}
+	for _, testcase := range testcases {
+		actual := hasDistinctControlPlaneVNET(testcase.cs)
+		if testcase.expected != actual {
+			t.Errorf("Test \"%s\": expected hasDistinctControlPlaneVNET() to return %t, but got %t . ", testcase.name, testcase.expected, actual)
+		}
+	}
+}
