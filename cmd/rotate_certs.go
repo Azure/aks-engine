@@ -426,7 +426,7 @@ func (rcc *rotateCertsCmd) rotateApiserver() error {
 
 	for _, host := range rcc.agentNodes {
 		log.Debugf("Ranging over node: %s\n", host.Name)
-		for _, cmd := range []string{caCertificateCmd, apiServerCertificateCmd} {
+		for _, cmd := range []string{caCertificateCmd} {
 			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
 			if err != nil {
 				log.Printf("Command %s output: %s\n", cmd, out)

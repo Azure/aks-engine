@@ -18471,16 +18471,18 @@ configureKubeletServerCert() {
 configureK8s() {
   local client_key="/etc/kubernetes/certs/client.key" apiserver_crt="/etc/kubernetes/certs/apiserver.crt" azure_json="/etc/kubernetes/azure.json"
   touch "${client_key}"
-  touch "${apiserver_crt}"
   chmod 0600 "${client_key}"
-  chmod 0644 "${apiserver_crt}"
-  chown root:root "${client_key}" "${apiserver_crt}"
-
+  chown root:root "${client_key}"
+  if [[ -n ${MASTER_NODE} ]]; then
+    touch "${apiserver_crt}"
+    chmod 0644 "${apiserver_crt}"
+    chown root:root "${apiserver_crt}"
+  fi
   set +x
   echo "${KUBELET_PRIVATE_KEY}" | base64 --decode >"${client_key}"
-  echo "${APISERVER_PUBLIC_KEY}" | base64 --decode >"${apiserver_crt}"
   configureKubeletServerCert
   if [[ -n ${MASTER_NODE} ]]; then
+    echo "${APISERVER_PUBLIC_KEY}" | base64 --decode >"${apiserver_crt}"
     if [[ ${ENABLE_AGGREGATED_APIS} == True ]]; then
       generateAggregatedAPICerts
     fi
