@@ -361,10 +361,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
-	if config.MSIUserAssignedID != "" {
+	/*if config.MSIUserAssignedID != "" {
 		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
-	}
+	}*/
 
 	return &Engine{
 		Config:            config,
