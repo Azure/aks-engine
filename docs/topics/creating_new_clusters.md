@@ -51,7 +51,7 @@ $ aks-engine generate --api-model ./my-cluster-definition.json  \
     --output-directory ./cluster_artifacts
 ```
 
-The above command assumes that the API model at the relative filepath `./my-cluster-definition.json` contains a fully populated cluster definition, including service principal credentials, and a DNS prefix to identify the cluster with a name.
+The above command assumes that the API model at the relative filepath `./my-cluster-definition.json` contains a minimally populated cluster definition, including service principal credentials, and a DNS prefix to identify the cluster with a name.
 
 ### Parameters
 
@@ -70,6 +70,19 @@ The above command assumes that the API model at the relative filepath `./my-clus
 As mentioned above, `aks-engine generate` expects all cluster definition data to be present in the API model JSON file. You may actually inject data into the API model at runtime by invoking the command and including that data in the `--set` argument interface. For example, this command will produce artifacts that can be used to deploy a fully functional Kubernetes cluster based on the AKS Engine defaults (the `examples/kubernetes.json` file will build a "default" single master, 2 node cluster) using your
 
 ## Frequently Asked Questions
+
+### Why would I run `aks-engine generate` vs `aks-engine deploy`?
+
+Depending on any customization you want to do either (1) the AKS Engine-generated ARM template, or (2) the particular way that the ARM template is deployed to Azure, you may want to use `aks-engine generate` to produce an ARM template specification, and then implement your own `az deployment group create`-equivalent workflow to actually bootstrap the cluster. Especially if you plan to bootstrap multiple clusters in multiple regions from a common cluster configuration, it may make sense to re-use a single ARM template across a set of ARM deployments. `aks-engine deploy` is only able to build one cluster at a time, so especially if you're bootstrapping multiple clusters in parallel using a common config, a workflow like this is probably optimal:
+
+1. `aks-engine generate --api-model ./common-cluster-definition.json --output-directory /path/to/re-usable-arm-template-directory`
+2. For every desired cluster+location, execute in parallel:
+  1. `az group create -n $RESOURCE_GROUP -l $LOCATION`; then
+  2. `az deployment group create --name $RESOURCE_GROUP --resource-group $RESOURCE_GROUP --template-file /path/to/re-usable-arm-template-directory/azuredeploy.json --parameters /path/to/re-usable-arm-template-directory/azuredeploy.parameters.json`
+
+In the above example we use name of the resource group as the name of the ARM deployment, suggesting the guidance that only one cluster be built in per resource group.
+
+In summary, when creating single clusters, and especially when maintaining Kubernetes environments distinctly (i.e., not maintaining a fleet of clusters running a common config), relying upon `aks-engine deploy` as a full end-to-end convenience to bootstrap your clusters is appropriate. For more sophisticated cluster configuration re-use scenarios, and/or more sophisticated ARM deployment reconciliation (i.e., retry logic for certain failures), `aks-engine generate` + `az deployment group create` is the more appropriate choice.
 
 ### Can I re-run `aks-engine deploy` on an existing cluster to update the cluster configuration?
 
