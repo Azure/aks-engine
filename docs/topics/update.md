@@ -8,7 +8,7 @@ This guide assumes you already have a running cluster deployed using the `aks-en
 
 ## Update
 
-The `aks-engine update` command can update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. When used in combination with a newer version of the `aks-engine` CLI compared to the version used to build the cluster originally, node pools can be regularly refreshed so that as they scale over time, new nodes always run the latest, validated bits.
+The `aks-engine update` command can update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. When used in combination with a newer version of the `aks-engine` CLI compared to the version used to build the cluster originally, node pools can be regularly refreshed so that as they scale over time, new nodes always run the latest, validated bits, using your latest, validated node configuration.
 
 This command can *only* be used with VMSS-backed node pools (the default AKS Engine node pool type is VMSS).
 

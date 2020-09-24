@@ -71,12 +71,12 @@ Some important considerations:
 
 Similar to `aks-engine update`, you may use the `addpool` command to try out a new node configuration in your cluster without affecting existing nodes or production workloads (although if your new configuration is risky in any way you will want to taint those nodes so that no production workloads are scheduled, until you can validate the new configuration). The primary differences are:
 
-- Use `addpool` when the configuration delta compared to an existing node pool is significant enough where it makes sense to organize discretely. Especially if the new pool will only serve a particular type of traffic (e.g., GPU or confidential compute), a dedicated pool should be used for easy, discrete scaling in response to the specific load requirements of the specific workloads it will run.
-- Use `addpool` when you want to run operational tests immediately, and especially if you want know the specific number of net new nodes to add. The primary operational difference between `addpool` and `update` is that `addpool` actually adds new operational capacity to your cluster immediately, whereas `update` merely changes the VMSS model, so that *the next* scale out operation renders a node with the new configuration.
+- Use `addpool` when the configuration delta compared to an existing node pool is significant enough where it makes sense to organize that new configuration discretely in its own pool. Especially if the new pool will only serve a particular type of traffic (e.g., GPU or confidential compute), a dedicated pool should be used for easy, discrete scaling in response to the specific load requirements of the specific workloads it will run.
+- Use `addpool` when you want to run operational tests immediately, and also especially if you know the specific number of net new nodes to add, and you need them immediately. The primary operational difference between `addpool` and `update` is that `addpool` actually adds new operational capacity to your cluster immediately, whereas `update` merely changes the VMSS model, so that *the next* scale out operation renders a node with the new configuration.
 
 ### Why would I use addpool instead of upgrade to install a newer version of Kubernetes on my cluster?
 
-If you're running a very large Kubernetes cluster, the one-node-at-a-time operation of `aks-engine upgrade` will take many hours, even days, depending on the size of the cluster. Each one of those node deletions + node additions is subject to environmental failures, and so a deterministic upgrade can indeed take many days. Depending on your tolerance for temporary additional quota, you can upgrade your nodes more quickly, one pool at a time, and use your own validation criteria to inform progression through the entire node pool upgrade operation. Let's demonstrate how that might work using a cluster with 3 node pools:
+If you're running a very large Kubernetes cluster, the one-node-at-a-time operation of `aks-engine upgrade` will take many hours, even days, depending on the size of the cluster. Each one of those node deletions + node additions is subject to environmental failures, and so a deterministic upgrade can indeed take many days. Depending on your tolerance for temporary additional quota, you can upgrade your nodes more quickly, one pool at a time, and use your own validation criteria to inform the progression velocity through an entire cluster upgrade workflow. Let's demonstrate how that might work using a cluster with 3 node pools:
 
 ```sh
 $ kubectl get nodes -o wide
@@ -102,7 +102,9 @@ k8s-pool3-26196714-vmss000009   Ready    agent    3m7s    v1.18.8   10.240.1.150
 
 Above we have a `pool1` with 3 nodes, a `pool2` with 3 nodes, and a `pool3` with 10 nodes. Rather than run a single, continuous upgrade operation across all nodes in the cluster, let's add pools, then validate the new version, and then scale those new pools up so the original nodes can be cordoned, drained, and deleted.
 
-Here we use the command line `jq` tool to create three new JSON files that we'll use to initiate 3 new `aks-engine addpool` operations, derived from the original `agentPoolProfile` specifications in the API model generated during cluster deployment:
+Before we do that, though, let's upgrade the control plane first! [You should always upgrade the control plane before your nodes](upgrade.md#what-should-i-upgrade-first-my-control-plane-nodes-or-my-worker-nodes). See the full upgrade docs [here](upgrade.md).
+
+After our control plane has been updated to v1.19.1, we can proceed with a rolling upgrade of our nodes by gradually adding and validating new node pool. We'll use the command line `jq` tool to create three new JSON files that we'll use to initiate 3 new `aks-engine addpool` operations, derived from the original `agentPoolProfile` specifications in the API model generated during cluster deployment:
 
 ```sh
 $ jq -r '.properties.agentPoolProfiles[0] | .name = "newpool1"' < _output/kubernetes-westus2-1838/apimodel.json > newpool1.json

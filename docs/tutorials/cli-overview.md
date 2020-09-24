@@ -121,7 +121,7 @@ Detailed documentation on `aks-engine scale` can be found [here](../topics/scale
 
 ### `aks-engine update`
 
-The `aks-engine update` command will update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. The updated node configuration will not take affect on any existing nodes, but will be applied to all future, new nodes created by VMSS scale out operations. Use this command to update the node configuration (OS configuration, VM SKU, Kubernetes kubelet configuration) of an existing node pool.
+The `aks-engine update` command will update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. The updated node configuration will not take affect on any existing nodes, but will be applied to all future, new nodes created by VMSS scale out operations. Use this command to update the node configuration (OS configuration, VM SKU, Kubernetes kubelet configuration) of an existing VMSS node pool.
 
 ```sh
 $ aks-engine update --help
