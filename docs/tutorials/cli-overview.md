@@ -230,7 +230,7 @@ AKS Engine also provides a command to generate a reusable ARM template only, wit
 
 ### `aks-engine generate`
 
-The `aks-engine generate` command is similar to `aks-engine deploy`: it uses an API model (cluster definition) file as input to define the desired cluster configuration and shape of a new Kubernetes cluster. Unlike `deploy`, `aks-engine generate` does not actually submit any operational requests to Azure, but is instead used to generate a reusable ARM template which may be deployed at a later time. Use this command as a part of a workflow that creates one or more Kubernetes clusters via an ARM group deployment that takes an ARM template as input (e.g., `az group deployment create` using the standard `az` Azure CLI).
+The `aks-engine generate` command is similar to `aks-engine deploy`: it uses an API model (cluster definition) file as input to define the desired cluster configuration and shape of a new Kubernetes cluster. Unlike `deploy`, `aks-engine generate` does not actually submit any operational requests to Azure, but is instead used to generate a reusable ARM template which may be deployed at a later time. Use this command as a part of a workflow that creates one or more Kubernetes clusters via an ARM group deployment that takes an ARM template as input (e.g., `az deployment group create` using the standard `az` Azure CLI).
 
 ```sh
 $ aks-engine generate --help
