@@ -20,7 +20,7 @@ Available Commands:
   get-logs      Collect logs and current cluster nodes configuration.
   get-versions  Display info about supported Kubernetes versions
   help          Help about any command
-  rotate-certs  Rotate certificates on an existing AKS Engine-created Kubernetes cluster
+  rotate-certs  (experimental) Rotate certificates on an existing AKS Engine-created Kubernetes cluster
   scale         Scale an existing AKS Engine-created Kubernetes cluster
   update        Update an existing AKS Engine-created VMSS node pool
   upgrade       Upgrade an existing AKS Engine-created Kubernetes cluster
@@ -256,3 +256,7 @@ Global Flags:
 ```
 
 Detailed documentation on `aks-engine generate` can be found [here](../topics/creating_new_clusters.md#generate).
+
+### `aks-engine rotate-certs`
+
+The `aks-engine rotate-certs` command is currently experimental and not recommended for use on production clusters.
