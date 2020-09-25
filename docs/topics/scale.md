@@ -234,4 +234,4 @@ k8s-agentpool1-10367588-vmss00000b   Ready    agent    68s   v1.18.8   10.240.0.
 k8s-master-10367588-0                Ready    master   55m   v1.18.3   10.255.255.5   <none>        Ubuntu 18.04.4 LTS   5.3.0-1022-azure   docker://3.0.12+azure
 ```
 
-In summary, by updating your API model to require the latest Kubernetes version, we produce an ARM template deployment that is able to be executed successully without traversing outside the VNET. As before, we've lost strict homogeneity, but because Kubernetes guarantees functional compatibility within a minor release channel (no breaking changes with patch releases), we now have an arguably more operationally stable cluster running the latest validated bits.
+In summary, by updating your API model to require the latest Kubernetes version, we produce an ARM template deployment that is able to be executed successfully without traversing outside the VNET. As before, we've lost strict homogeneity, but because Kubernetes guarantees functional compatibility within a minor release channel (no breaking changes with patch releases), we now have an operationally stable cluster running the latest validated bits.
