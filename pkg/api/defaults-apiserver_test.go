@@ -548,10 +548,7 @@ func TestAPIServerWebhookAuth(t *testing.T) {
 
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--v"] != "9" {
-		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
-			"1.15.12", a["--v"])
-	}
+
 	if a["--authentication-token-webhook-config-file"] != "/etc/kubernetes/guard/guard-authn-webhook.yaml" {
 		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
 			"1.15.12", a["--authentication-token-webhook-config-file"])
@@ -564,11 +561,15 @@ func TestAPIServerWebhookAuth(t *testing.T) {
 		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
 			"1.15.12", a["--authorization-mode"])
 	}
+	if a["--authorization-webhook-cache-authorized-ttl"] != "5m0s" {
+		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
+			"1.15.12", a["--authorization-mode"])
+	}
 	if a["--authorization-mode"] != "Node,Webhook,RBAC" {
 		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
 			"1.15.12", a["--authorization-mode"])
 	}
-	if a["--runtime-config"] != "authentication.k8s.io/v1beta1=true,authorization.k8s.io/v1beta1=true" {
+	if a["--runtime-config"] != "authentication.k8s.io/v1beta1=true,authorization.k8s.io/v1beta1=true,authorization-webhook-version=v1beta1" {
 		t.Fatalf("got unexpected webhook settings in API server config value for k8s v%s: %s",
 			"1.15.12", a["--runtime-config"])
 	}

@@ -164,12 +164,15 @@ func (cs *ContainerService) setAPIServerConfig() {
 
 	//Set apiserver properties for webhook authentication where guard addon is active
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.GuardAddonName) {
-		o.KubernetesConfig.APIServerConfig["--v"] = "9"
 		o.KubernetesConfig.APIServerConfig["--authentication-token-webhook-config-file"] = "/etc/kubernetes/guard/guard-authn-webhook.yaml"
 		o.KubernetesConfig.APIServerConfig["--authorization-webhook-config-file"] = "/etc/kubernetes/guard/guard-authz-webhook.yaml"
 		o.KubernetesConfig.APIServerConfig["--authentication-token-webhook-cache-ttl"] = "5m0s"
+		o.KubernetesConfig.APIServerConfig["--authorization-webhook-cache-authorized-ttl"] = "5m0s"
 		o.KubernetesConfig.APIServerConfig["--authorization-mode"] = "Node,Webhook,RBAC"
-		o.KubernetesConfig.APIServerConfig["--runtime-config"] = "authentication.k8s.io/v1beta1=true,authorization.k8s.io/v1beta1=true"
+		o.KubernetesConfig.APIServerConfig["--runtime-config"] = "authentication.k8s.io/v1beta1=true,authorization.k8s.io/v1beta1=true,authorization-webhook-version=v1beta1"
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "v1.16") {
+			o.KubernetesConfig.APIServerConfig["--runtime-config"] = "authentication.k8s.io/v1beta1=true,authorization.k8s.io/v1beta1=true"
+		}
 	}
 }
 

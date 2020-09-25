@@ -820,10 +820,6 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
-		"GetGuardProperty": func(property string) string {
-			guard := cs.Properties.OrchestratorProfile.KubernetesConfig.GetAddonByName(common.GuardAddonName)
-			return guard.Config[property]
-		},
 	}
 }
 
