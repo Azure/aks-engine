@@ -13,7 +13,11 @@ AKS Engine provides convenient tooling to quickly bootstrap Kubernetes clusters 
 
 ## Getting started
 
-Depending on how new you are to AKS Engine, you can try [a tutorial][tutorials], or just dive straight into the [documentation][docs].
+- Read the [CLI Overview](docs/tutorials/cli-overview.md) for a list of features provided by the `aks-engine` command line tool.
+
+- The [Quickstart Guide](docs/tutorials/quickstart.md) describes how to download the latest release of `aks-engine` for your environment, and demonstrates how to use `aks-engine` to create a Kubernetes cluster on Azure that you will manage and customize.
+
+- The [complete body of documentation can be found here][docs].
 
 Please see the [FAQ][] for answers about AKS Engine and its progenitor ACS-Engine.
 

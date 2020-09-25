@@ -54,7 +54,7 @@ For `VERSION` environment variable, we recommend that you provide a value which 
 }
 ```
 
-* Run `aks-engine deploy` [as normal](../tutorials/deploy.md).
+* Run `aks-engine deploy` [as normal](../tutorials/quickstart.md#deploy).
 
 ## Kubernetes 1.17+
 

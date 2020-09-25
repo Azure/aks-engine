@@ -424,6 +424,9 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	m := a.MasterProfile
 
+	if m.Count == 1 {
+		log.Warnf("Running only 1 control plane VM not recommended for production clusters, use 3 or 5 for control plane redundancy")
+	}
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")

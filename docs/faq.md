@@ -8,6 +8,10 @@ Azure Kubernetes Service ([AKS][]) is a Microsoft Azure service that supports fu
 
 AKS clusters can be created in the Azure portal or with `az aks create` in the [Azure command-line tool][]. AKS Engine clusters can be created with `aks-engine deploy` (`aks-engine` is the AKS Engine command-line tool), or by generating ARM templates with `aks-engine generate` and deploying them as a separate step using the `az` command-line tool (e.g., `az group deployement create`).
 
+### Can I Build an AKS Cluster with `aks-engine`?
+
+No, the `aks-engine` command line tool will not create an AKS cluster. To learn about AKS, you can [read the official docs](https://docs.microsoft.com/en-us/azure/aks/).
+
 ### What's the Difference Between `acs-engine` and `aks-engine`?
 
 AKS Engine is the next version of the ACS-Engine project. AKS Engine supports current and future versions of [Kubernetes][], while ACS-Engine also supported the Docker Swarm and Mesos DC/OS container orchestrators.
@@ -19,10 +23,6 @@ Yes.
 ### Is ACS-Engine Still Active?
 
 No further development or releases in ACS-Engine are planned. AKS Engine is a backward-compatible continuation of ACS-Engine, so all fixes and new features will target AKS Engine.
-
-### Can I Build an AKS Cluster with `aks-engine`?
-
-No, using the Azure Kubernetes Service itself is the way to create a supported, managed AKS cluster. AKS Engine shares some code with AKS, but does not create managed clusters.
 
 ### Should I use the latest `aks-engine` release if I was previously using `acs-engine`?
 

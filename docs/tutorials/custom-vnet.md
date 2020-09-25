@@ -144,7 +144,7 @@ Once you are ready with the cluster definition file, you can either use AKS engi
 
 ### Deploy using AKS Engine
 
- Follow the [instructions on how to deploy](deploy.md#deploy) using the cluster definition (API model) file you prepared.
+ Follow the [instructions on how to deploy](quickstart.md#deploy) using the cluster definition (API model) file you prepared.
 
 ### Generate the cluster Azure Resource Manager template
 

@@ -71,7 +71,7 @@ func newAddPoolCmd() *cobra.Command {
 	f.StringVarP(&apc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&apc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
 	f.StringVarP(&apc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
-	f.StringVarP(&apc.nodePoolPath, "node-pool", "p", "", "path to the generated nodepool.json file")
+	f.StringVarP(&apc.nodePoolPath, "node-pool", "p", "", "path to a JSON file that defines the new node pool spec")
 
 	addAuthFlags(&apc.authArgs, f)
 
