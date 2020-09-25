@@ -123,7 +123,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 				CreateOption: compute.Empty,
 			},
 			DiskSizeGB:        to.Int32Ptr(int32(etcdSizeGB)),
-			DiskIOPSReadWrite: to.Int64Ptr(76800),
+			DiskIOPSReadWrite: to.Int64Ptr(160000),
 			DiskMBpsReadWrite: to.Int64Ptr(2000),
 		},
 	}

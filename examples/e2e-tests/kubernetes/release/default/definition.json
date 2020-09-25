@@ -6,6 +6,7 @@
         "enableEncryptionWithExternalKms": true,
         "useManagedIdentity": true,
         "clusterSubnet": "10.239.0.0/16",
+        "etcdDiskSizeGB": "1024",
         "addons": [
           {
             "name": "kubernetes-dashboard",
@@ -51,12 +52,13 @@
     "masterProfile": {
       "count": 3,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v3",
+      "vmSize": "Standard_D2s_v3",
       "OSDiskSizeGB": 200,
       "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
       "firstConsecutiveStaticIP": "10.239.255.239",
       "vnetCidr": "10.239.0.0/16",
-      "availabilityZones": ["1", "2"]
+      "availabilityZones": ["1", "2"],
+      "ultraSSDEnabled": true
     },
     "agentPoolProfiles": [
       {
@@ -71,7 +73,8 @@
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "osDiskCachingType": "ReadOnly",
-        "dataDiskCachingType": "ReadWrite"
+        "dataDiskCachingType": "ReadWrite",
+        "ssdType": "Standard"
       },
       {
         "name": "poolwin",
@@ -85,10 +88,13 @@
       {
         "name": "pool1604vhd",
         "count": 1,
-        "vmSize": "Standard_D2_v3",
+        "vmSize": "Standard_D4s_v3",
         "distro": "aks-ubuntu-16.04",
         "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+        "availabilityZones": ["1", "2"],
+        "ssdType": "Standard",
+        "ultraSSDEnabled": true
       },
       {
         "name": "pool1604",
