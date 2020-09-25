@@ -687,6 +687,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	osDisk := compute.VirtualMachineScaleSetOSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
 		Caching:      compute.CachingTypes(profile.OSDiskCachingType),
+		ManagedDisk:  &compute.VirtualMachineScaleSetManagedDiskParameters{},
+	}
+
+	switch profile.SSDType {
+	case "Premium":
+		osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesPremiumLRS
+	case "Standard":
+		osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesStandardSSDLRS
 	}
 
 	if profile.OSDiskSizeGB > 0 {
@@ -700,9 +708,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	if profile.DiskEncryptionSetID != "" {
-		osDisk.ManagedDisk = &compute.VirtualMachineScaleSetManagedDiskParameters{
-			DiskEncryptionSet: &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)},
-		}
+		osDisk.ManagedDisk.DiskEncryptionSet = &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)}
 	}
 
 	if to.Bool(profile.UltraSSDEnabled) {

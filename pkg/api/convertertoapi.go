@@ -650,6 +650,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.OSDiskCachingType = vlabs.OSDiskCachingType
 	api.DataDiskCachingType = vlabs.DataDiskCachingType
 	api.VMSSName = vlabs.VMSSName
+	api.SSDType = vlabs.SSDType
 }
 
 func convertVLabsKeyVaultSecrets(vlabs *vlabs.KeyVaultSecrets, api *KeyVaultSecrets) {

@@ -6,7 +6,6 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -162,13 +161,15 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 
 	storageProfile := &compute.StorageProfile{}
 	imageRef := cs.Properties.MasterProfile.ImageRef
-	etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
+
 	if !cs.Properties.MasterProfile.HasCosmosEtcd() {
 		dataDisk := compute.DataDisk{
-			CreateOption: compute.DiskCreateOptionTypesEmpty,
-			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
+			CreateOption: compute.DiskCreateOptionTypesAttach,
 			Lun:          to.Int32Ptr(0),
 			Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
+			ManagedDisk: &compute.ManagedDiskParameters{
+				ID: to.StringPtr("[resourceId('Microsoft.Compute/disks', concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk'))]"),
+			},
 		}
 		if cs.Properties.MasterProfile.IsStorageAccount() {
 			dataDisk.Vhd = &compute.VirtualHardDisk{
