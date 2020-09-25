@@ -264,7 +264,8 @@ The `aks-engine rotate-certs` command is currently experimental and not recommen
 
 ### `aks-engine get-logs`
 
-The `aks-engine get-logs` can conveniently collect Linux host VM logs from your Linux node VMs for local troubleshooting. *This command does not support Windows nodes*. The command assumes that your node VMs have an sshd listener on port 22, that all nodes share a common ssh keypair for interactive login, and that a public endpoint exists on one of the control plane VMs for accommodating SSH agent key forwarding.
+The `aks-engine get-logs` can conveniently collect host VM logs from your Linux node VMs for local troubleshooting. *This command does not support Windows nodes*. The command assumes that your node VMs have an SSH daemon listening on port 22, that all nodes share a common SSH keypair for interactive login, and that a public endpoint exists on one of the control plane VMs for accommodating SSH agent key forwarding.
+
 
 ```sh
 $ aks-engine get-logs --help
