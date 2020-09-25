@@ -199,7 +199,7 @@ The Kubernetes project publishes that the control plane may be up to 2 versions 
 
 ### Can I use `aks-engine upgrade --control-plane-only` to change the control plane configuration irrespective of updating the Kubernetes version?
 
-Yes, but with caveats. Essentially you may use the `aks-engine upgrade --control-plane-only` functionality to replace your control plane VMs, one-at-a-time, with newer VMs rendered from updated API model configuration. You should always stage such changes, however, by building a staging cluster (reproducing at a minimum the version of `aks-engine` used to build your production cluster, and the API model JSON used as input; in a best-case scenario it will be in the same location as well, as different Azure location can have subtle differences). Here are a few useful possibilities that will work:
+Yes, but with caveats. Essentially you may use the `aks-engine upgrade --control-plane-only` functionality to replace your control plane VMs, one-at-a-time, with newer VMs rendered from updated API model configuration. You should always stage such changes, however, by building a staging cluster (reproducing at a minimum the version of `aks-engine` used to build your production cluster, and the API model JSON used as input; in a best-case scenario it will be in the same location as well). Here are a few useful possibilities that will work:
 
 - Updating the VM SKU by changing the `properties.masterProfile.vmSize` value
 - *Certain* configurable/tuneable kubelet properties in `properties.masterProfile.kubernetesConfig.kubeletConfig`, e.g.:
