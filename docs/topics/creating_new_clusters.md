@@ -157,7 +157,7 @@ Depending on any customization you want to do either (1) the AKS Engine-generate
   1. `az group create -n $RESOURCE_GROUP -l $LOCATION`; then
   2. `az deployment group create --name $RESOURCE_GROUP --resource-group $RESOURCE_GROUP --template-file /path/to/re-usable-arm-template-directory/azuredeploy.json --parameters /path/to/re-usable-arm-template-directory/azuredeploy.parameters.json`
 
-In the above example we use name of the resource group as the name of the ARM deployment, suggesting the guidance that only one cluster be built in per resource group.
+In the above example we use name of the resource group as the name of the ARM deployment, following the guidance that only one cluster be built per resource group.
 
 In summary, when creating single clusters, and especially when maintaining Kubernetes environments distinctly (i.e., not maintaining a fleet of clusters running a common config), relying upon `aks-engine deploy` as a full end-to-end convenience to bootstrap your clusters is appropriate. For more sophisticated cluster configuration re-use scenarios, and/or more sophisticated ARM deployment reconciliation (i.e., retry logic for certain failures), `aks-engine generate` + `az deployment group create` is the more appropriate choice.
 
