@@ -40,7 +40,7 @@ These commands are provided by AKS Engine in order to create and maintain Kubern
 
 ### `aks-engine deploy`
 
-The `aks-engine deploy` command will create a new cluster from scratch, using an API model (cluster definition) file as input to define the desired cluster configuration and shape, into the subscription, region, and resource group you provide, using credentials that you provide. Use this command to create a new cluster.
+The `aks-engine deploy` command will create a new cluster from scratch, using an API model (cluster definition) file as input to define the desired cluster configuration and shape, in the subscription, region, and resource group you provide, using credentials that you provide. Use this command to create a new cluster.
 
 ```sh
 $ aks-engine deploy --help
