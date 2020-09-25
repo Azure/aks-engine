@@ -297,7 +297,8 @@ remote: Compressing objects: 100% (42/42), done.
 remote: Total 92107 (delta 13), reused 15 (delta 1), pack-reused 92063
 Receiving objects: 100% (92107/92107), 92.86 MiB | 7.27 MiB/s, done.
 Resolving deltas: 100% (64711/64711), done.
-$ EXPORT LATEST_AKS_ENGINE_RELEASE=v0.56.0
+$ export LATEST_AKS_ENGINE_RELEASE=v0.56.0
+
 $ git checkout $LATEST_AKS_ENGINE_RELEASE
 Note: checking out 'v0.56.0'.
 
