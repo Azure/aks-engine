@@ -13,6 +13,7 @@ IDENTITY_SYSTEM="${IDENTITY_SYSTEM:-azure_ad}"
 ARC_LOCATION="eastus"
 GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST:-false}"
 TEST_PVC="${TEST_PVC:-false}"
+ROTATE_CERTS="${ROTATE_CERTS:-false}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
@@ -59,6 +60,28 @@ function renameResultsFile {
   if [ "${AZURE_ENV}" == "AzureStackCloud" ] && [ -f ${JUNIT_PATH} ]; then
     mv ${JUNIT_PATH} $(pwd)/test/e2e/kubernetes/${1}-junit.xml
   fi
+}
+
+function rotateCertificates {
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -v /etc/ssl/certs:/etc/ssl/certs \
+    -w ${WORK_DIR} \
+    -e REGION=${REGION} \
+    -e RESOURCE_GROUP=${RESOURCE_GROUP} \
+    ${DEV_IMAGE} \
+    ./bin/aks-engine rotate-certs \
+    --api-model _output/${RESOURCE_GROUP}/apimodel.json \
+    --apiserver ${API_SERVER} \
+    --azure-env ${AZURE_ENV} \
+    --client-id ${AZURE_CLIENT_ID} \
+    --client-secret ${AZURE_CLIENT_SECRET} \
+    --debug \
+    --identity-system ${IDENTITY_SYSTEM} \
+    --location ${REGION} \
+    --resource-group ${RESOURCE_GROUP} \
+    --ssh _output/${RESOURCE_GROUP}-ssh \
+    --subscription-id ${AZURE_SUBSCRIPTION_ID} || exit 1
 }
 
 echo "Running E2E tests against a cluster built with the following API model:"
@@ -164,7 +187,7 @@ docker run --rm \
 -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
 "${DEV_IMAGE}" make test-kubernetes || tryExit && renameResultsFile "deploy"
 
-if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ] || [ "${ROTATE_CERTS}" = "true" ]; then
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
   docker run --rm \
@@ -175,9 +198,10 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
     /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
-  API_SERVER="$RESOURCE_GROUP.$REGION.cloudapp.azure.com"
-  if [ "${AZURE_ENV}" = "AzureStackCloud" ]; then
-    API_SERVER="$RESOURCE_GROUP.$REGION.$RESOURCE_MANAGER_VM_DNS_SUFFIX"
+  API_SERVER=${RESOURCE_GROUP}.${REGION}.${RESOURCE_MANAGER_VM_DNS_SUFFIX:-cloudapp.azure.com}
+
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
   fi
 
   if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
@@ -246,6 +270,10 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   CLEANUP_AFTER_ADD_NODE_POOL=${CLEANUP_ON_EXIT}
   if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
     CLEANUP_AFTER_ADD_NODE_POOL="false"
+  fi
+
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
   fi
 
   docker run --rm \
@@ -360,6 +388,10 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
       --client-secret ${AZURE_CLIENT_SECRET} || exit 1
   done
 
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
+  fi
+
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -v /etc/ssl/certs:/etc/ssl/certs \
@@ -447,6 +479,10 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       --client-id ${AZURE_CLIENT_ID} \
       --client-secret ${AZURE_CLIENT_SECRET} || exit 1
 
+    if [ "${ROTATE_CERTS}" = "true" ]; then
+      rotateCertificates
+    fi
+
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -v /etc/ssl/certs:/etc/ssl/certs \
@@ -522,6 +558,10 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     --client-id ${AZURE_CLIENT_ID} \
     --client-secret ${AZURE_CLIENT_SECRET} || exit 1
   done
+
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
+  fi
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
