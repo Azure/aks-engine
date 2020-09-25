@@ -665,10 +665,32 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	vmssStorageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 
 	if profile.IsWindows() {
+		// Priority:
+		//   1. ImageRef in agent pool
+		//   2. Custom image in WindowsProfile. AKS does not use this for now but it may use this later for testing purpose.
+		//   3. ImageRef in WindowsProfile
+		//   4. PIR image in WindowsProfile
+		windowsProfile := cs.Properties.WindowsProfile
 		if profile.HasImageRef() {
 			imageRef := profile.ImageRef
 			if profile.HasImageGallery() {
 				v := fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', variables('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', variables('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(v),
+				}
+			} else {
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
+			}
+		} else if windowsProfile.HasCustomImage() {
+			vmssStorageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images', '%sCustomWindowsImage')]", profile.Name)),
+			}
+		} else if windowsProfile.HasImageRef() {
+			imageRef := windowsProfile.ImageRef
+			if windowsProfile.HasImageGallery() {
+				v := fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)
 				vmssStorageProfile.ImageReference = &compute.ImageReference{
 					ID: to.StringPtr(v),
 				}

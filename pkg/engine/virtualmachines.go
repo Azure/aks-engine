@@ -498,9 +498,30 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile := compute.StorageProfile{}
 
 	if profile.IsWindows() {
-		imageRef := profile.ImageRef
+		// Priority:
+		//   1. ImageRef in agent pool
+		//   2. Custom image in WindowsProfile. AKS does not use this for now but it may use this later for testing.
+		//   3. ImageRef in WindowsProfile
+		//   4. PIR image in WindowsProfile
+		windowsProfile := cs.Properties.WindowsProfile
 		if profile.HasImageRef() {
+			imageRef := profile.ImageRef
 			if profile.HasImageGallery() {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
+				}
+			} else {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
+			}
+		} else if windowsProfile.HasCustomImage() {
+			storageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images', '%sCustomWindowsImage')]", profile.Name)),
+			}
+		} else if windowsProfile.HasImageRef() {
+			imageRef := windowsProfile.ImageRef
+			if windowsProfile.HasImageGallery() {
 				storageProfile.ImageReference = &compute.ImageReference{
 					ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
 				}
