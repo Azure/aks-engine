@@ -803,7 +803,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				log.Printf("Image: %s", ds.Spec.Template.TemplateSpec.Containers[0].Image)
 				log.Printf("OrchestratorVersion: %s", eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion)
 				version := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
-				Expect(strings.HasSuffix(ds.Spec.Template.TemplateSpec.Containers[0].Image, version)).To(Equal(true))
+				Expect(strings.Contains(ds.Spec.Template.TemplateSpec.Containers[0].Image, version)).To(Equal(true))
 			} else {
 				Skip("Skipping as testing custom kube-proxy image")
 			}
