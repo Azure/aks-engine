@@ -10,6 +10,8 @@ This guide assumes you already have a running cluster deployed using the `aks-en
 
 The `aks-engine update` command can update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. When used in combination with a newer version of the `aks-engine` CLI compared to the version used to build the cluster originally, node pools can be regularly refreshed so that as they scale over time, new nodes always run the latest, validated bits, using your latest, validated node configuration.
 
+Note: `aks-engine update` **can not** be used to update the control plane! To update control plane VM configuration, see [`aks-engine upgrade --control-plane-only` documentation here](upgrade.md#when-should-i-use-aks-engine-upgrade---control-plane-only).
+
 This command can *only* be used with VMSS-backed node pools (the default AKS Engine node pool type is VMSS).
 
 The example below will assume you have a cluster deployed, and that the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`. It will also assume that there is a node pool named "agentpool1" in your cluster.
