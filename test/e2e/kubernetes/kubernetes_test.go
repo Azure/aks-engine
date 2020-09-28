@@ -2653,6 +2653,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should have guard agents running", func() {
+			if hasGuard, _ := eng.HasAddon(common.GuardAddonName); hasGuard {
+				By("Checking ready status of guard pods")
+				pods, err := pod.GetAllByPrefixWithRetry("guard", "kube-system", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Pods)).ToNot(BeZero())
+				for _, currentPod := range pods.Pods {
+					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
+					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+					tooManyRestarts := 5
+					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
+				}
+			} else {
+				Skip("Guard intergration was not requested")
+			}
+		})
+
 		It("should have resilient kubelet and docker systemd services", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")

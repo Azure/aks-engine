@@ -71,6 +71,7 @@ type Config struct {
 	LinuxContainerdURL             string `envconfig:"LINUX_CONTAINERD_URL"`
 	WindowsContainerdURL           string `envconfig:"WINDOWS_CONTAINERD_URL"`
 	*ArcOnboardingConfig
+	*GuardIntergrationConfig
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -95,6 +96,21 @@ type ArcOnboardingConfig struct {
 	SubscriptionID string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
 	Location       string `envconfig:"ARC_LOCATION" default:""`
 	TenantID       string `envconfig:"TENANT_ID"`
+}
+
+// GuardIntergrationConfig holds the azure guard intergration addon configuration
+type GuardIntergrationConfig struct {
+	ClientID                  string `envconfig:"ARC_CLIENT_ID" default:""`
+	ClientSecret              string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	SubscriptionID            string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	Location                  string `envconfig:"ARC_LOCATION" default:""`
+	TenantID                  string `envconfig:"TENANT_ID"`
+	GuardCACertificate        string `envconfig:"GUARD_CA_CERTIFICATE" default:""`
+	GuardCACertificateKey     string `envconfig:"GUARD_CA_CERTIFICATE_KEY" default:""`
+	GuardClientCertificate    string `envconfig:"GUARD_CLIENT_CERTIFICATE" default:""`
+	GuardClientCertificateKey string `envconfig:"GUARD_CLIENT_CERTIFICATE_KEY" default:""`
+	GuardServerCertificate    string `envconfig:"GUARD_SERVER_CERTIFICATE" default:""`
+	GuardServerCertificateKey string `envconfig:"GUARD_SERVER_CERTIFICATE_KEY" default:""`
 }
 
 // ParseConfig will return a new engine config struct taking values from env vars
@@ -328,6 +344,32 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 					addon.Config["clientID"] = config.ArcOnboardingConfig.ClientID
 					addon.Config["clientSecret"] = config.ArcOnboardingConfig.ClientSecret
 					addon.Config["location"] = config.ArcOnboardingConfig.Location
+				}
+				addon.Config["clusterName"] = cfg.Name
+				addon.Config["resourceGroup"] = fmt.Sprintf("%s-arc", cfg.Name) // set to config.Name once Arc is supported in all regions
+				break
+			}
+		}
+	}
+
+	if len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
+		for _, addon := range prop.OrchestratorProfile.KubernetesConfig.Addons {
+			if addon.Name == common.GuardAddonName && to.Bool(addon.Enabled) {
+				if addon.Config == nil {
+					addon.Config = make(map[string]string)
+				}
+				if cfg.GuardIntergrationConfig != nil {
+					addon.Config["tenantID"] = config.GuardIntergrationConfig.TenantID
+					addon.Config["subscriptionID"] = config.GuardIntergrationConfig.SubscriptionID
+					addon.Config["clientID"] = config.GuardIntergrationConfig.ClientID
+					addon.Config["clientSecret"] = config.GuardIntergrationConfig.ClientSecret
+					addon.Config["location"] = config.GuardIntergrationConfig.Location
+					addon.Config["guardCACertificate"] = config.GuardIntergrationConfig.GuardCACertificate
+					addon.Config["guardCACertificateKey"] = config.GuardIntergrationConfig.GuardCACertificateKey
+					addon.Config["guardClientCertificate"] = config.GuardIntergrationConfig.GuardClientCertificate
+					addon.Config["guardClientCertificateKey"] = config.GuardIntergrationConfig.GuardClientCertificateKey
+					addon.Config["guardServerCertificate"] = config.GuardIntergrationConfig.GuardServerCertificate
+					addon.Config["guardServerCertificateKey"] = config.GuardIntergrationConfig.GuardServerCertificateKey
 				}
 				addon.Config["clusterName"] = cfg.Name
 				addon.Config["resourceGroup"] = fmt.Sprintf("%s-arc", cfg.Name) // set to config.Name once Arc is supported in all regions

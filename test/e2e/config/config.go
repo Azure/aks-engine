@@ -58,6 +58,7 @@ type Config struct {
 	ClientID                string `envconfig:"CLIENT_ID"`
 	ClientSecret            string `envconfig:"CLIENT_SECRET"`
 	*ArcOnboardingConfig
+	*GuardIntergrationConfig
 }
 
 // CustomCloudConfig holds configurations for custom cloud
@@ -91,6 +92,21 @@ type ArcOnboardingConfig struct {
 	SubscriptionID string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
 	Location       string `envconfig:"ARC_LOCATION" default:""`
 	TenantID       string `envconfig:"TENANT_ID"`
+}
+
+// GuardIntergrationConfig holds the azure guard intergration addon configuration
+type GuardIntergrationConfig struct {
+	ClientID                  string `envconfig:"ARC_CLIENT_ID" default:""`
+	ClientSecret              string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	SubscriptionID            string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	Location                  string `envconfig:"ARC_LOCATION" default:""`
+	TenantID                  string `envconfig:"TENANT_ID"`
+	GuardCACertificate        string `envconfig:"GUARD_CA_CERTIFICATE" default:""`
+	GuardCACertificateKey     string `envconfig:"GUARD_CA_CERTIFICATE_KEY" default:""`
+	GuardClientCertificate    string `envconfig:"GUARD_CLIENT_CERTIFICATE" default:""`
+	GuardClientCertificateKey string `envconfig:"GUARD_CLIENT_CERTIFICATE_KEY" default:""`
+	GuardServerCertificate    string `envconfig:"GUARD_SERVER_CERTIFICATE" default:""`
+	GuardServerCertificateKey string `envconfig:"GUARD_SERVER_CERTIFICATE_KEY" default:""`
 }
 
 const (

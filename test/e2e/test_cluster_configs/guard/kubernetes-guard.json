@@ -1,0 +1,56 @@
+{
+    "env":{},
+    "apiModel":{
+        "apiVersion": "vlabs",
+        "properties": {
+          "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "kubernetesConfig": {
+              "addons": [
+                {
+                  "name": "guard",
+                  "enabled": true,
+                  "config": {
+                    "tenantID": "",
+                    "subscriptionID": "",
+                    "resourceGroup": "",
+                    "clusterName": "",
+                    "clientID": "",
+                    "clientSecret": "",
+                    "location": "eastus",
+                    "guardCACertificate": "",
+                    "guardClientCertificate": "",
+                    "guardClientCertificateKey": "",
+                    "guardServerCertificate": "",
+                    "guardServerCertificateKey": ""
+                  }
+                }
+              ]
+            }
+          },
+          "masterProfile": {
+            "count": 1,
+            "dnsPrefix": "",
+            "vmSize": "Standard_D2_v2"
+          },
+          "agentPoolProfiles": [
+            {
+              "name": "agentpool1",
+              "count": 3,
+              "vmSize": "Standard_D2_v2",
+              "availabilityProfile": "VirtualMachineScaleSets"
+            }
+          ],
+          "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+              "publicKeys": [
+                {
+                  "keyData": ""
+                }
+              ]
+            }
+          }
+        }
+    }
+}

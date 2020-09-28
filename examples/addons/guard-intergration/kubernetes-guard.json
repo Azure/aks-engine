@@ -1,0 +1,54 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+      "orchestratorProfile": {
+        "orchestratorType": "Kubernetes",
+        "kubernetesConfig": {
+          "addons": [
+            {
+              "name": "guard",
+              "enabled": true,
+              "config": {
+                "tenantID": "cf186dad-e2b1-40fa-8637-e88ee6f2f2cc",
+                "subscriptionID": "87e86ff6-e57f-4c88-b65e-835ad77827bf",
+                "resourceGroup": "connectedCluster2",
+                "clusterName": "k8sConnected2",
+                "clientID": "b9bb8776-0e3a-4ad9-86d7-6536cf268bf4",
+                "clientSecret": "oOM3VOZtR1~r~Sqq9.W7UxjUu-dB89H0M6",
+                "location": "eastus",
+                "guardCACertificate": "-----BEGIN CERTIFICATE-----\nMIICuDCCAaCgAwIBAgIBADANBgkqhkiG9w0BAQsFADANMQswCQYDVQQDEwJjYTAe\nFw0yMDA5MTQyMTA2MDBaFw0zMDA5MTIyMTA2MDBaMA0xCzAJBgNVBAMTAmNhMIIB\nIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr30bdxT2NKMnYKcB58W0gPwD\nbcMKM5HzzCtBfat4Ec9G4KzWjf5INUnTXcBdPYf864KwmSF10ex6FxHT/bYHCJZE\nZ5MBI9p7lv+mnOkzw0CaTKUFn3UqLoh3zvgGYqDsPj6jhGFwsLEWsNCp4KgM9N8x\n7Go10GAHoRGeg3C8gqzwk9GOcvWRLuEpmQUCSkALAlK6aoH5aTChwDBLT6qtnlWi\nmfQmoak4UcrYskD2K7HvaIKPeE5sg+MdCc/KaeChUK0729WeU3tUyQ3G99IXXIlo\ntoLvh4HbdAN93IMFsvMM7LXQES6f2iCSOZft9OFpoH2YXAjR6jbnpRyn7bKzCQID\nAQABoyMwITAOBgNVHQ8BAf8EBAMCAqQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG\n9w0BAQsFAAOCAQEAqo/f9c8bb3BO2x2zBLigh9q1oi/tt9U8Gy8hYG27ScdWjzTI\ns4j0Pp5TXh847n6lNrXRym0qbxPOkmeuUOB0/DM1ox+CXbvYexcgU+k2XQ16k1UP\n0ZcsOZtJK6MwGpg6jrzKnsOFfDUzNs7uV8ZjgVbLsAZ4Q6rD2p4lUb9djlBq2ofX\nBuBlCuyzvGnoKSAzQthPb8AlyhlnbU/dbpXFMgpF5bQIKcbq2OW9J3ItZihQ1mpz\n0THCdGIieamjcAa4+rUaLVKCiAUFmhZcJAJ3jqtndOfbP2tBiQpDHolKptPE3WXK\n0TWCKtb1EvtJ5JDjsB5Jjk4rSIeKgljGNrAfQQ==\n-----END CERTIFICATE-----\n",
+                "guardCACertificateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEAr30bdxT2NKMnYKcB58W0gPwDbcMKM5HzzCtBfat4Ec9G4KzW\njf5INUnTXcBdPYf864KwmSF10ex6FxHT/bYHCJZEZ5MBI9p7lv+mnOkzw0CaTKUF\nn3UqLoh3zvgGYqDsPj6jhGFwsLEWsNCp4KgM9N8x7Go10GAHoRGeg3C8gqzwk9GO\ncvWRLuEpmQUCSkALAlK6aoH5aTChwDBLT6qtnlWimfQmoak4UcrYskD2K7HvaIKP\neE5sg+MdCc/KaeChUK0729WeU3tUyQ3G99IXXIlotoLvh4HbdAN93IMFsvMM7LXQ\nES6f2iCSOZft9OFpoH2YXAjR6jbnpRyn7bKzCQIDAQABAoIBAAs7o91sfxIBe4zJ\nQ+r1EcfL2eBVwrpoVkW0Yx3LMwVY0j2hcp5mL3MRxbDTlmRQ5xSgKfOzW5pTW8FM\nR9iOpUacb8Z9d243FwAkXyLeHo0Z/oZ3bbO2STvvSlP6NlZr3JNjaQ4ZOqBkxYIN\n6UHTH/kwrD5o0gcDjpl1ykK5nadzlVQiBZfOTgcZEPACk4QAh7o6mpS2kUrrU2Dj\n615z4Htt9CMlGltivXhWiDMsGpTwRWyQWCTFGjG8Y6SWDtXMQtLXfKypusVcA4AC\n7EA5OrQZYvDUR7syGPu7JnDk5WhXazq4C5+7FOhRzN7lsL6C6xk1RdFpBdXHKVhj\n0K/pF40CgYEA1MLPmzbK3UPgK90VYPSVOTZPZXC+VV5NaSCiMijlTtJrsWR84jSF\nziWWT/675HhC6GJEtrjmZogXniyQixHuReZALPrksgyV1UKo/FvCcq7Plg5dCjFU\n4u1zOkk4HSVy3Ya8hsQfs2wfzWs+Z7anFcQKz/h4+euyvR9MMgvQbUMCgYEA0ycn\nUG5GS9iB71PbZhrluaVNjMtQq1X4vq6cLeCTwsxA3kj6r0BXDPuRcTmDIaA4RA85\n9XvGjabvO61cVKZrRVGCQ2l9jyW2RfoSRQRS1ha+lJTKJBoy0XrmTHt45yJ5MYaa\n+1MeJA9e+tTn+otiUqIGVvZ1d0gc19x1xcfmk8MCgYEAxd90o38/Bq/00faoxmZS\nTkZTax2C9vRgfFBMaOgd88PBQtcZSmvcsc/FTxqzdpXebC/QhjvKlDsn9ASwXZbM\nipfMwciJX4pS42c+sI1Kd8xa5czv/OXKc86wptmn5XuJq7t+pLvMW9tIbIy8GksG\ndDjCcY8+O/lYX4m3HKheLO8CgYEAzU71uAvxSBAVjwpfevFOS2tCc1LBdkcanPWU\noDsMEU2fCUO2lC6gNdxp98ivC0QJUYvolBus3NDjLoiLDTffd8AgQ8HPtx85EuNr\nXjYtAUOOPVRLFD1xCiRQxy8LSNpJMvGpwhN4bCGR/ZyEjyV2DdjDB02Ou9OfT/hp\nf0y2kxcCgYAZdaUBvD6jck9+g7X6LkPC+kJ3vu1Y4dwwnPpDICqSiJ8NUWTm05l7\nbWhkiXF5YzljYY2NVWXlE5lrp9KnLnESSfJTGNtPqq9Z/MnHt+7sLsGdzaaClM4K\nhTc83Cr9txke8uWes6ZA2RoImn2zBI+2tcQafBEqON9tRt/JDwfQpw==\n-----END RSA PRIVATE KEY-----\n",
+                "guardClientCertificate": "-----BEGIN CERTIFICATE-----\nMIIC6DCCAdCgAwIBAgIIZ5ZPawwc6BIwDQYJKoZIhvcNAQELBQAwDTELMAkGA1UE\nAxMCY2EwHhcNMjAwOTE0MjEwNjAwWhcNMjEwOTE0MjEwNjMxWjAgMQ4wDAYDVQQK\nEwVhenVyZTEOMAwGA1UEAxMFYXp1cmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw\nggEKAoIBAQDJ1Q44HJhX1+RY18L8PWpP19StmQb59gAfs2Nv6TKGst0GELf4aGlU\nVY+8i4eMTEEtEmqK80j7DRFWSc+8DkBQZPGA0CdAvaPwM47LaDATY9WJwtnGmGmg\nx2Zlm0lZNvcYhVqB4SpQUVnboK2yAeNopnen+vqvafd0Wdr3Q0DJYXqJG2ZirHkw\n6WXJTZRm6Jq29TbM4V5BIgklGiGkym7antQj4Bgpg5PHW3OP6d0yuiInomJVy4GR\nMjTwqBIoBmm+aoYNUslId7VrFQXn7RYrcqvvCj1JBLiVQPFzT8vZYL1iTkKeLs+6\nwHV8tbZIT1aH6I18djCaw77W83VENoABAgMBAAGjOTA3MA4GA1UdDwEB/wQEAwIF\noDATBgNVHSUEDDAKBggrBgEFBQcDAjAQBgNVHREECTAHggVhenVyZTANBgkqhkiG\n9w0BAQsFAAOCAQEAJGyici32TKcjmRROKvx1AjimzpGt9k34qeMqABKeNPNdyOjS\nmyvYIHV4Ip08Ay4oKsa16nCX317DMvHe3W2owBSuFTsYOIeuGbBQOgOXGTcqQnos\nkSPpZz8PJhmkL9MMSeTGbr5ujUQSIAKgd7lWqn5soPX7nxOjrfTdJNQnCS7oYDiw\nmAO4qB9NWsNXjznHRJfXeti6og+HEX0p2jRFOomFeVv/shP8i/l154QeaPQlQXC1\nBfICCe3w9ETpLvmIvoGyde4deZwvxQjaSSZXILUt/AjDQBlqP/FLMyCTyx3AX+y0\n5mlrT66Ofo+vQxMhWGoO+24rFwMWo3AC1u4Lug==\n-----END CERTIFICATE-----",
+                "guardClientCertificateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAydUOOByYV9fkWNfC/D1qT9fUrZkG+fYAH7Njb+kyhrLdBhC3\n+GhpVFWPvIuHjExBLRJqivNI+w0RVknPvA5AUGTxgNAnQL2j8DOOy2gwE2PVicLZ\nxphpoMdmZZtJWTb3GIVageEqUFFZ26CtsgHjaKZ3p/r6r2n3dFna90NAyWF6iRtm\nYqx5MOllyU2UZuiatvU2zOFeQSIJJRohpMpu2p7UI+AYKYOTx1tzj+ndMroiJ6Ji\nVcuBkTI08KgSKAZpvmqGDVLJSHe1axUF5+0WK3Kr7wo9SQS4lUDxc0/L2WC9Yk5C\nni7PusB1fLW2SE9Wh+iNfHYwmsO+1vN1RDaAAQIDAQABAoIBAG6Zou4atVzFwKry\nqTXiTcStCC2NAuas6Ip2mhH0XyyzDS1KshWc2cNOE7MFXuUB0GFrixjTknWIRqzb\nS8vIn3OurSyiZDA0+4YgKqrKUDX/6j9QmFgcox1ox3L8cmhCF4vHX752beKPgcc5\nuJUoNb7eIgnaHc9MKT8IElaW8wSmvgg5R8tANJ81bqH391oWMhPa9i6XIP/AYkUX\nENH1z9HUXsfsetpN/nc/vbNZV7tQTlh8+nstwOjT9eSmP+oR6k78p5pgQfF1GU9q\ngmCOAd5P8Q8pIKls/G1uf/BvB7tFIDCEfG75qxuOvxQZ/1ye7tfC9r7Ecle0+M3k\n3GTYgjECgYEA40tgoFZdcQfzWy774GO/MSHgMxhOiX24VisZp+jLgtn6pYnIgs6f\n1qC7h4wXCbsPtn6p48WKVfSsCsSE30eE//idgCvmEBuoK6g/jrcdksSAtSDP+ypI\nYJBPPTpNxqhXCH69cJg65n9ASBF1RuP+cicmSRFg1ummDrbw6YlzYz0CgYEA41J2\ntHrl011VJhngYbcesLOQBVOiEToMDdLoXGpSaRmq5lNbE3xCKZexYwAhePCj9SN9\ngJRmzq6o1PLjiBKVU7m0T9u1ccIdCgDaB3mS7TEHHHiSdzGXugJ09mq6b7N3VHzi\nYhkR/CRtY8Q4TjZQkWnVqOwylwtbxazKNWECjBUCgYBc3v26Rc+kUZVT2py8EMWc\nM7VB61qbvyzEuJOhEfOloZ9SaDvvhrG0prQ5LDp1lWNUM+kC0kI14OUy+R05hiWH\n2XOxXT6BsmtCe1qM27FPuM7GM4QHoj00h4J5CAujckEtjWumR+05JSGE0O1Ua/AZ\ngHmaPWmOJqXdOU6yfaESGQKBgAiT7wjGbm+4YOMsLMxjJZRTYkbhLgdqYlQPNldu\nZ6exoUJJuPEWSkTZhYcP1TOEGRvB+BVnBC4eZx6J/839rYbYRhaRWtptEb1z5MZN\nbx7mL7eCUTyQMYKCXzmBM4HNit40TDKZcZVLJpmSKPHCmO2zya0zJIGQmyjtaT/0\nZi01AoGBAIRiU/6jFkSjBIp8ZwLPWxIjA+j2dX4PbQEzQzKZzeCF3bhldaLzGRR8\numGPSLsBr7WPjkkxMb4W/58YFT/e9vwqwuQErwyjm2v7oPVAJqF3df9P2JhZbV1c\n2vT0O7CIBDl9D5CkscI86jPkBigK605hMdeoGqRARQIh/XQNwQeV\n-----END RSA PRIVATE KEY-----\n",
+                "guardServerCertificate": "-----BEGIN CERTIFICATE-----\nMIIC4DCCAcigAwIBAgIIJk64T7zBYOkwDQYJKoZIhvcNAQELBQAwDTELMAkGA1UE\nAxMCY2EwHhcNMjAwOTE0MjEwNjAwWhcNMjEwOTE0MjEwNjE2WjARMQ8wDQYDVQQD\nEwZzZXJ2ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDfrwq+BYou\niOYUioFiWAa1a7jfpOfJYSnmU0ee+uIc0XPEExRz20OzPcqJnrj2eMWoMk8mvrwS\njStATLOHsRL60EzQvvqEAHWrllv5/3BTSsuH7ZBUgVnV7hiZUZC2dg4MYviaSfox\neuQAz6pspux8Y1G7bmQ/MWwhwYgt0+HZsMmfp1GbPTuWNG+e9H6IvEFS4b4Amo1s\nyJK86MBdn8Q/cP8+CeCuf+dS+WOR/kElANidHiZU1y5MohVoU4zBqhkvKjXeoiUU\nED5DRas02g4vOPzyTOuXpalO4emfyxsEif8lutqdgXhuLr+cmRvFnKVMjwibVNNq\nwVpJr2bHjjdxAgMBAAGjQDA+MA4GA1UdDwEB/wQEAwIFoDATBgNVHSUEDDAKBggr\nBgEFBQcDATAXBgNVHREEEDAOggZzZXJ2ZXKHBH8AAAEwDQYJKoZIhvcNAQELBQAD\nggEBAF8cDBKALLAcuobdkETFVUJFLoa1ILPKHB9wjMIFYwjfSy4u2el89Gblnn/q\nxIPmUGiUTYv9+LX/1vkynUV3IxzYyZkkkJxU+Iwp11YktmMvuDz8lIBKVEXGsrC9\nGY5Dn0VWkME/h3rCehmEIBUCP5Rjao3D3TcnFKH1wNnbtJ4qoLP2FBUbl/2fhVn2\nGSpcqsIGbMKdU4jaOuQfBhpjU6LT5JgUNwU/DiEPbu1OqgK1QcTgtzpcnm+LXBnr\nmQRuge7GA/FnKVzZ25eBmd0HMdAckinWY9l2DXJ94/ILMCviYTKFtO59N0gvVv2d\no2Doh3/Xnu89YmipzwvajQovnkM=\n-----END CERTIFICATE-----\n",
+                "guardServerCertificateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA368KvgWKLojmFIqBYlgGtWu436TnyWEp5lNHnvriHNFzxBMU\nc9tDsz3KiZ649njFqDJPJr68Eo0rQEyzh7ES+tBM0L76hAB1q5Zb+f9wU0rLh+2Q\nVIFZ1e4YmVGQtnYODGL4mkn6MXrkAM+qbKbsfGNRu25kPzFsIcGILdPh2bDJn6dR\nmz07ljRvnvR+iLxBUuG+AJqNbMiSvOjAXZ/EP3D/Pgngrn/nUvljkf5BJQDYnR4m\nVNcuTKIVaFOMwaoZLyo13qIlFBA+Q0WrNNoOLzj88kzrl6WpTuHpn8sbBIn/Jbra\nnYF4bi6/nJkbxZylTI8Im1TTasFaSa9mx443cQIDAQABAoIBAGybpD6hl/eCVxzQ\nJ4Rls1QxasGEY1rfR6Xi99qUfGd7t5cToJGkfBmyvf3WSH68I1TIoK/yWoUzcDW3\nSFBxRQLtUu7kW+TuCDR5PE2FnreCkJJ+Yd72M3VxNxZyiS5e4fFXuNfJZabSwZQ3\nQMuivR6kZtH4Bsq8J4G4Y3PE9lto2Ah75lVy8qr6ANqQR4geew28GyCNtdV5XEYZ\nDR5OeA7YdghNMk1fFOUpCv5vSSKbay3uguhe/ft4LciKcaLyerkRKarxWj5inFiD\nEIG+l4w+J90NgjVonu8xeFCUWbAbZFe7CjPlpE0u6VSRaUlqiJL7rM1TyBP3pogC\n592vL+UCgYEA8bs3aZPzJQlLiWCBckIkk9LRgi7mA1CIbydKh/3kdlrLlyjWJQ9x\nWCPi8VlzAHd3uSFvNL5+zFANwQcjtB5mCWMA9yVQoY2vf/61xxQN52MeofS6RUxF\nKbUQEPPmM+X0PzJVSm8lPt9oP9awSmB/6iPt2kk+RCykQHr5PUnNG8sCgYEA7OMc\nOUWrB4fwyvugZZiglQieNHXx++33UVMbfsfq8Z9bv11tos5TgsjeTpHTPBfUbQi9\nJwf7ULn1G+PPz8btrVivH7/yhFLPhFvhmJQ8AcR4eykqbKszzDLlkZHAJq3qAGHX\n7nYColRFOldCtLdG+8exgYe0D7L+X3jLpKnbSjMCgYBSz1LtTSzHbEa/Ohs+PCBx\nr4/sLArJ6eXDRk+HBNgmH3aNQwURTxgCHNEa4wy9hS+zcRu6kuO3NFlx3fNCOgO0\nhYEIKXVU0sfjbitxlpIoyVDuJHtHUBiFcCyf0h3ze3xPxftn82lr/3akH/TmleZc\nHJDX7a1yB2UBXd9SOp0UPwKBgQCCH79BNqPcXzBGUDKrnEuZkkJVTvS+DtnsMlrI\nKclFMOSVGh0/cVcuYGi9gB0oxW5K9qHw7tF+ZqfdyiY9XGjy7+RC7I2rYlHbwx0J\nU2QjFGmaPeKwDttFMDAq5oVGugHwc87JjsmjoeblRUm/O24ioG9BV+nxNcHFb/Vt\nXmC3QQKBgH+VAn3sRYh4Td/zHKypBHMkz4iK4nX6ABt6bi5KEY6Rge74k21KXSUu\n8hatkMi1+HE7wE3n3D+WXcEgry7IoBPqLmwRdpuDrGtYA6O4bTiXMmte79cKZliy\nXXPDhmhq4/706DqCeXW2Q0VdXuOuKPqWkKkGIqt89PZr9xt8SZDF\n-----END RSA PRIVATE KEY-----\n"
+              }
+            }
+          ]
+        }
+      },
+      "masterProfile": {
+        "count": 1,
+        "dnsPrefix": "",
+        "vmSize": "Standard_D2_v2"
+      },
+      "agentPoolProfiles": [
+        {
+          "name": "agentpool1",
+          "count": 3,
+          "vmSize": "Standard_D2_v2",
+          "availabilityProfile": "VirtualMachineScaleSets"
+        }
+      ],
+      "linuxProfile": {
+        "adminUsername": "azureuser",
+        "ssh": {
+          "publicKeys": [
+            {
+              "keyData": ""
+            }
+          ]
+        }
+      }
+    }
+  }
