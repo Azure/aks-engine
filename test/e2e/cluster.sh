@@ -328,8 +328,8 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  nodepools=$(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json)
-  for ((i = 0; i < ${#nodepools[@]}; ++i)); do
+  nodepoolcount=$(jq '.properties.agentPoolProfiles| length' < _output/$RESOURCE_GROUP/apimodel.json)
+  for ((i = 0; i < $nodepoolcount; ++i)); do
     nodepool=$(jq -r --arg i $i '. | .properties.agentPoolProfiles[$i | tonumber].name' < _output/$RESOURCE_GROUP/apimodel.json)
     if [ "${UPDATE_NODE_POOLS}" = "true" ]; then
       # modify the master VM SKU to simulate vertical vm scaling via upgrade
