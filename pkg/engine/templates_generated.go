@@ -18490,8 +18490,8 @@ configureK8s() {
       generateAggregatedAPICerts
     fi
   else
-    {{- /* If we are a node vm then we only proceed w/ local azure.json configuration if cloud-init has pre-paved that file */}}
-    wait_for_file 1 1 $azure_json || return
+    {{- /* If we are a node that does not need azure.json (cloud-init tells us), then return immediately */}}
+    wait_for_file 1 1 /opt/azure/needs_azure.json || return
   fi
 
   {{/* Perform the required JSON escaping */}}
@@ -22020,6 +22020,14 @@ func k8sCloudInitMasternodecustomdataYml() (*asset, error) {
 var _k8sCloudInitNodecustomdataYml = []byte(`#cloud-config
 
 write_files:
+{{- if .RequiresCloudproviderConfig}}
+- path: /opt/azure/needs_azure.json
+  permissions: "0644"
+  owner: root
+  content: |
+    #EOF
+{{end}}
+
 - path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip

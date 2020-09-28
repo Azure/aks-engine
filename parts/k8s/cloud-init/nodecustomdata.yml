@@ -1,6 +1,14 @@
 #cloud-config
 
 write_files:
+{{- if .RequiresCloudproviderConfig}}
+- path: /opt/azure/needs_azure.json
+  permissions: "0644"
+  owner: root
+  content: |
+    #EOF
+{{end}}
+
 - path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
