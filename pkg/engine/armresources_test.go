@@ -356,6 +356,30 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 		},
 	}
 
+	etcdDisk := DiskARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionCompute')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+				"name":  "etcdDiskLoopNode",
+			},
+		},
+		Disk: compute.Disk{
+			Type:     to.StringPtr("Microsoft.Compute/disks"),
+			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
+			Location: to.StringPtr("[variables('location')]"),
+			Sku: &compute.DiskSku{
+				Name: compute.PremiumLRS,
+			},
+			DiskProperties: &compute.DiskProperties{
+				CreationData: &compute.CreationData{
+					CreateOption: compute.Empty,
+				},
+				DiskSizeGB: to.Int32Ptr(int32(256)),
+			},
+		},
+	}
+
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
 
 	masterVM := VirtualMachineARM{
@@ -495,6 +519,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 		publicIPAddress,
 		loadBalancer,
 		networkInterface,
+		etcdDisk,
 		masterVM,
 		masterVMExtension,
 		aksBillingExtension,

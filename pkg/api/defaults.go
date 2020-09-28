@@ -389,15 +389,17 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
-		if to.Bool(cs.Properties.MasterProfile.UltraSSDEnabled) {
-			if o.KubernetesConfig.EtcdDiskIOPS == 0 || o.KubernetesConfig.EtcdDiskMBPS == 0 {
-				etcdSizeGB, _ := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
-				ultraSSDConfig := getDefaultUltraSSDConfig(etcdSizeGB)
-				if o.KubernetesConfig.EtcdDiskIOPS == 0 {
-					o.KubernetesConfig.EtcdDiskIOPS = ultraSSDConfig.iops
-				}
-				if o.KubernetesConfig.EtcdDiskMBPS == 0 {
-					o.KubernetesConfig.EtcdDiskMBPS = ultraSSDConfig.mbps
+		if cs.Properties.MasterProfile != nil {
+			if to.Bool(cs.Properties.MasterProfile.UltraSSDEnabled) {
+				if o.KubernetesConfig.EtcdDiskIOPS == 0 || o.KubernetesConfig.EtcdDiskMBPS == 0 {
+					etcdSizeGB, _ := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
+					ultraSSDConfig := getDefaultUltraSSDConfig(etcdSizeGB)
+					if o.KubernetesConfig.EtcdDiskIOPS == 0 {
+						o.KubernetesConfig.EtcdDiskIOPS = ultraSSDConfig.iops
+					}
+					if o.KubernetesConfig.EtcdDiskMBPS == 0 {
+						o.KubernetesConfig.EtcdDiskMBPS = ultraSSDConfig.mbps
+					}
 				}
 			}
 		}
