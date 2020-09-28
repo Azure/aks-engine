@@ -52,7 +52,7 @@
     "masterProfile": {
       "count": 3,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2s_v3",
+      "vmSize": "Standard_D4s_v3",
       "OSDiskSizeGB": 200,
       "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
       "firstConsecutiveStaticIP": "10.239.255.239",

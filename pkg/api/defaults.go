@@ -389,6 +389,19 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if to.Bool(cs.Properties.MasterProfile.UltraSSDEnabled) {
+			if o.KubernetesConfig.EtcdDiskIOPS == 0 || o.KubernetesConfig.EtcdDiskMBPS == 0 {
+				etcdSizeGB, _ := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
+				ultraSSDConfig := getDefaultUltraSSDConfig(etcdSizeGB)
+				if o.KubernetesConfig.EtcdDiskIOPS == 0 {
+					o.KubernetesConfig.EtcdDiskIOPS = ultraSSDConfig.iops
+				}
+				if o.KubernetesConfig.EtcdDiskMBPS == 0 {
+					o.KubernetesConfig.EtcdDiskMBPS = ultraSSDConfig.mbps
+				}
+			}
+		}
+
 		if a.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB == 0 {
 			a.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB = DefaultEtcdStorageLimitGB
 		}
@@ -1165,5 +1178,65 @@ func (cs *ContainerService) setCSIProxyDefaults() {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
 			w.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
 		}
+	}
+}
+
+type ssdConfig struct {
+	iops int
+	mbps int
+}
+
+func getDefaultUltraSSDConfig(etcdDiskSizeGB int) ssdConfig {
+	if etcdDiskSizeGB >= 1024 {
+		return ssdConfig{
+			iops: 160000,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 512 {
+		return ssdConfig{
+			iops: 80000,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 256 {
+		return ssdConfig{
+			iops: 76800,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 128 {
+		return ssdConfig{
+			iops: 38400,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 64 {
+		return ssdConfig{
+			iops: 19200,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 32 {
+		return ssdConfig{
+			iops: 9600,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 16 {
+		return ssdConfig{
+			iops: 4800,
+			mbps: 1200,
+		}
+	}
+	if etcdDiskSizeGB >= 8 {
+		return ssdConfig{
+			iops: 2400,
+			mbps: 600,
+		}
+	}
+	return ssdConfig{
+		iops: 1200,
+		mbps: 300,
 	}
 }

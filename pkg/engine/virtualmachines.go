@@ -230,13 +230,19 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 }
 
 func createEtcdDisk(cs *api.ContainerService) DiskARM {
+	var ssdType compute.DiskStorageAccountTypes
+	if cs.Properties.MasterProfile != nil && to.Bool(cs.Properties.MasterProfile.UltraSSDEnabled) {
+		ssdType = compute.UltraSSDLRS
+	} else {
+		ssdType = compute.PremiumLRS
+	}
 	etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
 	etcdDisk := compute.Disk{
 		Type:     to.StringPtr("Microsoft.Compute/disks"),
 		Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
 		Location: to.StringPtr("[variables('location')]"),
 		Sku: &compute.DiskSku{
-			Name: compute.UltraSSDLRS,
+			Name: ssdType,
 		},
 		Zones: &[]string{
 			"[string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))])]",
@@ -246,8 +252,8 @@ func createEtcdDisk(cs *api.ContainerService) DiskARM {
 				CreateOption: compute.Empty,
 			},
 			DiskSizeGB:        to.Int32Ptr(int32(etcdSizeGB)),
-			DiskIOPSReadWrite: to.Int64Ptr(160000),
-			DiskMBpsReadWrite: to.Int64Ptr(2000),
+			DiskIOPSReadWrite: to.Int64Ptr(int64(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskIOPS)),
+			DiskMBpsReadWrite: to.Int64Ptr(int64(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskMBPS)),
 		},
 	}
 

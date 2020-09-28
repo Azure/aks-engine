@@ -332,21 +332,24 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != 0 && (o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes < 4 || o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes > 120) {
 				return errors.New("outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120")
 			}
-
-			if a.IsAzureStackCloud() {
-				if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {
-					return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
+			if o.KubernetesConfig.EtcdDiskSizeGB != "" {
+				etcdDiskSizeGB, err := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
+				if err != nil {
+					return errors.Errorf("could not convert EtcdDiskSizeGB to int")
 				}
-
-				if o.KubernetesConfig.EtcdDiskSizeGB != "" {
-					etcdDiskSizeGB, err := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
-					if err != nil {
-						return errors.Errorf("could not convert EtcdDiskSizeGB to int")
-					}
-					if etcdDiskSizeGB > MaxAzureStackManagedDiskSize {
-						return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
-					}
+				if a.IsAzureStackCloud() && etcdDiskSizeGB > MaxAzureStackManagedDiskSize {
+					return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
 				}
+				if o.KubernetesConfig.EtcdStorageLimitGB != 0 && o.KubernetesConfig.EtcdStorageLimitGB >= etcdDiskSizeGB {
+					return errors.Errorf("etcdDiskSizeGB should be larger than etcdStorageLimitGB")
+				}
+				if etcdDiskSizeGB < 4 {
+					return errors.Errorf("etcdDiskSizeGB set to %d, should be at least 4", etcdDiskSizeGB)
+				}
+			}
+
+			if to.Bool(o.KubernetesConfig.UseInstanceMetadata) && a.IsAzureStackCloud() {
+				return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
 			}
 
 			if o.KubernetesConfig.EtcdStorageLimitGB != 0 {
