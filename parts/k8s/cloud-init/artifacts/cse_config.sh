@@ -147,6 +147,9 @@ configureKubeletServerCert() {
 }
 configureK8s() {
   local client_key="/etc/kubernetes/certs/client.key" apiserver_crt="/etc/kubernetes/certs/apiserver.crt" azure_json="/etc/kubernetes/azure.json"
+  touch $azure_json
+  chmod 0600 $azure_json
+  chown root:root $azure_json
   touch "${client_key}"
   chmod 0600 "${client_key}"
   chown root:root "${client_key}"

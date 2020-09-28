@@ -18470,6 +18470,9 @@ configureKubeletServerCert() {
 }
 configureK8s() {
   local client_key="/etc/kubernetes/certs/client.key" apiserver_crt="/etc/kubernetes/certs/apiserver.crt" azure_json="/etc/kubernetes/azure.json"
+  touch $azure_json
+  chmod 0600 $azure_json
+  chown root:root $azure_json
   touch "${client_key}"
   chmod 0600 "${client_key}"
   chown root:root "${client_key}"
@@ -22017,14 +22020,6 @@ func k8sCloudInitMasternodecustomdataYml() (*asset, error) {
 var _k8sCloudInitNodecustomdataYml = []byte(`#cloud-config
 
 write_files:
-{{- if .RequiresCloudproviderConfig}}
-- path: /etc/kubernetes/azure.json
-  permissions: "0600"
-  owner: root
-  content: |
-    #EOF
-{{end}}
-
 - path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
