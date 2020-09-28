@@ -123,6 +123,8 @@ Detailed documentation on `aks-engine scale` can be found [here](../topics/scale
 
 The `aks-engine update` command will update the VMSS model of a node pool according to a modified configuration of the aks-engine-generated `apimodel.json`. The updated node configuration will not take affect on any existing nodes, but will be applied to all future, new nodes created by VMSS scale out operations. Use this command to update the node configuration (such as the OS configuration, VM SKU, or Kubernetes kubelet configuration) of an existing VMSS node pool.
 
+Note: `aks-engine update` **can not** be used to update the control plane! To update control plane VM configuration, see [`aks-engine upgrade --control-plane-only` documentation here](../topics/upgrade.md#when-should-i-use-aks-engine-upgrade---control-plane-only).
+
 
 ```sh
 $ aks-engine update --help
