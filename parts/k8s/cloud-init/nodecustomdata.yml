@@ -2,8 +2,8 @@
 
 write_files:
 {{- if .RequiresCloudproviderConfig}}
-- path: /etc/kubernetes/azure.json
-  permissions: "0600"
+- path: /opt/azure/needs_azure.json
+  permissions: "0644"
   owner: root
   content: |
     #EOF
