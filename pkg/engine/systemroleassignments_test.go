@@ -9,7 +9,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -35,6 +35,7 @@ func TestCreateVmasRoleAssignment(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
 				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset'))), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalType:    authorization.ServicePrincipal,
 			},
 		},
 	}
@@ -70,6 +71,7 @@ func TestCreateAgentVmasSysRoleAssignment(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('fooprofileVMNamePrefix'), copyIndex(variables('fooprofileOffset'))), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalType:    authorization.ServicePrincipal,
 			},
 		},
 	}
@@ -102,6 +104,7 @@ func TestCreateAgentVmssSysRoleAssignment(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('fooprofileVMNamePrefix')), '2017-03-30', 'Full').identity.principalId]"),
+				PrincipalType:    authorization.ServicePrincipal,
 			},
 		},
 	}
@@ -118,16 +121,89 @@ func TestCreateKubernetesMasterRoleAssignmentForAgentPools(t *testing.T) {
 	masterProfile := &api.MasterProfile{
 		Count: 2,
 	}
+	// Two pools sharing a common VNET
 	agentProfile1 := &api.AgentPoolProfile{
-		Name: "agentProfile1",
+		Name:         "agentProfile1",
+		VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET1_NAME",
 	}
 	agentProfile2 := &api.AgentPoolProfile{
-		Name: "agentProfile2",
+		Name:         "agentProfile2",
+		VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET2_NAME",
 	}
 
 	actual := createKubernetesMasterRoleAssignmentForAgentPools(masterProfile, []*api.AgentPoolProfile{agentProfile1, agentProfile2})
 
 	expected := []DeploymentWithResourceGroupARM{
+		{
+			DeploymentARMResource: DeploymentARMResource{
+				APIVersion: "2017-05-10",
+				DependsOn: []string{
+					"[concat(variables('masterVMNamePrefix'), 0)]",
+					"[concat(variables('masterVMNamePrefix'), 1)]",
+				},
+			},
+			ResourceGroup: to.StringPtr("[variables('agentProfile1SubnetResourceGroup')]"),
+			DeploymentExtended: resources.DeploymentExtended{
+				Name: to.StringPtr("[concat('masterMsiRoleAssignment-', variables('agentProfile1VMNamePrefix'))]"),
+				Type: to.StringPtr("Microsoft.Resources/deployments"),
+				Properties: &resources.DeploymentPropertiesExtended{
+					Mode: "Incremental",
+					Template: map[string]interface{}{
+						"resources": []interface{}{
+							SystemRoleAssignmentARM{
+								ARMResource: ARMResource{
+									APIVersion: "[variables('apiVersionAuthorizationSystem')]",
+								},
+								RoleAssignment: authorization.RoleAssignment{
+									Name: to.StringPtr("[concat(variables('agentProfile1Vnet'), '/Microsoft.Authorization/', guid(uniqueString(reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), 0)), '2017-03-30', 'Full').identity.principalId)))]"),
+									Type: to.StringPtr("Microsoft.Network/virtualNetworks/providers/roleAssignments"),
+									RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
+										RoleDefinitionID: to.StringPtr("[variables('networkContributorRoleDefinitionId')]"),
+										PrincipalID:      to.StringPtr("[reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), 0)), '2017-03-30', 'Full').identity.principalId]"),
+									},
+								},
+							},
+							SystemRoleAssignmentARM{
+								ARMResource: ARMResource{
+									APIVersion: "[variables('apiVersionAuthorizationSystem')]",
+								},
+								RoleAssignment: authorization.RoleAssignment{
+									Name: to.StringPtr("[concat(variables('agentProfile1Vnet'), '/Microsoft.Authorization/', guid(uniqueString(reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), 1)), '2017-03-30', 'Full').identity.principalId)))]"),
+									Type: to.StringPtr("Microsoft.Network/virtualNetworks/providers/roleAssignments"),
+									RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
+										RoleDefinitionID: to.StringPtr("[variables('networkContributorRoleDefinitionId')]"),
+										PrincipalID:      to.StringPtr("[reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), 1)), '2017-03-30', 'Full').identity.principalId]"),
+									},
+								},
+							},
+						},
+						"contentVersion": "1.0.0.0",
+						"$schema":        "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+					},
+				},
+			},
+		},
+	}
+
+	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing: %s", diff)
+	}
+
+	// Two pools with discrete VNETs
+	agentProfile1 = &api.AgentPoolProfile{
+		Name:         "agentProfile1",
+		VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET1_NAME/subnets/SUBNET1_NAME",
+	}
+	agentProfile2 = &api.AgentPoolProfile{
+		Name:         "agentProfile2",
+		VnetSubnetID: "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET2_NAME/subnets/SUBNET2_NAME",
+	}
+
+	actual = createKubernetesMasterRoleAssignmentForAgentPools(masterProfile, []*api.AgentPoolProfile{agentProfile1, agentProfile2})
+
+	expected = []DeploymentWithResourceGroupARM{
 		{
 			DeploymentARMResource: DeploymentARMResource{
 				APIVersion: "2017-05-10",
@@ -228,7 +304,7 @@ func TestCreateKubernetesMasterRoleAssignmentForAgentPools(t *testing.T) {
 		},
 	}
 
-	diff := cmp.Diff(actual, expected)
+	diff = cmp.Diff(actual, expected)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while comparing: %s", diff)

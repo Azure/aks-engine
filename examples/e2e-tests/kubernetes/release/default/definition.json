@@ -4,6 +4,7 @@
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
+        "useManagedIdentity": true,
         "clusterSubnet": "10.239.0.0/16",
         "addons": [
           {
@@ -146,10 +147,6 @@
       "adminPassword": "replacepassword1234$",
       "sshEnabled": true,
       "enableAutomaticUpdates": false
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

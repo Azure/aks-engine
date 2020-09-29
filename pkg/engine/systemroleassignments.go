@@ -5,11 +5,12 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -32,6 +33,7 @@ func createVMASRoleAssignment() SystemRoleAssignmentARM {
 	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{
 		RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
 		PrincipalID:      to.StringPtr("[reference(concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset'))), '2017-03-30', 'Full').identity.principalId]"),
+		PrincipalType:    authorization.ServicePrincipal,
 	}
 	return systemRoleAssignment
 }
@@ -56,6 +58,7 @@ func createAgentVMASSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleA
 	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{
 		RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 		PrincipalID:      to.StringPtr(fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachines/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset'))), '2017-03-30', 'Full').identity.principalId]", profile.Name)),
+		PrincipalType:    authorization.ServicePrincipal,
 	}
 
 	return systemRoleAssignment
@@ -76,6 +79,7 @@ func createAgentVMSSSysRoleAssignment(profile *api.AgentPoolProfile) SystemRoleA
 	systemRoleAssignment.RoleAssignmentPropertiesWithScope = &authorization.RoleAssignmentPropertiesWithScope{
 		RoleDefinitionID: to.StringPtr("[variables('readerRoleDefinitionId')]"),
 		PrincipalID:      to.StringPtr(fmt.Sprintf("[reference(concat('Microsoft.Compute/virtualMachineScaleSets/', variables('%[1]sVMNamePrefix')), '2017-03-30', 'Full').identity.principalId]", profile.Name)),
+		PrincipalType:    authorization.ServicePrincipal,
 	}
 
 	return systemRoleAssignment
@@ -88,13 +92,35 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 		dependenciesToMasterVms[masterIdx] = fmt.Sprintf("[concat(variables('masterVMNamePrefix'), %d)]", masterIdx)
 	}
 
-	var roleAssignmentsForAllAgentPools = make([]DeploymentWithResourceGroupARM, len(agentPoolProfiles))
+	roleAssignmentsForAllAgentPools := []DeploymentWithResourceGroupARM{}
 
 	// The following is based on:
 	// * https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/role-based-access-control/role-assignments-template.md#create-a-role-assignment-at-a-resource-scope
 	// * https://github.com/Azure/azure-quickstart-templates/blob/master/201-rbac-builtinrole-multipleVMs/azuredeploy.json#L79
-	for agentPoolIdx, agentPool := range agentPoolProfiles {
+
+	// We're gonna keep track of distinct VNETs in use across all our node pools;
+	//   we only want to define master VM --> VNET role assignments once per VNET.
+	// If our cluster configuration includes more than one pool sharing a common VNET,
+	//   we define the master VM --> VNET role assignments (one per master VM) just once for those pools
+	var vnetInCluster = struct{}{}
+	vnets := make(map[string]struct{})
+	for _, agentPool := range agentPoolProfiles {
 		var roleAssignments = make([]interface{}, masterProfile.Count)
+		subnetElements := strings.Split(agentPool.VnetSubnetID, "/")
+		// We expect a very specific string format for the VnetSubnetID property;
+		//   if it can't be split into at least 9 "/"-delimited elements,
+		//   then we should assume that our role assignment composition below will be malformed,
+		//   and so we simply skip assigning a role assigment for this pool.
+		// This should never happen, but this defensive posture ensures no code panic execution path
+		//   // when we statically grab the first 9 elements (`subnetElements[:9]` below)
+		if len(subnetElements) < 9 {
+			continue
+		}
+		vnetResourceURI := strings.Join(subnetElements[:9], "/")
+		if _, ok := vnets[vnetResourceURI]; ok {
+			continue
+		}
+		vnets[vnetResourceURI] = vnetInCluster
 
 		for masterIdx := 0; masterIdx < masterProfile.Count; masterIdx++ {
 			masterVMReference := fmt.Sprintf("reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), %d)), '2017-03-30', 'Full').identity.principalId", masterIdx)
@@ -110,7 +136,7 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 						},
 					*/
 				},
-				// Reference to the subnet of the worker VMs:
+				// Reference to the VNET of the worker VMs:
 				RoleAssignment: authorization.RoleAssignment{
 					Name: to.StringPtr(fmt.Sprintf("[concat(variables('%sVnet'), '/Microsoft.Authorization/', guid(uniqueString(%s)))]", agentPool.Name, masterVMReference)),
 					Type: to.StringPtr("Microsoft.Network/virtualNetworks/providers/roleAssignments"),
@@ -146,7 +172,7 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 			},
 		}
 
-		roleAssignmentsForAllAgentPools[agentPoolIdx] = roleAssignmentsForAgentPoolSubDeployment
+		roleAssignmentsForAllAgentPools = append(roleAssignmentsForAllAgentPools, roleAssignmentsForAgentPoolSubDeployment)
 	}
 
 	return roleAssignmentsForAllAgentPools
