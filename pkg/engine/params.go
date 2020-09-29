@@ -216,9 +216,16 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			// Set ImageRef if it is not nil and always set the Windows VHD information in WindowsProfile.
 			// ImageRef will be used to generate ARM template for the agent pool if it is set.
 			// Otherwise, the Windows VHD information in WindowsProfile will be used to generate ARM template.
+			// Priority:
+			//   1. ImageRef in agent pool
+			//   2. ImageRef in WindowsProfile
+			//   3. PIR image in WindowsProfile
 			if agentProfile.ImageRef != nil {
 				addValue(parametersMap, fmt.Sprintf("%sosImageName", agentProfile.Name), agentProfile.ImageRef.Name)
 				addValue(parametersMap, fmt.Sprintf("%sosImageResourceGroup", agentProfile.Name), agentProfile.ImageRef.ResourceGroup)
+			} else if properties.WindowsProfile.HasImageRef() {
+				addValue(parametersMap, fmt.Sprintf("%sosImageName", agentProfile.Name), properties.WindowsProfile.ImageRef.Name)
+				addValue(parametersMap, fmt.Sprintf("%sosImageResourceGroup", agentProfile.Name), properties.WindowsProfile.ImageRef.ResourceGroup)
 			}
 			addValue(parametersMap, fmt.Sprintf("%sosImageOffer", agentProfile.Name), properties.WindowsProfile.WindowsOffer)
 			addValue(parametersMap, fmt.Sprintf("%sosImageSKU", agentProfile.Name), properties.WindowsProfile.GetWindowsSku())
