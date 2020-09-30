@@ -35,6 +35,7 @@
                     "name": "agentwin",
                     "count": 2,
                     "vmSize": "Standard_D2_v3",
+                    "osDiskSSDType": "Standard",
                     "availabilityProfile": "VirtualMachineScaleSets",
                     "osType": "Windows"
                 }

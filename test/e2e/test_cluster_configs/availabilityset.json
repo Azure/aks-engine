@@ -10,13 +10,14 @@
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v3"
+				"vmSize": "Standard_D2s_v3"
 			},
 			"agentPoolProfiles": [
 				{
 					"name": "poollinux1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
+					"osDiskSSDType": "Standard",
 					"osType": "Linux",
 					"availabilityProfile": "AvailabilitySet"
 				},
@@ -24,6 +25,7 @@
 					"name": "poolwin1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
+					"osDiskSSDType": "Standard",
 					"osType": "Windows",
 					"availabilityProfile": "AvailabilitySet"
 				}
@@ -51,12 +53,14 @@
 			"name": "poollinux2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
+			"osDiskType": "StandardSSD",
 			"availabilityProfile": "AvailabilitySet"
 		},
 		{
 			"name": "poolwin2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
+			"osDiskType": "StandardSSD",
 			"osType": "Windows",
 			"availabilityProfile": "AvailabilitySet"
 		}

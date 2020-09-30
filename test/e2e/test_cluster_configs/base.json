@@ -10,7 +10,9 @@
 		"SKIP_TESTS_AFTER_SCALE_DOWN": "true",
 		"SKIP_TESTS_AFTER_UPGRADE": "true",
 		"SKIP_TESTS_AFTER_SCALE_UP": "false",
-		"STABILITY_ITERATIONS": "0"
+		"STABILITY_ITERATIONS": "0",
+		"MASTER_VM_UPGRADE_SKU": "Standard_D4s_v3",
+		"NODE_VM_UPGRADE_SKU": "Standard_D4_v3"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -18,18 +20,20 @@
 			"masterProfile": {
 				"count": 3,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v3"
+				"vmSize": "Standard_D2s_v3"
 			},
 			"agentPoolProfiles": [
 				{
 					"name": "poollinux1",
 					"count": 1,
-					"vmSize": "Standard_D2_v3"
+					"vmSize": "Standard_D2_v3",
+					"osDiskType": "StandardSSD"
 				},
 				{
 					"name": "poolwin",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
+					"osDiskType": "StandardSSD",
 					"osType": "Windows"
 				}
 			],
@@ -56,6 +60,7 @@
 			"name": "poollinux2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
+			"osDiskType": "StandardSSD",
 			"availabilityProfile": "VirtualMachineScaleSets",
 			"kubernetesConfig": {
 				"kubeletConfig": {
@@ -69,6 +74,7 @@
 			"name": "poolwin2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
+			"osDiskType": "StandardSSD",
 			"osType": "Windows",
 			"availabilityProfile": "VirtualMachineScaleSets"
 		}
