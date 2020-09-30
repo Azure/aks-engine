@@ -690,13 +690,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		ManagedDisk:  &compute.VirtualMachineScaleSetManagedDiskParameters{},
 	}
 
-	switch profile.SSDType {
-	case "Premium":
-		osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesPremiumLRS
-	case "Standard":
-		osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesStandardSSDLRS
-	}
-
 	if profile.OSDiskSizeGB > 0 {
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(profile.OSDiskSizeGB))
 	}
@@ -704,6 +697,13 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	if profile.IsEphemeral() {
 		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
 			Option: compute.Local,
+		}
+	} else {
+		switch profile.OSDiskSSDType {
+		case api.Premium:
+			osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesPremiumLRS
+		case api.Standard:
+			osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesStandardSSDLRS
 		}
 	}
 
@@ -815,6 +815,19 @@ func getVMSSDataDisks(profile *api.AgentPoolProfile) *[]compute.VirtualMachineSc
 		}
 		if profile.StorageProfile == api.StorageAccount {
 			dataDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]", profile.Name, i))
+		} else if profile.DataDiskSSDType != "" {
+			var ssdType compute.StorageAccountTypes
+			switch profile.DataDiskSSDType {
+			case api.Ultra:
+				ssdType = compute.StorageAccountTypesUltraSSDLRS
+			case api.Premium:
+				ssdType = compute.StorageAccountTypesPremiumLRS
+			case api.Standard:
+				ssdType = compute.StorageAccountTypesStandardLRS
+			}
+			dataDisk.ManagedDisk = &compute.VirtualMachineScaleSetManagedDiskParameters{
+				StorageAccountType: ssdType,
+			}
 		}
 		dataDisks = append(dataDisks, dataDisk)
 	}

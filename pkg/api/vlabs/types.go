@@ -445,6 +445,8 @@ type MasterProfile struct {
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	SysctlDConfig             map[string]string `json:"sysctldConfig,omitempty"`
+	OSDiskSSDType             string            `json:"osDiskSSDType,omitempty"`
+	DataDiskSSDType           string            `json:"dataDiskSSDType,omitempty"`
 	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 
@@ -538,7 +540,8 @@ type AgentPoolProfile struct {
 	ProximityPlacementGroupID         string            `json:"proximityPlacementGroupID,omitempty"`
 	OSDiskCachingType                 string            `json:"osDiskCachingType,omitempty"`
 	DataDiskCachingType               string            `json:"dataDiskCachingType,omitempty"`
-	SSDType                           string            `json:"ssdType,omitempty"`
+	OSDiskSSDType                     string            `json:"osDiskSSDType,omitempty"`
+	DataDiskSSDType                   string            `json:"dataDiskSSDType,omitempty"`
 	// VMSSName is a read-only field; its value will be computed during template generation
 	VMSSName string `json:"vmssName,omitempty"`
 }

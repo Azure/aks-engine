@@ -515,6 +515,8 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
+	vlabsProfile.OSDiskSSDType = api.OSDiskSSDType
+	vlabsProfile.DataDiskSSDType = api.DataDiskSSDType
 	vlabsProfile.UltraSSDEnabled = api.UltraSSDEnabled
 	vlabsProfile.EncryptionAtHost = api.EncryptionAtHost
 	vlabsProfile.ProximityPlacementGroupID = api.ProximityPlacementGroupID
@@ -610,7 +612,8 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.OSDiskCachingType = api.OSDiskCachingType
 	p.DataDiskCachingType = api.DataDiskCachingType
 	p.VMSSName = api.VMSSName
-	p.SSDType = api.SSDType
+	p.OSDiskSSDType = api.OSDiskSSDType
+	p.DataDiskSSDType = api.DataDiskSSDType
 }
 
 func convertServicePrincipalProfileToVLabs(api *ServicePrincipalProfile, v *vlabs.ServicePrincipalProfile) {

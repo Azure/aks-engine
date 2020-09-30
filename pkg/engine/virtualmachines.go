@@ -168,13 +168,14 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 			CreateOption: compute.DiskCreateOptionTypesAttach,
 			Lun:          to.Int32Ptr(0),
 			Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
-			ManagedDisk: &compute.ManagedDiskParameters{
-				ID: to.StringPtr("[resourceId('Microsoft.Compute/disks', concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk'))]"),
-			},
 		}
 		if cs.Properties.MasterProfile.IsStorageAccount() {
 			dataDisk.Vhd = &compute.VirtualHardDisk{
 				URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/', variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-etcddisk.vhd')]"),
+			}
+		} else {
+			dataDisk.ManagedDisk = &compute.ManagedDiskParameters{
+				ID: to.StringPtr("[resourceId('Microsoft.Compute/disks', concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk'))]"),
 			}
 		}
 		storageProfile.DataDisks = &[]compute.DataDisk{
@@ -205,6 +206,19 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		osDisk.Vhd = &compute.VirtualHardDisk{
 			URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-osdisk.vhd')]"),
 		}
+	} else if cs.Properties.MasterProfile.OSDiskSSDType != "" {
+		var ssdType compute.StorageAccountTypes
+		switch cs.Properties.MasterProfile.OSDiskSSDType {
+		case api.Ultra:
+			ssdType = compute.StorageAccountTypesUltraSSDLRS
+		case api.Premium:
+			ssdType = compute.StorageAccountTypesPremiumLRS
+		case api.Standard:
+			ssdType = compute.StorageAccountTypesStandardLRS
+		}
+		osDisk.ManagedDisk = &compute.ManagedDiskParameters{
+			StorageAccountType: ssdType,
+		}
 	}
 
 	if cs.Properties.MasterProfile.OSDiskSizeGB > 0 {
@@ -231,10 +245,15 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 
 func createEtcdDisk(cs *api.ContainerService) DiskARM {
 	var ssdType compute.DiskStorageAccountTypes
-	if cs.Properties.MasterProfile != nil && to.Bool(cs.Properties.MasterProfile.UltraSSDEnabled) {
-		ssdType = compute.UltraSSDLRS
-	} else {
-		ssdType = compute.PremiumLRS
+	if cs.Properties.MasterProfile != nil {
+		switch cs.Properties.MasterProfile.DataDiskSSDType {
+		case api.Ultra:
+			ssdType = compute.UltraSSDLRS
+		case api.Premium:
+			ssdType = compute.PremiumLRS
+		case api.Standard:
+			ssdType = compute.StandardLRS
+		}
 	}
 	hasAvailabilityZones := cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasAvailabilityZones()
 	etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
