@@ -353,6 +353,7 @@ type KubernetesConfig struct {
 	DockerEngineVersion               string                `json:"dockerEngineVersion,omitempty"` // Deprecated
 	MobyVersion                       string                `json:"mobyVersion,omitempty"`
 	ContainerdVersion                 string                `json:"containerdVersion,omitempty"`
+	LinuxContainerdURL                string                `json:"linuxContainerdURL,omitempty"`
 	CustomCcmImage                    string                `json:"customCcmImage,omitempty"`
 	UseCloudControllerManager         *bool                 `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL           string                `json:"customWindowsPackageURL,omitempty"`

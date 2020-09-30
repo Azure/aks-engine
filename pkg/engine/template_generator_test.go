@@ -112,6 +112,8 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetBase64EncodedEnvironmentJSON",
 		"GetIdentitySystem",
 		"NeedsContainerd",
+		"HasLinuxContainerdURL",
+		"GetLinuxContainerdURL",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
@@ -144,6 +146,18 @@ func TestGetTemplateFuncMap(t *testing.T) {
 			rargs := make([]reflect.Value, 0)
 			ret := v.Call(rargs)
 			if ret[0].Interface() != false {
+				t.Fatalf("Got unexpected NeedsContainerd response")
+			}
+		case "HasLinuxContainerdURL":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != false {
+				t.Fatalf("Got unexpected NeedsContainerd response")
+			}
+		case "GetLinuxContainerdURL":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != "" {
 				t.Fatalf("Got unexpected NeedsContainerd response")
 			}
 		}

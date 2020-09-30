@@ -294,6 +294,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.DockerBridgeSubnet = apiCfg.DockerBridgeSubnet
 	vlabsCfg.MobyVersion = apiCfg.MobyVersion
 	vlabsCfg.ContainerdVersion = apiCfg.ContainerdVersion
+	vlabsCfg.LinuxContainerdURL = apiCfg.LinuxContainerdURL
 	vlabsCfg.CloudProviderBackoff = apiCfg.CloudProviderBackoff
 	vlabsCfg.CloudProviderBackoffMode = apiCfg.CloudProviderBackoffMode
 	vlabsCfg.CloudProviderBackoffDuration = apiCfg.CloudProviderBackoffDuration
