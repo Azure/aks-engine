@@ -1555,7 +1555,7 @@ func (a *AgentPoolProfile) HasImageGallery() bool {
 
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
-	return len(a.VnetSubnetID) > 0 && !strings.Contains(a.VnetSubnetID, a.NodeResourceGroup)
+	return len(a.VnetSubnetID) > 0 && len(a.NodeResourceGroup) > 0 && !strings.Contains(a.VnetSubnetID, a.NodeResourceGroup)
 }
 
 // IsWindows returns true if the agent pool is windows
