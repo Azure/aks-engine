@@ -643,6 +643,7 @@ type AgentPoolProfile struct {
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
 	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty"`
 	VnetSubnetID                        string               `json:"vnetSubnetID,omitempty"`
+	NodeResourceGroup                   string               `json:"nodeResourceGroup,omitempty"`
 	Subnet                              string               `json:"subnet"`
 	IPAddressCount                      int                  `json:"ipAddressCount,omitempty"`
 	Distro                              Distro               `json:"distro,omitempty"`
@@ -1554,7 +1555,7 @@ func (a *AgentPoolProfile) HasImageGallery() bool {
 
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
-	return len(a.VnetSubnetID) > 0
+	return len(a.VnetSubnetID) > 0 && len(a.NodeResourceGroup) > 0 && !strings.Contains(a.VnetSubnetID, a.NodeResourceGroup)
 }
 
 // IsWindows returns true if the agent pool is windows
