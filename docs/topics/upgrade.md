@@ -176,6 +176,10 @@ For each node, the cluster will follow the same process described in the section
 
 ## Frequently Asked Questions
 
+### Can I use `aks-engine upgrade` to upgrade all possible cluster configurations in an existing cluster?
+
+No! `aks-engine upgrade` was designed to exclusively update the Kubernetes version running on a cluster, without affecting any other cluster config (especially IaaS resources). Because under the hood `aks-engine upgrade` is actually removing and adding new VMs, various configuration changes *may* be delivered to the new VMs (such as the VM size), but these changes should be considered experimental and thoroughly tested in a staging environment before being integrated into a production workflow. Specifically, changes to the VNET, Load Balancer, and other network-related configuration are not supported as modifiable by `aks-engine upgrade`. If you need to change the Load Balancer config, for example, you will need to build a new cluster.
+
 ### When should I use `aks-engine upgrade --control-plane-only`?
 
 We actually recommend that you *only* use `aks-engine upgrade --control-plane-only`. There are a few reasons:
