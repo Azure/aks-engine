@@ -698,6 +698,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
 			Option: compute.Local,
 		}
+		osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesStandardLRS
 	} else {
 		switch profile.OSDiskType {
 		case api.UltraSSD:

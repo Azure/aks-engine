@@ -575,8 +575,8 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
-		if agentPoolProfile.IsEphemeral() {
-			log.Warnf("Ephemeral disks are enabled for Agent Pool %s. This feature in AKS-Engine is experimental, and data could be lost in some cases.", agentPoolProfile.Name)
+		if agentPoolProfile.IsEphemeral() && agentPoolProfile.ScaleSetPriority != ScaleSetPrioritySpot {
+			log.Warnf("Ephemeral OS disk is enabled for Agent Pool %s. This is an appropriate configuration for ephemeral nodes; data may be lost in some cases.", agentPoolProfile.Name)
 		}
 
 		if e := validateProximityPlacementGroupID(agentPoolProfile.ProximityPlacementGroupID); e != nil {
