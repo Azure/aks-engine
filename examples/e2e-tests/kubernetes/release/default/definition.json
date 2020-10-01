@@ -74,8 +74,8 @@
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "osDiskCachingType": "ReadOnly",
         "dataDiskCachingType": "ReadWrite",
-        "osDiskSSDType": "Standard",
-        "dataDiskSSDType": "Premium"
+        "osDiskType": "StandardSSD",
+        "dataDiskType": "PremiumSSD"
       },
       {
         "name": "poolwin",
@@ -94,7 +94,7 @@
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "availabilityZones": ["1", "2"],
-        "osDiskSSDType": "Standard",
+        "osDiskType": "StandardSSD",
         "ultraSSDEnabled": true
       },
       {

@@ -38,7 +38,7 @@
 					"name": "pool1",
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
-					"osDiskSSDType": "Standard",
+					"osDiskType": "StandardSSD",
 					"distro": "flatcar"
 				}
 			],

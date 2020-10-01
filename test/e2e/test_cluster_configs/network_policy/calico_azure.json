@@ -37,7 +37,7 @@
 					"name": "agent1",
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
-					"osDiskSSDType": "Standard",
+					"osDiskType": "StandardSSD",
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot"

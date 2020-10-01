@@ -25,7 +25,7 @@
 					"name": "agentwin",
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
-					"osDiskSSDType": "Standard",
+					"osDiskType": "StandardSSD",
 					"osType": "Windows"
 				}
 			],

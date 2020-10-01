@@ -521,7 +521,8 @@ const TLSStrongCipherSuitesKubelet = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TL
 
 // SSD Types
 const (
-	Ultra    string = "Ultra"
-	Premium  string = "Premium"
-	Standard string = "Standard"
+	UltraSSD    string = "UltraSSD"
+	PremiumSSD  string = "PremiumSSD"
+	StandardSSD string = "StandardSSD"
+	StandardHDD string = "StandardHDD"
 )

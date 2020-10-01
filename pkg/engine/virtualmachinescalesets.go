@@ -699,11 +699,15 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			Option: compute.Local,
 		}
 	} else {
-		switch profile.OSDiskSSDType {
-		case api.Premium:
+		switch profile.OSDiskType {
+		case api.UltraSSD:
+			osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesUltraSSDLRS
+		case api.PremiumSSD:
 			osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesPremiumLRS
-		case api.Standard:
+		case api.StandardSSD:
 			osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesStandardSSDLRS
+		case api.StandardHDD:
+			osDisk.ManagedDisk.StorageAccountType = compute.StorageAccountTypesStandardLRS
 		}
 	}
 
@@ -815,18 +819,20 @@ func getVMSSDataDisks(profile *api.AgentPoolProfile) *[]compute.VirtualMachineSc
 		}
 		if profile.StorageProfile == api.StorageAccount {
 			dataDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]", profile.Name, i))
-		} else if profile.DataDiskSSDType != "" {
-			var ssdType compute.StorageAccountTypes
-			switch profile.DataDiskSSDType {
-			case api.Ultra:
-				ssdType = compute.StorageAccountTypesUltraSSDLRS
-			case api.Premium:
-				ssdType = compute.StorageAccountTypesPremiumLRS
-			case api.Standard:
-				ssdType = compute.StorageAccountTypesStandardLRS
+		} else if profile.DataDiskType != "" {
+			var diskType compute.StorageAccountTypes
+			switch profile.DataDiskType {
+			case api.UltraSSD:
+				diskType = compute.StorageAccountTypesUltraSSDLRS
+			case api.PremiumSSD:
+				diskType = compute.StorageAccountTypesPremiumLRS
+			case api.StandardSSD:
+				diskType = compute.StorageAccountTypesStandardSSDLRS
+			case api.StandardHDD:
+				diskType = compute.StorageAccountTypesStandardLRS
 			}
 			dataDisk.ManagedDisk = &compute.VirtualMachineScaleSetManagedDiskParameters{
-				StorageAccountType: ssdType,
+				StorageAccountType: diskType,
 			}
 		}
 		dataDisks = append(dataDisks, dataDisk)

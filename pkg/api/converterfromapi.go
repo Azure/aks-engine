@@ -515,8 +515,8 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
-	vlabsProfile.OSDiskSSDType = api.OSDiskSSDType
-	vlabsProfile.DataDiskSSDType = api.DataDiskSSDType
+	vlabsProfile.OSDiskType = api.OSDiskType
+	vlabsProfile.DataDiskType = api.DataDiskType
 	vlabsProfile.UltraSSDEnabled = api.UltraSSDEnabled
 	vlabsProfile.EncryptionAtHost = api.EncryptionAtHost
 	vlabsProfile.ProximityPlacementGroupID = api.ProximityPlacementGroupID

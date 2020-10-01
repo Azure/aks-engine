@@ -391,7 +391,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		if !isUpgrade && !isScale {
 			if cs.Properties.MasterProfile != nil {
-				if cs.Properties.MasterProfile.DataDiskSSDType == Ultra {
+				if cs.Properties.MasterProfile.DataDiskType == UltraSSD {
 					if o.KubernetesConfig.EtcdDiskIOPS == 0 || o.KubernetesConfig.EtcdDiskMBPS == 0 {
 						etcdSizeGB, _ := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
 						ultraSSDConfig := getDefaultUltraSSDConfig(etcdSizeGB)
@@ -714,16 +714,16 @@ func (p *Properties) setMasterProfileDefaults() {
 	}
 
 	if !isUpgrade {
-		if p.MasterProfile.DataDiskSSDType == "" {
-			p.MasterProfile.DataDiskSSDType = Premium
+		if p.MasterProfile.DataDiskType == "" {
+			p.MasterProfile.DataDiskType = PremiumSSD
 		}
-		if p.MasterProfile.DataDiskSSDType == Ultra {
+		if p.MasterProfile.DataDiskType == UltraSSD {
 			if p.MasterProfile.UltraSSDEnabled == nil {
 				p.MasterProfile.UltraSSDEnabled = to.BoolPtr(true)
 			}
 		}
-		if p.MasterProfile.OSDiskSSDType == "" {
-			p.MasterProfile.OSDiskSSDType = Premium
+		if p.MasterProfile.OSDiskType == "" {
+			p.MasterProfile.OSDiskType = PremiumSSD
 		}
 	}
 }
