@@ -60,16 +60,36 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_1_18_release_e2e'
+    name: 'k8s_1_18_docker_e2e'
     k8sRelease: '1.18'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     enableKMSEncryption: false
+    containerRuntime: 'docker'
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_1_19_release_e2e'
+    name: 'k8s_1_19_docker_e2e'
     k8sRelease: '1.19'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     enableKMSEncryption: false
+    containerRuntime: 'docker'
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_18_containerd_e2e'
+    k8sRelease: '1.18'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+    enableKMSEncryption: false
+    containerRuntime: 'containerd'
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_19_containerd_e2e'
+    k8sRelease: '1.19'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+    enableKMSEncryption: false
+    containerRuntime: 'containerd'
