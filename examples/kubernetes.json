@@ -25,10 +25,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

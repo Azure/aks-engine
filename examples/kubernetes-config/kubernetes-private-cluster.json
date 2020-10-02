@@ -13,36 +13,31 @@
             "username": "azureuser",
             "publicKey": ""
           }
-          }
         }
-      },
-      "masterProfile": {
+      }
+    },
+    "masterProfile": {
+      "count": 3,
+      "dnsPrefix": "",
+      "vmSize": "Standard_D2_v3"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "linuxpool1",
         "count": 3,
-        "dnsPrefix": "",
-        "vmSize": "Standard_D2_v3"
-      },
-      "agentPoolProfiles": [
-        {
-          "name": "linuxpool1",
-          "count": 3,
-          "vmSize": "Standard_D2_v3",
-          "availabilityProfile": "AvailabilitySet"
-        }
-      ],
-      "linuxProfile": {
-        "adminUsername": "azureuser",
-        "ssh": {
-          "publicKeys": [
-            {
-              "keyData": ""
-            }
-          ]
-        }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
-      },
-      "certificateProfile": {}
+        "vmSize": "Standard_D2_v3",
+        "availabilityProfile": "AvailabilitySet"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": ""
+          }
+        ]
+      }
+    }
   }
 }

@@ -39,10 +39,6 @@ This is the [NVIDIA Device Plugin](https://github.com/NVIDIA/k8s-device-plugin) 
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

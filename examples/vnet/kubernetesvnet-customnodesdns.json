@@ -64,10 +64,6 @@
         "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/dnsupdate/",
         "script": "register-dns.sh"
       }
-    ],
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
+    ]
   }
 }

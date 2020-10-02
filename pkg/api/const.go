@@ -246,7 +246,7 @@ const (
 // Azure API Versions
 const (
 	APIVersionAuthorizationUser   = "2018-09-01-preview"
-	APIVersionAuthorizationSystem = "2018-01-01-preview"
+	APIVersionAuthorizationSystem = "2018-09-01-preview"
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2018-02-14"

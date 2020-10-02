@@ -35,6 +35,7 @@ type Config struct {
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX" default:""`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX" default:""`
 	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
+	UseManagedIdentity             bool   `envconfig:"USE_MANAGED_IDENTITY" default:""`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY" default:""`
 	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
@@ -141,7 +142,20 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		isAzureStackCloud = true
 	}
 
-	if config.ClientID != "" && config.ClientSecret != "" && !(prop.OrchestratorProfile.KubernetesConfig != nil && prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+	if prop.OrchestratorProfile.KubernetesConfig == nil {
+		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	}
+
+	if config.MSIUserAssignedID != "" {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
+		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
+	}
+
+	if config.UseManagedIdentity {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
+	}
+
+	if config.ClientID != "" && config.ClientSecret != "" && !(prop.OrchestratorProfile.KubernetesConfig != nil && to.Bool(prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)) {
 		if !prop.IsAzureStackCloud() {
 			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
 				ClientID: config.ClientID,
@@ -158,10 +172,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		for idx, pool := range prop.AgentPoolProfiles {
 			pool.DNSPrefix = fmt.Sprintf("%v-%v", config.AgentDNSPrefix, idx)
 		}
-	}
-
-	if prop.OrchestratorProfile.KubernetesConfig == nil {
-		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 	}
 
 	if prop.LinuxProfile != nil {
@@ -373,11 +383,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				pool.Distro = vlabs.Distro(config.Distro)
 			}
 		}
-	}
-
-	if config.MSIUserAssignedID != "" {
-		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
-		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
 	if config.LinuxContainerdURL != "" {

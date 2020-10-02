@@ -38,10 +38,6 @@
         "version": "v1",
         "extensionParameters": ""
       }
-    ],
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
+    ]
   }
 }

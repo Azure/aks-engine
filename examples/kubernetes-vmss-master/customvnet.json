@@ -99,10 +99,6 @@
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
   }
