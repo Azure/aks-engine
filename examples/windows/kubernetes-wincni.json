@@ -41,11 +41,7 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    },
+    }
     "extensionProfiles": [
       {
         "name": "winrm",

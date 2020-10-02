@@ -125,10 +125,6 @@ In this case, we are going to use the following template (this creates a cluster
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

@@ -55,10 +55,6 @@
 			},
 			"featureFlags": {
 				"BlockOutboundInternet": true
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	}

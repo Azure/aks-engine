@@ -100,19 +100,6 @@ Again, because in this example we are deploying to Azure Public Cloud, we may om
   (etc ...)
 ```
 
-Once that's done, we need to create a [service principal][sp] for the Kubernetes cluster so it can talk to any resources that are a part of the same resource group.
-
-```console
-$ az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/51ac25de-afdg-9201-d923-8d8e8e8e8e8e/resourceGroups/contoso-apple"
-{
-  "appId": "47a62f0b-917c-4def-aa85-9b010455e591",
-  "displayName": "azure-cli-2019-01-11-22-22-06",
-  "name": "http://azure-cli-2019-01-11-22-22-06",
-  "password": "26054d2b-799b-448e-962a-783d0d6f976b",
-  "tenant": "72f988bf-86f1-41af-91ab-2d7cd011db47"
-}
-```
-
 Make a note of the `appId` and the `password` fields, as we will be providing them as the values to `client-id` and `client-secret` in the next step, respectively.
 
 Finally, run `aks-engine deploy` with the appropriate arguments:
@@ -123,33 +110,12 @@ $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --resource-group contoso-apple \
     --location westus2 \
     --api-model examples/kubernetes.json \
-    --client-id 47a62f0b-917c-4def-aa85-9b010455e591 \
-    --client-secret 26054d2b-799b-448e-962a-783d0d6f976b \
-    --set servicePrincipalProfile.clientId="47a62f0b-917c-4def-aa85-9b010455e591" \
-    --set servicePrincipalProfile.secret="26054d2b-799b-448e-962a-783d0d6f976b"
+    --auth-method cli"
 
 INFO[0000] new API model file has been generated during merge: /tmp/mergedApiModel619868596
 WARN[0002] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
 INFO[0025] Starting ARM Deployment contoso-apple-1423145182 in resource group contoso-apple. This will take some time...
 INFO[0256] Finished ARM Deployment (contoso-apple-1423145182). Succeeded
-```
-
-Note that we also used the `--set` CLI argument twice to inject the service principal `appId` and `password` into the API model:
-
-```
-    --set servicePrincipalProfile.clientId="47a62f0b-917c-4def-aa85-9b010455e591" \
-    --set servicePrincipalProfile.secret="26054d2b-799b-448e-962a-783d0d6f976b"
-```
-
-The `--set` argument allows runtime overrides of the values in the input `--api-model` file. In this case, the example API model under `examples/kubernetes.json` doesn't include any real service principal secrets, so we need to either include our desired secrets using the `--set` mechanism described above, or manually fill in these empty string values in the API model:
-
-```
-...
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
-...
 ```
 
 `aks-engine` will generate ARM templates, SSH keys, and a kubeconfig (A specification that may be used as input to the `kubectl` command to establish a privileged connection to the Kubernetes apiserver, see [here](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) for more documentation.), and then persist those as local files under the `_output/contoso-apple` directory:

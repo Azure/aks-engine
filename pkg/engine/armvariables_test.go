@@ -86,7 +86,7 @@ func TestK8sVars(t *testing.T) {
 		"agentpool1osImageResourceGroup":     "[parameters('agentpool1osImageResourceGroup')]",
 		"agentpool1osImageSKU":               "[parameters('agentpool1osImageSKU')]",
 		"agentpool1osImageVersion":           "[parameters('agentpool1osImageVersion')]",
-		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
+		"apiVersionAuthorizationSystem":      "2018-09-01-preview",
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
@@ -682,7 +682,7 @@ func TestK8sVars(t *testing.T) {
 		"agentpool1osImageResourceGroup":     "[parameters('agentpool1osImageResourceGroup')]",
 		"agentpool1osImageSKU":               "[parameters('agentpool1osImageSKU')]",
 		"agentpool1osImageVersion":           "[parameters('agentpool1osImageVersion')]",
-		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
+		"apiVersionAuthorizationSystem":      "2018-09-01-preview",
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2017-03-30",
 		"apiVersionDeployments":              "2018-06-01",
@@ -946,7 +946,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 	}
 
 	expectedMap := map[string]interface{}{
-		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
+		"apiVersionAuthorizationSystem":      "2018-09-01-preview",
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
