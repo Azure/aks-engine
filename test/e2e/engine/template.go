@@ -68,6 +68,8 @@ type Config struct {
 	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
 	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
 	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
+	LinuxContainerdURL             string `envconfig:"LINUX_CONTAINERD_URL"`
+	WindowsContainerdURL           string `envconfig:"WINDOWS_CONTAINERD_URL"`
 	*ArcOnboardingConfig
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
@@ -364,6 +366,14 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	if config.MSIUserAssignedID != "" {
 		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
+	}
+
+	if config.LinuxContainerdURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.LinuxContainerdURL = config.LinuxContainerdURL
+	}
+
+	if config.WindowsContainerdURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = config.WindowsContainerdURL
 	}
 
 	return &Engine{
