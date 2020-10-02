@@ -2066,6 +2066,7 @@ func TestValidateAddons(t *testing.T) {
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime: Containerd,
 						Addons: []KubernetesAddon{
 							{
 								Name:    common.FlannelAddonName,
@@ -2078,11 +2079,45 @@ func TestValidateAddons(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name: "flannel addon enabled but no containerRuntime",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd),
+		},
+		{
+			name: "flannel addon enabled with docker",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime: Docker,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd),
+		},
+		{
 			name: "flannel addon enabled w/ NetworkPlugin=flannel",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
-						NetworkPlugin: NetworkPluginFlannel,
+						ContainerRuntime: Containerd,
+						NetworkPlugin:    NetworkPluginFlannel,
 						Addons: []KubernetesAddon{
 							{
 								Name:    common.FlannelAddonName,
@@ -2099,7 +2134,8 @@ func TestValidateAddons(t *testing.T) {
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
-						NetworkPlugin: DefaultNetworkPlugin,
+						ContainerRuntime: Containerd,
+						NetworkPlugin:    DefaultNetworkPlugin,
 						Addons: []KubernetesAddon{
 							{
 								Name:    common.FlannelAddonName,
@@ -2116,7 +2152,8 @@ func TestValidateAddons(t *testing.T) {
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
-						NetworkPlugin: "kubenet",
+						ContainerRuntime: Containerd,
+						NetworkPlugin:    "kubenet",
 						Addons: []KubernetesAddon{
 							{
 								Name:    common.FlannelAddonName,
@@ -2133,7 +2170,8 @@ func TestValidateAddons(t *testing.T) {
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
-						NetworkPolicy: "calico",
+						ContainerRuntime: Containerd,
+						NetworkPolicy:    "calico",
 						Addons: []KubernetesAddon{
 							{
 								Name:    common.FlannelAddonName,

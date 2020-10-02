@@ -838,6 +838,9 @@ func (a *Properties) validateAddons() error {
 							return errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, networkPlugin, NetworkPluginFlannel)
 						}
 					}
+					if a.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
+						return errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd)
+					}
 				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.14.0")
 					if err != nil {
