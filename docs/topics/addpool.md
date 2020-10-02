@@ -17,8 +17,6 @@ To add a new pool to the cluster you will run a command like:
 ```sh
 $ aks-engine addpool --subscription-id <subscription_id> \
     --resource-group mycluster --location <location> \
-    --client-id '<service principal client ID>' \
-    --client-secret '<service principal client secret>' \
     --api-model _output/mycluster/apimodel.json \
     --node-pool ./pool.json
 ```
@@ -58,8 +56,8 @@ Some important considerations:
 |--resource-group|yes|The resource group the cluster is deployed in.|
 |--location|yes|The location the resource group is in.|
 |--api-model|yes|Relative path to the generated API model for the cluster.|
-|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
-|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to client_secret or client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to client_secret|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
 |--node-pool|yes|Path to JSON file expressing the `agentPoolProfile` spec of the new node pool.|
 |--auth-method|no|The authentication method used. Default value is `client_secret`. Other supported values are: `cli`, `client_certificate`, and `device`.|
@@ -133,15 +131,15 @@ $ grep orchestratorRelease -A 1 _output/kubernetes-westus2-1838/apimodel.json
 We can now run addpool once per new pool to begin the process of validating v1.19.1 across our existing v1.18.8 cluster:
 
 ```sh
-$ aks-engine addpool --subscription-id $TEST_AZURE_SUB_ID --api-model _output/kubernetes-westus2-1838/apimodel.json --node-pool newpool1.json --location westus2 --resource-group kubernetes-westus2-1838 --auth-method client_secret --client-id $TEST_AZURE_SP_ID --client-secret $TEST_AZURE_SP_PW
+$ aks-engine addpool --subscription-id $TEST_AZURE_SUB_ID --api-model _output/kubernetes-westus2-1838/apimodel.json --node-pool newpool1.json --location westus2 --resource-group kubernetes-westus2-1838
 WARN[0003] Any new nodes will have containerd version 1.3.7
 INFO[0003] Starting ARM Deployment kubernetes-westus2-1838-1942811440 in resource group kubernetes-westus2-1838. This will take some time...
 INFO[0158] Finished ARM Deployment (kubernetes-westus2-1838-1942811440). Succeeded
-$ aks-engine addpool --subscription-id $TEST_AZURE_SUB_ID --api-model _output/kubernetes-westus2-1838/apimodel.json --node-pool newpool2.json --location westus2 --resource-group kubernetes-westus2-1838 --auth-method client_secret --client-id $TEST_AZURE_SP_ID --client-secret $TEST_AZURE_SP_PW
+$ aks-engine addpool --subscription-id $TEST_AZURE_SUB_ID --api-model _output/kubernetes-westus2-1838/apimodel.json --node-pool newpool2.json --location westus2 --resource-group kubernetes-westus2-1838
 WARN[0008] Any new nodes will have containerd version 1.3.7
 INFO[0008] Starting ARM Deployment kubernetes-westus2-1838-25937475 in resource group kubernetes-westus2-1838. This will take some time...
 INFO[0163] Finished ARM Deployment (kubernetes-westus2-1838-25937475). Succeeded
-$ aks-engine addpool --subscription-id $TEST_AZURE_SUB_ID --api-model _output/kubernetes-westus2-1838/apimodel.json --node-pool newpool3.json --location westus2 --resource-group kubernetes-westus2-1838 --auth-method client_secret --client-id $TEST_AZURE_SP_ID --client-secret $TEST_AZURE_SP_PW
+$ aks-engine addpool --subscription-id $TEST_AZURE_SUB_ID --api-model _output/kubernetes-westus2-1838/apimodel.json --node-pool newpool3.json --location westus2 --resource-group kubernetes-westus2-1838
 WARN[0004] Any new nodes will have containerd version 1.3.7
 INFO[0004] Starting ARM Deployment kubernetes-westus2-1838-1370618455 in resource group kubernetes-westus2-1838. This will take some time...
 INFO[0174] Finished ARM Deployment (kubernetes-westus2-1838-1370618455). Succeeded
@@ -188,7 +186,7 @@ node/k8s-newpool3-26196714-vmss000000 tainted
 Let's say we've validated the "pool1" replacement, which we've called "newpool1". Let's scale that pool out to match the original "pool1":
 
 ```sh
-$ aks-engine scale --subscription-id $TEST_AZURE_SUB_ID --client-id $TEST_AZURE_SP_ID --client-secret $TEST_AZURE_SP_PW --api-model _output/kubernetes-westus2-1838/apimodel.json --location westus2 --resource-group kubernetes-westus2-1838 --apiserver kubernetes-westus2-1838.westus2.cloudapp.azure.com --node-pool newpool1 --new-node-count 3 --auth-method client_secret --identity-system azure_ad
+$ aks-engine scale --api-model _output/kubernetes-westus2-1838/apimodel.json --location westus2 --resource-group kubernetes-westus2-1838 --apiserver kubernetes-westus2-1838.westus2.cloudapp.azure.com --node-pool newpool1 --new-node-count 3
 INFO[0003] found VMSS k8s-newpool1-26196714-vmss in resource group kubernetes-westus2-1838 that correlates with node pool newpool1
 WARN[0003] Any new nodes will have containerd version 1.3.7
 INFO[0003] Removing singlePlacementGroup property from [variables('newpool1VMNamePrefix')]

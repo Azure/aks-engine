@@ -19,8 +19,6 @@ To scale the cluster you will run a command like:
 ```sh
 $ aks-engine scale --subscription-id <subscription_id> \
     --resource-group mycluster --location <location> \
-    --client-id '<service principal client ID>' \
-    --client-secret '<service principal client secret>' \
     --api-model _output/mycluster/apimodel.json --new-node-count <desired node count> \
     --node-pool agentpool1 --apiserver mycluster.<location>.cloudapp.azure.com
 ```
@@ -35,8 +33,8 @@ This command will re-use the `apimodel.json` file inside the output directory as
 |--resource-group|yes|The resource group the cluster is deployed in.|
 |--location|yes|The location the resource group is in.|
 |--api-model|yes|Relative path to the generated API model for the cluster.|
-|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
-|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to client_secret or client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to client_secret|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
 |--node-pool|depends|Required if there is more than one node pool. Which node pool should be scaled.|
 |--new-node-count|yes|Desired number of nodes in the node pool.|
@@ -185,7 +183,7 @@ $ grep orchestratorVersion _output/kubernetes-westus2-95121/apimodel.json
 Now, let's try that scale operation again!
 
 ```sh
-$ bin/aks-engine scale --subscription-id $AZURE_SUB_ID --client-id $AZURE_SP_ID --client-secret $AZURE_SP_PW --api-model _output/$RESOURCE_GROUP/apimodel.json --location westus2 --resource-group $RESOURCE_GROUP --apiserver $RESOURCE_GROUP.westus2.cloudapp.azure.com --node-pool agentpool1 --new-node-count 10 --auth-method client_secret --identity-system azure_ad
+$ bin/aks-engine scale --api-model _output/$RESOURCE_GROUP/apimodel.json --location westus2 --resource-group $RESOURCE_GROUP --apiserver $RESOURCE_GROUP.westus2.cloudapp.azure.com --node-pool agentpool1 --new-node-count 10
 INFO[0004] found VMSS k8s-agentpool1-10367588-vmss in resource group kubernetes-westus2-95121 that correlates with node pool agentpool1
 WARN[0004] Any new nodes will have Moby version 19.03.12
 WARN[0004] containerd will be upgraded to version 1.3.7
