@@ -78,6 +78,8 @@ var cseErrorCodes = map[string]int{
 	"ERR_KUBERESERVED_SLICE_SETUP_FAIL":          181,
 	"ERR_KUBELET_SLICE_SETUP_FAIL":               182,
 	"ERR_CRI_SLICE_SETUP_FAIL":                   183,
+	"ERR_DEB_DOWNLOAD_TIMEOUT":                   184,
+	"ERR_DEB_PKG_ADD_FAIL":                       185,
 }
 
 func GetCSEErrorCode(errorType string) int {

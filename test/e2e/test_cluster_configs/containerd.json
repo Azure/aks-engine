@@ -8,6 +8,7 @@
                 "kubernetesConfig": {
                     "networkPlugin": "azure",
                     "containerRuntime": "containerd",
+                    "linuxContainerdURL": "https://packages.microsoft.com/repos/microsoft-ubuntu-bionic-prod/pool/main/m/moby-containerd/moby-containerd_1.3.7+azure-2_amd64.deb",
                     "windowsContainerdURL": "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
                 }
             },

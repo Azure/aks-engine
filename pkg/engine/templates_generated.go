@@ -19905,6 +19905,14 @@ time_metric "InstallContainerd" installContainerd
 {{else}}
 time_metric "installMoby" installMoby
 {{end}}
+{{- if HasLinuxContainerdURL}}
+  LINUX_CONTAINERD_URL={{GetLinuxContainerdURL}}
+  if [[ -n "${LINUX_CONTAINERD_URL:-}" ]]; then
+    DEB="${LINUX_CONTAINERD_URL##*/}"
+    retrycmd_no_stats 120 5 25 curl -fsSL ${LINUX_CONTAINERD_URL} >/tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_DOWNLOAD_TIMEOUT"}}
+    retrycmd 20 30 120 dpkg -i /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
+  fi
+{{end}}
 fi
 
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
