@@ -17716,6 +17716,7 @@ spec:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(KUBE_NODE_NAME)"
             - "--provider-volume=/etc/kubernetes/secrets-store-csi-providers"
+            - "--grpc-supported-providers=azure"
             - "--metrics-addr=:8080"
           env:
             - name: CSI_ENDPOINT
