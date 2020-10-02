@@ -271,11 +271,12 @@ func autofillApimodel(dc *deployCmd) error {
 			return errors.New("apimodel: missing masterProfile.dnsPrefix and --dns-prefix was not specified")
 		}
 		dc.containerService.Properties.MasterProfile.DNSPrefix = dc.dnsPrefix
-		if dc.autoSuffix {
-			suffix := strconv.FormatInt(time.Now().Unix(), 16)
-			dc.containerService.Properties.MasterProfile.DNSPrefix += "-" + suffix
-			log.Infof("Generated random suffix %s, DNS Prefix is %s", suffix, dc.containerService.Properties.MasterProfile.DNSPrefix)
-		}
+	}
+
+	if dc.autoSuffix {
+		suffix := strconv.FormatInt(time.Now().Unix(), 16)
+		dc.containerService.Properties.MasterProfile.DNSPrefix += "-" + suffix
+		log.Infof("Generated random suffix %s, DNS Prefix is %s", suffix, dc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
 	if dc.outputDirectory == "" {
