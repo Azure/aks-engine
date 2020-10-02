@@ -25072,6 +25072,7 @@ function CreateHypervisorRuntime {
             SandboxImage = "$image-windows-$version-amd64"
             SandboxPlatform = "windows/amd64"
             SandboxIsolation = 1
+            ScaleCPULimitsToSandbox = true
 "@
 }
 
