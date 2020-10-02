@@ -25,17 +25,19 @@ const (
 
 // Distro string consts
 const (
-	Ubuntu            Distro = "ubuntu"
-	Ubuntu1804        Distro = "ubuntu-18.04"
-	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
-	RHEL              Distro = "rhel"
-	CoreOS            Distro = "coreos"
-	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
-	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
-	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
-	AKSUbuntu1604     Distro = "aks-ubuntu-16.04"
-	AKSUbuntu1804     Distro = "aks-ubuntu-18.04"
-	ACC1604           Distro = "acc-16.04"
+	Ubuntu               Distro = "ubuntu"
+	Ubuntu1804           Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2       Distro = "ubuntu-18.04-gen2"
+	RHEL                 Distro = "rhel"
+	CoreOS               Distro = "coreos"
+	AKS1604Deprecated    Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
+	AKS1804Deprecated    Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
+	AKSDockerEngine      Distro = "aks-docker-engine" // deprecated docker-engine distro.
+	AKSUbuntu1604        Distro = "aks-ubuntu-16.04"
+	AKSUbuntu1804        Distro = "aks-ubuntu-18.04"
+	ACC1604              Distro = "acc-16.04"
+	AKSUbuntuGPU1804     Distro = "aks-ubuntu-gpu-18.04"
+	AKSUbuntuGPU1804Gen2 Distro = "aks-ubuntu-gpu-18.04-gen2"
 )
 
 const (
@@ -48,7 +50,7 @@ const (
 	// DockerCEDockerComposeVersion is the Docker Compose version
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.5"
+	KubernetesWindowsDockerVersion = "19.03.11"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
@@ -192,6 +194,8 @@ const (
 	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
+	// DefaultPrivateClusterHostsConfigAgentEnabled enables the hosts config agent for private cluster
+	DefaultPrivateClusterHostsConfigAgentEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
 	NetworkPolicyAzure = "azure"
 	// NetworkPolicyNone is the string expression for the deprecated NetworkPolicy usage pattern "none"
@@ -248,7 +252,7 @@ const (
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2018-02-14"
-	APIVersionManagedIdentity     = "2015-08-31-preview"
+	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
 )
@@ -319,15 +323,18 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	// AKS needs 1.0.33 for node local dns cache support
-	AzureCniPluginVerLinux = "v1.0.33"
+	AzureCniPluginVerLinux = "v1.1.3"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.0.33"
+	AzureCniPluginVerWindows = "v1.1.3"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.6"
+	// WindowsPauseImageVersion specifies version of Windows pause image
+	WindowsPauseImageVersion = "1.4.0"
+	// DefaultAlwaysPullWindowsPauseImage is the default windowsProfile.AlwaysPullWindowsPauseImage value
+	DefaultAlwaysPullWindowsPauseImage = false
 )
 
 const (
@@ -440,13 +447,17 @@ const (
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
 	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
-	DefaultKubernetesClusterSubnetIPv6 = "fc00::/8"
+	DefaultKubernetesClusterSubnetIPv6 = "fc00::/48"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
+	// DefaultKubernetesServiceCIDRIPv6 specifies the IPv6 subnet that kubernetes will create Service IPs within.
+	DefaultKubernetesServiceCIDRIPv6 = "fd00::/108"
+	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
+	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.10"
+	DefaultMobyVersion = "19.03.12"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
@@ -465,6 +476,14 @@ const (
 	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
 	// DefaultKubeProxyMode is the default KubeProxyMode value
 	DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
+	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
+	DefaultWindowsSSHEnabled = true
+)
+
+// WindowsProfile defaults
+// TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
+const (
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.2"
 )
 
 const (

@@ -7,10 +7,14 @@
 $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
-# Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
-$global:MasterSubnet = "{{MasterSubnet}}"
-$global:NetworkMode = "{{NetworkMode}}"
-$global:NetworkPlugin = "{{NetworkPlugin}}"
+$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
+
+$global:CsiProxyEnabled = [System.Convert]::ToBoolean($Global:ClusterConfiguration.Csi.EnableProxy)
+$global:MasterSubnet = $Global:ClusterConfiguration.Kubernetes.ControlPlane.MasterSubnet
+$global:NetworkMode = "L2Bridge"
+$global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
+$global:ContainerRuntime = $Global:ClusterConfiguration.Cri.Name
+$UseContainerD = ($global:ContainerRuntime -eq "containerd")
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
@@ -18,7 +22,7 @@ function Write-Log ($message) {
     $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
 }
 
-Write-Log "Entering windowsnodecleanup.ps1"
+Write-Log "Entering windowsnodereset.ps1"
 
 Import-Module $global:HNSModule
 
@@ -31,6 +35,16 @@ Stop-Service kubeproxy
 Write-Log "Stopping kubelet service"
 Stop-Service kubelet
 
+if ($global:CsiProxyEnabled) {
+    Write-Log "Stopping csi-proxy service"
+    Stop-Service csi-proxy
+}
+
+if ($global:EnableHostsConfigAgent) {
+    Write-Log "Stopping hosts-config-agent service"
+    Stop-Service hosts-config-agent
+}
+
 #
 # Perform cleanup
 #
@@ -38,7 +52,13 @@ Stop-Service kubelet
 $hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
 if ($hnsNetwork) {
     Write-Log "Cleaning up containers"
-    docker ps -q | ForEach-Object { docker rm $_ -f }
+    if ($UseContainerD -eq $true) {
+        ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io tasks kill $_ }
+        ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io c rm $_ }
+    }
+    else {
+        docker.exe ps -q | ForEach-Object { docker rm $_ -f }
+    }
 
     Write-Log "Removing old HNS network 'azure'"
     Remove-HnsNetwork $hnsNetwork
@@ -51,6 +71,8 @@ if ($hnsNetwork) {
         "c:\k\azure-vnet.json.lock",
         "c:\k\azure-vnet-ipam.json",
         "c:\k\azure-vnet-ipam.json.lock"
+        "c:\k\azure-vnet-ipamv6.json",
+        "c:\k\azure-vnet-ipamv6.json.lock"
     )
 
     foreach ($file in $filesToRemove) {
@@ -70,8 +92,8 @@ Get-HnsPolicyList | Remove-HnsPolicyList
 # Create required networks
 #
 
-# If using kubenet create the HSN network here.
-# (The kubelet creates the HSN network when using azure-cni + azure cloud provider)
+# If using kubenet create the HNS network here.
+# (The kubelet creates the HNS network when using azure-cni + azure cloud provider)
 if ($global:NetworkPlugin -eq 'kubenet') {
     Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"
     $podCIDR = Get-PodCIDR
@@ -83,10 +105,16 @@ if ($global:NetworkPlugin -eq 'kubenet') {
 #
 # Start Services
 #
+
+if ($global:CsiProxyEnabled) {
+    Write-Log "Starting csi-proxy service"
+    Start-Service csi-proxy
+}
+
 Write-Log "Starting kubelet service"
 Start-Service kubelet
 
 Write-Log "Starting kubeproxy service"
 Start-Service kubeproxy
 
-Write-Log "Exiting windowsnodecleanup.ps1"
+Write-Log "Exiting windowsnodereset.ps1"

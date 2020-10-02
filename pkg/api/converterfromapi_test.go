@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/go-cmp/cmp"
@@ -157,20 +158,23 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
-						AzureTelemetryPID:                "AzureTelemetryPID",
-						KubernetesImageBase:              "KubernetesImageBase",
-						TillerImageBase:                  "TillerImageBase",
-						ACIConnectorImageBase:            "ACIConnectorImageBase",
-						NVIDIAImageBase:                  "NVIDIAImageBase",
-						AzureCNIImageBase:                "AzureCNIImageBase",
-						CalicoImageBase:                  "CalicoImageBase",
-						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
-						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
-						CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
-						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+						AzureTelemetryPID:                    "AzureTelemetryPID",
+						KubernetesImageBase:                  "KubernetesImageBase",
+						TillerImageBase:                      "TillerImageBase",
+						ACIConnectorImageBase:                "ACIConnectorImageBase",
+						NVIDIAImageBase:                      "NVIDIAImageBase",
+						AzureCNIImageBase:                    "AzureCNIImageBase",
+						CalicoImageBase:                      "CalicoImageBase",
+						EtcdDownloadURLBase:                  "EtcdDownloadURLBase",
+						KubeBinariesSASURLBase:               "KubeBinariesSASURLBase",
+						WindowsTelemetryGUID:                 "WindowsTelemetryGUID",
+						CNIPluginsDownloadURL:                "CNIPluginsDownloadURL",
+						VnetCNILinuxPluginsDownloadURL:       "VnetCNILinuxPluginsDownloadURL",
+						VnetCNIWindowsPluginsDownloadURL:     "VnetCNIWindowsPluginsDownloadURL",
+						ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
+						WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
+						WindowsPauseImageURL:                 "WindowsPauseImageURL",
+						AlwaysPullWindowsPauseImage:          true,
 					},
 					DCOSSpecConfig: DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -252,6 +256,15 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 	if vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase != csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase {
 		t.Errorf("incorrect ContainerdDownloadURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL != csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL {
+		t.Errorf("incorrect WindowsProvisioningScriptsPackageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL != csSpec.KubernetesSpecConfig.WindowsPauseImageURL {
+		t.Errorf("incorrect WindowsPauseImageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsPauseImageURL, vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage != csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage {
+		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
 	}
 
 	//DockerSpecConfig
@@ -507,11 +520,14 @@ func getDefaultContainerService() *ContainerService {
 					ResourceGroup: "FooImageRefResourceGroup",
 				},
 				KubernetesConfig: &KubernetesConfig{
-					KubernetesImageBase:             "quay.io",
-					ClusterSubnet:                   "fooClusterSubnet",
-					NetworkPolicy:                   "calico",
-					NetworkPlugin:                   "azure-cni",
-					ContainerRuntime:                "docker",
+					KubernetesImageBase: "quay.io",
+					ClusterSubnet:       "fooClusterSubnet",
+					NetworkPolicy:       "calico",
+					NetworkPlugin:       "azure-cni",
+					ContainerRuntime:    "docker",
+					ContainerRuntimeConfig: map[string]string{
+						common.ContainerDataDirKey: "/mnt/docker",
+					},
 					MaxPods:                         3,
 					DockerBridgeSubnet:              "sampleDockerSubnet",
 					DNSServiceIP:                    "172.0.0.1",
@@ -540,7 +556,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.0.33",
+					AzureCNIVersion:                 "1.1.3",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",
@@ -580,7 +596,8 @@ func getDefaultContainerService() *ContainerService {
 						"sampleSchedulerKey": "sampleSchedulerVal",
 					},
 					PrivateCluster: &PrivateCluster{
-						Enabled: to.BoolPtr(true),
+						Enabled:                to.BoolPtr(true),
+						EnableHostsConfigAgent: to.BoolPtr(true),
 						JumpboxProfile: &PrivateJumpboxProfile{
 							Name:           "sampleJumpboxProfile",
 							VMSize:         "Standard_DS1_v2",
@@ -674,6 +691,25 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 	}
 }
 
+func TestPPGToVLabs(t *testing.T) {
+	ppgResourceID1 := "ppgResourceID1"
+	ppgResourceID2 := "ppgResourceID2"
+	cs := getDefaultContainerService()
+	cs.Properties.MasterProfile.ProximityPlacementGroupID = ppgResourceID1
+	cs.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID = ppgResourceID2
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if vlabsCS.Properties.MasterProfile.ProximityPlacementGroupID != ppgResourceID1 {
+		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID1)
+	}
+
+	if vlabsCS.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID != ppgResourceID2 {
+		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID2)
+	}
+}
+
 func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	cs := getDefaultContainerService()
 	cs.Properties.MasterProfile.PlatformFaultDomainCount = to.IntPtr(3)
@@ -745,23 +781,25 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
+				EnableAHUB:             to.BoolPtr(true),
 			},
 			expected: vlabs.WindowsProfile{
 				AdminUsername:          "user",
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
 				Secrets:                []vlabs.KeyVaultSecrets{},
+				EnableAHUB:             to.BoolPtr(true),
 			},
 		},
 		{
@@ -789,9 +827,9 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
 			actual := vlabs.WindowsProfile{}
 			convertWindowsProfileToVLabs(&c.w, &actual)
 

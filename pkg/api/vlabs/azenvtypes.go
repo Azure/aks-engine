@@ -34,21 +34,24 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
-	AzureTelemetryPID                string `json:"azureTelemetryPID,omitempty"`
-	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
-	MCRKubernetesImageBase           string `json:"mcrKubernetesImageBase,omitempty"`
-	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
-	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
-	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
-	CalicoImageBase                  string `json:"calicoImageBase,omitempty"`
-	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
-	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
-	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
-	CNIPluginsDownloadURL            string `json:"cniPluginsDownloadURL,omitempty"`
-	VnetCNILinuxPluginsDownloadURL   string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
-	VnetCNIWindowsPluginsDownloadURL string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
-	ContainerdDownloadURLBase        string `json:"containerdDownloadURLBase,omitempty"`
+	AzureTelemetryPID                    string `json:"azureTelemetryPID,omitempty"`
+	KubernetesImageBase                  string `json:"kubernetesImageBase,omitempty"`
+	MCRKubernetesImageBase               string `json:"mcrKubernetesImageBase,omitempty"`
+	TillerImageBase                      string `json:"tillerImageBase,omitempty"`
+	ACIConnectorImageBase                string `json:"aciConnectorImageBase,omitempty"`
+	NVIDIAImageBase                      string `json:"nvidiaImageBase,omitempty"`
+	AzureCNIImageBase                    string `json:"azureCNIImageBase,omitempty"`
+	CalicoImageBase                      string `json:"calicoImageBase,omitempty"`
+	EtcdDownloadURLBase                  string `json:"etcdDownloadURLBase,omitempty"`
+	KubeBinariesSASURLBase               string `json:"kubeBinariesSASURLBase,omitempty"`
+	WindowsTelemetryGUID                 string `json:"windowsTelemetryGUID,omitempty"`
+	CNIPluginsDownloadURL                string `json:"cniPluginsDownloadURL,omitempty"`
+	VnetCNILinuxPluginsDownloadURL       string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
+	VnetCNIWindowsPluginsDownloadURL     string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
+	ContainerdDownloadURLBase            string `json:"containerdDownloadURLBase,omitempty"`
+	WindowsProvisioningScriptsPackageURL string `json:"windowsProvisioningScriptsPackageURL,omitempty"`
+	WindowsPauseImageURL                 string `json:"windowsPauseImageURL,omitempty"`
+	AlwaysPullWindowsPauseImage          bool   `json:"alwaysPullWindowsPauseImage,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint

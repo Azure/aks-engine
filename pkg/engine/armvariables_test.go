@@ -84,7 +84,7 @@ func TestK8sVars(t *testing.T) {
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
 		"apiVersionKeyVault":                 "2018-02-14",
-		"apiVersionManagedIdentity":          "2015-08-31-preview",
+		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
 		"applicationInsightsKey":             "c92d8284-b550-4b06-b7ba-e80fd7178faa", // should be DefaultApplicationInsightsKey,
@@ -182,6 +182,11 @@ func TestK8sVars(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"customCloudAuthenticationMethod":           cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
+		"windowsCSIProxyURL":                        "",
+		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
@@ -652,7 +657,7 @@ func TestK8sVars(t *testing.T) {
 		"environmentJSON":                    `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`,
 		"customCloudAuthenticationMethod":    "client_secret",
 		"customCloudIdentifySystem":          "azure_ad",
-		"apiVersionManagedIdentity":          "2015-08-31-preview",
+		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2017-10-01",
 		"apiVersionStorage":                  "2017-10-01",
 		"clusterKeyVaultName":                "",
@@ -748,6 +753,11 @@ func TestK8sVars(t *testing.T) {
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+		"windowsCSIProxyURL":                        "",
+		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -894,7 +904,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
 		"apiVersionKeyVault":                 "2018-02-14",
-		"apiVersionManagedIdentity":          "2015-08-31-preview",
+		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
 		"applicationInsightsKey":             "c92d8284-b550-4b06-b7ba-e80fd7178faa", // should be DefaultApplicationInsightsKey,
@@ -997,10 +1007,78 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+		"windowsCSIProxyURL":                        "",
+		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+}
+
+func TestK8sVarsWindowsProfile(t *testing.T) {
+	var trueVar = true
+	cases := []struct {
+		name         string
+		wp           *api.WindowsProfile
+		expectedVars map[string]interface{}
+	}{
+		{
+			name: "No windows profile",
+			wp:   nil,
+			expectedVars: map[string]interface{}{
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
+			},
+		},
+		{
+			name: "Defaults",
+			wp:   &api.WindowsProfile{},
+			expectedVars: map[string]interface{}{
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
+			},
+		},
+		{
+			name: "Non-defaults",
+			wp: &api.WindowsProfile{
+				EnableCSIProxy:                &trueVar,
+				CSIProxyURL:                   "http://some/package.tar",
+				ProvisioningScriptsPackageURL: "https://provisioning/package",
+				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
+				AlwaysPullWindowsPauseImage:   &trueVar,
+			},
+			expectedVars: map[string]interface{}{
+				"windowsEnableCSIProxy":                true,
+				"windowsCSIProxyURL":                   "http://some/package.tar",
+				"windowsProvisioningScriptsPackageURL": "https://provisioning/package",
+				"windowsPauseImageURL":                 "mcr.contoso.com/core/pause:",
+				"alwaysPullWindowsPauseImage":          "true",
+			},
+		},
+	}
+
+	for _, c := range cases {
+		test := c
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			vars := getWindowsProfileVars(test.wp)
+
+			diff := cmp.Diff(test.expectedVars, vars)
+			if diff != "" {
+				t.Errorf("unexpected diff in vars: %s", diff)
+			}
+		})
 	}
 }

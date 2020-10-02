@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 )
 
@@ -184,6 +185,8 @@ func convertLinuxProfileToVLabs(obj *LinuxProfile, vlabsProfile *vlabs.LinuxProf
 func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.WindowsProfile) {
 	vlabsProfile.AdminUsername = api.AdminUsername
 	vlabsProfile.AdminPassword = api.AdminPassword
+	vlabsProfile.CSIProxyURL = api.CSIProxyURL
+	vlabsProfile.EnableCSIProxy = api.EnableCSIProxy
 	if api.ImageRef != nil {
 		vlabsProfile.ImageRef = &vlabs.ImageReference{}
 		vlabsProfile.ImageRef.Gallery = api.ImageRef.Gallery
@@ -193,6 +196,8 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 		vlabsProfile.ImageRef.Version = api.ImageRef.Version
 	}
 	vlabsProfile.ImageVersion = api.ImageVersion
+	vlabsProfile.ProvisioningScriptsPackageURL = api.ProvisioningScriptsPackageURL
+	vlabsProfile.WindowsPauseImageURL = api.WindowsPauseImageURL
 	vlabsProfile.WindowsImageSourceURL = api.WindowsImageSourceURL
 	vlabsProfile.WindowsPublisher = api.WindowsPublisher
 	vlabsProfile.WindowsOffer = api.WindowsOffer
@@ -204,8 +209,14 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 		convertKeyVaultSecretsToVlabs(&s, secret)
 		vlabsProfile.Secrets = append(vlabsProfile.Secrets, *secret)
 	}
-	vlabsProfile.SSHEnabled = api.SSHEnabled
+	if api.SSHEnabled != nil {
+		vlabsProfile.SSHEnabled = api.SSHEnabled
+	}
 	vlabsProfile.EnableAutomaticUpdates = api.EnableAutomaticUpdates
+	if api.GetEnableAHUB() {
+		vlabsProfile.EnableAHUB = to.BoolPtr(true)
+	}
+	vlabsProfile.AlwaysPullWindowsPauseImage = api.AlwaysPullWindowsPauseImage
 }
 
 func convertOrchestratorProfileToVLabs(api *OrchestratorProfile, o *vlabs.OrchestratorProfile) {
@@ -296,6 +307,8 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.UseCloudControllerManager = apiCfg.UseCloudControllerManager
 	vlabsCfg.CustomWindowsPackageURL = apiCfg.CustomWindowsPackageURL
 	vlabsCfg.WindowsNodeBinariesURL = apiCfg.WindowsNodeBinariesURL
+	vlabsCfg.WindowsContainerdURL = apiCfg.WindowsContainerdURL
+	vlabsCfg.WindowsSdnPluginURL = apiCfg.WindowsSdnPluginURL
 	vlabsCfg.UseInstanceMetadata = apiCfg.UseInstanceMetadata
 	vlabsCfg.LoadBalancerSku = apiCfg.LoadBalancerSku
 	vlabsCfg.ExcludeMasterFromStandardLB = apiCfg.ExcludeMasterFromStandardLB
@@ -327,6 +340,14 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	convertSchedulerConfigToVlabs(apiCfg, vlabsCfg)
 	convertPrivateClusterToVlabs(apiCfg, vlabsCfg)
 	convertPodSecurityPolicyConfigToVlabs(apiCfg, vlabsCfg)
+	convertContainerRuntimeConfigToVlabs(apiCfg, vlabsCfg)
+}
+
+func convertContainerRuntimeConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
+	v.ContainerRuntimeConfig = map[string]string{}
+	for key, val := range a.ContainerRuntimeConfig {
+		v.ContainerRuntimeConfig[key] = val
+	}
 }
 
 func convertKubeletConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
@@ -387,6 +408,7 @@ func convertPrivateClusterToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig
 	if a.PrivateCluster != nil {
 		v.PrivateCluster = &vlabs.PrivateCluster{}
 		v.PrivateCluster.Enabled = a.PrivateCluster.Enabled
+		v.PrivateCluster.EnableHostsConfigAgent = a.PrivateCluster.EnableHostsConfigAgent
 		if a.PrivateCluster.JumpboxProfile != nil {
 			v.PrivateCluster.JumpboxProfile = &vlabs.PrivateJumpboxProfile{}
 			convertPrivateJumpboxProfileToVlabs(a.PrivateCluster.JumpboxProfile, v.PrivateCluster.JumpboxProfile)
@@ -489,7 +511,9 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
+	vlabsProfile.UltraSSDEnabled = api.UltraSSDEnabled
 	vlabsProfile.EncryptionAtHost = api.EncryptionAtHost
+	vlabsProfile.ProximityPlacementGroupID = api.ProximityPlacementGroupID
 	convertCustomFilesToVlabs(api, vlabsProfile)
 }
 
@@ -535,8 +559,10 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.EnableVMSSNodePublicIP = api.EnableVMSSNodePublicIP
 	p.LoadBalancerBackendAddressPoolIDs = api.LoadBalancerBackendAddressPoolIDs
 	p.AuditDEnabled = api.AuditDEnabled
+	p.UltraSSDEnabled = api.UltraSSDEnabled
 	p.DiskEncryptionSetID = api.DiskEncryptionSetID
 	p.EncryptionAtHost = api.EncryptionAtHost
+	p.ProximityPlacementGroupID = api.ProximityPlacementGroupID
 
 	for k, v := range api.CustomNodeLabels {
 		p.CustomNodeLabels[k] = v
@@ -612,6 +638,7 @@ func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
 	vlabs.EnableIPv6DualStack = api.EnableIPv6DualStack
 	vlabs.EnableTelemetry = api.EnableTelemetry
+	vlabs.EnableIPv6Only = api.EnableIPv6Only
 }
 
 func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomCloudProfile) {
@@ -675,21 +702,24 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	vlabses.KubernetesSpecConfig = vlabs.KubernetesSpecConfig{
-		AzureTelemetryPID:                api.KubernetesSpecConfig.AzureTelemetryPID,
-		KubernetesImageBase:              api.KubernetesSpecConfig.KubernetesImageBase,
-		MCRKubernetesImageBase:           api.KubernetesSpecConfig.MCRKubernetesImageBase,
-		TillerImageBase:                  api.KubernetesSpecConfig.TillerImageBase,
-		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,
-		NVIDIAImageBase:                  api.KubernetesSpecConfig.NVIDIAImageBase,
-		AzureCNIImageBase:                api.KubernetesSpecConfig.AzureCNIImageBase,
-		CalicoImageBase:                  api.KubernetesSpecConfig.CalicoImageBase,
-		EtcdDownloadURLBase:              api.KubernetesSpecConfig.EtcdDownloadURLBase,
-		KubeBinariesSASURLBase:           api.KubernetesSpecConfig.KubeBinariesSASURLBase,
-		WindowsTelemetryGUID:             api.KubernetesSpecConfig.WindowsTelemetryGUID,
-		CNIPluginsDownloadURL:            api.KubernetesSpecConfig.CNIPluginsDownloadURL,
-		VnetCNILinuxPluginsDownloadURL:   api.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
-		VnetCNIWindowsPluginsDownloadURL: api.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
-		ContainerdDownloadURLBase:        api.KubernetesSpecConfig.ContainerdDownloadURLBase,
+		AzureTelemetryPID:                    api.KubernetesSpecConfig.AzureTelemetryPID,
+		KubernetesImageBase:                  api.KubernetesSpecConfig.KubernetesImageBase,
+		MCRKubernetesImageBase:               api.KubernetesSpecConfig.MCRKubernetesImageBase,
+		TillerImageBase:                      api.KubernetesSpecConfig.TillerImageBase,
+		ACIConnectorImageBase:                api.KubernetesSpecConfig.ACIConnectorImageBase,
+		NVIDIAImageBase:                      api.KubernetesSpecConfig.NVIDIAImageBase,
+		AzureCNIImageBase:                    api.KubernetesSpecConfig.AzureCNIImageBase,
+		CalicoImageBase:                      api.KubernetesSpecConfig.CalicoImageBase,
+		EtcdDownloadURLBase:                  api.KubernetesSpecConfig.EtcdDownloadURLBase,
+		KubeBinariesSASURLBase:               api.KubernetesSpecConfig.KubeBinariesSASURLBase,
+		WindowsTelemetryGUID:                 api.KubernetesSpecConfig.WindowsTelemetryGUID,
+		CNIPluginsDownloadURL:                api.KubernetesSpecConfig.CNIPluginsDownloadURL,
+		VnetCNILinuxPluginsDownloadURL:       api.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
+		VnetCNIWindowsPluginsDownloadURL:     api.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
+		ContainerdDownloadURLBase:            api.KubernetesSpecConfig.ContainerdDownloadURLBase,
+		WindowsProvisioningScriptsPackageURL: api.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
+		WindowsPauseImageURL:                 api.KubernetesSpecConfig.WindowsPauseImageURL,
+		AlwaysPullWindowsPauseImage:          api.KubernetesSpecConfig.AlwaysPullWindowsPauseImage,
 	}
 	vlabses.OSImageConfig = map[vlabs.Distro]vlabs.AzureOSImageConfig{}
 	for k, v := range api.OSImageConfig {

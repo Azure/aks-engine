@@ -710,7 +710,25 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_NV6s_v2",
         "Standard_PB12s",
         "Standard_PB24s",
-        "Standard_PB6s"
+        "Standard_PB6s",
+        "Standard_NC4as_T4_v3",
+        "Standard_NC8as_T4_v3",
+        "Standard_NC16as_T4_v3",
+        "Standard_NC64as_T4_v3",
+        "Standard_D2_v4",
+        "Standard_D4_v4",
+        "Standard_D8_v4",
+        "Standard_D16_v4",
+        "Standard_D32_v4",
+        "Standard_D48_v4",
+        "Standard_D64_v4",
+        "Standard_D2s_v4",
+        "Standard_D4s_v4",
+        "Standard_D8s_v4",
+        "Standard_D16s_v4",
+        "Standard_D32s_v4",
+        "Standard_D48s_v4",
+        "Standard_D64s_v4"
     ],
 `
 }
@@ -1691,6 +1709,60 @@ func GetSizeMap() string {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_PB6s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NC4as_T4_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NC8as_T4_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NC16as_T4_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NC64as_T4_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D2_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D4_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D8_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D16_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D32_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D48_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D64_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D2s_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D4s_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D8s_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D16s_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D32s_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D48s_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D64s_v4": {
       "storageAccountType": "Premium_LRS"
     }
    }

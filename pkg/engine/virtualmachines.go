@@ -23,7 +23,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	var useManagedIdentity, userAssignedIDEnabled bool
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 	}
 
 	var dependencies []string
@@ -211,6 +211,12 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(cs.Properties.MasterProfile.OSDiskSizeGB))
 	}
 
+	if to.Bool(cs.Properties.MasterProfile.UltraSSDEnabled) {
+		vmProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	storageProfile.OsDisk = osDisk
 	storageProfile.ImageReference = imgReference
 	vmProperties.StorageProfile = storageProfile
@@ -329,7 +335,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 	}
 
 	if isStorageAccount {
@@ -477,6 +483,14 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		}
 		agentCustomData := getCustomDataFromJSON(t.GetKubernetesWindowsNodeCustomDataJSONObject(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
+
+		if cs.Properties.WindowsProfile.HasEnableAHUB() {
+			licenseType := api.WindowsLicenseTypeNone
+			if cs.Properties.WindowsProfile.GetEnableAHUB() {
+				licenseType = api.WindowsLicenseTypeServer
+			}
+			virtualMachine.LicenseType = &licenseType
+		}
 	}
 
 	virtualMachine.OsProfile = &osProfile
@@ -484,7 +498,46 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile := compute.StorageProfile{}
 
 	if profile.IsWindows() {
-		storageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
+		// Priority:
+		//   1. ImageRef in agent pool
+		//   2. Custom image in WindowsProfile. AKS does not use this for now but it may use this later for testing.
+		//   3. ImageRef in WindowsProfile
+		//   4. PIR image in WindowsProfile
+		windowsProfile := cs.Properties.WindowsProfile
+		if profile.HasImageRef() {
+			imageRef := profile.ImageRef
+			if profile.HasImageGallery() {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
+				}
+			} else {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
+			}
+		} else if windowsProfile.HasCustomImage() {
+			storageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images', '%sCustomWindowsImage')]", profile.Name)),
+			}
+		} else if windowsProfile.HasImageRef() {
+			imageRef := windowsProfile.ImageRef
+			if windowsProfile.HasImageGallery() {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
+				}
+			} else {
+				storageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
+			}
+		} else {
+			storageProfile.ImageReference = &compute.ImageReference{
+				Offer:     to.StringPtr(fmt.Sprintf("[variables('%sosImageOffer')]", profile.Name)),
+				Publisher: to.StringPtr(fmt.Sprintf("[variables('%sosImagePublisher')]", profile.Name)),
+				Sku:       to.StringPtr(fmt.Sprintf("[variables('%sosImageSKU')]", profile.Name)),
+				Version:   to.StringPtr(fmt.Sprintf("[variables('%sosImageVersion')]", profile.Name)),
+			}
+		}
 
 		if profile.HasDisks() {
 			storageProfile.DataDisks = getArmDataDisks(profile)
@@ -538,6 +591,12 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	if profile.DiskEncryptionSetID != "" {
 		osDisk.ManagedDisk = &compute.ManagedDiskParameters{
 			DiskEncryptionSet: &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)},
+		}
+	}
+
+	if to.Bool(profile.UltraSSDEnabled) {
+		virtualMachine.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
 		}
 	}
 

@@ -18,7 +18,7 @@ const (
 	kubeDNSImageReference                             string = "k8s-dns-kube-dns-amd64:1.15.4"
 	kubeDNSMasqNannyImageReference                    string = "k8s-dns-dnsmasq-nanny-amd64:1.15.4"
 	kubeDNSSidecarImageReference                      string = "k8s-dns-sidecar-amd64:1.14.10"
-	pauseImageReference                               string = "k8s/core/pause:1.2.0"
+	pauseImageReference                               string = "oss/kubernetes/pause:1.3.1"
 	tillerImageReference                              string = "tiller:v2.13.1"
 	reschedulerImageReference                         string = "rescheduler:v0.4.0"
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
@@ -69,11 +69,17 @@ const (
 // k8sComponentVersions is a convenience map to make UT maintenance easier,
 // at the expense of some add'l indirection in getK8sVersionComponents below
 var k8sComponentVersions = map[string]map[string]string{
+	"1.19": {
+		"addon-resizer":                   "addon-resizer:1.8.7",
+		"metrics-server":                  "metrics-server-amd64:v0.3.5",
+		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
+		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
+	},
 	"1.18": {
 		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.5",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
-		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.0",
+		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 	},
 	"1.17": {
 		"addon-resizer":                   "addon-resizer:1.8.7",
@@ -182,6 +188,30 @@ func getKubeConfigs() map[string]map[string]string {
 
 func getVersionOverrides(v string) map[string]string {
 	switch v {
+	case "1.18.6":
+		return map[string]string{"windowszip": "v1.18.6-hotfix.20200723/windowszip/v1.18.6-hotfix.20200723-1int.zip"}
+	case "1.18.4":
+		return map[string]string{"windowszip": "v1.18.4-hotfix.20200624/windowszip/v1.18.4-hotfix.20200624-1int.zip"}
+	case "1.18.2":
+		return map[string]string{"windowszip": "v1.18.2-hotfix.20200624/windowszip/v1.18.2-hotfix.20200624-1int.zip"}
+	case "1.17.11":
+		return map[string]string{"windowszip": "v1.17.11-hotfix.20200901/windowszip/v1.17.11-hotfix.20200901-1int.zip"}
+	case "1.17.9":
+		return map[string]string{"windowszip": "v1.17.9-hotfix.20200824/windowszip/v1.17.9-hotfix.20200824-1int.zip"}
+	case "1.17.7":
+		return map[string]string{"windowszip": "v1.17.7-hotfix.20200817/windowszip/v1.17.7-hotfix.20200817-1int.zip"}
+	case "1.16.15":
+		return map[string]string{"windowszip": "v1.16.15-hotfix.20200903/windowszip/v1.16.15-hotfix.20200903-1int.zip"}
+	case "1.16.13":
+		return map[string]string{"windowszip": "v1.16.13-hotfix.20200824/windowszip/v1.16.13-hotfix.20200824-1int.zip"}
+	case "1.16.11":
+		return map[string]string{"windowszip": "v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip"}
+	case "1.16.10":
+		return map[string]string{"windowszip": "v1.16.10-hotfix.20200817/windowszip/v1.16.10-hotfix.20200817-1int.zip"}
+	case "1.15.12":
+		return map[string]string{"windowszip": "v1.15.12-hotfix.20200714/windowszip/v1.15.12-hotfix.20200714-1int.zip"}
+	case "1.15.11":
+		return map[string]string{"windowszip": "v1.15.11-hotfix.20200714/windowszip/v1.15.11-hotfix.20200714-1int.zip"}
 	case "1.8.11":
 		return map[string]string{"kube-dns": "k8s-dns-kube-dns-amd64:1.14.9"}
 	case "1.8.9":
@@ -227,6 +257,85 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 	var ret map[string]string
 	k8sComponent := k8sComponentVersions[majorMinor]
 	switch majorMinor {
+	case "1.19":
+		ret = map[string]string{
+			"kube-apiserver":                                  "kube-apiserver:v" + version,
+			"kube-controller-manager":                         "kube-controller-manager:v" + version,
+			common.KubeProxyAddonName:                         "kube-proxy:v" + version,
+			"kube-scheduler":                                  "kube-scheduler:v" + version,
+			"ccm":                                             azureCloudControllerManagerImageReference,
+			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
+			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
+			common.DashboardAddonName:                         dashboardImageReference,
+			"exechealthz":                                     execHealthZImageReference,
+			"addonresizer":                                    k8sComponent["addon-resizer"],
+			"heapster":                                        heapsterImageReference,
+			common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
+			common.CoreDNSAddonName:                           coreDNSImageReference,
+			"kube-dns":                                        kubeDNSImageReference,
+			"addonmanager":                                    k8sComponent["addon-manager"],
+			"dnsmasq":                                         kubeDNSMasqNannyImageReference,
+			"pause":                                           pauseImageReference,
+			common.TillerAddonName:                            tillerImageReference,
+			common.ReschedulerAddonName:                       reschedulerImageReference,
+			common.ACIConnectorAddonName:                      virtualKubeletImageReference,
+			common.ContainerMonitoringAddonName:               omsImageReference,
+			common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
+			common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
+			"k8s-dns-sidecar":                                 kubeDNSSidecarImageReference,
+			common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
+			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
+			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
+			common.IPMASQAgentAddonName:                       ipMasqAgentImageReference,
+			common.DNSAutoscalerAddonName:                     dnsAutoscalerImageReference,
+			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
+			"calico-typha":                                    calicoTyphaImageReference,
+			"calico-cni":                                      calicoCNIImageReference,
+			"calico-node":                                     calicoNodeImageReference,
+			"calico-pod2daemon":                               calicoPod2DaemonImageReference,
+			"calico-cluster-proportional-autoscaler":          calicoClusterProportionalAutoscalerImageReference,
+			common.CiliumAgentContainerName:                   ciliumAgentImageReference,
+			common.CiliumCleanStateContainerName:              ciliumCleanStateImageReference,
+			common.CiliumOperatorContainerName:                ciliumOperatorImageReference,
+			common.CiliumEtcdOperatorContainerName:            ciliumEtcdOperatorImageReference,
+			common.AntreaControllerContainerName:              antreaControllerImageReference,
+			common.AntreaAgentContainerName:                   antreaAgentImageReference,
+			common.AntreaOVSContainerName:                     antreaOVSImageReference,
+			"antrea" + common.AntreaInstallCNIContainerName:   antreaInstallCNIImageReference,
+			common.NMIContainerName:                           aadPodIdentityNMIImageReference,
+			common.MICContainerName:                           aadPodIdentityMICImageReference,
+			common.AzurePolicyAddonName:                       azurePolicyImageReference,
+			common.GatekeeperContainerName:                    gatekeeperImageReference,
+			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
+			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
+			common.CSIAttacherContainerName:                   csiAttacherImageReference,
+			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
+			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
+			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
+			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
+			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
+			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
+			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
+			common.ScheduledMaintenanceManagerContainerName:   ScheduledMaintenanceManagerImageReference,
+			"nodestatusfreq":                                  DefaultKubernetesNodeStatusUpdateFrequency,
+			"nodegraceperiod":                                 DefaultKubernetesCtrlMgrNodeMonitorGracePeriod,
+			"podeviction":                                     DefaultKubernetesCtrlMgrPodEvictionTimeout,
+			"routeperiod":                                     DefaultKubernetesCtrlMgrRouteReconciliationPeriod,
+			"backoffretries":                                  strconv.Itoa(DefaultKubernetesCloudProviderBackoffRetries),
+			"backoffjitter":                                   strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffJitter, 'f', -1, 64),
+			"backoffduration":                                 strconv.Itoa(DefaultKubernetesCloudProviderBackoffDuration),
+			"backoffexponent":                                 strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffExponent, 'f', -1, 64),
+			"ratelimitqps":                                    strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPS, 'f', -1, 64),
+			"ratelimitqpswrite":                               strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPSWrite, 'f', -1, 64),
+			"ratelimitbucket":                                 strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucket),
+			"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
+			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
+			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+		}
 	case "1.18":
 		ret = map[string]string{
 			"kube-apiserver":                                  "kube-apiserver:v" + version,
@@ -235,7 +344,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			"kube-scheduler":                                  "kube-scheduler:v" + version,
 			"ccm":                                             azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
-			"windowszip":                                      "v" + version + "-1int.zip",
+			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
 			"addonresizer":                                    k8sComponent["addon-resizer"],
@@ -314,7 +423,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			"kube-scheduler":                                  "kube-scheduler:v" + version,
 			"ccm":                                             azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
-			"windowszip":                                      "v" + version + "-1int.zip",
+			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
 			"addonresizer":                                    k8sComponent["addon-resizer"],
@@ -391,7 +500,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
 			"ccm":                                             azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
-			"windowszip":                                      "v" + version + "-1int.zip",
+			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
 			"addonresizer":                                    k8sComponent["addon-resizer"],
@@ -467,7 +576,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			"hyperkube":                                       "hyperkube-amd64:v" + version,
 			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
 			"ccm":                                             "cloud-controller-manager-amd64:v" + version,
-			"windowszip":                                      "v" + version + "-1int.zip",
+			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
 			"addonresizer":                                    k8sComponent["addon-resizer"],
@@ -543,7 +652,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			"hyperkube":                                       "hyperkube-amd64:v" + version,
 			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
 			"ccm":                                             "cloud-controller-manager-amd64:v" + version,
-			"windowszip":                                      "v" + version + "-1int.zip",
+			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
 			"addonresizer":                                    k8sComponent["addon-resizer"],
@@ -619,7 +728,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			"hyperkube":                                       "hyperkube-amd64:v" + version,
 			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
 			"ccm":                                             "cloud-controller-manager-amd64:v" + version,
-			"windowszip":                                      "v" + version + "-1int.zip",
+			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
 			"addonresizer":                                    k8sComponent["addon-resizer"],

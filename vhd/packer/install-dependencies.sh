@@ -66,9 +66,8 @@ installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.1.3
 1.0.33
-1.0.30
-1.0.29
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -201,6 +200,15 @@ for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
+
+MCR_PAUSE_VERSIONS="1.3.1"
+for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
+    # Pull the arch independent MCR pause image which is built for Linux and Windows
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/pause:${PAUSE_VERSION}"
+    pullContainerImage "docker" "${CONTAINER_IMAGE}"
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 GCR_PAUSE_VERSIONS="3.1"
 for PAUSE_VERSION in ${GCR_PAUSE_VERSIONS}; do
     # Image 'mcr.microsoft.com/k8s/azurestack/core/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
@@ -224,6 +232,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.18.0
 1.17.0
 1.16.3
 1.16.2
@@ -422,6 +431,8 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.18.2
+1.18.1
 1.17.3
 1.17.2
 1.16.7

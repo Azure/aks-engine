@@ -24,13 +24,38 @@ import (
 )
 
 // DistroValues is a list of currently supported distros
-var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, Ubuntu1804Gen2, ACC1604}
+var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, Ubuntu1804Gen2, ACC1604, AKSUbuntuGPU1804, AKSUbuntuGPU1804Gen2}
 
 // PropertiesDefaultsParams is the parameters when we set the properties defaults for ContainerService.
 type PropertiesDefaultsParams struct {
 	IsUpgrade  bool
 	IsScale    bool
 	PkiKeySize int
+}
+
+func (p *Properties) setLoadBalancerSkuDefaults() {
+	if p.OrchestratorProfile == nil {
+		p.OrchestratorProfile = &OrchestratorProfile{}
+	}
+
+	if p.OrchestratorProfile.KubernetesConfig == nil {
+		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+	}
+
+	if p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
+		if p.HasAvailabilityZones() {
+			p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+		} else {
+			p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
+		}
+	}
+
+	// normalize sku
+	if strings.EqualFold(p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, BasicLoadBalancerSku) {
+		p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
+	} else if strings.EqualFold(p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
+		p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+	}
 }
 
 // SetPropertiesDefaults for the container Properties, returns true if certs are generated
@@ -53,6 +78,9 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 		properties.setMasterProfileDefaults(params.IsUpgrade)
 	}
 
+	// move load balancer sku defaults logic from setOrchestratorDefaults() to here to serve LB checking at setAgentProfileDefaults()
+	properties.setLoadBalancerSkuDefaults()
+
 	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
 
 	properties.setStorageDefaults()
@@ -65,7 +93,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 	}
 
 	if cs.Properties.WindowsProfile != nil {
-		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
+		cs.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
 	}
 
 	properties.setTelemetryProfileDefaults()
@@ -89,9 +117,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		return
 	}
 	o := a.OrchestratorProfile
-	o.OrchestratorVersion = common.GetValidPatchVersion(
-		o.OrchestratorType,
-		o.OrchestratorVersion, isUpdate, a.HasWindows())
+	if o.OrchestratorVersion == "" {
+		o.OrchestratorVersion = common.GetValidPatchVersion(
+			o.OrchestratorType,
+			o.OrchestratorVersion, isUpdate, a.HasWindows())
+	}
 
 	switch o.OrchestratorType {
 	case Kubernetes:
@@ -190,9 +220,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
+				// ipv6 only cluster
+				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+					o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnetIPv6
+				}
 				// ipv4 and ipv6 subnet for dual stack
 				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, cs.getDefaultKubernetesClusterSubnetIPv6()}, ",")
 				}
 			}
 		} else {
@@ -205,7 +239,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					if err == nil {
 						if ip.To4() != nil {
 							// the first cidr block is ipv4, so append ipv6
-							clusterSubnets = append(clusterSubnets, DefaultKubernetesClusterSubnetIPv6)
+							clusterSubnets = append(clusterSubnets, cs.getDefaultKubernetesClusterSubnetIPv6())
 						} else {
 							// first cidr has to be ipv4
 							clusterSubnets = append([]string{DefaultKubernetesClusterSubnet}, clusterSubnets...)
@@ -224,12 +258,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 		if o.KubernetesConfig.DNSServiceIP == "" {
 			o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIP
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIPv6
+			}
 		}
 		if o.KubernetesConfig.DockerBridgeSubnet == "" {
 			o.KubernetesConfig.DockerBridgeSubnet = DefaultDockerBridgeSubnet
 		}
 		if o.KubernetesConfig.ServiceCIDR == "" {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDRIPv6
+			}
 		}
 
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
@@ -259,6 +299,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		if o.KubernetesConfig.PrivateCluster.Enabled == nil {
 			o.KubernetesConfig.PrivateCluster.Enabled = to.BoolPtr(DefaultPrivateClusterEnabled)
+		}
+
+		if o.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent == nil {
+			o.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent = to.BoolPtr(DefaultPrivateClusterHostsConfigAgentEnabled)
 		}
 
 		if "" == a.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB {
@@ -333,20 +377,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
-		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
-			if a.HasAvailabilityZones() {
-				a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-			} else {
-				a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
-			}
-		}
-
-		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
-			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
-		} else if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(StandardLoadBalancerSku) {
-			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-		}
-
 		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
 			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 		}
@@ -377,6 +407,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		} else {
 			// CloudProviderDisableOutboundSNAT is only valid in the context of Standard LB, statically set to false if not Standard LB
 			o.KubernetesConfig.CloudProviderDisableOutboundSNAT = to.BoolPtr(false)
+		}
+
+		if o.KubernetesConfig.ContainerRuntimeConfig == nil {
+			o.KubernetesConfig.ContainerRuntimeConfig = make(map[string]string)
 		}
 
 		// Master-specific defaults that depend upon OrchestratorProfile defaults
@@ -639,11 +673,13 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			if profile.VMSSOverProvisioningEnabled == nil {
 				profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
 			}
-			if profile.Count > 100 {
-				profile.SinglePlacementGroup = to.BoolPtr(false)
-			}
+
 			if profile.SinglePlacementGroup == nil {
-				profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
+				if strings.EqualFold(p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
+					profile.SinglePlacementGroup = to.BoolPtr(false)
+				} else {
+					profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
+				}
 			}
 		}
 		// set default OSType to Linux
@@ -699,30 +735,86 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 }
 
 // setWindowsProfileDefaults sets default WindowsProfile values
-func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
-	windowsProfile := p.WindowsProfile
+func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+	windowsProfile := cs.Properties.WindowsProfile
 	if !isUpgrade && !isScale {
-		if windowsProfile.WindowsPublisher == "" {
-			windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
+		// Allow non-default values of windowsProfile.ProvisioningScriptsPackageURL to allow for testing of updates to the scripts.
+		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
+			windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
 		}
-		if windowsProfile.WindowsOffer == "" {
-			windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
+		if len(windowsProfile.WindowsPauseImageURL) == 0 {
+			windowsProfile.WindowsPauseImageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsPauseImageURL
 		}
-		if windowsProfile.WindowsSku == "" {
-			windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+		if windowsProfile.AlwaysPullWindowsPauseImage == nil {
+			windowsProfile.AlwaysPullWindowsPauseImage = to.BoolPtr(cloudSpecConfig.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
+		}
+		if windowsProfile.SSHEnabled == nil {
+			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
+		}
+		if windowsProfile.EnableCSIProxy != nil && *windowsProfile.EnableCSIProxy && len(windowsProfile.CSIProxyURL) == 0 {
+			windowsProfile.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
 		}
 
-		if windowsProfile.ImageVersion == "" {
-			// default versions are specific to a publisher/offer/sku
-			if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
-				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
-			} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
-				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
-			} else {
-				windowsProfile.ImageVersion = "latest"
+		// This allows caller to use the latest ImageVersion and WindowsSku for adding a new Windows pool to an existing cluster.
+		// We must assure that same WindowsPublisher and WindowsOffer are used in an existing cluster.
+		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				if windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
+			}
+		} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = WindowsServer2019OSImageConfig.ImageSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				if windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
+			}
+		} else {
+			if windowsProfile.WindowsPublisher == "" {
+				windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
+			}
+			if windowsProfile.WindowsOffer == "" {
+				windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+			}
+
+			if windowsProfile.ImageVersion == "" {
+				// default versions are specific to a publisher/offer/sku
+				if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
 			}
 		}
 	} else if isUpgrade {
+		// Allow non-default values of windowsProfile.ProvisioningScriptsPackageURL to allow for custom clouds.
+		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
+			windowsProfile.ProvisioningScriptsPackageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL
+		}
+		if len(windowsProfile.WindowsPauseImageURL) == 0 {
+			windowsProfile.WindowsPauseImageURL = cloudSpecConfig.KubernetesSpecConfig.WindowsPauseImageURL
+		}
+		if windowsProfile.AlwaysPullWindowsPauseImage == nil {
+			windowsProfile.AlwaysPullWindowsPauseImage = to.BoolPtr(cloudSpecConfig.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
+		}
+		if windowsProfile.EnableCSIProxy != nil && *windowsProfile.EnableCSIProxy && len(windowsProfile.CSIProxyURL) == 0 {
+			windowsProfile.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
+		}
+
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
 		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
 		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
@@ -1012,4 +1104,17 @@ func generateEtcdEncryptionKey() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+// getDefaultKubernetesClusterSubnetIPv6 returns the default IPv6 cluster subnet
+func (cs *ContainerService) getDefaultKubernetesClusterSubnetIPv6() string {
+	o := cs.Properties.OrchestratorProfile
+	// In 1.17+ the default IPv6 mask size is /64 which means the cluster
+	// subnet mask size >= /48
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0") {
+		return DefaultKubernetesClusterSubnetIPv6
+	}
+	// In 1.16, the default mask size for IPv6 is /24 which forces the cluster
+	// subnet mask size to be strictly >= /8
+	return "fc00::/8"
 }

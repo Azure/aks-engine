@@ -328,6 +328,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsPrivateCluster": func() bool {
 			return cs.Properties.OrchestratorProfile.IsPrivateCluster()
 		},
+		"EnableHostsConfigAgent": func() bool {
+			return cs.Properties.OrchestratorProfile.IsHostsConfigAgentEnabled()
+		},
 		"ProvisionJumpbox": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 		},
@@ -471,12 +474,14 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			var parts = []string{
 				kubernetesWindowsAgentFunctionsPS1,
 				kubernetesWindowsConfigFunctionsPS1,
+				kubernetesWindowsContainerdFunctionsPS1,
+				kubernetesWindowsCsiProxyFunctionsPS1,
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
-				kubernetesWindowsLogsCleanupPS1,
-				kubernetesWindowsNodeResetPS1,
-				kubernetesWindowsOpenSSHFunctionPS1}
+				kubernetesWindowsHostsConfigAgentFunctionsPS1,
+				kubernetesWindowsOpenSSHFunctionPS1,
+			}
 
 			// Create a buffer, new zip
 			buf := new(bytes.Buffer)
@@ -536,8 +541,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"AnyAgentIsLinux": func() bool {
 			return cs.Properties.AnyAgentIsLinux()
 		},
-		"IsNSeriesSKU": func(profile *api.AgentPoolProfile) bool {
-			return common.IsNvidiaEnabledSKU(profile.VMSize)
+		"IsNSeriesSKU": func(vmSKU string) bool {
+			return common.IsNvidiaEnabledSKU(vmSKU)
 		},
 		"HasAvailabilityZones": func(profile *api.AgentPoolProfile) bool {
 			return profile.HasAvailabilityZones()
@@ -588,7 +593,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.WindowsProfile.HasCustomImage()
 		},
 		"WindowsSSHEnabled": func() bool {
-			return cs.Properties.WindowsProfile.SSHEnabled
+			return cs.Properties.WindowsProfile.GetSSHEnabled()
 		},
 		"GetConfigurationScriptRootURL": func() string {
 			linuxProfile := cs.Properties.LinuxProfile
@@ -655,6 +660,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsIPv6DualStackFeatureEnabled": func() bool {
 			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
 		},
+		"IsIPv6Enabled": func() bool {
+			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
+		},
 		"GetBase64EncodedEnvironmentJSON": func() string {
 			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
 			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))
@@ -680,6 +688,20 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
+		},
+		"GetDockerConfig": func(hasGPU bool) string {
+			val, err := getDockerConfig(cs, hasGPU)
+			if err != nil {
+				return ""
+			}
+			return val
+		},
+		"GetContainerdConfig": func() string {
+			val, err := getContainerdConfig(cs)
+			if err != nil {
+				return ""
+			}
+			return val
 		},
 		"HasNSeriesSKU": func() bool {
 			return cs.Properties.HasNSeriesSKU()
@@ -756,6 +778,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetTargetEnvironment": func() string {
 			return helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 		},
+		"IsAKSCustomCloud": func() bool {
+			return cs.IsAKSCustomCloud()
+		},
+		"GetInitAKSCustomCloudFilepath": func() string {
+			return initAKSCustomCloudFilepath
+		},
 		"GetCustomCloudConfigCSEScriptFilepath": func() string {
 			return customCloudConfigCSEScriptFilepath
 		},
@@ -819,6 +847,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"CloseBraces": func() string {
 			return "}}"
+		},
+		"IndentString": func(original string, spaces int) string {
+			return common.IndentString(original, spaces)
 		},
 	}
 }
@@ -901,7 +932,46 @@ func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerS
 
 func generateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) string {
 	if isUserAssignedIdentity {
-		return "' USER_ASSIGNED_IDENTITY_ID=',reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID')), '2018-11-30').clientId, ' '"
+		return "' USER_ASSIGNED_IDENTITY_ID=',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId, ' '"
 	}
 	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
+}
+
+func generateUserAssignedIdentityClientIDParameterForWindows(isUserAssignedIdentity bool) string {
+	if isUserAssignedIdentity {
+		return "' -UserAssignedClientID ',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId,"
+	}
+	return ""
+}
+
+func getDockerConfig(cs *api.ContainerService, hasGPU bool) (string, error) {
+	var overrides []func(*common.DockerConfig) error
+
+	if hasGPU {
+		overrides = append(overrides, common.DockerNvidiaOverride)
+	}
+
+	val, err := common.GetDockerConfig(cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig, overrides)
+	if err != nil {
+		return "", err
+	}
+
+	return val, nil
+}
+
+func getContainerdConfig(cs *api.ContainerService) (string, error) {
+	var overrides = []func(*common.ContainerdConfig) error{
+		common.ContainerdSandboxImageOverrider(cs.Properties.OrchestratorProfile.GetPodInfraContainerSpec()),
+	}
+
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginKubenet {
+		overrides = append(overrides, common.ContainerdKubenetOverride)
+	}
+
+	val, err := common.GetContainerdConfig(cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig, overrides)
+	if err != nil {
+		return "", err
+	}
+
+	return val, nil
 }

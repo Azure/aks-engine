@@ -164,6 +164,7 @@ func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecParams) er
 			azureStackCloudSpec.KubernetesSpecConfig.CalicoImageBase = helpers.EnsureString(asccKubernetesSpecConfig.CalicoImageBase, azsKubernetesSpecConfig.CalicoImageBase)
 			azureStackCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.CNIPluginsDownloadURL, azsKubernetesSpecConfig.CNIPluginsDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.ContainerdDownloadURLBase = helpers.EnsureString(asccKubernetesSpecConfig.ContainerdDownloadURLBase, azsKubernetesSpecConfig.ContainerdDownloadURLBase)
+			azureStackCloudSpec.KubernetesSpecConfig.CSIProxyDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.CSIProxyDownloadURL, azsKubernetesSpecConfig.CSIProxyDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.EtcdDownloadURLBase = helpers.EnsureString(asccKubernetesSpecConfig.EtcdDownloadURLBase, azsKubernetesSpecConfig.EtcdDownloadURLBase)
 			azureStackCloudSpec.KubernetesSpecConfig.KubeBinariesSASURLBase = helpers.EnsureString(asccKubernetesSpecConfig.KubeBinariesSASURLBase, azsKubernetesSpecConfig.KubeBinariesSASURLBase)
 			azureStackCloudSpec.KubernetesSpecConfig.KubernetesImageBase = helpers.EnsureString(asccKubernetesSpecConfig.KubernetesImageBase, azsKubernetesSpecConfig.KubernetesImageBase)
@@ -173,6 +174,9 @@ func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecParams) er
 			azureStackCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 			azureStackCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = helpers.EnsureString(asccKubernetesSpecConfig.WindowsTelemetryGUID, azsKubernetesSpecConfig.WindowsTelemetryGUID)
+			azureStackCloudSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, azsKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+			azureStackCloudSpec.KubernetesSpecConfig.WindowsPauseImageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsPauseImageURL, azsKubernetesSpecConfig.WindowsPauseImageURL)
+			azureStackCloudSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage = asccKubernetesSpecConfig.AlwaysPullWindowsPauseImage
 
 			//EndpointConfig
 			asccEndpointConfig := ascc.EndpointConfig

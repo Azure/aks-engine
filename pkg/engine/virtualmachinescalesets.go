@@ -24,10 +24,9 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
 
-	var useManagedIdentity, userAssignedIDEnabled bool
+	var userAssignedIDEnabled bool
 	if k8sConfig != nil {
-		useManagedIdentity = k8sConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && k8sConfig.UserAssignedID != ""
+		userAssignedIDEnabled = k8sConfig.UserAssignedIDEnabled()
 	}
 	isAzureCNI := orchProfile.IsAzureCNI()
 	masterCount := masterProfile.Count
@@ -89,7 +88,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		virtualMachine.Zones = &masterProfile.AvailabilityZones
 	}
 
-	if useManagedIdentity && userAssignedIDEnabled {
+	if userAssignedIDEnabled {
 		identity := &compute.VirtualMachineScaleSetIdentity{}
 		identity.Type = compute.ResourceIdentityTypeUserAssigned
 		identity.UserAssignedIdentities = map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
@@ -110,6 +109,11 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	if masterProfile.PlatformFaultDomainCount != nil {
 		vmProperties.PlatformFaultDomainCount = to.Int32Ptr(int32(*masterProfile.PlatformFaultDomainCount))
+	}
+	if masterProfile.ProximityPlacementGroupID != "" {
+		vmProperties.ProximityPlacementGroup = &compute.SubResource{
+			ID: to.StringPtr(masterProfile.ProximityPlacementGroupID),
+		}
 	}
 	vmProperties.SinglePlacementGroup = masterProfile.SinglePlacementGroup
 	vmProperties.Overprovision = to.BoolPtr(false)
@@ -287,7 +291,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		} else {
 			registry = `mcr.microsoft.com 443`
 		}
-		outBoundCmd = `retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
+		outBoundCmd = `retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` 2>&1 || exit $ERR_OUTBOUND_CONN_FAIL;`
 	}
 
 	vmssCSE := compute.VirtualMachineScaleSetExtension{
@@ -329,6 +333,12 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		OsProfile:        &osProfile,
 		StorageProfile:   &storageProfile,
 		ExtensionProfile: &extensionProfile,
+	}
+
+	if to.Bool(masterProfile.UltraSSDEnabled) {
+		vmProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
 	}
 
 	virtualMachine.VirtualMachineScaleSetProperties = vmProperties
@@ -406,11 +416,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	var useManagedIdentity bool
+	var userAssignedIdentityEnabled bool
 	if k8sConfig != nil {
 		useManagedIdentity = k8sConfig.UseManagedIdentity
 	}
 	if useManagedIdentity {
-		userAssignedIdentityEnabled := k8sConfig.UserAssignedID != ""
+		userAssignedIdentityEnabled = k8sConfig.UserAssignedIDEnabled()
 		if userAssignedIdentityEnabled {
 			virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
 				Type: compute.ResourceIdentityTypeUserAssigned,
@@ -437,6 +448,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	if profile.PlatformFaultDomainCount != nil {
 		vmssProperties.PlatformFaultDomainCount = to.Int32Ptr(int32(*profile.PlatformFaultDomainCount))
+	}
+
+	if profile.ProximityPlacementGroupID != "" {
+		vmssProperties.ProximityPlacementGroup = &compute.SubResource{
+			ID: to.StringPtr(profile.ProximityPlacementGroupID),
+		}
 	}
 
 	if to.Bool(profile.VMSSOverProvisioningEnabled) {
@@ -537,7 +554,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		ipconfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipconfig)
 
-		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
 				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
 				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
@@ -593,6 +610,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			CustomData: to.StringPtr(customDataStr),
 		}
 		vmssVMProfile.OsProfile = &windowsOsProfile
+
+		if cs.Properties.WindowsProfile.HasEnableAHUB() {
+			licenseType := api.WindowsLicenseTypeNone
+			if cs.Properties.WindowsProfile.GetEnableAHUB() {
+				licenseType = api.WindowsLicenseTypeServer
+			}
+			vmssVMProfile.LicenseType = &licenseType
+		}
 	} else {
 		customDataStr := getCustomDataFromJSON(t.GetKubernetesLinuxNodeCustomDataJSONObject(cs, profile))
 		linuxOsProfile := compute.VirtualMachineScaleSetOSProfile{
@@ -640,7 +665,49 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	vmssStorageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 
 	if profile.IsWindows() {
-		vmssStorageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
+		// Priority:
+		//   1. ImageRef in agent pool
+		//   2. Custom image in WindowsProfile. AKS does not use this for now but it may use this later for testing purpose.
+		//   3. ImageRef in WindowsProfile
+		//   4. PIR image in WindowsProfile
+		windowsProfile := cs.Properties.WindowsProfile
+		if profile.HasImageRef() {
+			imageRef := profile.ImageRef
+			if profile.HasImageGallery() {
+				v := fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', variables('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', variables('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(v),
+				}
+			} else {
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
+			}
+		} else if windowsProfile.HasCustomImage() {
+			vmssStorageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/images', '%sCustomWindowsImage')]", profile.Name)),
+			}
+		} else if windowsProfile.HasImageRef() {
+			imageRef := windowsProfile.ImageRef
+			if windowsProfile.HasImageGallery() {
+				v := fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(v),
+				}
+			} else {
+				vmssStorageProfile.ImageReference = &compute.ImageReference{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+				}
+			}
+		} else {
+			vmssStorageProfile.ImageReference = &compute.ImageReference{
+				Offer:     to.StringPtr(fmt.Sprintf("[variables('%sosImageOffer')]", profile.Name)),
+				Publisher: to.StringPtr(fmt.Sprintf("[variables('%sosImagePublisher')]", profile.Name)),
+				Sku:       to.StringPtr(fmt.Sprintf("[variables('%sosImageSKU')]", profile.Name)),
+				Version:   to.StringPtr(fmt.Sprintf("[variables('%sosImageVersion')]", profile.Name)),
+			}
+		}
+
 		vmssStorageProfile.DataDisks = getVMSSDataDisks(profile)
 	} else {
 		if profile.HasImageRef() {
@@ -688,6 +755,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	}
 
+	if to.Bool(profile.UltraSSDEnabled) {
+		vmssProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	vmssStorageProfile.OsDisk = &osDisk
 
 	vmssVMProfile.StorageProfile = &vmssStorageProfile
@@ -705,15 +778,20 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	if !featureFlags.IsFeatureEnabled("BlockOutboundInternet") && cs.Properties.IsHostedMasterProfile() {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
 			registry = `gcr.azk8s.cn 443`
+		} else if cs.IsAKSCustomCloud() {
+			registry = cs.Properties.CustomCloudEnv.McrURL
 		} else {
 			registry = `mcr.microsoft.com 443`
 		}
-		outBoundCmd = `retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
+		if registry != "" {
+			outBoundCmd = `retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` 2>&1 || exit $ERR_OUTBOUND_CONN_FAIL;`
+		}
 	}
 
 	var vmssCSE compute.VirtualMachineScaleSetExtension
 
 	if profile.IsWindows() {
+		commandExec := fmt.Sprintf("[concat('echo %s && powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),%s' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %s 2>&1 ; exit $LASTEXITCODE')]", "%DATE%,%TIME%,%COMPUTERNAME%", generateUserAssignedIdentityClientIDParameterForWindows(userAssignedIdentityEnabled), "%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log")
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
@@ -723,7 +801,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                map[string]interface{}{},
 				ProtectedSettings: map[string]interface{}{
-					"commandToExecute": "[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command \"', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '\" > %SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]",
+					"commandToExecute": commandExec,
 				},
 			},
 		}
@@ -732,18 +810,18 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		if featureFlags.IsFeatureEnabled("CSERunInBackground") {
 			runInBackground = " &"
 		}
-		var userAssignedIDEnabled bool
-		if cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.KubernetesConfig != nil {
-			userAssignedIDEnabled = cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
-		} else {
-			userAssignedIDEnabled = false
-		}
 		nVidiaEnabled := strconv.FormatBool(common.IsNvidiaEnabledSKU(profile.VMSize))
 		sgxEnabled := strconv.FormatBool(common.IsSgxEnabledSKU(profile.VMSize))
 		auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 		isVHD := strconv.FormatBool(profile.IsVHDDistro())
 
-		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
+		initAKSCustomCloud := ""
+		if cs.IsAKSCustomCloud() {
+			initAKSCustomCloud = fmt.Sprintf("for i in $(seq 1 1200); do grep -Fq \"EOF\" %s && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; %s >> /var/log/azure/cluster-provision.log 2>&1;",
+				initAKSCustomCloudFilepath, initAKSCustomCloudFilepath)
+		}
+
+		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; %s', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"; systemctl --no-pager -l status kubelet 2>&1 | head -n 100')]", outBoundCmd, initAKSCustomCloud, generateUserAssignedIdentityClientIDParameter(userAssignedIdentityEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{

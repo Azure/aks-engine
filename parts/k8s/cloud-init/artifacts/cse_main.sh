@@ -63,7 +63,11 @@ fi
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
     echo "detected golden image pre-install"
-    cleanUpContainerImages
+    export -f retrycmd_if_failure
+    export -f cleanUpContainerImages
+    export KUBERNETES_VERSION
+    echo "start to clean up container images"
+    bash -c cleanUpContainerImages &
     FULL_INSTALL_REQUIRED=false
 else
     if [[ "${IS_VHD}" = true ]]; then
@@ -181,14 +185,18 @@ fi
 ensureContainerd
 {{end}}
 
+{{- if and IsHostedMaster EnableHostsConfigAgent}}
+configPrivateClusterHosts
+{{end}}
+
 {{- if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 {{end}}
 
-{{/* configure and enable dhcpv6 for dual stack feature */}}
-{{- if IsIPv6DualStackFeatureEnabled}}
+{{/* configure and enable dhcpv6 for ipv6 features */}}
+{{- if IsIPv6Enabled}}
 ensureDHCPv6
 {{end}}
 
@@ -229,7 +237,11 @@ fi
 VALIDATION_ERR=0
 
 {{- if IsHostedMaster }}
-RES=$(retrycmd_if_failure 20 1 3 nslookup ${API_SERVER_NAME})
+API_SERVER_DNS_RETRIES=20
+if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
+  API_SERVER_DNS_RETRIES=200
+fi
+RES=$(retrycmd_if_failure ${API_SERVER_DNS_RETRIES} 1 3 nslookup ${API_SERVER_NAME})
 STS=$?
 if [[ $STS != 0 ]]; then
     if [[ $RES == *"168.63.129.16"*  ]]; then
@@ -237,8 +249,13 @@ if [[ $STS != 0 ]]; then
     else
         VALIDATION_ERR=$ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL
     fi
+else
+    API_SERVER_CONN_RETRIES=50
+    if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
+        API_SERVER_CONN_RETRIES=100
+    fi
+    retrycmd_if_failure ${API_SERVER_CONN_RETRIES} 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR=$ERR_K8S_API_SERVER_CONN_FAIL
 fi
-retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR=$ERR_K8S_API_SERVER_CONN_FAIL
 {{end}}
 
 if $REBOOTREQUIRED; then

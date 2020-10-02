@@ -1,50 +1,44 @@
-# This is a temporary file to test dot-sourcing functions stored in separate scripts in a zip file
+# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
+filter RemoveNulls { $_ -replace '\0', '' }
 
-filter Timestamp {"$(Get-Date -Format o): $_"}
+filter Timestamp { "$(Get-Date -Format o): $_" }
 
-function Write-Log($message)
-{
+function Write-Log($message) {
     $msg = $message | Timestamp
     Write-Output $msg
 }
 
-function DownloadFileOverHttp
-{
+function DownloadFileOverHttp {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $Url,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $DestinationPath
     )
 
     # First check to see if a file with the same name is already cached on the VHD
     $fileName = [IO.Path]::GetFileName($Url)
-    
+
     $search = @()
-    if (Test-Path $global:CacheDir)
-    {
+    if (Test-Path $global:CacheDir) {
         $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
     }
 
-    if ($search.Count -ne 0)
-    {
+    if ($search.Count -ne 0) {
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
         Copy-Item -Path $search[0] -Destination $DestinationPath -Force
     }
-    else
-    {
+    else {
         $secureProtocols = @()
         $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
-    
-        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
-        {
-            if ($insecureProtocols -notcontains $protocol)
-            {
+
+        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType])) {
+            if ($insecureProtocols -notcontains $protocol) {
                 $secureProtocols += $protocol
             }
         }
         [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
-    
+
         $oldProgressPreference = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
 
@@ -65,17 +59,25 @@ function DownloadFileOverHttp
     }
 }
 
+function Get-ProvisioningScripts {
+    Write-Log "Getting provisioning scripts"
+    DownloadFileOverHttp -Url $global:ProvisioningScriptsPackageUrl -DestinationPath 'c:\k\provisioningscripts.zip'
+    Expand-Archive -Path 'c:\k\provisioningscripts.zip' -DestinationPath 'c:\k' -Force
+    Remove-Item -Path 'c:\k\provisioningscripts.zip' -Force
+}
+
 function Get-WindowsVersion {
     $systemInfo = Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion"
     return "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)"
 }
 
 function Get-CniVersion {
-    switch($global:NetworkPlugin) {
+    switch ($global:NetworkPlugin) {
         "azure" {
             if ($global:VNetCNIPluginsURL -match "(v[0-9`.]+).(zip|tar)") {
                 return $matches[1]
-            } else {
+            }
+            else {
                 return ""
             }
             break;
@@ -87,12 +89,12 @@ function Get-CniVersion {
 }
 
 function Get-InstanceMetadataServiceTelemetry {
-    $keys = @{}
+    $keys = @{ }
 
     try {
         # Write-Log "Querying instance metadata service..."
         # Note: 2019-04-30 is latest api available in all clouds
-        $metadata = Invoke-RestMethod -Headers @{"Metadata"="true"} -URI "http://169.254.169.254/metadata/instance?api-version=2019-04-30" -Method get
+        $metadata = Invoke-RestMethod -Headers @{"Metadata" = "true" } -URI "http://169.254.169.254/metadata/instance?api-version=2019-04-30" -Method get
         # Write-Log ($metadata | ConvertTo-Json)
 
         $keys.Add("vm_size", $metadata.compute.vmSize)
@@ -124,30 +126,29 @@ function Initialize-DataDirectories {
     }
 }
 
-function Retry-Command
-{
+function Retry-Command {
     Param(
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]
         $Command,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][hashtable]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][hashtable]
         $Args,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][int]
         $Retries,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][int]
         $RetryDelaySeconds
     )
 
     for ($i = 0; $i -lt $Retries; $i++) {
         try {
             return & $Command @Args
-        } catch {
+        }
+        catch {
             Start-Sleep $RetryDelaySeconds
         }
     }
 }
 
-function Invoke-Executable
-{
+function Invoke-Executable {
     Param(
         [string]
         $Executable,
@@ -168,7 +169,8 @@ function Invoke-Executable
             Write-Log "$Executable returned unsuccessfully with exit code $LASTEXITCODE"
             Start-Sleep -Seconds $RetryDelaySeconds
             continue
-        } else {
+        }
+        else {
             Write-Log "$Executable returned successfully"
             return
         }
@@ -195,9 +197,6 @@ function Get-LogCollectionScripts {
 function Register-LogsCleanupScriptTask {
     Write-Log "Creating a scheduled task to run windowslogscleanup.ps1"
 
-    (Get-Content "c:\AzureData\k8s\windowslogscleanup.ps1") |
-    Out-File "c:\k\windowslogscleanup.ps1"
-
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\windowslogscleanup.ps1`""
     $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
     $trigger = New-JobTrigger -Daily -At "00:00" -DaysInterval 1
@@ -208,12 +207,6 @@ function Register-LogsCleanupScriptTask {
 function Register-NodeResetScriptTask {
     Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
-    (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
-    Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
-    Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
-    Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
-    Out-File 'c:\k\windowsnodereset.ps1'
-
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\windowsnodereset.ps1`""
     $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
     $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
@@ -221,12 +214,69 @@ function Register-NodeResetScriptTask {
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }
 
+# TODO ksubrmnn parameterize this fully
+function Write-KubeClusterConfig {
+    param(
+        [Parameter(Mandatory = $true)][string]
+        $MasterIP,
+        [Parameter(Mandatory = $true)][string]
+        $KubeDnsServiceIp
+    )
+
+    $Global:ClusterConfiguration = [PSCustomObject]@{ }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
+        Name   = $global:ContainerRuntime;
+        Images = @{
+            # e.g. "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
+            "Pause" = $global:WindowsPauseImageURL
+        }
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
+        Name   = $global:NetworkPlugin;
+        Plugin = @{
+            Name = "bridge";
+        };
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Csi -Value @{
+        EnableProxy = $global:EnableCsiProxy
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Kubernetes -Value @{
+        Source       = @{
+            Release = $global:KubeBinariesVersion;
+        };
+        ControlPlane = @{
+            IpAddress    = $MasterIP;
+            Username     = "azureuser"
+            MasterSubnet = $global:MasterSubnet
+        };
+        Network      = @{
+            ServiceCidr = $global:KubeServiceCIDR;
+            ClusterCidr = $global:KubeClusterCIDR;
+            DnsIp       = $KubeDnsServiceIp
+        };
+        Kubelet      = @{
+            NodeLabels = $global:KubeletNodeLabels;
+            ConfigArgs = $global:KubeletConfigArgs
+        };
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{
+        Destination = "c:\k";
+    }
+
+    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
+}
+
 function Assert-FileExists {
     Param(
-        [Parameter(Mandatory=$true,Position=0)][string]
+        [Parameter(Mandatory = $true, Position = 0)][string]
         $Filename
     )
-    
+
     if (-Not (Test-Path $Filename)) {
         throw "$Filename does not exist"
     }
@@ -237,5 +287,9 @@ function Update-DefenderPreferences {
 
     if ($global:EnableCsiProxy) {
         Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
+    }
+
+    if ($global:ContainerRuntime -eq 'containerd') {
+        Add-MpPreference -ExclusionProcess "c:\program files\containerd\containerd.exe"
     }
 }

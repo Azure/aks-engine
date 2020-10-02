@@ -516,6 +516,11 @@ func TestGetTargetEnv(t *testing.T) {
 			"azurestacklocation",
 			"AzurePublicCloud",
 		},
+		{
+			"akscustomlocation",
+			"akscustom",
+			"akscustom",
+		},
 	}
 
 	for _, testcase := range testcases {
