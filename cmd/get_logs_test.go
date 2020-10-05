@@ -61,17 +61,6 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
-				linuxScriptPath:        "",
-				sshHostURI:             "server.example.com",
-				location:               "southcentralus",
-			},
-			expectedErr: errors.New("--linux-script must be specified"),
-			name:        "NeedsLinuxScript",
-		},
-		{
-			glc: &getLogsCmd{
-				apiModelPath:           existingFile,
-				linuxSSHPrivateKeyPath: existingFile,
 				linuxScriptPath:        missingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",

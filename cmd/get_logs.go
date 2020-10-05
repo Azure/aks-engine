@@ -41,6 +41,7 @@ type getLogsCmd struct {
 	sshHostURI             string
 	linuxSSHPrivateKeyPath string
 	linuxScriptPath        string
+	windowsScriptPath      string
 	outputDirectory        string
 	controlPlaneOnly       bool
 	// computed
@@ -75,14 +76,14 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
 	command.Flags().StringVar(&glc.sshHostURI, "ssh-host", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
 	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes (required)")
-	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
+	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes")
+	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	_ = command.MarkFlagRequired("location")
 	_ = command.MarkFlagRequired("api-model")
 	_ = command.MarkFlagRequired("ssh-host")
 	_ = command.MarkFlagRequired("linux-ssh-private-key")
-	_ = command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
 }
 
@@ -107,11 +108,11 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	} else if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
 	}
-	if glc.linuxScriptPath == "" {
-		// optional once in VHD
-		return errors.New("--linux-script must be specified")
-	} else if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
+	if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+	}
+	if _, err := os.Stat(glc.windowsScriptPath); os.IsNotExist(err) {
+		return errors.Errorf("specified --windows-script does not exist (%s)", glc.windowsScriptPath)
 	}
 	if glc.outputDirectory == "" {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
@@ -255,25 +256,46 @@ func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (stri
 }
 
 func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, error) {
-	if isWindowsNode(node) || glc.linuxScriptPath == "" {
+	if (glc.windowsScriptPath == "") && (glc.linuxScriptPath == "") {
 		return "", nil
 	}
 
-	scriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
-	if err != nil {
-		return "", errors.Wrap(err, "reading log collection script content")
+	if glc.linuxScriptPath == "" {
+		linuxScriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
+		if err != nil {
+			return "", errors.Wrap(err, "reading Linux log collection script content")
+		}
+
+		log.Debugf("Uploading Linux log collection script (%s)\n", glc.linuxScriptPath)
+		session, err := client.NewSession()
+		if err != nil {
+			return "", errors.Wrap(err, "creating SSH session")
+		}
+		defer session.Close()
+
+		session.Stdin = bytes.NewReader(linuxScriptContent)
+		if co, err := session.CombinedOutput("bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""); err != nil {
+			return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading Linux log collection script")
+		}
 	}
 
-	log.Debugf("Uploading log collection script (%s)\n", glc.linuxScriptPath)
-	session, err := client.NewSession()
-	if err != nil {
-		return "", errors.Wrap(err, "creating SSH session")
-	}
-	defer session.Close()
+	if glc.windowsScriptPath == "" {
+		windowsScriptContent, err := ioutil.ReadFile(glc.windowsScriptPath)
+		if err != nil {
+			return "", errors.Wrap(err, "reading Windows log collection script content")
+		}
 
-	session.Stdin = bytes.NewReader(scriptContent)
-	if co, err := session.CombinedOutput("bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""); err != nil {
-		return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading log collection script")
+		log.Debugf("Uploading Windows log collection script (%s)\n", glc.windowsScriptPath)
+		session, err := client.NewSession()
+		if err != nil {
+			return "", errors.Wrap(err, "creating SSH session")
+		}
+		defer session.Close()
+
+		session.Stdin = bytes.NewReader(windowsScriptContent)
+		if co, err := session.CombinedOutput("powershell -noprofile -command \"Write-Output $Input > $env:temp\\collect-windows-logs.ps1\""); err != nil {
+			return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading Windows log collection script")
+		}
 	}
 	return "", nil
 }
@@ -296,8 +318,13 @@ func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, 
 			cmd = fmt.Sprintf("bash -c \"export AZURE_ENV=%s; sudo -E %s\"", glc.getCloudName(), script)
 		}
 	} else {
-		script = "c:\\k\\debug\\collect-windows-logs.ps1"
-		cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
+		if glc.windowsScriptPath != "" {
+			script = "c:\\k\\debug\\collect-windows-logs.ps1"
+			cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
+		} else {
+			script = "c:\\k\\debug\\collect-windows-logs.ps1"
+			cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
+		}
 	}
 
 	if co, err := session.CombinedOutput(cmd); err != nil {

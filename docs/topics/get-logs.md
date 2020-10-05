@@ -33,8 +33,7 @@ $ aks-engine get-logs \
     --location <location> \
     --api-model _output/<dnsPrefix>/apimodel.json \
     --ssh-host <dnsPrefix>.<location>.cloudapp.azure.com \
-    --linux-ssh-private-key ~/.ssh/id_rsa \
-    --linux-script scripts/collect-logs.sh
+    --linux-ssh-private-key ~/.ssh/id_rsa
 ```
 
 ### Parameters
@@ -45,6 +44,6 @@ $ aks-engine get-logs \
 |--api-model|yes|Path to the generated API model for the cluster.|
 |--ssh-host|yes|FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster.|
 |--linux-ssh-private-key|yes|Path to a SSH private key that can be use to create a remote session on the cluster Linux nodes.|
-|--linux-script|yes|Custom log collection script. It should produce file `/tmp/logs.zip`.|
+|--linux-script|no|Custom log collection script. It should produce file `/tmp/logs.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
 |--control-plane-only|no|Only collect logs from master nodes.|
