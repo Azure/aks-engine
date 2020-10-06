@@ -66,6 +66,7 @@ jobs:
     createVNET: true
     enableKMSEncryption: false
     containerRuntime: 'docker'
+    runSSHTests: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -75,6 +76,7 @@ jobs:
     createVNET: true
     enableKMSEncryption: false
     containerRuntime: 'docker'
+    runSSHTests: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -84,6 +86,7 @@ jobs:
     createVNET: true
     enableKMSEncryption: false
     containerRuntime: 'containerd'
+    runSSHTests: false
 
 - template: e2e-job-template.yaml
   parameters:
@@ -93,3 +96,4 @@ jobs:
     createVNET: true
     enableKMSEncryption: false
     containerRuntime: 'containerd'
+    runSSHTests: false
