@@ -9,7 +9,6 @@ metadata:
 spec:
   priorityClassName: system-node-critical
   hostNetwork: true
-  dnsPolicy: ClusterFirstWithHostNet
   containers:
     - name: kube-apiserver
       image: {{ContainerImage "kube-apiserver"}}
