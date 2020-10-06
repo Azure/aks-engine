@@ -4428,6 +4428,9 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.SecretsStoreCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"metricsPort": "8095",
+					},
 				},
 			}, "1.15.4"),
 		},
