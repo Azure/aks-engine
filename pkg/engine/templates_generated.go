@@ -22237,7 +22237,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     clusters:
     - cluster:
         certificate-authority: /etc/kubernetes/guard/pki/ca.crt
-        server: https://guard.svc:443/tokenreviews
+        server: https://guard.kube-system.svc.cluster.local:443/tokenreviews
       name: guard-server
     contexts:
     - context:
@@ -22262,7 +22262,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     clusters:
     - cluster:
         certificate-authority: /etc/kubernetes/guard/pki/ca.crt
-        server: https://guard.svc:443/subjectaccessreviews
+        server: https://guard.kube-system.svc.cluster.local:443/subjectaccessreviews
       name: guard-server
     contexts:
     - context:
@@ -24518,6 +24518,17 @@ metadata:
 spec:
   priorityClassName: system-node-critical
   hostNetwork: true
+  dnsConfig:
+    nameservers:
+      - 10.0.0.10
+    searches:
+      - default.svc.cluster.local
+      - svc.cluster.local
+      - cluster.local
+    options:
+      - name: ndots
+        value: "5"
+      - name: edns0
   containers:
     - name: kube-apiserver
       image: {{ContainerImage "kube-apiserver"}}

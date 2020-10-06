@@ -560,7 +560,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     clusters:
     - cluster:
         certificate-authority: /etc/kubernetes/guard/pki/ca.crt
-        server: https://guard.svc:443/tokenreviews
+        server: https://guard.kube-system.svc.cluster.local:443/tokenreviews
       name: guard-server
     contexts:
     - context:
@@ -585,7 +585,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     clusters:
     - cluster:
         certificate-authority: /etc/kubernetes/guard/pki/ca.crt
-        server: https://guard.svc:443/subjectaccessreviews
+        server: https://guard.kube-system.svc.cluster.local:443/subjectaccessreviews
       name: guard-server
     contexts:
     - context:
