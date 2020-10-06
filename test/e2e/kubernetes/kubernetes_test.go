@@ -170,6 +170,8 @@ var _ = BeforeSuite(func() {
 	stabilityCommandTimeout = 3 * time.Second
 	if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == api.NetworkPolicyCalico {
 		stabilityCommandTimeout = 10 * time.Second
+	} else if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == api.NetworkPolicyAzure {
+		stabilityCommandTimeout = 15 * time.Second
 	}
 	Expect(dnsAddonName).NotTo(Equal(""))
 
