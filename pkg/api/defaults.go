@@ -210,9 +210,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			// For that case we'll need to specify the containerd version.
 			if versions.GreaterThanOrEqualTo(o.KubernetesConfig.MobyVersion, "19.03") && (o.KubernetesConfig.ContainerdVersion == "" || isUpdate) {
 				if o.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-					log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
-				} else {
-					log.Warnf("Any new nodes will have containerd version %s\n", DefaultContainerdVersion)
+					if isUpgrade {
+						log.Warnf("containerd will be upgraded to version %s\n", DefaultContainerdVersion)
+					}
+					if isScale {
+						log.Warnf("Any new nodes will have containerd version %s\n", DefaultContainerdVersion)
+					}
 				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}

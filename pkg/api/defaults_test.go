@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -23,6 +24,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/versions"
+	log "github.com/sirupsen/logrus"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -5653,4 +5655,30 @@ func TestSetCSIProxyDefaults(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleContainerService_setOrchestratorDefaults() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+
+	mockCS := getMockBaseContainerService("1.19.2")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(true, false)
+
+	mockCS = getMockBaseContainerService("1.19.2")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, true)
+
+	mockCS = getMockBaseContainerService("1.19.2")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, false)
+
+	// Output:
+	// level=warning msg="Moby will be upgraded to version 19.03.12\n"
+	// level=warning msg="containerd will be upgraded to version 1.3.7\n"
+	// level=warning msg="Any new nodes will have Moby version 19.03.12\n"
+	// level=warning msg="Any new nodes will have containerd version 1.3.7\n"
 }
