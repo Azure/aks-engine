@@ -231,9 +231,19 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
-	if config.ContainerRuntime == "containerd" &&
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
+	if config.ContainerRuntime == "containerd" {
+		if prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
+			prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
+		}
+		if prop.WindowsProfile.WindowsPublisher == "" &&
+			prop.WindowsProfile.WindowsOffer == "" &&
+			prop.WindowsProfile.WindowsSku == "" &&
+			prop.WindowsProfile.ImageVersion == "" {
+			prop.WindowsProfile.WindowsPublisher = "microsoft-aks"
+			prop.WindowsProfile.WindowsOffer = "aks-windows"
+			prop.WindowsProfile.WindowsSku = "2019-datacenter-core-smalldisk-containerd-2005"
+			prop.WindowsProfile.ImageVersion = "latest"
+		}
 	}
 
 	if config.ContainerRuntime != "" {
