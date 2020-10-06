@@ -85,10 +85,10 @@
         "name": "poolwin",
         "count": 1,
         "vmSize": "Standard_D2s_v3",
+        "OSDiskSizeGB": 256,
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-        "osType": "Windows",
-        "storageProfile": "Ephemeral"
+        "osType": "Windows"
       },
       {
         "name": "pool1604vhd",
@@ -121,15 +121,6 @@
         "distro": "ubuntu-18.04-gen2",
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
-      },
-      {
-        "name": "poolwingen2",
-        "count": 1,
-        "vmSize": "Standard_D2s_v3",
-        "osType": "Windows",
-        "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-        "osDiskCachingType": "ReadOnly"
       }
     ],
     "linuxProfile": {
