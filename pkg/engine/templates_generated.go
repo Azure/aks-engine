@@ -21448,8 +21448,8 @@ write_files:
 {{WrapAsVariable "kubeconfig"}}
 
 runcmd:
-- . {{GetCSEHelpersScriptFilepath}}
-- retrycmd_if_failure 10 5 10 curl -LO https://storage.googleapis.com/kubernetes-release/release/v{{.OrchestratorProfile.OrchestratorVersion}}/bin/linux/amd64/kubectl
+- source {{GetCSEHelpersScriptFilepath}}
+- retrycmd 10 5 10 curl -LO https://storage.googleapis.com/kubernetes-release/release/v{{.OrchestratorProfile.OrchestratorVersion}}/bin/linux/amd64/kubectl
 - chmod +x ./kubectl
 - sudo mv ./kubectl /usr/local/bin/kubectl
 - chown -R "{{WrapAsParameter "jumpboxUsername"}}" "/home/{{WrapAsParameter "jumpboxUsername"}}"
@@ -22028,7 +22028,7 @@ mounts:
     - /var/lib/etcddisk
 runcmd:
 - set -x
-- . {{GetCSEHelpersScriptFilepath}}
+- source {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
 `)
 
@@ -22551,7 +22551,7 @@ coreos:
 {{else}}
 runcmd:
 - set -x
-- . {{GetCSEHelpersScriptFilepath}}
+- source {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{- end}}
 `)

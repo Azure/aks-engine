@@ -553,5 +553,5 @@ mounts:
     - /var/lib/etcddisk
 runcmd:
 - set -x
-- . {{GetCSEHelpersScriptFilepath}}
+- source {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
