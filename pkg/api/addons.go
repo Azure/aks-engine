@@ -456,6 +456,9 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{
 		Name:    common.AADPodIdentityAddonName,
 		Enabled: to.BoolPtr(DefaultAADPodIdentityAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Config: map[string]string{
+			"probePort": "8085",
+		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.NMIContainerName,
@@ -839,6 +842,9 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultSecretsStoreCSIDriverAddonsConfig := KubernetesAddon{
 		Name: common.SecretsStoreCSIDriverAddonName,
+		Config: map[string]string{
+			"metricsPort": "8095",
+		},
 		Enabled: to.BoolPtr(!o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) && DefaultSecretStoreCSIDriverAddonEnabled &&
 			common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
 		Containers: []KubernetesContainerSpec{

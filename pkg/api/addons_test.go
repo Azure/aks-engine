@@ -1916,6 +1916,9 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"probePort": "8085",
+					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.NMIContainerName,
@@ -5200,6 +5203,9 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 		addons = append(addons, KubernetesAddon{
 			Name:    common.SecretsStoreCSIDriverAddonName,
 			Enabled: to.BoolPtr(true),
+			Config: map[string]string{
+				"metricsPort": "8095",
+			},
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:           common.CSILivenessProbeContainerName,

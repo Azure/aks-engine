@@ -800,10 +800,16 @@ func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 			return false, regexErr
 		}
 		if matched {
-			if pod.Status.Phase != "Running" {
+			if pod.Status.Phase == "Running" {
+				for _, containerStatus := range pod.Status.ContainerStatuses {
+					if containerStatus.Ready {
+						status = append(status, true)
+					} else {
+						status = append(status, false)
+					}
+				}
+			} else if pod.Status.Phase != "Pending" && pod.Status.Phase != "ImagePullBackOff" && pod.Status.Phase != "ContainerCreating" {
 				status = append(status, false)
-			} else {
-				status = append(status, true)
 			}
 		}
 	}
@@ -814,11 +820,11 @@ func AreAllPodsRunning(podPrefix, namespace string) (bool, error) {
 
 	for _, s := range status {
 		if !s {
-			return false, nil
+			return false, errors.Errorf("At least one pod has a container in a non-Ready state")
 		}
 	}
 
-	return true, err
+	return true, nil
 }
 
 // AreAllPodsSucceededResult is a return struct for AreAllPodsSucceeded
