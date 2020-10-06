@@ -7369,6 +7369,7 @@ spec:
         args:
           - "--host-ip=$(HOST_IP)"
           - "--node=$(NODE_NAME)"
+          - "--http-probe-port={{ContainerConfig "probePort"}}"
         env:
           - name: HOST_IP
             valueFrom:
@@ -7396,7 +7397,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8080
+            port: {{ContainerConfig "probePort"}}
           initialDelaySeconds: 10
           periodSeconds: 5
       nodeSelector:
@@ -17717,7 +17718,7 @@ spec:
             - "--nodeid=$(KUBE_NODE_NAME)"
             - "--provider-volume=/etc/kubernetes/secrets-store-csi-providers"
             - "--grpc-supported-providers=azure"
-            - "--metrics-addr=:8080"
+            - "--metrics-addr=:{{ContainerConfig "metricsPort"}}"
           env:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
