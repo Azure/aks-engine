@@ -1,10 +1,6 @@
 name: Nightly
 
 on:
-  push:
-    branches: [ master, nightly-release ] 
-  pull_request:
-    branches: [ master ]
   schedule:
     - cron: '0 0 * * *' # Every day at midnight
 
