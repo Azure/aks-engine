@@ -19875,7 +19875,6 @@ time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
   {{end}}
 {{end}}
 
-{{- if HasVHDDistroNodes}}
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
   time_metric "CleanUpContainerImages" cleanUpContainerImages
@@ -19886,9 +19885,6 @@ else
   fi
   FULL_INSTALL_REQUIRED=true
 fi
-{{else}}
-FULL_INSTALL_REQUIRED=true
-{{end}}
 
 {{- if not IsVHDDistroForAllNodes}}
 if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
