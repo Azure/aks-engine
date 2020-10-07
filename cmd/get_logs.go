@@ -260,7 +260,7 @@ func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, e
 		return "", nil
 	}
 
-	if glc.linuxScriptPath == "" {
+	if glc.linuxScriptPath != "" {
 		linuxScriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
 		if err != nil {
 			return "", errors.Wrap(err, "reading Linux log collection script content")
@@ -279,7 +279,7 @@ func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, e
 		}
 	}
 
-	if glc.windowsScriptPath == "" {
+	if glc.windowsScriptPath != "" {
 		windowsScriptContent, err := ioutil.ReadFile(glc.windowsScriptPath)
 		if err != nil {
 			return "", errors.Wrap(err, "reading Windows log collection script content")
@@ -293,7 +293,7 @@ func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, e
 		defer session.Close()
 
 		session.Stdin = bytes.NewReader(windowsScriptContent)
-		if co, err := session.CombinedOutput("powershell -noprofile -command \"Write-Output $Input > $env:temp\\collect-windows-logs.ps1\""); err != nil {
+		if co, err := session.CombinedOutput("powershell -command \"Write-Output $Input > $env:temp\\collect-windows-logs.ps1\""); err != nil {
 			return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading Windows log collection script")
 		}
 	}
