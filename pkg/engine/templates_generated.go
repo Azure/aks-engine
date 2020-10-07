@@ -24518,17 +24518,6 @@ metadata:
 spec:
   priorityClassName: system-node-critical
   hostNetwork: true
-  dnsConfig:
-    nameservers:
-      - 10.0.0.10
-    searches:
-      - default.svc.cluster.local
-      - svc.cluster.local
-      - cluster.local
-    options:
-      - name: ndots
-        value: "5"
-      - name: edns0
   containers:
     - name: kube-apiserver
       image: {{ContainerImage "kube-apiserver"}}
