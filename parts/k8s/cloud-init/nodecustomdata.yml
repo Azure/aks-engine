@@ -502,6 +502,6 @@ coreos:
 {{else}}
 runcmd:
 - set -x
-- . {{GetCSEHelpersScriptFilepath}}
+- source {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{- end}}
