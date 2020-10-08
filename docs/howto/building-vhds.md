@@ -30,3 +30,7 @@ To build the Windows VHD
    ```
 
 Once complete, packer will output a URI to the VHD it created.
+
+## Linux VHD
+
+TODO
