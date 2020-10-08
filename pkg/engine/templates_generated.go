@@ -17657,6 +17657,20 @@ status:
   conditions: []
   storedVersions: []
 ---
+{{- /* A priority class for the daemonset such that they are not */}}
+{{- /* frozen out of a node due to the node filling up with "normal" */}}
+{{- /* pods before the daemonset controller can get the daemonset */}}
+{{- /* pods to be scheduled. */}}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: csi-secrets-store
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+value: 1000
+globalDefault: false
+description: "This is the daemonset priority class for csi-secrets-store"
+---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
@@ -17673,6 +17687,7 @@ spec:
       labels:
         app: csi-secrets-store
     spec:
+      priorityClassName: csi-secrets-store
       serviceAccountName: secrets-store-csi-driver
       hostNetwork: true
       containers:
@@ -17833,6 +17848,7 @@ spec:
       labels:
         app: csi-secrets-store-provider-azure
     spec:
+      priorityClassName: csi-secrets-store
       serviceAccountName: csi-secrets-store-provider-azure
       hostNetwork: true
       containers:
