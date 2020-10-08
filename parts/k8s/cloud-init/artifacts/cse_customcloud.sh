@@ -43,7 +43,7 @@ ensureCustomCloudSourcesList() {
 
 configureK8sCustomCloud() {
   {{- if IsAzureStackCloud}}
-  local azure_json_path = "/etc/kubernetes/azure.json"
+  local azure_json_path="/etc/kubernetes/azure.json"
   export -f ensureAzureStackCertificates
   retrycmd 60 10 30 bash -c ensureAzureStackCertificates
   set +x
