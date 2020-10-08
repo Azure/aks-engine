@@ -40,7 +40,7 @@ jobs:
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
       -e CONTAINER_RUNTIME=$(CONTAINER_RUNTIME) \
-      -e WINDOWS-SERVER-VERSION=2019 \
+      -e WINDOWS_SERVER_VERSION=2019 \
       ${DEIS_GO_DEV_IMAGE} make run-packer-windows
     displayName: Building windows VHD
 
