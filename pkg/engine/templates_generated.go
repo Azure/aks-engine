@@ -17665,6 +17665,8 @@ apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
   name: csi-secrets-store
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
 value: 1000
 globalDefault: false
 description: "This is the daemonset priority class for csi-secrets-store"
