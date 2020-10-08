@@ -17657,10 +17657,10 @@ status:
   conditions: []
   storedVersions: []
 ---
-{{/* A priority class for the daemonset such that they are not */}}
-{{/* frozen out of a node due to the node filling up with "normal" */}}
-{{/* pods before the daemonset controller can get the daemonset */}}
-{{/* pods to be scheduled. */}}
+{{- /* A priority class for the daemonset such that they are not */}}
+{{- /* frozen out of a node due to the node filling up with "normal" */}}
+{{- /* pods before the daemonset controller can get the daemonset */}}
+{{- /* pods to be scheduled. */}}
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
