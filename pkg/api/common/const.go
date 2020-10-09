@@ -356,8 +356,8 @@ var (
 					},
 				},
 				Registry: RegistryPlugin{
-					Headers: map[string]string{
-						"X-Meta-Source-Client": "[azure/aks-engine]",
+					Headers: map[string][]string{
+						"X-Meta-Source-Client": []string{"azure/aks-engine"},
 					},
 				},
 			},

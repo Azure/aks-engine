@@ -24,7 +24,7 @@ type ContainerdPlugin struct {
 }
 
 type RegistryPlugin struct {
-	Headers map[string]string `toml:"headers,omitempty"`
+	Headers map[string][]string `toml:"headers,omitempty"`
 }
 
 type IoContainerdGrpcV1Cri struct {
