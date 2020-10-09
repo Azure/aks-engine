@@ -23,10 +23,15 @@ type ContainerdPlugin struct {
 	Runtimes           map[string]ContainerdRuntime `toml:"runtimes,omitempty"`
 }
 
+type RegistryPlugin struct {
+	Headers map[string]string `toml:"headers,omitempty"`
+}
+
 type IoContainerdGrpcV1Cri struct {
 	SandboxImage string              `toml:"sandbox_image,omitempty"`
 	CNI          ContainerdCNIPlugin `toml:"cni,omitempty"`
 	Containerd   ContainerdPlugin    `toml:"containerd,omitempty"`
+	Registry     RegistryPlugin      `toml:"registry,omitempty"`
 }
 
 type Plugins struct {

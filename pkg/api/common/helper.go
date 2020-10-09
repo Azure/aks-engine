@@ -465,7 +465,10 @@ version = 2
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-          runtime_type = "io.containerd.runc.v2"
+		  runtime_type = "io.containerd.runc.v2"
+	[plugins."io.containerd.grpc.v1.cri".registry]
+	  [plugins."io.containerd.grpc.v1.cri".registry.headers]
+	    X-Meta-Source-Client: ["azure/aks-engine"]
 `
 
 var containerdRerootConfigString = `oom_score = 0
@@ -481,7 +484,10 @@ version = 2
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-          runtime_type = "io.containerd.runc.v2"
+		  runtime_type = "io.containerd.runc.v2"
+	[plugins."io.containerd.grpc.v1.cri".registry]
+	  [plugins."io.containerd.grpc.v1.cri".registry.headers]
+		X-Meta-Source-Client: ["azure/aks-engine"]
 `
 
 var containerdKubenetConfigString = `oom_score = 0
@@ -497,7 +503,10 @@ version = 2
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-          runtime_type = "io.containerd.runc.v2"
+		  runtime_type = "io.containerd.runc.v2"
+	[plugins."io.containerd.grpc.v1.cri".registry]
+	  [plugins."io.containerd.grpc.v1.cri".registry.headers]
+		X-Meta-Source-Client: ["azure/aks-engine"]
 `
 
 var containerdImageConfigString = `oom_score = 0
@@ -513,7 +522,10 @@ version = 2
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-          runtime_type = "io.containerd.runc.v2"
+		  runtime_type = "io.containerd.runc.v2"
+	[plugins."io.containerd.grpc.v1.cri".registry]
+	  [plugins."io.containerd.grpc.v1.cri".registry.headers]
+		X-Meta-Source-Client: ["azure/aks-engine"]
 `
 
 var containerdImageRerootConfigString = `oom_score = 0
@@ -530,7 +542,10 @@ version = 2
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-          runtime_type = "io.containerd.runc.v2"
+		  runtime_type = "io.containerd.runc.v2"
+	[plugins."io.containerd.grpc.v1.cri".registry]
+	  [plugins."io.containerd.grpc.v1.cri".registry.headers]
+		X-Meta-Source-Client: ["azure/aks-engine"]
 `
 
 var containerdImageKubenetConfigString = `oom_score = 0
@@ -547,7 +562,10 @@ version = 2
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-          runtime_type = "io.containerd.runc.v2"
+		  runtime_type = "io.containerd.runc.v2"
+	[plugins."io.containerd.grpc.v1.cri".registry]
+	  [plugins."io.containerd.grpc.v1.cri".registry.headers]
+		X-Meta-Source-Client: ["azure/aks-engine"]
 `
 
 var containerdAllConfigString = `oom_score = 0
@@ -565,7 +583,10 @@ version = 2
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-          runtime_type = "io.containerd.runc.v2"
+		  runtime_type = "io.containerd.runc.v2"
+	[plugins."io.containerd.grpc.v1.cri".registry]
+	  [plugins."io.containerd.grpc.v1.cri".registry.headers]
+		X-Meta-Source-Client: ["azure/aks-engine"]
 `
 
 var defaultDockerConfigString = `{
