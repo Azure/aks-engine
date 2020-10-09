@@ -1214,6 +1214,7 @@ func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
 	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase = "mcr.microsoft.com/k8s/core/"
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 	properties.CustomCloudProfile = &CustomCloudProfile{}
 	properties.CustomCloudProfile.Environment = &azure.Environment{}
@@ -1228,6 +1229,9 @@ func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
 		t.Fatalf("setOrchestratorDefaults did not set LoadBalancerSku to its expect value (%s) for Azure Stack clouds", DefaultAzureStackLoadBalancerSku)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase != expectedImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set MCRKubernetesImageBase to its expect value (%s) for Azure Stack clouds", expectedImageBase)
 	}
 }
 
