@@ -1209,20 +1209,27 @@ func TestKubernetesImageBase(t *testing.T) {
 }
 
 func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
-	mockCS := getMockBaseContainerService("1.15.7")
-	properties := mockCS.Properties
-	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
-	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
-	properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase = "mcr.microsoft.com/k8s/core/"
-	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-	properties.CustomCloudProfile = &CustomCloudProfile{}
-	properties.CustomCloudProfile.Environment = &azure.Environment{}
-	mockCS.setOrchestratorDefaults(true, true)
+	genMockCS := func() ContainerService {
+		mockCS := getMockBaseContainerService("1.15.7")
+		properties := mockCS.Properties
+		properties.OrchestratorProfile.OrchestratorType = Kubernetes
+		properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
+		properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+		properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase = "mcr.microsoft.com/k8s/core/"
+		properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+		properties.CustomCloudProfile = &CustomCloudProfile{}
+		properties.CustomCloudProfile.Environment = &azure.Environment{}
+		return mockCS
+	}
 
-	expectedImageBase := "mcr.microsoft.com/"
-	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != expectedImageBase {
-		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", expectedImageBase)
+	overrideImageBase := "mcr.microsoft.com/"
+	inputImageBase := "mcr.microsoft.com/k8s/core/"
+
+	mockCS := genMockCS()
+	properties := mockCS.Properties
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != overrideImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", overrideImageBase)
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
 		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBaseType to its expect value (%s) for Azure Stack clouds", common.KubernetesImageBaseTypeMCR)
@@ -1230,8 +1237,24 @@ func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
 		t.Fatalf("setOrchestratorDefaults did not set LoadBalancerSku to its expect value (%s) for Azure Stack clouds", DefaultAzureStackLoadBalancerSku)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase != expectedImageBase {
-		t.Fatalf("setOrchestratorDefaults did not set MCRKubernetesImageBase to its expect value (%s) for Azure Stack clouds", expectedImageBase)
+	if properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase != inputImageBase {
+		t.Fatal("setOrchestratorDefaults should not override MCRKubernetesImageBase")
+	}
+
+	mockCS = genMockCS()
+	properties = mockCS.Properties
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != overrideImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", overrideImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBaseType to its expect value (%s) for Azure Stack clouds", common.KubernetesImageBaseTypeMCR)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
+		t.Fatalf("setOrchestratorDefaults did not set LoadBalancerSku to its expect value (%s) for Azure Stack clouds", DefaultAzureStackLoadBalancerSku)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase != overrideImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set MCRKubernetesImageBase to its expect value (%s) for Azure Stack clouds", overrideImageBase)
 	}
 }
 
