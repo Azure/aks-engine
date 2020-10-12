@@ -7,14 +7,6 @@
                 "useManagedIdentity": true,
                 "addons": [
                     {
-                        "name": "kubernetes-dashboard",
-                        "enabled": true
-                    },
-                    {
-                        "name": "rescheduler",
-                        "enabled": true
-                    },
-                    {
                         "name": "cluster-autoscaler",
                         "enabled": true,
                         "pools": [
@@ -46,10 +38,6 @@
                     },
                     {
                         "name": "azure-policy",
-                        "enabled": true
-                    },
-                    {
-                        "name": "node-problem-detector",
                         "enabled": true
                     }
                 ]
