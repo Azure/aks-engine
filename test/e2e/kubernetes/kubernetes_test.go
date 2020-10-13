@@ -2173,9 +2173,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			})*/
 		It("should be able to attach azure file", func() {
-			if eng.HasWindowsAgents() &&
-				!eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() &&
-				!to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+			if eng.HasWindowsAgents() && !eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
+				useCloudControllerManager := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
+				if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) && useCloudControllerManager {
+					Skip("cloud-controller-manager storageclass doesn't work w/ MSI")
+				}
 				orchestratorVersion := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
 				if orchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
