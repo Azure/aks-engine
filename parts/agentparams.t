@@ -67,7 +67,6 @@
     },
 {{end}}
     "{{.Name}}VMSize": {
-      {{GetKubernetesAllowedVMSKUs}}
       "defaultValue": "{{.VMSize}}",
       "metadata": {
         "description": "The size of the Virtual Machine."
