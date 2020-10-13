@@ -132,7 +132,7 @@ We will also need to generate an SSH key. When creating VMs, you will need an SS
 1. Windows - https://www.digitalocean.com/community/tutorials/how-to-create-ssh-keys-with-putty-to-connect-to-a-vps
 1. Mac and Linux - https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
 
-Next, we'll create a resource group to demonstrate building a cluster into a resource group that already exists (Note: we recommend you use this resource group *only* for your Kubernetes cluster resources, and use *one, dedicated resourc group per cluster*).
+Next, we'll create a resource group to demonstrate building a cluster into a resource group that already exists (Note: we recommend you use this resource group *only* for your Kubernetes cluster resources, and use *one, dedicated resource group per cluster*).
 
 ```console
 $ az group create --name contoso-apple-5eac6ed8 --location westus2
