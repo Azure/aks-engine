@@ -289,18 +289,6 @@ func (a *Account) CreateDeployment(name string, e *engine.Engine) error {
 	if err != nil {
 		log.Printf("\nError from deployment for %s in resource group %s:%s\n", d.Name, a.ResourceGroup.Name, err)
 		log.Printf("Command Output: %s\n", out)
-		// Keeping this retry scenario in here for historical purposes.
-		// If we see a recurrence of PrincipalNotFound ARM deployment errors we can re-enable to unblock all other testing signal
-		/*if bytes.Contains(out, []byte("PrincipalNotFound")) {
-			for err != nil {
-				cmd = exec.Command("az", azArgsStringSlice...)
-				util.PrintCommand(cmd)
-				out, err = cmd.CombinedOutput()
-				if err != nil {
-					log.Printf("Command Output: %s\n", out)
-				}
-			}
-		}*/
 		return err
 	}
 	quit <- true
