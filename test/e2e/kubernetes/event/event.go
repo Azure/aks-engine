@@ -22,14 +22,26 @@ type List struct {
 
 // Event represents the basic fields of a Kubernetes event.
 type Event struct {
-	Message string `json:"message"`
-	Reason  string `json:"reason"`
-	Type    string `json:"type"`
+	Message        string         `json:"message"`
+	Reason         string         `json:"reason"`
+	Type           string         `json:"type"`
+	InvolvedObject InvolvedObject `json:"involvedObject"`
+	Metadata       Metadata       `json:"metadata"`
+}
+
+// Metadata holds information like reate time
+type Metadata struct {
+	CreatedAt time.Time `json:"creationTimestamp"`
+}
+
+// InvolvedObject holds information of the involved object.
+type InvolvedObject struct {
+	Name string `json:"name"`
 }
 
 // GetAll returns all events.
 func GetAll() (*List, error) {
-	cmd := exec.Command("k", "get", "events", "-o", "json")
+	cmd := exec.Command("k", "get", "events", "-o", "json", "--sort-by=.metadata.creationTimestamp")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error getting event:\n")

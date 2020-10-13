@@ -7,6 +7,7 @@ package kubernetes
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -22,12 +23,14 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/pkg/errors"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/configmap"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/daemonset"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/event"
@@ -40,6 +43,7 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/persistentvolumeclaims"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/service"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/statefulset"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/Azure/aks-engine/test/e2e/remote"
@@ -197,6 +201,166 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
+	Describe("during a cluster upgrade operation", func() {
+		It("should not have any volume attach/detach operation race conditions", func() {
+			// Load test variables from a ConfigMap e2e-test-variables, which is pre-defined in apimodel.
+			cm, err := configmap.Get("e2e-test-variables", "default", 1)
+			if err != nil {
+				Skip("Could not find ConfigMap e2e-test-variables, skip the test.")
+			}
+
+			testConfigString, ok := cm.Data["testConfig"]
+			if !ok {
+				Fail("Could not load data testConfig from ConfigMap e2e-test-variables.")
+			}
+
+			var testConfig map[string]interface{}
+			if err := json.Unmarshal([]byte(testConfigString), &testConfig); err != nil {
+				Fail("Cound not unmarshal testConfig json: " + err.Error())
+			}
+			if upgrade, ok := testConfig["upgrade_cluster"]; !ok || !upgrade.(bool) {
+				Skip("Cound not find variable upgrade_cluster, or the variable is false, skip the test.")
+			}
+
+			upgradeVersionInterface, ok := testConfig["upgrade_version"]
+			if !ok {
+				Fail("Cound not find variable upgrade_version.")
+			}
+			upgradeVersion := upgradeVersionInterface.(string)
+
+			ssList := testConfig["statefulset"].([]interface{})
+			if len(ssList) == 0 {
+				Fail("No StatefulSet configured in this cluster, skip the test.")
+			}
+
+			// wait for all statefulsets are ready.
+			doneCh := make(chan string, len(ssList))
+			errCh := make(chan error, 1)
+
+			for _, ssInterface := range ssList {
+				ssName := ssInterface.(string)
+				go func(ssName string, doneCh chan string, errCh chan error) {
+					for {
+						ss, err := statefulset.Get(ssName, "default", 1)
+						if err == nil {
+							if ss.Status.ReadyReplicas == ss.Status.Replicas {
+								doneCh <- ssName
+								return
+							} else {
+								fmt.Printf("StatefulSet %s is not in ready status, wait for 5 minutes...\n", ssName)
+								time.Sleep(5 * time.Minute)
+							}
+						} else {
+							errCh <- errors.Wrapf(err, "error when getting statefulset %s", ssName)
+							return
+						}
+					}
+				}(ssName, doneCh, errCh)
+			}
+
+			doneCount := 0
+		doneCheck:
+			for {
+				select {
+				case err := <-errCh:
+					Fail("StatefulSets deploy failed! " + err.Error())
+				case <-doneCh:
+					doneCount++
+					if doneCount == len(ssList) {
+						break doneCheck
+					}
+				case <-time.After(30 * time.Minute):
+					Fail("Get StatefulSets status time out!")
+				}
+			}
+
+			// Check if the upgrade operation has completed.
+			nodeList, _ := node.Get()
+			for _, node := range nodeList.Nodes {
+				if node.Status.NodeInfo.KubeletVersion != upgradeVersion {
+					Skip(fmt.Sprintf("The cluster upgrade operation has not completed. Node %s is in version %s, not in target upgrade version %s. Skip the test", node.Metadata.Name, node.Status.NodeInfo.KubeletVersion, upgradeVersion))
+				}
+			}
+
+			// Get Pods and PVs info.
+			pvcList, _ := persistentvolumeclaims.GetAllByPrefix("persistent-storage-statefulset.*", "default")
+			podPvMap := make(map[string][]string)
+			re := regexp.MustCompile("statefulset-with-pvc-[0-9]+-[0-9]+")
+			for _, pvc := range pvcList {
+				if match := re.MatchString(pvc.Metadata.Name); match {
+					podName := re.FindString(pvc.Metadata.Name)
+					podPvMap[podName] = append(podPvMap[podName], pvc.Spec.VolumeName)
+				}
+			}
+
+			// Get all the kubernetes events after the upgrade operation.
+			eventList, _ := event.GetAll()
+
+			if len(eventList.Events) == 0 {
+				Fail("No events are found.")
+			}
+
+			// Analyze the events to check if the volume detach/attach operations happened in order.
+			CurrentUpgradeNode := ""
+			podVolumeMap := make(map[string]map[string]struct{})
+			raceCondition := false
+			for _, e := range eventList.Events {
+				switch e.Reason {
+				case "NodeNotSchedulable":
+					if CurrentUpgradeNode != "" {
+						if len(podVolumeMap) != 0 {
+							fmt.Println("-----------------------------")
+							fmt.Println("The following Pods/Volumes were not landed on the new node before the next node was drained.")
+							for pod, volumes := range podVolumeMap {
+								fmt.Println("Pod " + pod)
+								for v, _ := range volumes {
+									fmt.Println("  |-Volume " + v)
+								}
+							}
+							raceCondition = true
+						}
+						podVolumeMap = make(map[string]map[string]struct{})
+					}
+					CurrentUpgradeNode = e.InvolvedObject.Name
+				case "Killing":
+					podName := e.InvolvedObject.Name
+					if pvList, ok := podPvMap[podName]; ok {
+						if _, ok := podVolumeMap[podName]; !ok {
+							podVolumeMap[podName] = make(map[string]struct{})
+						}
+						for _, pv := range pvList {
+							podVolumeMap[podName][pv] = struct{}{}
+						}
+					}
+				case "SuccessfulAttachVolume":
+					podName := e.InvolvedObject.Name
+					if _, ok := podVolumeMap[podName]; ok {
+						re := regexp.MustCompile("pvc-.{8}-.{4}-.{4}-.{4}-.{12}")
+						if match := re.MatchString(e.Message); match {
+							pvcName := re.FindString(e.Message)
+							if _, ok := podVolumeMap[podName][pvcName]; ok {
+								delete(podVolumeMap[podName], pvcName)
+							}
+						}
+						if len(podVolumeMap[podName]) == 0 {
+							delete(podVolumeMap, podName)
+						}
+					}
+				}
+			}
+
+			fmt.Println("-----------------------------")
+			fmt.Println("Events during the upgrade operation:")
+			for _, e := range eventList.Events {
+				if e.Reason == "Killing" || e.Reason == "SuccessfulAttachVolume" || e.Reason == "NodeNotSchedulable" {
+					fmt.Printf("%s %s %s %s\n", e.Metadata.CreatedAt, e.Reason, e.InvolvedObject.Name, e.Message)
+				}
+			}
+
+			Expect(raceCondition).To(Equal(false))
+		})
+	})
+
 	Describe("regardless of agent pool type", func() {
 		It("should check for cluster-init pod", func() {
 			if cfg.ClusterInitPodName != "" {
