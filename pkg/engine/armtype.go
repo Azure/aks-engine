@@ -112,7 +112,7 @@ type StorageAccountARM struct {
 	storage.Account
 }
 
-// SystemRoleAssignmentARM embeds the ARMResource type in authorization.SystemRoleAssignment(2018-01-01-preview).
+// SystemRoleAssignmentARM embeds the ARMResource type in authorization.SystemRoleAssignment(2018-09-01-preview).
 type SystemRoleAssignmentARM struct {
 	ARMResource
 	authorization.RoleAssignment

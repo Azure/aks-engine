@@ -27,11 +27,6 @@
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
-      },
-      "certificateProfile": {}
+      }
     }
   }

@@ -32,7 +32,7 @@
     "windowsProfile": {
       "adminUsername": "azureuser",
       "adminPassword": "replacepassword1234$",
-      "sshEnabled": true,                             
+      "sshEnabled": true,
       "windowsPauseImageURL": "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
       "alwaysPullWindowsPauseImage": true
     },
@@ -45,10 +45,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

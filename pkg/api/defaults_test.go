@@ -790,6 +790,60 @@ func TestDiskCachingTypes(t *testing.T) {
 	}
 }
 
+func TestDefaultUseManagedIdentity(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	isUpgrade := false
+	isScale := false
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if !to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity to be true by default, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{},
+	}
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity to be false by default in CustomCloudProfile context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity to be false by default in VMSS control plane context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	isUpgrade = true
+	isScale = false
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil {
+		t.Errorf("expected UseManagedIdentity to be unchanged by default in upgrade context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	isUpgrade = false
+	isScale = true
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil {
+		t.Errorf("expected UseManagedIdentity to be unchanged by default in scale context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(false)
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity=false config to be honored by defaults enforcement, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+}
+
 func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties

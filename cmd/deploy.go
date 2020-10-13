@@ -270,13 +270,13 @@ func autofillApimodel(dc *deployCmd) error {
 		if dc.dnsPrefix == "" {
 			return errors.New("apimodel: missing masterProfile.dnsPrefix and --dns-prefix was not specified")
 		}
-		log.Warnf("apimodel: missing masterProfile.dnsPrefix will use %q", dc.dnsPrefix)
 		dc.containerService.Properties.MasterProfile.DNSPrefix = dc.dnsPrefix
 	}
 
 	if dc.autoSuffix {
 		suffix := strconv.FormatInt(time.Now().Unix(), 16)
 		dc.containerService.Properties.MasterProfile.DNSPrefix += "-" + suffix
+		log.Infof("Generated random suffix %s, DNS Prefix is %s", suffix, dc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
 	if dc.outputDirectory == "" {
@@ -324,7 +324,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 	k8sConfig := dc.containerService.Properties.OrchestratorProfile.KubernetesConfig
 
-	useManagedIdentity := k8sConfig != nil && k8sConfig.UseManagedIdentity
+	useManagedIdentity := k8sConfig != nil && to.Bool(k8sConfig.UseManagedIdentity)
 
 	if !useManagedIdentity {
 		spp := dc.containerService.Properties.ServicePrincipalProfile

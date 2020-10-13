@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestCreateKeyVault(t *testing.T) {
@@ -52,7 +53,7 @@ func TestCreateKeyVault(t *testing.T) {
 	}
 
 	//Test with UseManagedIdentityEnabled
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 
 	actual = CreateKeyVaultVMAS(cs)
 
@@ -87,7 +88,7 @@ func TestCreateKeyVault(t *testing.T) {
 	}
 
 	//Test with UserAssignedID
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooID"
 
 	actual = CreateKeyVaultVMAS(cs)
@@ -164,7 +165,7 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 	}
 
 	//Test with UseManagedIdentityEnabled
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 
 	actual = CreateKeyVaultVMSS(cs)
 
@@ -199,7 +200,7 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 	}
 
 	//Test with UserAssignedID
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooID"
 
 	actual = CreateKeyVaultVMSS(cs)

@@ -9,9 +9,7 @@ $ aks-engine deploy --subscription-id $SUBSCRIPTION_ID \
     --dns-prefix $CLUSTER_NAME \
     --resource-group $RESOURCE_GROUP \
     --location $LOCATION \
-    --api-model examples/kubernetes.json \
-    --client-id $SERVICE_PRINCIPAL_ID \
-    --client-secret $SERVICE_PRINCIPAL_PASSWORD
+    --api-model examples/kubernetes.json
 ```
 
 `aks-engine deploy` is a long-running operation that creates Azure resources (e.g., Virtual Machine and/or Virtual Machine Scale Set [VMSS], Disk, Network Interface, Network Security Group, Public IP Address, Virtual Network, Load Balancer, and others) that will underly a Kubernetes cluster. All deployed VMs will be configured to run Kubernetes bootstrap scripts appropriate for the desired cluster configuration. The outcome of a successful `aks-engine deploy` operation is a fully operational Kubernetes cluster, ready for use immediately.
@@ -34,8 +32,8 @@ A more detailed walk-through of `aks-engine deploy` is in the [quickstart guide]
 |--set|no|Set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2).|
 |--ca-certificate-path|no|Path to the CA certificate to use for Kubernetes PKI assets.|
 |--ca-private-key-path|no|Path to the CA private key to use for Kubernetes PKI assets.|
-|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
-|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to client_secret or client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to client_secret|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
 |--identity-system|no|Identity system (default is azure_ad)|
 |--auth-method|no|The authentication method used. Default value is `client_secret`. Other supported values are: `cli`, `client_certificate`, and `device`.|

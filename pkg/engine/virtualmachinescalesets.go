@@ -431,7 +431,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	var useManagedIdentity bool
 	var userAssignedIdentityEnabled bool
 	if k8sConfig != nil {
-		useManagedIdentity = k8sConfig.UseManagedIdentity
+		useManagedIdentity = to.Bool(k8sConfig.UseManagedIdentity)
 	}
 	if useManagedIdentity {
 		userAssignedIdentityEnabled = k8sConfig.UserAssignedIDEnabled()

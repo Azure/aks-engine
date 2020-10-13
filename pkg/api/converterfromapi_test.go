@@ -537,7 +537,7 @@ func getDefaultContainerService() *ContainerService {
 					DockerBridgeSubnet:              "sampleDockerSubnet",
 					DNSServiceIP:                    "172.0.0.1",
 					ServiceCIDR:                     "172.0.0.1/16",
-					UseManagedIdentity:              true,
+					UseManagedIdentity:              to.BoolPtr(true),
 					UserAssignedID:                  "fooUserAssigneID",
 					UserAssignedClientID:            "fooUserAssigneClientID",
 					MobyVersion:                     "3.0.0",

@@ -508,7 +508,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 	}
 
 	// Now test with userAssignedID enabled and StorageAccount in agents
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooUserAssignedID"
 	cs.Properties.AgentPoolProfiles[0].StorageProfile = api.StorageAccount
 	userAssignedIDEnabled = true

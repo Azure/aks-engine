@@ -4853,7 +4853,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
@@ -4917,7 +4917,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
@@ -4970,7 +4970,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{

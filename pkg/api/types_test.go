@@ -3883,7 +3883,7 @@ func TestUserAssignedMSI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserailizing the example user msi api model: %s", err)
 	}
-	systemMSI := apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	systemMSI := to.Bool(apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	actualUserMSI := apiModel.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
 	if !systemMSI || actualUserMSI != "" {
 		t.Fatalf("found user msi: %t and usermsi: %s", systemMSI, actualUserMSI)
@@ -3897,7 +3897,7 @@ func TestUserAssignedMSI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserailizing the example user msi api model: %s", err)
 	}
-	systemMSI = apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	systemMSI = to.Bool(apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	actualUserMSI = apiModel.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
 	if !systemMSI && actualUserMSI != exampleUserMSI {
 		t.Fatalf("found user msi: %t and usermsi: %s", systemMSI, actualUserMSI)
@@ -6429,7 +6429,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 
 func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "fooID",
 	}
 	if !k.UserAssignedIDEnabled() {
@@ -6437,7 +6437,7 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: false,
+		UseManagedIdentity: to.BoolPtr(false),
 		UserAssignedID:     "fooID",
 	}
 
@@ -6448,7 +6448,7 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 
 func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "fooID",
 	}
 	if !k.ShouldCreateNewUserAssignedIdentity() {
@@ -6456,7 +6456,7 @@ func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     exampleUserMSI,
 	}
 
@@ -6467,7 +6467,7 @@ func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 
 func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "",
 	}
 	if !k.SystemAssignedIDEnabled() {
@@ -6475,7 +6475,7 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "foo",
 	}
 
@@ -6484,7 +6484,7 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: false,
+		UseManagedIdentity: to.BoolPtr(false),
 		UserAssignedID:     "",
 	}
 

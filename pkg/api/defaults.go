@@ -181,6 +181,14 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if !isUpgrade && !isScale &&
+			!cs.Properties.IsHostedMasterProfile() &&
+			!cs.Properties.IsCustomCloudProfile() &&
+			!cs.Properties.MasterProfile.IsVirtualMachineScaleSets() &&
+			o.KubernetesConfig.UseManagedIdentity == nil {
+			o.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
+		}
+
 		if a.HasWindows() {
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPluginWindows
