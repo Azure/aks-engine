@@ -81,6 +81,12 @@ type MockKubernetesClient struct {
 	FailGetNode               bool
 	UpdateNodeFunc            func(*v1.Node) (*v1.Node, error)
 	GetNodeFunc               func(name string) (*v1.Node, error)
+	GetPodFunc                func(namespace, name string) (*v1.Pod, error)
+	GetPvcFunc                func(namespace, name string) (*v1.PersistentVolumeClaim, error)
+	GetPvFunc                 func(name string) (*v1.PersistentVolume, error)
+	FailGetPod                bool
+	FailGetPv                 bool
+	FailGetPvc                bool
 	FailUpdateNode            bool
 	FailDeleteNode            bool
 	FailDeleteServiceAccount  bool
@@ -474,6 +480,39 @@ func (mkc *MockKubernetesClient) UpdateDeployment(namespace string, deployment *
 		return nil, errors.New("UpdateDeployment failed")
 	}
 	return &appsv1.Deployment{}, nil
+}
+
+// GetPersistentVolumeClaim returns details about Persistent Volume Claim with passed in name.
+func (mkc *MockKubernetesClient) GetPersistentVolumeClaim(namespace, name string) (*v1.PersistentVolumeClaim, error) {
+	if mkc.FailGetPvc {
+		return nil, errors.New("GetPersistentVolumeClaim failed")
+	}
+	if mkc.GetPvcFunc != nil {
+		return mkc.GetPvcFunc(namespace, name)
+	}
+	return &v1.PersistentVolumeClaim{}, nil
+}
+
+// GetPersistentVolume returns details about Persistent Volume with passed in name.
+func (mkc *MockKubernetesClient) GetPersistentVolume(name string) (*v1.PersistentVolume, error) {
+	if mkc.FailGetPv {
+		return nil, errors.New("GetPersistentVolume failed")
+	}
+	if mkc.GetPvFunc != nil {
+		return mkc.GetPvFunc(name)
+	}
+	return &v1.PersistentVolume{}, nil
+}
+
+// GetPod returns the pod with the provided name and namespace.
+func (mkc *MockKubernetesClient) GetPod(namespace, name string) (*v1.Pod, error) {
+	if mkc.FailGetPod {
+		return nil, errors.New("GetPod failed")
+	}
+	if mkc.GetPodFunc != nil {
+		return mkc.GetPodFunc(namespace, name)
+	}
+	return &v1.Pod{}, nil
 }
 
 //DeleteBlob mock

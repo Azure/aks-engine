@@ -270,4 +270,10 @@ type KubernetesClient interface {
 	WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error)
 	// UpdateDeployment updates a deployment to match the given specification.
 	UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error)
+	// GetPersistentVolume returns details about Persistent Volume with passed in name.
+	GetPersistentVolume(name string) (*v1.PersistentVolume, error)
+	// GetPersistentVolumeClaim returns details about Persistent Volume Claim with passed in name.
+	GetPersistentVolumeClaim(namespace string, name string) (*v1.PersistentVolumeClaim, error)
+	// GetPod returns the pod with the provided name and namespace.
+	GetPod(namespace string, name string) (*v1.Pod, error)
 }

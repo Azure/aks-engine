@@ -154,7 +154,7 @@ func (c *KubernetesClientSetClient) EvictPod(pod *v1.Pod, policyGroupVersion str
 }
 
 // GetPod returns the pod with the provided name and namespace.
-func (c *KubernetesClientSetClient) getPod(namespace, name string) (*v1.Pod, error) {
+func (c *KubernetesClientSetClient) GetPod(namespace, name string) (*v1.Pod, error) {
 	return c.clientset.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
 }
 
@@ -169,7 +169,7 @@ func (c *KubernetesClientSetClient) WaitForDelete(logger *log.Entry, pods []v1.P
 	err := wait.PollImmediate(c.interval, c.timeout, func() (bool, error) {
 		pendingPods := []v1.Pod{}
 		for i, pod := range pods {
-			p, err := c.getPod(pod.Namespace, pod.Name)
+			p, err := c.GetPod(pod.Namespace, pod.Name)
 			if apierrors.IsNotFound(err) || (p != nil && p.ObjectMeta.UID != pod.ObjectMeta.UID) {
 				logger.Infof("%s pod successfully %s", pod.Name, verbStr)
 				continue
@@ -201,4 +201,14 @@ func (c *KubernetesClientSetClient) GetDeployment(namespace, name string) (*apps
 // UpdateDeployment updates a deployment to match the given specification.
 func (c *KubernetesClientSetClient) UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
 	return c.clientset.AppsV1().Deployments(namespace).Update(deployment)
+}
+
+// GetPersistentVolumeClaim returns details about Persistent Volume Claim with passed in name.
+func (c *KubernetesClientSetClient) GetPersistentVolumeClaim(namespace string, name string) (*v1.PersistentVolumeClaim, error) {
+	return c.clientset.CoreV1().PersistentVolumeClaims(namespace).Get(name, metav1.GetOptions{})
+}
+
+// GetPersistentVolume returns details about Persistent Volume with passed in name.
+func (c *KubernetesClientSetClient) GetPersistentVolume(name string) (*v1.PersistentVolume, error) {
+	return c.clientset.CoreV1().PersistentVolumes().Get(name, metav1.GetOptions{})
 }
