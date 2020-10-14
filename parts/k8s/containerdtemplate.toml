@@ -57,6 +57,8 @@ state = "C:\\ProgramData\\containerd\\state"
       [plugins.cri.registry.mirrors]
         [plugins.cri.registry.mirrors."docker.io"]
           endpoint = ["https://registry-1.docker.io"]
+      [plugins.cri.registry.headers]
+        X-Meta-Source-Client = ["azure/aks-engine"]
   [plugins.diff-service]
     default = ["windows"]
   [plugins.scheduler]
