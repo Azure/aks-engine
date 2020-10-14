@@ -1,5 +1,6 @@
 root = "C:\\ProgramData\\containerd\\root"
 state = "C:\\ProgramData\\containerd\\state"
+version = 2
 
 [grpc]
   address = "\\\\.\\pipe\\containerd-containerd"

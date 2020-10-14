@@ -21701,6 +21701,7 @@ func k8sCloudInitNodecustomdataYml() (*asset, error) {
 
 var _k8sContainerdtemplateToml = []byte(`root = "C:\\ProgramData\\containerd\\root"
 state = "C:\\ProgramData\\containerd\\state"
+version = 2
 
 [grpc]
   address = "\\\\.\\pipe\\containerd-containerd"
@@ -21722,7 +21723,7 @@ state = "C:\\ProgramData\\containerd\\state"
   path = ""
 
 [plugins]
-  [plugins.cri]
+  [plugins."io.containerd.grpc.v1.cri"]
     stream_server_address = "127.0.0.1"
     stream_server_port = "0"
     enable_selinux = false
@@ -21731,33 +21732,35 @@ state = "C:\\ProgramData\\containerd\\state"
     systemd_cgroup = false
     enable_tls_streaming = false
     max_container_log_line_size = 16384
-    [plugins.cri.containerd]
+    [plugins."io.containerd.grpc.v1.cri".containerd]
       snapshotter = "windows"
       no_pivot = false
-      [plugins.cri.containerd.default_runtime]
+      [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime]
         runtime_type = "io.containerd.runhcs.v1"
-        [plugins.cri.containerd.default_runtime.options]
+        [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime.options]
           Debug = true
           DebugType = 2
           SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
           SandboxPlatform = "windows/amd64"
           SandboxIsolation = {{sandboxIsolation}}
-      [plugins.cri.containerd.runtimes]
-        [plugins.cri.containerd.runtimes.runhcs-wcow-process]
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process]
           runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-process.options]
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process.options]
             Debug = true
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
             SandboxPlatform = "windows/amd64"
 {{hypervisors}}
-    [plugins.cri.cni]
+    [plugins."io.containerd.grpc.v1.cri".cni]
       bin_dir = "{{cnibin}}"
       conf_dir = "{{cniconf}}"
-    [plugins.cri.registry]
-      [plugins.cri.registry.mirrors]
-        [plugins.cri.registry.mirrors."docker.io"]
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
           endpoint = ["https://registry-1.docker.io"]
+      [plugins."io.containerd.grpc.v1.cri".registry.headers]
+        X-Meta-Source-Client = ["azure/aks-engine"]
   [plugins.diff-service]
     default = ["windows"]
   [plugins.scheduler]
@@ -21765,7 +21768,8 @@ state = "C:\\ProgramData\\containerd\\state"
     deletion_threshold = 0
     mutation_threshold = 100
     schedule_delay = "0s"
-    startup_delay = "100ms"`)
+    startup_delay = "100ms"
+`)
 
 func k8sContainerdtemplateTomlBytes() ([]byte, error) {
 	return _k8sContainerdtemplateToml, nil
