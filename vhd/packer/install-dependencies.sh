@@ -143,7 +143,6 @@ done
 
 ADDON_RESIZER_VERSIONS="
 1.8.7
-1.8.4
 "
 for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
@@ -240,7 +239,6 @@ CLUSTER_AUTOSCALER_VERSIONS="
 1.18.2
 1.17.3
 1.16.6
-1.15.7
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -375,10 +373,6 @@ K8S_VERSIONS="
 1.16.15
 1.16.14
 1.16.14-azs
-1.15.12
-1.15.12-azs
-1.15.11
-1.15.11-azs
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then

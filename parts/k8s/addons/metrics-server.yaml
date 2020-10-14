@@ -20,9 +20,7 @@ rules:
   resources:
   - pods
   - nodes
-{{- if IsKubernetesVersionGe "1.16.0"}}
   - nodes/stats
-{{- end}}
   - namespaces
   verbs:
   - get
@@ -103,11 +101,7 @@ spec:
     protocol: TCP
     targetPort: 443
 ---
-{{- if IsKubernetesVersionGe "1.16.0"}}
 apiVersion: apps/v1
-{{else}}
-apiVersion: extensions/v1beta1
-{{- end}}
 kind: Deployment
 metadata:
   name: metrics-server
@@ -134,11 +128,7 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
         - /metrics-server
-{{- if IsKubernetesVersionGe "1.16.0"}}
         - --kubelet-insecure-tls
-{{else}}
-        - --source=kubernetes.summary_api:''
-{{- end}}
       nodeSelector:
         kubernetes.io/os: linux
 ---
