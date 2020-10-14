@@ -5,9 +5,11 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -20,6 +22,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -44,6 +47,10 @@ type getLogsCmd struct {
 	windowsScriptPath      string
 	outputDirectory        string
 	controlPlaneOnly       bool
+	uploadLogs             bool
+	storageAccountName     string
+	storageAccountKey      string
+	storageContainerURL    string
 	// computed
 	cs               *api.ContainerService
 	locale           *gotext.Locale
@@ -80,6 +87,10 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
+	command.Flags().BoolVarP(&glc.uploadLogs, "upload-logs", "", false, "upload logs to a Storage Container on Azure or custom cloud")
+	command.Flags().StringVar(&glc.storageAccountName, "storage-account-name", "", "storage account name of the storage account that container exist (required if upload-logs is set)")
+	command.Flags().StringVar(&glc.storageAccountKey, "storage-account-key", "", "storage account key of the storage account that container exist (required if upload-logs is set)")
+	command.Flags().StringVar(&glc.storageContainerURL, "storage-container-url", "", "URL of the storage container that the logs will be uploaded, will create a default container if no URL provided")
 	_ = command.MarkFlagRequired("location")
 	_ = command.MarkFlagRequired("api-model")
 	_ = command.MarkFlagRequired("ssh-host")
@@ -118,6 +129,13 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
 		if err := os.MkdirAll(glc.outputDirectory, 0755); err != nil {
 			return errors.Errorf("error creating output directory (%s)", glc.outputDirectory)
+		}
+	}
+	if glc.uploadLogs {
+		if glc.storageAccountName == "" {
+			return errors.New("--storage-account-name must be specified when --upload is set")
+		} else if glc.storageAccountKey == "" {
+			return errors.New("--storage-account-key must be specified when --upload is set")
 		}
 	}
 	return nil
@@ -168,6 +186,18 @@ func (glc *getLogsCmd) run() (err error) {
 	if err = glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
+	if glc.uploadLogs && glc.storageContainerURL == "" {
+		log.Infof("No storage container URL provided, will create a defaul storage container 'kuberneteslogs'")
+		err = glc.CreateDefaultStorageContainer()
+		if err != nil {
+			log.Warnf("Failed to create default storage container 'kuberneteslogs', will not upload logs to storage container")
+			log.Warnf("Error: %s", err)
+			glc.uploadLogs = false
+		}
+	} else {
+		log.Infof("Will upload logs to storage container URL: %s", glc.storageContainerURL)
+	}
+
 	for _, n := range glc.masterNodes {
 		log.Infof("Processing master node: %s\n", n.Name)
 		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
@@ -210,7 +240,15 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	}
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
-		return errors.Wrap(err, "listing cluster nodes")
+		log.Warnf("unable to list nodes from api server, will only collect logs from control panel VMs")
+		glc.controlPlaneOnly = true
+		for nodeIndex := 0; nodeIndex < glc.cs.Properties.MasterProfile.Count; nodeIndex++ {
+			var controlPanelNode v1.Node
+			controlPanelNode.Name = fmt.Sprint(common.LegacyControlPlaneVMPrefix, "-", glc.cs.Properties.GetClusterID(), "-", nodeIndex)
+			controlPanelNode.Status.NodeInfo.OperatingSystem = "linux"
+			glc.masterNodes = append(glc.masterNodes, controlPanelNode)
+		}
+		return nil
 	}
 	for _, node := range nodeList.Items {
 		if isLinuxNode(node) {
@@ -252,6 +290,15 @@ func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (stri
 	if err != nil {
 		return stdout, err
 	}
+
+	if glc.uploadLogs {
+		log.Debugf("Will upload logs to storage container, URL: (%s)\n", glc.storageContainerURL)
+		err = glc.uploadLogsToStorageContainer(node)
+		if err != nil {
+			return "", errors.Wrap(err, "uploading logs to storage container")
+		}
+	}
+
 	return "", nil
 }
 
@@ -260,7 +307,7 @@ func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, e
 		return "", nil
 	}
 
-	if glc.linuxScriptPath != "" {
+	if isLinuxNode(node) && (glc.linuxScriptPath != "") {
 		linuxScriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
 		if err != nil {
 			return "", errors.Wrap(err, "reading Linux log collection script content")
@@ -279,7 +326,7 @@ func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, e
 		}
 	}
 
-	if glc.windowsScriptPath != "" {
+	if isWindowsNode(node) && (glc.windowsScriptPath != "") {
 		windowsScriptContent, err := ioutil.ReadFile(glc.windowsScriptPath)
 		if err != nil {
 			return "", errors.Wrap(err, "reading Windows log collection script content")
@@ -293,7 +340,7 @@ func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, e
 		defer session.Close()
 
 		session.Stdin = bytes.NewReader(windowsScriptContent)
-		if co, err := session.CombinedOutput("powershell -command \"Write-Output $Input > $env:temp\\collect-windows-logs.ps1\""); err != nil {
+		if co, err := session.CombinedOutput("powershell -noprofile -command \"$Input > $env:temp\\collect-windows-logs.ps1\""); err != nil {
 			return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading Windows log collection script")
 		}
 	}
@@ -319,12 +366,11 @@ func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, 
 		}
 	} else {
 		if glc.windowsScriptPath != "" {
-			script = "c:\\k\\debug\\collect-windows-logs.ps1"
-			cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
+			script = "(gi $env:temp).fullname + '\\collect-windows-logs.ps1'"
 		} else {
 			script = "c:\\k\\debug\\collect-windows-logs.ps1"
-			cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
 		}
+		cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
 	}
 
 	if co, err := session.CombinedOutput(cmd); err != nil {
@@ -372,6 +418,50 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 
 	fmt.Println("")
 	return "", nil
+}
+
+func (glc *getLogsCmd) CreateDefaultStorageContainer() error {
+	//default container name is "kuberneteslogs"
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/kuberneteslogs", glc.storageAccountName))
+	credential, err := azblob.NewSharedKeyCredential(glc.storageAccountName, glc.storageAccountKey)
+	if err != nil {
+		return errors.Wrap(err, "getting credential from storage account name and key")
+	}
+
+	containerURL := azblob.NewContainerURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+
+	_, err = containerURL.Create(context.Background(), azblob.Metadata{}, azblob.PublicAccessContainer)
+	if err != nil {
+		return errors.Wrap(err, "creating storage container 'kuberneteslogs'")
+	}
+
+	glc.storageContainerURL = fmt.Sprintf("https://%s.blob.core.windows.net/kuberneteslogs", glc.storageAccountName)
+
+	return nil
+}
+
+func (glc *getLogsCmd) uploadLogsToStorageContainer(node v1.Node) error {
+	log.Infof("Uploading logs for %s", node.Name)
+	logFileName := fmt.Sprintf("%s.zip", node.Name)
+	logFilePath := path.Join(glc.outputDirectory, logFileName)
+	logFile, err := os.Open(logFilePath)
+	if err != nil {
+		return errors.Wrap(err, "opening zipped log file")
+	}
+
+	u, _ := url.Parse(fmt.Sprintf("%s/%s", glc.storageContainerURL, logFileName))
+	credential, err := azblob.NewSharedKeyCredential(glc.storageAccountName, glc.storageAccountKey)
+	if err != nil {
+		return errors.Wrap(err, "getting credential from storage account name and key")
+	}
+	blockBlobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+
+	_, err = azblob.UploadFileToBlockBlob(context.Background(), logFile, blockBlobURL, azblob.UploadToBlockBlobOptions{})
+	if err != nil {
+		return errors.Wrap(err, "uploading log file to storage container blob")
+	}
+
+	return nil
 }
 
 func isLinuxNode(node v1.Node) bool {
