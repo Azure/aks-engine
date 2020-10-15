@@ -13503,97 +13503,233 @@ apiVersion: v1
 data:
   kube.conf: |-
     # Fluentd config file for OMS Docker - cluster components (kubeAPI)
-    #fluent forward plugin
-    <source>
-     type forward
-     port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
-     bind 0.0.0.0
-     chunk_size_limit 4m
-    </source>
-
-    #Kubernetes pod inventory
-    <source>
-     type kubepodinventory
-     tag oms.containerinsights.KubePodInventory
-     run_interval 60
-     log_level debug
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
-    </source>
-
-    #Kubernetes events
-    <source>
-     type kubeevents
-     tag oms.containerinsights.KubeEvents
-     run_interval 60
-     log_level debug
+     #fluent forward plugin
+     <source>
+      type forward
+      port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
+      bind 0.0.0.0
+      chunk_size_limit 4m
      </source>
 
-    #Kubernetes Nodes
-    <source>
-     type kubenodeinventory
-     tag oms.containerinsights.KubeNodeInventory
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes pod inventory
+     <source>
+      type kubepodinventory
+      tag oms.containerinsights.KubePodInventory
+      run_interval 60
+      log_level debug
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
+     </source>
 
-    #Kubernetes health
-    <source>
-     type kubehealth
-     tag kubehealth.ReplicaSet
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes events
+     <source>
+      type kubeevents
+      tag oms.containerinsights.KubeEvents
+      run_interval 60
+      log_level debug
+      </source>
 
-    #cadvisor perf- Windows nodes
-    <source>
-     type wincadvisorperf
-     tag oms.api.wincadvisorperf
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes Nodes
+     <source>
+      type kubenodeinventory
+      tag oms.containerinsights.KubeNodeInventory
+      run_interval 60
+      log_level debug
+     </source>
 
-    #Kubernetes object state - deployments
-    <source>
-     type kubestatedeployments
-     tag oms.containerinsights.KubeStateDeployments
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes health
+     <source>
+      type kubehealth
+      tag kubehealth.ReplicaSet
+      run_interval 60
+      log_level debug
+     </source>
 
-    #Kubernetes object state - HPA
-    <source>
-     type kubestatehpa
-     tag oms.containerinsights.KubeStateHpa
-     run_interval 60
-     log_level debug
-    </source>
+     #cadvisor perf- Windows nodes
+     <source>
+      type wincadvisorperf
+      tag oms.api.wincadvisorperf
+      run_interval 60
+      log_level debug
+     </source>
 
-    <filter mdm.kubenodeinventory**>
-     type filter_inventory2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
-     log_level info
-    </filter>
+     #Kubernetes object state - deployments
+     <source>
+      type kubestatedeployments
+      tag oms.containerinsights.KubeStateDeployments
+      run_interval 60
+      log_level debug
+     </source>
 
-    #custom_metrics_mdm filter plugin for perf data from windows nodes
-    <filter mdm.cadvisorperf**>
-     type filter_cadvisor2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
-     metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes,pvUsedBytes
-     log_level info
-    </filter>
+     #Kubernetes object state - HPA
+     <source>
+      type kubestatehpa
+      tag oms.containerinsights.KubeStateHpa
+      run_interval 60
+      log_level debug
+     </source>
 
-    #health model aggregation filter
-    <filter kubehealth**>
-     type filter_health_model_builder
-    </filter>
+     <filter mdm.kubenodeinventory**>
+      type filter_inventory2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
+      log_level info
+     </filter>
 
-    <match oms.containerinsights.KubePodInventory**>
+     #custom_metrics_mdm filter plugin for perf data from windows nodes
+     <filter mdm.cadvisorperf**>
+      type filter_cadvisor2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
+      metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes,pvUsedBytes
+      log_level info
+     </filter>
+
+     #health model aggregation filter
+     <filter kubehealth**>
+      type filter_health_model_builder
+     </filter>
+
+     <match oms.containerinsights.KubePodInventory**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match oms.containerinsights.KubeEvents**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match oms.containerinsights.KubeServices**>
+      type out_oms
+      log_level debug
+      num_threads 2
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match oms.containerinsights.KubeNodeInventory**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match oms.containerinsights.ContainerNodeInventory**>
+      type out_oms
+      log_level debug
+      num_threads 3
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
+      buffer_queue_limit 20
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match oms.api.KubePerf**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match mdm.kubepodinventory** mdm.kubenodeinventory** >
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+      retry_mdm_post_wait_minutes 30
+     </match>
+
+     <match oms.api.wincadvisorperf**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match mdm.cadvisorperf**>
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+      retry_mdm_post_wait_minutes 30
+     </match>
+
+    <match kubehealth.Signals**>
      type out_oms
      log_level debug
      num_threads 5
      buffer_chunk_limit 4m
      buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
+     buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
@@ -13602,13 +13738,13 @@ data:
      max_retry_wait 5m
     </match>
 
-    <match oms.containerinsights.KubeEvents**>
+    <match oms.api.InsightsMetrics**>
      type out_oms
      log_level debug
      num_threads 5
      buffer_chunk_limit 4m
      buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
+     buffer_path %STATE_DIR_WS%/out_oms_insightsmetrics*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
@@ -13616,142 +13752,6 @@ data:
      retry_wait 5s
      max_retry_wait 5m
     </match>
-
-    <match oms.containerinsights.KubeServices**>
-     type out_oms
-     log_level debug
-     num_threads 2
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
-
-    <match oms.containerinsights.KubeNodeInventory**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
-
-    <match oms.containerinsights.ContainerNodeInventory**>
-     type out_oms
-     log_level debug
-     num_threads 3
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
-     buffer_queue_limit 20
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
-
-    <match oms.api.KubePerf**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
-
-    <match mdm.kubepodinventory** mdm.kubenodeinventory** >
-     type out_mdm
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-     retry_mdm_post_wait_minutes 30
-    </match>
-
-    <match oms.api.wincadvisorperf**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
-
-    <match mdm.cadvisorperf**>
-     type out_mdm
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-     retry_mdm_post_wait_minutes 30
-    </match>
-
-   <match kubehealth.Signals**>
-    type out_oms
-    log_level debug
-    num_threads 5
-    buffer_chunk_limit 4m
-    buffer_type file
-    buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
-    buffer_queue_limit 20
-    buffer_queue_full_action drop_oldest_chunk
-    flush_interval 20s
-    retry_limit 10
-    retry_wait 5s
-    max_retry_wait 5m
-   </match>
-
-   <match oms.api.InsightsMetrics**>
-    type out_oms
-    log_level debug
-    num_threads 5
-    buffer_chunk_limit 4m
-    buffer_type file
-    buffer_path %STATE_DIR_WS%/out_oms_insightsmetrics*.buffer
-    buffer_queue_limit 20
-    buffer_queue_full_action drop_oldest_chunk
-    flush_interval 20s
-    retry_limit 10
-    retry_wait 5s
-    max_retry_wait 5m
-   </match>
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -14216,7 +14216,7 @@ spec:
   names:
     plural: healthstates
     kind: HealthState
-{{- end}}`)
+{{end}}`)
 
 func k8sAddonsContainerMonitoringYamlBytes() ([]byte, error) {
 	return _k8sAddonsContainerMonitoringYaml, nil
