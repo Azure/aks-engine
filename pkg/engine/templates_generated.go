@@ -13473,8 +13473,8 @@ rules:
   - apiGroups: [""]
     resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "nodes/spec", "nodes/proxy", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
-  - apiGroups: ["extensions", "apps"]
-    resources: ["replicasets"]
+  - apiGroups: ["apps", "extensions", "autoscaling"]
+    resources: ["replicasets", "deployments", "horizontalpodautoscalers"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
     resources: ["healthstates"]
@@ -13511,22 +13511,22 @@ data:
      chunk_size_limit 4m
     </source>
 
-     #Kubernetes pod inventory
+    #Kubernetes pod inventory
     <source>
      type kubepodinventory
      tag oms.containerinsights.KubePodInventory
      run_interval 60
      log_level debug
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
     </source>
 
-     #Kubernetes events
+    #Kubernetes events
     <source>
      type kubeevents
      tag oms.containerinsights.KubeEvents
      run_interval 60
      log_level debug
-    </source>
+     </source>
 
     #Kubernetes Nodes
     <source>
@@ -13552,17 +13552,33 @@ data:
      log_level debug
     </source>
 
+    #Kubernetes object state - deployments
+    <source>
+     type kubestatedeployments
+     tag oms.containerinsights.KubeStateDeployments
+     run_interval 60
+     log_level debug
+    </source>
+
+    #Kubernetes object state - HPA
+    <source>
+     type kubestatehpa
+     tag oms.containerinsights.KubeStateHpa
+     run_interval 60
+     log_level debug
+    </source>
+
     <filter mdm.kubenodeinventory**>
      type filter_inventory2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
      log_level info
     </filter>
 
-    # custom_metrics_mdm filter plugin for perf data from windows nodes
+    #custom_metrics_mdm filter plugin for perf data from windows nodes
     <filter mdm.cadvisorperf**>
      type filter_cadvisor2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-     metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
+     metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes,pvUsedBytes
      log_level info
     </filter>
 
@@ -13707,35 +13723,35 @@ data:
      retry_mdm_post_wait_minutes 30
     </match>
 
-    <match kubehealth.Signals**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+   <match kubehealth.Signals**>
+    type out_oms
+    log_level debug
+    num_threads 5
+    buffer_chunk_limit 4m
+    buffer_type file
+    buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
+    buffer_queue_limit 20
+    buffer_queue_full_action drop_oldest_chunk
+    flush_interval 20s
+    retry_limit 10
+    retry_wait 5s
+    max_retry_wait 5m
+   </match>
 
-    <match oms.api.InsightsMetrics**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_insightsmetrics*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+   <match oms.api.InsightsMetrics**>
+    type out_oms
+    log_level debug
+    num_threads 5
+    buffer_chunk_limit 4m
+    buffer_type file
+    buffer_path %STATE_DIR_WS%/out_oms_insightsmetrics*.buffer
+    buffer_queue_limit 20
+    buffer_queue_full_action drop_oldest_chunk
+    flush_interval 20s
+    retry_limit 10
+    retry_wait 5s
+    max_retry_wait 5m
+   </match>
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -13820,6 +13836,13 @@ spec:
               name: host-log
             - mountPath: /var/lib/docker/containers
               name: containerlog-path
+              readOnly: true
+            - mountPath: /mnt/docker
+              name: containerlog-path-2
+              readOnly: true
+            - mountPath: /mnt/containers
+              name: containerlog-path-3
+              readOnly: true
             - mountPath: /etc/kubernetes/host
               name: azure-json-path
             - mountPath: /etc/omsagent-secret
@@ -13827,6 +13850,10 @@ spec:
               readOnly: true
             - mountPath: /etc/config/settings
               name: settings-vol-config
+              readOnly: true
+            - mountPath: /etc/config/settings/adx
+              name: omsagent-adx-secret
+              readOnly: true
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -13864,6 +13891,12 @@ spec:
         - name: containerlog-path
           hostPath:
             path: /var/lib/docker/containers
+        - name: containerlog-path-2
+          hostPath:
+            path: /mnt/docker
+        - name: containerlog-path-3
+          hostPath:
+            path: /mnt/containers
         - name: azure-json-path
           hostPath:
             path: /etc/kubernetes
@@ -13873,6 +13906,10 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
+            optional: true
+        - name: omsagent-adx-secret
+          secret:
+            secretName: omsagent-adx-secret
             optional: true
   updateStrategy:
     type: RollingUpdate
@@ -13944,8 +13981,6 @@ spec:
               name: docker-sock
             - mountPath: /var/log
               name: host-log
-            - mountPath: /var/lib/docker/containers
-              name: containerlog-path
             - mountPath: /etc/kubernetes/host
               name: azure-json-path
             - mountPath: /etc/omsagent-secret
@@ -13955,6 +13990,9 @@ spec:
               name: omsagent-rs-config
             - mountPath: /etc/config/settings
               name: settings-vol-config
+              readOnly: true
+            - mountPath: /etc/config/settings/adx
+              name: omsagent-adx-secret
               readOnly: true
           livenessProbe:
             exec:
@@ -13995,9 +14033,6 @@ spec:
         - name: host-log
           hostPath:
             path: /var/log
-        - name: containerlog-path
-          hostPath:
-            path: /var/lib/docker/containers
         - name: azure-json-path
           hostPath:
             path: /etc/kubernetes
@@ -14010,6 +14045,10 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
+            optional: true
+        - name: omsagent-adx-secret
+          secret:
+            secretName: omsagent-adx-secret
             optional: true
 ---
 apiVersion: apps/v1
@@ -14058,8 +14097,12 @@ spec:
               value: "DaemonSet"
             - name: HOSTNAME
               valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
+                 fieldRef:
+                   fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                 fieldRef:
+                   fieldPath: status.hostIP
           volumeMounts:
             - mountPath: C:\ProgramData\docker\containers
               name: docker-windows-containers
@@ -14071,6 +14114,9 @@ spec:
               readOnly: true
             - mountPath: C:\etc\omsagent-secret
               name: omsagent-secret
+              readOnly: true
+            - mountPath: C:\etc\config\adx
+              name: omsagent-adx-secret
               readOnly: true
           livenessProbe:
             exec:
@@ -14110,6 +14156,10 @@ spec:
         - name: omsagent-secret
           secret:
             secretName: omsagent-secret
+        - name: omsagent-adx-secret
+          secret:
+            secretName: omsagent-adx-secret
+            optional: true
 ---
 kind: Service
 apiVersion: v1
@@ -14127,6 +14177,30 @@ spec:
       port: 25227
       targetPort: in-rs-tcp
 ---
+# this is for versions >=1.19, for versions <1.19 we continue to use v1beta1
+{{- if IsKubernetesVersionGe "1.19.0"}}
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: healthstates.azmon.container.insights
+  namespace: kube-system
+spec:
+  group: azmon.container.insights
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          state:
+            type: string
+  scope: Namespaced
+  names:
+    plural: healthstates
+    kind: HealthState
+{{- else }}
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -14142,7 +14216,7 @@ spec:
   names:
     plural: healthstates
     kind: HealthState
-`)
+{{- end}}`)
 
 func k8sAddonsContainerMonitoringYamlBytes() ([]byte, error) {
 	return _k8sAddonsContainerMonitoringYaml, nil
