@@ -35,6 +35,7 @@ const (
 	getLogsName             = "get-logs"
 	getLogsShortDescription = "Collect logs and current cluster nodes configuration."
 	getLogsLongDescription  = "Collect deployment logs, running daemons/services logs and current nodes configuration."
+	defaultStorageContainer = "kuberneteslogs"
 )
 
 type getLogsCmd struct {
@@ -119,11 +120,15 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	} else if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
 	}
-	if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
-		return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+	if glc.linuxScriptPath != "" {
+		if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+		}
 	}
-	if _, err := os.Stat(glc.windowsScriptPath); os.IsNotExist(err) {
-		return errors.Errorf("specified --windows-script does not exist (%s)", glc.windowsScriptPath)
+	if glc.windowsScriptPath != "" {
+		if _, err := os.Stat(glc.windowsScriptPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --windows-script does not exist (%s)", glc.windowsScriptPath)
+		}
 	}
 	if glc.outputDirectory == "" {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
@@ -134,7 +139,8 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	if glc.uploadLogs {
 		if glc.storageAccountName == "" {
 			return errors.New("--storage-account-name must be specified when --upload is set")
-		} else if glc.storageAccountKey == "" {
+		}
+		if glc.storageAccountKey == "" {
 			return errors.New("--storage-account-key must be specified when --upload is set")
 		}
 	}
@@ -188,41 +194,50 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	if glc.uploadLogs && glc.storageContainerURL == "" {
 		log.Infof("No storage container URL provided, will create a defaul storage container 'kuberneteslogs'")
-		err = glc.CreateDefaultStorageContainer()
+		glc.storageContainerURL, err = CreateDefaultStorageContainer(glc.storageAccountName, glc.storageAccountKey)
 		if err != nil {
 			log.Warnf("Failed to create default storage container 'kuberneteslogs', will not upload logs to storage container")
 			log.Warnf("Error: %s", err)
 			glc.uploadLogs = false
 		}
-	} else {
-		log.Infof("Will upload logs to storage container URL: %s", glc.storageContainerURL)
 	}
-
-	for _, n := range glc.masterNodes {
-		log.Infof("Processing master node: %s\n", n.Name)
-		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
-		if err != nil {
-			log.Warnf("Remote command output: %s", out)
-			log.Warnf("Error: %s", err)
+	if glc.linuxScriptPath == "" && (!glc.cs.Properties.MasterProfile.IsVHDDistro()) {
+		log.Warnf("No linux log collecting script provided, will skip log collection for master nodes as distro is not aks VHD")
+	} else {
+		for _, n := range glc.masterNodes {
+			log.Infof("Processing master node: %s\n", n.Name)
+			out, err := glc.collectLogs(n, glc.linuxSSHConfig)
+			if err != nil {
+				log.Warnf("Remote command output: %s", out)
+				log.Warnf("Error: %s", err)
+			}
 		}
 	}
 	if glc.controlPlaneOnly {
 		return nil
 	}
-	for _, n := range glc.linuxNodes {
-		log.Infof("Processing Linux node: %s\n", n.Name)
-		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
-		if err != nil {
-			log.Warnf("Remote command output: %s", out)
-			log.Warnf("Error: %s", err)
+	if glc.linuxScriptPath == "" && (!glc.isLinuxpoolVHDDistro()) {
+		log.Warnf("No linux log collecting script provided, will skip log collection for linux agent nodes as distro is not AKS VHD")
+	} else {
+		for _, n := range glc.linuxNodes {
+			log.Infof("Processing Linux node: %s\n", n.Name)
+			out, err := glc.collectLogs(n, glc.linuxSSHConfig)
+			if err != nil {
+				log.Warnf("Remote command output: %s", out)
+				log.Warnf("Error: %s", err)
+			}
 		}
 	}
-	for _, n := range glc.windowsNodes {
-		log.Infof("Processing Windows node: %s\n", n.Name)
-		out, err := glc.collectLogs(n, glc.windowsSSHConfig)
-		if err != nil {
-			log.Warnf("Remote command output: %s", out)
-			log.Warnf("Error: %s", err)
+	if glc.windowsScriptPath == "" && !(glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows") {
+		log.Warnf("No Windows log collecting script provided, will skip log collection for Windows agent nodes as distro is not AKS VHD")
+	} else {
+		for _, n := range glc.windowsNodes {
+			log.Infof("Processing Windows node: %s\n", n.Name)
+			out, err := glc.collectLogs(n, glc.windowsSSHConfig)
+			if err != nil {
+				log.Warnf("Remote command output: %s", out)
+				log.Warnf("Error: %s", err)
+			}
 		}
 	}
 	log.Infof("Logs downloaded to %s", glc.outputDirectory)
@@ -240,14 +255,9 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	}
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
-		log.Warnf("unable to list nodes from api server, will only collect logs from control panel VMs")
+		log.Warnf("Unable to list nodes from api server, will only collect logs from control panel VMs")
 		glc.controlPlaneOnly = true
-		for nodeIndex := 0; nodeIndex < glc.cs.Properties.MasterProfile.Count; nodeIndex++ {
-			var controlPanelNode v1.Node
-			controlPanelNode.Name = fmt.Sprint(common.LegacyControlPlaneVMPrefix, "-", glc.cs.Properties.GetClusterID(), "-", nodeIndex)
-			controlPanelNode.Status.NodeInfo.OperatingSystem = "linux"
-			glc.masterNodes = append(glc.masterNodes, controlPanelNode)
-		}
+		glc.masterNodes = glc.getControlPanelNodes()
 		return nil
 	}
 	for _, node := range nodeList.Items {
@@ -261,10 +271,10 @@ func (glc *getLogsCmd) getClusterNodes() error {
 			if glc.windowsSSHConfig != nil {
 				glc.windowsNodes = append(glc.windowsNodes, node)
 			} else {
-				log.Warnf("skipping node %s, SSH not enabled", node.Name)
+				log.Warnf("Skipping node %s, SSH not enabled", node.Name)
 			}
 		} else {
-			log.Warnf("skipping node %s, could not determine operating system", node.Name)
+			log.Warnf("Skipping node %s, could not determine operating system", node.Name)
 		}
 	}
 	return nil
@@ -420,26 +430,6 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 	return "", nil
 }
 
-func (glc *getLogsCmd) CreateDefaultStorageContainer() error {
-	//default container name is "kuberneteslogs"
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/kuberneteslogs", glc.storageAccountName))
-	credential, err := azblob.NewSharedKeyCredential(glc.storageAccountName, glc.storageAccountKey)
-	if err != nil {
-		return errors.Wrap(err, "getting credential from storage account name and key")
-	}
-
-	containerURL := azblob.NewContainerURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
-
-	_, err = containerURL.Create(context.Background(), azblob.Metadata{}, azblob.PublicAccessContainer)
-	if err != nil {
-		return errors.Wrap(err, "creating storage container 'kuberneteslogs'")
-	}
-
-	glc.storageContainerURL = fmt.Sprintf("https://%s.blob.core.windows.net/kuberneteslogs", glc.storageAccountName)
-
-	return nil
-}
-
 func (glc *getLogsCmd) uploadLogsToStorageContainer(node v1.Node) error {
 	log.Infof("Uploading logs for %s", node.Name)
 	logFileName := fmt.Sprintf("%s.zip", node.Name)
@@ -464,6 +454,25 @@ func (glc *getLogsCmd) uploadLogsToStorageContainer(node v1.Node) error {
 	return nil
 }
 
+func CreateDefaultStorageContainer(storageAccountName string, storageAccountKey string) (string, error) {
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s", storageAccountName, defaultStorageContainer))
+	credential, err := azblob.NewSharedKeyCredential(storageAccountName, storageAccountKey)
+	if err != nil {
+		return "", errors.Wrap(err, "getting credential from storage account name and key")
+	}
+
+	containerURL := azblob.NewContainerURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+
+	_, err = containerURL.Create(context.Background(), azblob.Metadata{}, azblob.PublicAccessContainer)
+	if err != nil {
+		return "", errors.Wrap(err, "creating storage container 'kuberneteslogs'")
+	}
+
+	storageContainerURL := fmt.Sprintf("https://%s.blob.core.windows.net/kuberneteslogs", storageAccountName)
+
+	return storageContainerURL, nil
+}
+
 func isLinuxNode(node v1.Node) bool {
 	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "linux")
 }
@@ -477,6 +486,26 @@ func (glc *getLogsCmd) getCloudName() string {
 		return "AzureStackCloud"
 	}
 	return ""
+}
+
+func (glc *getLogsCmd) isLinuxpoolVHDDistro() bool {
+	for _, profile := range glc.cs.Properties.AgentPoolProfiles {
+		if profile.OSType == "Linux" && profile.IsVHDDistro() {
+			return true
+		}
+	}
+	return false
+}
+
+func (glc *getLogsCmd) getControlPanelNodes() []v1.Node {
+	var ControlPanelNodeList []v1.Node
+	for nodeIndex := 0; nodeIndex < glc.cs.Properties.MasterProfile.Count; nodeIndex++ {
+		var controlPanelNode v1.Node
+		controlPanelNode.Name = fmt.Sprint(common.LegacyControlPlaneVMPrefix, "-", glc.cs.Properties.GetClusterID(), "-", nodeIndex)
+		controlPanelNode.Status.NodeInfo.OperatingSystem = "linux"
+		ControlPanelNodeList = append(ControlPanelNodeList, controlPanelNode)
+	}
+	return ControlPanelNodeList
 }
 
 type DownloadProgressWriter struct {
