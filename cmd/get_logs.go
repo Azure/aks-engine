@@ -209,7 +209,10 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	}
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
-		return errors.Wrap(err, "listing cluster nodes")
+		log.Warnf("Unable to list nodes from api server, will only collect logs from control panel VMs")
+		glc.controlPlaneOnly = true
+		glc.masterNodes = glc.getControlPanelNodes()
+		return nil
 	}
 	for _, node := range nodeList.Items {
 		if isLinuxNode(node) {
@@ -222,10 +225,10 @@ func (glc *getLogsCmd) getClusterNodes() error {
 			if glc.windowsSSHConfig != nil {
 				glc.windowsNodes = append(glc.windowsNodes, node)
 			} else {
-				log.Warnf("skipping node %s, SSH not enabled", node.Name)
+				log.Warnf("Skipping node %s, SSH not enabled", node.Name)
 			}
 		} else {
-			log.Warnf("skipping node %s, could not determine operating system", node.Name)
+			log.Warnf("Skipping node %s, could not determine operating system", node.Name)
 		}
 	}
 	return nil
@@ -360,6 +363,17 @@ func (glc *getLogsCmd) getCloudName() string {
 		return "AzureStackCloud"
 	}
 	return ""
+}
+
+func (glc *getLogsCmd) getControlPanelNodes() []v1.Node {
+	var ControlPanelNodeList []v1.Node
+	for nodeIndex := 0; nodeIndex < glc.cs.Properties.MasterProfile.Count; nodeIndex++ {
+		var controlPanelNode v1.Node
+		controlPanelNode.Name = fmt.Sprint(common.LegacyControlPlaneVMPrefix, "-", glc.cs.Properties.GetClusterID(), "-", nodeIndex)
+		controlPanelNode.Status.NodeInfo.OperatingSystem = "linux"
+		ControlPanelNodeList = append(ControlPanelNodeList, controlPanelNode)
+	}
+	return ControlPanelNodeList
 }
 
 type DownloadProgressWriter struct {
