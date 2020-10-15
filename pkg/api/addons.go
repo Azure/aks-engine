@@ -31,21 +31,21 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		kubernetesImageBase = o.KubernetesConfig.KubernetesImageBase
 	}
 	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020"
-	omsagentWinImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020"
+	omsagentWinImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 	var workspaceDomain string
 	if cs.Properties.IsCustomCloudProfile() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod05262020"
-			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod10052020"
+			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 		}
 	} else {
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod05262020"
-			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod10052020"
+			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))

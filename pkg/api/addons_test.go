@@ -1576,7 +1576,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "250Mi",
 							CPULimits:      "1",
 							MemoryLimits:   "750Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020",
 						},
 						{
 							Name:           "omsagent-win",
@@ -1584,7 +1584,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "250Mi",
 							CPULimits:      "1",
 							MemoryLimits:   "750Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod10052020",
 						},
 					},
 				},
