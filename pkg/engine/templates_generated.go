@@ -14216,7 +14216,8 @@ spec:
   names:
     plural: healthstates
     kind: HealthState
-{{end}}`)
+{{end}}
+`)
 
 func k8sAddonsContainerMonitoringYamlBytes() ([]byte, error) {
 	return _k8sAddonsContainerMonitoringYaml, nil
