@@ -19806,6 +19806,11 @@ func k8sCloudInitArtifactsKubeletMonitorTimer() (*asset, error) {
 var _k8sCloudInitArtifactsKubeletService = []byte(`[Unit]
 Description=Kubelet
 ConditionPathExists=/usr/local/bin/kubelet
+{{- if NeedsContainerd}}
+Requires=containerd.service
+{{else}}
+Requires=docker.service
+{{- end}}
 
 [Service]
 Restart=always
