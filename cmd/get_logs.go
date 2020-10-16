@@ -76,8 +76,8 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
 	command.Flags().StringVar(&glc.sshHostURI, "ssh-host", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
 	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes (required)")
-	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes")
-	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes")
+	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required if distro is not aks-ubuntu)")
+	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes (required if distro is not aks-windows)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	_ = command.MarkFlagRequired("location")
@@ -172,7 +172,7 @@ func (glc *getLogsCmd) run() (err error) {
 	if err = glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
-	if glc.linuxScriptPath == "" && (!glc.cs.Properties.MasterProfile.IsVHDDistro()) {
+	if !glc.linuxScriptAvailable("master") {
 		log.Warnf("No linux log collecting script provided, will skip log collection for master nodes as distro is not aks VHD")
 	} else {
 		for _, n := range glc.masterNodes {
@@ -187,8 +187,8 @@ func (glc *getLogsCmd) run() (err error) {
 	if glc.controlPlaneOnly {
 		return nil
 	}
-	if glc.linuxScriptPath == "" && (!glc.isLinuxpoolVHDDistro()) {
-		log.Warnf("No linux log collecting script provided, will skip log collection for linux agent nodes as distro is not AKS VHD")
+	if !glc.linuxScriptAvailable("agentpool") {
+		log.Warnf("No linux log collecting script provided, will skip log collection for linux agent nodes as distro is not aks VHD")
 	} else {
 		for _, n := range glc.linuxNodes {
 			log.Infof("Processing Linux node: %s\n", n.Name)
@@ -199,7 +199,7 @@ func (glc *getLogsCmd) run() (err error) {
 			}
 		}
 	}
-	if glc.windowsScriptPath == "" && !(glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows") {
+	if !glc.windowsScriptAvailable() {
 		log.Warnf("No Windows log collecting script provided, will skip log collection for Windows agent nodes as distro is not AKS VHD")
 	} else {
 		for _, n := range glc.windowsNodes {
@@ -335,11 +335,11 @@ func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, 
 		}
 	} else {
 		if glc.windowsScriptPath != "" {
-			script = "(gi $env:temp).fullname + '\\collect-windows-logs.ps1'"
+			script = "$env:temp\\collect-windows-logs.ps1"
 		} else {
 			script = "c:\\k\\debug\\collect-windows-logs.ps1"
 		}
-		cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
+		cmd = fmt.Sprintf("powershell -command \"iex %s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
 	}
 
 	if co, err := session.CombinedOutput(cmd); err != nil {
@@ -404,13 +404,24 @@ func (glc *getLogsCmd) getCloudName() string {
 	return ""
 }
 
-func (glc *getLogsCmd) isLinuxpoolVHDDistro() bool {
-	for _, profile := range glc.cs.Properties.AgentPoolProfiles {
-		if profile.OSType == "Linux" && profile.IsVHDDistro() {
-			return true
+func (glc *getLogsCmd) linuxScriptAvailable(nodeType string) bool {
+	if glc.linuxScriptPath != "" {
+		return true
+	}
+	if nodeType == "master" {
+		return glc.cs.Properties.MasterProfile.IsVHDDistro()
+	} else if nodeType == "agentpool" {
+		for _, profile := range glc.cs.Properties.AgentPoolProfiles {
+			if profile.OSType == "Linux" && profile.IsVHDDistro() {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func (glc *getLogsCmd) windowsScriptAvailable() bool {
+	return glc.windowsScriptPath != "" || (glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows")
 }
 
 type DownloadProgressWriter struct {
