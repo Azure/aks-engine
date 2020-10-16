@@ -5,9 +5,11 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -20,6 +22,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -43,6 +46,8 @@ type getLogsCmd struct {
 	linuxScriptPath        string
 	outputDirectory        string
 	controlPlaneOnly       bool
+	blobServiceSASURL      string
+	storageContainerName   string
 	// computed
 	cs               *api.ContainerService
 	locale           *gotext.Locale
@@ -78,6 +83,8 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
+	command.Flags().StringVarP(&glc.blobServiceSASURL, "SAS-URL", "", "", "blob service SAS URL of the storage account on Azure or custom cloud to upload kubernetes logs")
+	command.Flags().StringVar(&glc.storageContainerName, "storage-container-name", "", "name of the storage container that to upload kubernetes logs (required if --SAS-URL is set and storage container name not included in the SAS URL)")
 	_ = command.MarkFlagRequired("location")
 	_ = command.MarkFlagRequired("api-model")
 	_ = command.MarkFlagRequired("ssh-host")
@@ -251,6 +258,13 @@ func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (stri
 	if err != nil {
 		return stdout, err
 	}
+	if glc.blobServiceSASURL != "" {
+		log.Debugf("Will upload logs to storage account")
+		err = glc.uploadLogsToStorageContainer(node)
+		if err != nil {
+			return "", errors.Wrap(err, "uploading logs to storage container")
+		}
+	}
 	return "", nil
 }
 
@@ -345,6 +359,37 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 
 	fmt.Println("")
 	return "", nil
+}
+
+func (glc *getLogsCmd) uploadLogsToStorageContainer(node v1.Node) error {
+	log.Infof("Uploading logs for %s", node.Name)
+	logFileName := fmt.Sprintf("%s.zip", node.Name)
+	logFilePath := path.Join(glc.outputDirectory, logFileName)
+	logFile, err := os.Open(logFilePath)
+	if err != nil {
+		return errors.Wrap(err, "opening zipped log file")
+	}
+
+	urls := strings.Split(glc.blobServiceSASURL, "/?")
+	if len(urls) != 2 {
+		return errors.Wrap(err, "validating blob service SAS URL")
+	}
+	var fullURL string
+	if glc.storageContainerName == "" {
+		fullURL = fmt.Sprintf("%s/%s?%s", urls[0], node.Name, urls[1])
+	} else {
+		fullURL = fmt.Sprintf("%s/%s/%s?%s", urls[0], glc.storageContainerName, node.Name, urls[1])
+	}
+	u, _ := url.Parse(fullURL)
+	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(azblob.NewAnonymousCredential(), azblob.PipelineOptions{}))
+	blockBlobURL := blobURL.ToBlockBlobURL()
+
+	_, err = azblob.UploadFileToBlockBlob(context.Background(), logFile, blockBlobURL, azblob.UploadToBlockBlobOptions{})
+	if err != nil {
+		return errors.Wrap(err, "uploading log file to storage container blob")
+	}
+
+	return nil
 }
 
 func isLinuxNode(node v1.Node) bool {
