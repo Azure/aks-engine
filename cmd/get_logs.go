@@ -211,7 +211,7 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	if err != nil {
 		log.Warnf("Unable to list nodes from api server, will only collect logs from control panel VMs")
 		glc.controlPlaneOnly = true
-		glc.masterNodes = glc.getControlPanelNodes()
+		glc.masterNodes = computeControlPanelNodes(glc.cs.Properties.MasterProfile.Count, glc.cs.Properties.GetClusterID())
 		return nil
 	}
 	for _, node := range nodeList.Items {
@@ -365,15 +365,15 @@ func (glc *getLogsCmd) getCloudName() string {
 	return ""
 }
 
-func (glc *getLogsCmd) getControlPanelNodes() []v1.Node {
-	var ControlPanelNodeList []v1.Node
-	for nodeIndex := 0; nodeIndex < glc.cs.Properties.MasterProfile.Count; nodeIndex++ {
-		var controlPanelNode v1.Node
-		controlPanelNode.Name = fmt.Sprint(common.LegacyControlPlaneVMPrefix, "-", glc.cs.Properties.GetClusterID(), "-", nodeIndex)
-		controlPanelNode.Status.NodeInfo.OperatingSystem = "linux"
-		ControlPanelNodeList = append(ControlPanelNodeList, controlPanelNode)
+func computeControlPanelNodes(nodesCount int, clusterID string) []v1.Node {
+	var nodeList []v1.Node
+	for i := 0; i < nodesCount; i++ {
+		var node v1.Node
+		node.Name = fmt.Sprint(common.LegacyControlPlaneVMPrefix, "-", clusterID, "-", i)
+		node.Status.NodeInfo.OperatingSystem = "linux"
+		nodeList = append(nodeList, node)
 	}
-	return ControlPanelNodeList
+	return nodeList
 }
 
 type DownloadProgressWriter struct {
