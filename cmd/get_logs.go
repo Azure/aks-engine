@@ -370,7 +370,7 @@ func computeControlPanelNodes(nodesCount int, clusterID string) []v1.Node {
 	var nodeList []v1.Node
 	for i := 0; i < nodesCount; i++ {
 		var node v1.Node
-		node.Name = fmt.Sprint(common.LegacyControlPlaneVMPrefix, "-", clusterID, "-", i)
+		node.Name = fmt.Sprintf("%s-%s-%d", common.LegacyControlPlaneVMPrefix, clusterID, i)
 		node.Status.NodeInfo.OperatingSystem = "linux"
 		nodeList = append(nodeList, node)
 	}
