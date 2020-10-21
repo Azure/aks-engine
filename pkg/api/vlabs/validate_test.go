@@ -94,7 +94,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.15.11",
+					OrchestratorVersion: "1.16.14",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -131,7 +131,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.15.11",
+					OrchestratorVersion: "1.16.14",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -194,7 +194,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.15.11",
+					OrchestratorVersion: "1.16.14",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -277,7 +277,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.15.11",
+					OrchestratorVersion: "v1.16.14",
 				},
 			},
 		},
@@ -1436,6 +1436,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 	t.Run("ServicePrincipalProfile with secret should pass", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
+		}
 
 		if err := cs.Validate(false); err != nil {
 			t.Errorf("should not error %v", err)
@@ -1451,6 +1454,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 			SecretName:    "secret-name",
 			SecretVersion: "version",
 		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
+		}
 		if err := cs.Validate(false); err != nil {
 			t.Errorf("should not error %v", err)
 		}
@@ -1463,6 +1469,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:    "/subscriptions/SUB-ID/resourceGroups/RG-NAME/providers/Microsoft.KeyVault/vaults/KV-NAME",
 			SecretName: "secret-name",
+		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
 		}
 
 		if err := cs.Validate(false); err != nil {
@@ -1478,6 +1487,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 			VaultID:    "/subscriptions/SUB-ID/resourceGroups/RG-NAME/providers/Microsoft.KeyVault/vaults/KV-NAME",
 			SecretName: "secret-name",
 		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
+		}
 
 		if err := cs.Validate(false); err == nil {
 			t.Error("error should have occurred")
@@ -1491,6 +1503,9 @@ func Test_ServicePrincipalProfile_ValidateSecretOrKeyvaultSecretRef(t *testing.T
 		cs.Properties.ServicePrincipalProfile.KeyvaultSecretRef = &KeyvaultSecretRef{
 			VaultID:    "randomID",
 			SecretName: "secret-name",
+		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			UseManagedIdentity: to.BoolPtr(false),
 		}
 
 		if err := cs.Validate(false); err == nil || err.Error() != "service principal client keyvault secret reference is of incorrect format" {
@@ -2314,7 +2329,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error on azure-policy with managed identity",
@@ -2509,7 +2524,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorRelease = "1.15"
+	p.OrchestratorProfile.OrchestratorRelease = "1.16"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error on nvidia-device-plugin with k8s >= 1.12",
@@ -2581,7 +2596,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	// Basic test with UseManagedIdentity
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		NetworkPlugin:      "azure",
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		Addons: []KubernetesAddon{
 			{
 				Name:    "appgw-ingress",
@@ -3047,7 +3062,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 	}{
 		{
 			name:                "use managed identity with master vmas",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
 				DNSPrefix: "dummy",
@@ -3063,7 +3078,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 		},
 		{
 			name:                "use master VMSS with empty user assigned ID",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
@@ -3092,7 +3107,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 				OrchestratorRelease: test.orchestratorRelease,
 				OrchestratorType:    Kubernetes,
 				KubernetesConfig: &KubernetesConfig{
-					UseManagedIdentity: test.useManagedIdentity,
+					UseManagedIdentity: to.BoolPtr(test.useManagedIdentity),
 					UserAssignedID:     test.userAssignedID,
 				},
 			}
@@ -3154,7 +3169,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and storage account",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -3166,7 +3181,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and agent profiles with VMAS",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -3255,7 +3270,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 	}{
 		{
 			name:                "Agent profile with zones vmas",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -3277,7 +3292,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "Master profile with zones and Agent profile without zones",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -3298,7 +3313,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "Master profile without zones and Agent profile with zones",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			masterProfile: &MasterProfile{
 				Count:               3,
 				DNSPrefix:           "foo",
@@ -3319,7 +3334,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "all zones and basic loadbalancer",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               5,
@@ -3342,7 +3357,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                        "all zones with standard loadbalancer and false excludeMasterFromStandardLB",
-			orchestratorRelease:         "1.15",
+			orchestratorRelease:         "1.16",
 			loadBalancerSku:             StandardLoadBalancerSku,
 			excludeMasterFromStandardLB: false,
 			masterProfile: &MasterProfile{
@@ -3545,7 +3560,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 	}{
 		{
 			name:                "lowercase basic LB",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     "basic",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3565,7 +3580,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Basic LB",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3576,7 +3591,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "lowercase standard LB",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     "standard",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3587,7 +3602,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Standard LB without master excluded",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     StandardLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3600,7 +3615,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Standard LB",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     StandardLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3612,7 +3627,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "empty string LB value",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     "",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3623,7 +3638,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "invalid LB string value",
-			orchestratorRelease: "1.15",
+			orchestratorRelease: "1.16",
 			loadBalancerSku:     "foo",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3730,7 +3745,7 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.15"
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.16"
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
@@ -3843,7 +3858,7 @@ func TestProperties_ValidatePPGID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.15"
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.16"
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
@@ -4019,7 +4034,7 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.15"
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.16"
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
@@ -4653,7 +4668,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.11",
+						OrchestratorVersion: "1.16.14",
 						KubernetesConfig: &KubernetesConfig{
 							UseInstanceMetadata: to.BoolPtr(trueVal),
 						},
@@ -4674,7 +4689,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.11",
+						OrchestratorVersion: "1.16.14",
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024",
 						},
@@ -4695,7 +4710,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.11",
+						OrchestratorVersion: "1.16.14",
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024GB",
 						},
@@ -4716,7 +4731,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.11",
+						OrchestratorVersion: "1.16.14",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
@@ -4742,7 +4757,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.11",
+						OrchestratorVersion: "1.16.14",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
@@ -4808,7 +4823,7 @@ func TestValidateAcceleratedNetworkingEnabledWindows(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.11",
+						OrchestratorVersion: "1.16.14",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{

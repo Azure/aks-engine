@@ -38,11 +38,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    },
-    "certificateProfile": {}
+    }
   }
 }

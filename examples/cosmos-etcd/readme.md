@@ -18,8 +18,6 @@ Here is an example `aks-engine` command:
 
 ```console
 $ aks-engine deploy --subscription-id <SubscriptionId> \
-    --client-id <servicePrincipalClientId> \
-    --client-secret <ServicePrincipalSecret> \
     --dns-prefix <YourDNSPrefix> \
     --location centralus \
     --api-model <apiModel>.json

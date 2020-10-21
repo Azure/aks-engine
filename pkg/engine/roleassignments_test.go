@@ -104,7 +104,7 @@ func TestCreateKubernetesSpAppGIdentityOperatorAccessRoleAssignment(t *testing.T
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: true,
+					UseManagedIdentity: to.BoolPtr(true),
 				},
 			},
 		},

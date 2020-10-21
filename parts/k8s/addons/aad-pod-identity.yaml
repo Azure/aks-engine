@@ -110,7 +110,7 @@ roleRef:
   name: aad-pod-id-nmi-role
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -124,12 +124,10 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       component: nmi
       tier: node
-{{- end}}
   template:
     metadata:
       labels:
@@ -253,7 +251,7 @@ roleRef:
   name: aad-pod-id-mic-role
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -265,11 +263,9 @@ metadata:
   namespace: kube-system
 spec:
   replicas: 2
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       component: mic
-{{- end}}
   template:
     metadata:
       labels:

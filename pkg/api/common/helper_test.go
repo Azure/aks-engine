@@ -138,51 +138,6 @@ func TestIsSGXEnabledSKU(t *testing.T) {
 	}
 }
 
-func TestGetMasterKubernetesLabelsDeprecated(t *testing.T) {
-	cases := []struct {
-		name       string
-		rg         string
-		deprecated bool
-		expected   string
-	}{
-		{
-			"valid rg string",
-			"my-resource-group",
-			false,
-			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.azure.com/cluster=my-resource-group",
-		},
-		{
-			"valid rg string",
-			"my-resource-group",
-			true,
-			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=my-resource-group",
-		},
-		{
-			"empty string",
-			"",
-			false,
-			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.azure.com/cluster=",
-		},
-		{
-			"empty string",
-			"",
-			true,
-			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=",
-		},
-	}
-
-	for _, c := range cases {
-		c := c
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			ret := GetMasterKubernetesLabels(c.rg, c.deprecated)
-			if ret != c.expected {
-				t.Fatalf("expected GetMasterKubernetesLabels(%s, %t) to return %s, but instead got %s", c.rg, c.deprecated, c.expected, ret)
-			}
-		})
-	}
-}
-
 func TestGetOrderedEscapedKeyValsString(t *testing.T) {
 	alphabetizedString := `"foo=bar", "yes=please"`
 	cases := []struct {

@@ -245,7 +245,7 @@ func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
 }
 
 func TestKubeletConfigAzureStackDefaults(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.15", "", false, false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false, false), 3, 2, false)
 	cs.Properties.CustomCloudProfile = &CustomCloudProfile{}
 	winProfile := &AgentPoolProfile{}
 	winProfile.Count = 1
@@ -260,18 +260,20 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		"--address":                           "0.0.0.0",
 		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
 		"--anonymous-auth":                    "false",
+		"--authentication-token-webhook":      "true",
 		"--authorization-mode":                "Webhook",
 		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
 		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
 		"--cgroups-per-qos":                   "true",
 		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
-		"--cloud-provider":                    "azure",
 		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--cloud-provider":                    "azure",
 		"--cluster-dns":                       DefaultKubernetesDNSServiceIP,
 		"--cluster-domain":                    "cluster.local",
 		"--enforce-node-allocatable":          "pods",
 		"--event-qps":                         DefaultKubeletEventQPS,
 		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
+		"--feature-gates":                     "RotateKubeletServerCertificate=true",
 		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		"--image-pull-progress-deadline":      "30m",
@@ -281,17 +283,17 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		"--network-plugin":                    NetworkPluginKubenet,
 		"--node-status-update-frequency":      DefaultAzureStackKubernetesNodeStatusUpdateFrequency,
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
-		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
 		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion][common.PauseComponentName],
+		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
+		"--read-only-port":                    "0",
+		"--register-with-taints":              common.MasterNodeTaint,
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "4h",
-		"--feature-gates":                     "RotateKubeletServerCertificate=true",
-		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
+		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
-		"--register-with-taints":              common.MasterNodeTaint,
 		"--v":                                 "2",
 		"--volume-plugin-dir":                 "/etc/kubernetes/volumeplugins",
 		"--healthz-port":                      DefaultKubeletHealthzPort,
@@ -389,7 +391,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 }
 
 func TestKubeletConfigDefaultsRemovals(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.15", "", false, false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false, false), 3, 2, false)
 	poolProfile := &AgentPoolProfile{}
 	poolProfile.Count = 1
 	poolProfile.Name = "agentpool2"
@@ -407,7 +409,7 @@ func TestKubeletConfigDefaultsRemovals(t *testing.T) {
 				key)
 		}
 	}
-	cs = CreateMockContainerService("testcluster", "1.15.0-beta.1", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "1.16.0-beta.1", 3, 2, false)
 	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, poolProfile)
 	cs.setKubeletConfig(false)
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig

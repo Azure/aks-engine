@@ -713,7 +713,6 @@ spec:
               cpu: {{ContainerCPUReqs "csi-snapshotter"}}
               memory: {{ContainerMemReqs "csi-snapshotter"}}
         {{end}}
-        {{if IsKubernetesVersionGe "1.16.0"}}
         - name: csi-resizer
           image: {{ContainerImage "csi-resizer"}}
           args:
@@ -733,7 +732,6 @@ spec:
             requests:
               cpu: {{ContainerCPUReqs "csi-resizer"}}
               memory: {{ContainerMemReqs "csi-resizer"}}
-        {{end}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:

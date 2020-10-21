@@ -43,7 +43,7 @@ spec:
     name: tiller
   type: ClusterIP
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -54,12 +54,10 @@ metadata:
   name: tiller-deploy
   namespace: kube-system
 spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       app: helm
       name: tiller
-{{- end}}
   template:
     metadata:
       labels:

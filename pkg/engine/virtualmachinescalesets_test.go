@@ -204,7 +204,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 	}
 
 	// Test with managed Identity
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooAssignedID"
 	userAssignedIDEnabled = true
 
@@ -521,7 +521,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 	}
 
 	// Test with windows and managed Identity
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooAssignedID"
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
@@ -567,7 +567,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 					AutoUpgradeMinorVersion: to.BoolPtr(true),
 					Settings:                map[string]interface{}{},
 					ProtectedSettings: map[string]interface{}{
-						"commandToExecute": `[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),` + generateUserAssignedIdentityClientIDParameterForWindows(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) + `' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]`,
+						"commandToExecute": `[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),` + generateUserAssignedIdentityClientIDParameterForWindows(to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)) + `' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]`,
 					},
 				},
 			},
@@ -608,7 +608,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	// Test with ipv6 dual stack enabled
 	cs.Properties.FeatureFlags = &api.FeatureFlags{EnableIPv6DualStack: true}
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = ""
 	cs.Properties.AgentPoolProfiles[0].OSType = "Linux"
 

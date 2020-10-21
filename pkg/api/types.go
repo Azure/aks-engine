@@ -456,7 +456,7 @@ type KubernetesConfig struct {
 	DockerBridgeSubnet                string                `json:"dockerBridgeSubnet,omitempty"`
 	DNSServiceIP                      string                `json:"dnsServiceIP,omitempty"`
 	ServiceCIDR                       string                `json:"serviceCidr,omitempty"`
-	UseManagedIdentity                bool                  `json:"useManagedIdentity,omitempty"`
+	UseManagedIdentity                *bool                 `json:"useManagedIdentity,omitempty"`
 	UserAssignedID                    string                `json:"userAssignedID,omitempty"`
 	UserAssignedClientID              string                `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage              string                `json:"customHyperkubeImage,omitempty"`
@@ -2075,12 +2075,12 @@ func (k *KubernetesConfig) IsRBACEnabled() bool {
 
 // UserAssignedIDEnabled checks if the user assigned ID is enabled or not.
 func (k *KubernetesConfig) UserAssignedIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedID != ""
+	return to.Bool(k.UseManagedIdentity) && k.UserAssignedID != ""
 }
 
 // SystemAssignedIDEnabled checks if system assigned IDs should be used.
 func (k *KubernetesConfig) SystemAssignedIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedID == ""
+	return to.Bool(k.UseManagedIdentity) && k.UserAssignedID == ""
 }
 
 func (k *KubernetesConfig) ShouldCreateNewUserAssignedIdentity() bool {
@@ -2508,7 +2508,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"CLOUDPROVIDER_RATELIMIT_BUCKET":       strconv.Itoa(kubernetesConfig.CloudProviderRateLimitBucket),
 		"CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE": strconv.Itoa(kubernetesConfig.CloudProviderRateLimitBucketWrite),
 		"LOAD_BALANCER_DISABLE_OUTBOUND_SNAT":  strconv.FormatBool(to.Bool(kubernetesConfig.CloudProviderDisableOutboundSNAT)),
-		"USE_MANAGED_IDENTITY_EXTENSION":       strconv.FormatBool(kubernetesConfig.UseManagedIdentity),
+		"USE_MANAGED_IDENTITY_EXTENSION":       strconv.FormatBool(to.Bool(kubernetesConfig.UseManagedIdentity)),
 		"USE_INSTANCE_METADATA":                strconv.FormatBool(to.Bool(kubernetesConfig.UseInstanceMetadata)),
 		"LOAD_BALANCER_SKU":                    kubernetesConfig.LoadBalancerSku,
 		"EXCLUDE_MASTER_FROM_STANDARD_LB":      strconv.FormatBool(to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)),
