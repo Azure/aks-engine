@@ -209,7 +209,7 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	}
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
-		log.Warnf("%s getting node list", err)
+		log.Warnf("Error getting node list: %s", err)
 		log.Infof("Collecting logs from control panel VMs")
 		glc.controlPlaneOnly = true
 		glc.masterNodes = computeControlPanelNodes(glc.cs.Properties.MasterProfile.Count, glc.cs.Properties.GetClusterID())
