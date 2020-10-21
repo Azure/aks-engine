@@ -172,43 +172,34 @@ func (glc *getLogsCmd) run() (err error) {
 	if err = glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
-	if !glc.linuxScriptAvailable("master") {
-		log.Warnf("No linux log collecting script provided, will skip log collection for master nodes as distro is not aks VHD")
-	} else {
-		for _, n := range glc.masterNodes {
-			log.Infof("Processing master node: %s\n", n.Name)
-			out, err := glc.collectLogs(n, glc.linuxSSHConfig)
-			if err != nil {
-				log.Warnf("Remote command output: %s", out)
-				log.Warnf("Error: %s", err)
-			}
+	if err = glc.validateLogScript(); err != nil {
+		return errors.Wrap(err, "validating log collection scripts for nodes")
+	}
+	for _, n := range glc.masterNodes {
+		log.Infof("Processing master node: %s\n", n.Name)
+		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
+		if err != nil {
+			log.Warnf("Remote command output: %s", out)
+			log.Warnf("Error: %s", err)
 		}
 	}
 	if glc.controlPlaneOnly {
 		return nil
 	}
-	if !glc.linuxScriptAvailable("agentpool") {
-		log.Warnf("No linux log collecting script provided, will skip log collection for linux agent nodes as distro is not aks VHD")
-	} else {
-		for _, n := range glc.linuxNodes {
-			log.Infof("Processing Linux node: %s\n", n.Name)
-			out, err := glc.collectLogs(n, glc.linuxSSHConfig)
-			if err != nil {
-				log.Warnf("Remote command output: %s", out)
-				log.Warnf("Error: %s", err)
-			}
+	for _, n := range glc.linuxNodes {
+		log.Infof("Processing Linux node: %s\n", n.Name)
+		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
+		if err != nil {
+			log.Warnf("Remote command output: %s", out)
+			log.Warnf("Error: %s", err)
 		}
 	}
-	if !glc.windowsScriptAvailable() {
-		log.Warnf("No Windows log collecting script provided, will skip log collection for Windows agent nodes as distro is not AKS VHD")
-	} else {
-		for _, n := range glc.windowsNodes {
-			log.Infof("Processing Windows node: %s\n", n.Name)
-			out, err := glc.collectLogs(n, glc.windowsSSHConfig)
-			if err != nil {
-				log.Warnf("Remote command output: %s", out)
-				log.Warnf("Error: %s", err)
-			}
+	for _, n := range glc.windowsNodes {
+		log.Infof("Processing Windows node: %s\n", n.Name)
+		out, err := glc.collectLogs(n, glc.windowsSSHConfig)
+		if err != nil {
+			log.Warnf("Remote command output: %s", out)
+			log.Warnf("Error: %s", err)
 		}
 	}
 	log.Infof("Logs downloaded to %s", glc.outputDirectory)
@@ -389,6 +380,28 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 	return "", nil
 }
 
+func (glc *getLogsCmd) validateLogScript() error {
+	if glc.linuxScriptPath == "" && !glc.cs.Properties.MasterProfile.IsVHDDistro() {
+		if glc.controlPlaneOnly {
+			return errors.Errorf("No log collection script found for control plane nodes")
+		} else {
+			log.Warnf("Skipping master nodes nodes as no log collection script found")
+			glc.masterNodes = nil
+		}
+	}
+	for _, profile := range glc.cs.Properties.AgentPoolProfiles {
+		if glc.linuxScriptPath == "" && profile.OSType == "Linux" && !profile.IsVHDDistro() {
+			log.Warnf("Skipping nodes in linux agentpool %s as no log collection script found", profile.Name)
+			glc.linuxNodes = updateLinuxNodesList(glc.linuxNodes, profile.Name)
+		}
+		if glc.windowsScriptPath == "" && profile.OSType == "Windows" && !(glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows") {
+			log.Warnf("Skipping nodes in windows agentpools as no log collection script found")
+			glc.windowsNodes = nil
+		}
+	}
+	return nil
+}
+
 func isLinuxNode(node v1.Node) bool {
 	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "linux")
 }
@@ -404,24 +417,14 @@ func (glc *getLogsCmd) getCloudName() string {
 	return ""
 }
 
-func (glc *getLogsCmd) linuxScriptAvailable(nodeType string) bool {
-	if glc.linuxScriptPath != "" {
-		return true
-	}
-	if nodeType == "master" {
-		return glc.cs.Properties.MasterProfile.IsVHDDistro()
-	} else if nodeType == "agentpool" {
-		for _, profile := range glc.cs.Properties.AgentPoolProfiles {
-			if profile.OSType == "Linux" && profile.IsVHDDistro() {
-				return true
-			}
+func updateLinuxNodesList(nodeList []v1.Node, agentPoolName string) []v1.Node {
+	var linuxNodeList []v1.Node
+	for _, node := range nodeList {
+		if strings.Split(node.Name, "-")[1] != agentPoolName {
+			linuxNodeList = append(linuxNodeList, node)
 		}
 	}
-	return false
-}
-
-func (glc *getLogsCmd) windowsScriptAvailable() bool {
-	return glc.windowsScriptPath != "" || (glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows")
+	return linuxNodeList
 }
 
 type DownloadProgressWriter struct {
