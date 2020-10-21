@@ -31,8 +31,8 @@ type KubernetesClientSetClient struct {
 	interval, timeout time.Duration
 }
 
-// GetKubernetesClient returns a KubernetesClient hooked up to the api server at the apiserverURL.
-func (az *AzureClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
+// NewKubernetesClientSetClient returns a KubernetesClient hooked up to the api server at the apiserverURL.
+func NewKubernetesClientSetClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
 	// creates the clientset
 	config, err := clientcmd.BuildConfigFromKubeconfigGetter(apiserverURL, func() (*clientcmdapi.Config, error) { return clientcmd.Load([]byte(kubeConfig)) })
 	if err != nil {

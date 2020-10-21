@@ -80,6 +80,11 @@ type AzureClient struct {
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
 }
 
+// GetKubernetesClient returns a KubernetesClient hooked up to the api server at the apiserverURL.
+func (az *AzureClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
+	return NewKubernetesClientSetClient(apiserverURL, kubeConfig, interval, timeout)
+}
+
 // NewAzureClientWithCLI creates an AzureClient configured from Azure CLI 2.0 for local development scenarios.
 func NewAzureClientWithCLI(env azure.Environment, subscriptionID string) (*AzureClient, error) {
 	_, tenantID, err := getOAuthConfig(env, subscriptionID)
