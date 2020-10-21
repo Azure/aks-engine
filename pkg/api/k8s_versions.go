@@ -189,7 +189,9 @@ func getKubeConfigs() map[string]map[string]string {
 func getVersionOverrides(v string) map[string]string {
 	switch v {
 	case "1.19.1":
-		return map[string]string{"windowszip": "v1.19.1-hotfix.20200923/windowszip/v1.19.1-hotfix.20200923-1int.zip "}
+		return map[string]string{"windowszip": "v1.19.1-hotfix.20200923/windowszip/v1.19.1-hotfix.20200923-1int.zip"}
+	case "1.18.8":
+		return map[string]string{"windowszip": "v1.18.8-hotfix.20200924/windowszip/v1.18.8-hotfix.20200924-1int.zip"}
 	case "1.18.6":
 		return map[string]string{"windowszip": "v1.18.6-hotfix.20200723/windowszip/v1.18.6-hotfix.20200723-1int.zip"}
 	case "1.18.4":
@@ -205,7 +207,7 @@ func getVersionOverrides(v string) map[string]string {
 	case "1.16.15":
 		return map[string]string{"windowszip": "v1.16.15-hotfix.20200903/windowszip/v1.16.15-hotfix.20200903-1int.zip"}
 	case "1.16.13":
-		return map[string]string{"windowszip": "v1.16.13-hotfix.20200824/windowszip/v1.16.13-hotfix.20200824-1int.zip"}
+		return map[string]string{"windowszip": "v1.16.13-hotfix.20200917/windowszip/v1.16.13-hotfix.20200917-1int.zip "}
 	case "1.16.11":
 		return map[string]string{"windowszip": "v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip"}
 	case "1.16.10":
