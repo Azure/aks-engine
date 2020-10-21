@@ -231,7 +231,7 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
-	kubernetesVersion := "1.15.11"
+	kubernetesVersion := "1.16.14"
 	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
@@ -790,6 +790,60 @@ func TestDiskCachingTypes(t *testing.T) {
 	}
 }
 
+func TestDefaultUseManagedIdentity(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	isUpgrade := false
+	isScale := false
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if !to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity to be true by default, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{},
+	}
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity to be false by default in CustomCloudProfile context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity to be false by default in VMSS control plane context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	isUpgrade = true
+	isScale = false
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil {
+		t.Errorf("expected UseManagedIdentity to be unchanged by default in upgrade context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	isUpgrade = false
+	isScale = true
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil {
+		t.Errorf("expected UseManagedIdentity to be unchanged by default in scale context, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+
+	mockCS = getMockBaseContainerService("1.18.8")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(false)
+	mockCS.setOrchestratorDefaults(isUpgrade, isScale)
+	if to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+		t.Errorf("expected UseManagedIdentity=false config to be honored by defaults enforcement, instead got %t", to.Bool(mockCS.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity))
+	}
+}
+
 func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties
@@ -1209,25 +1263,52 @@ func TestKubernetesImageBase(t *testing.T) {
 }
 
 func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
-	mockCS := getMockBaseContainerService("1.15.7")
-	properties := mockCS.Properties
-	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
-	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
-	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-	properties.CustomCloudProfile = &CustomCloudProfile{}
-	properties.CustomCloudProfile.Environment = &azure.Environment{}
-	mockCS.setOrchestratorDefaults(true, true)
+	genMockCS := func() ContainerService {
+		mockCS := getMockBaseContainerService("1.15.7")
+		properties := mockCS.Properties
+		properties.OrchestratorProfile.OrchestratorType = Kubernetes
+		properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
+		properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+		properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase = "mcr.microsoft.com/k8s/core/"
+		properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+		properties.CustomCloudProfile = &CustomCloudProfile{}
+		properties.CustomCloudProfile.Environment = &azure.Environment{}
+		return mockCS
+	}
 
-	expectedImageBase := "mcr.microsoft.com/"
-	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != expectedImageBase {
-		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", expectedImageBase)
+	overrideImageBase := "mcr.microsoft.com/"
+	inputImageBase := "mcr.microsoft.com/k8s/core/"
+
+	mockCS := genMockCS()
+	properties := mockCS.Properties
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != overrideImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", overrideImageBase)
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
 		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBaseType to its expect value (%s) for Azure Stack clouds", common.KubernetesImageBaseTypeMCR)
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
 		t.Fatalf("setOrchestratorDefaults did not set LoadBalancerSku to its expect value (%s) for Azure Stack clouds", DefaultAzureStackLoadBalancerSku)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase != inputImageBase {
+		t.Fatal("setOrchestratorDefaults should not override MCRKubernetesImageBase")
+	}
+
+	mockCS = genMockCS()
+	properties = mockCS.Properties
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != overrideImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", overrideImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBaseType to its expect value (%s) for Azure Stack clouds", common.KubernetesImageBaseTypeMCR)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
+		t.Fatalf("setOrchestratorDefaults did not set LoadBalancerSku to its expect value (%s) for Azure Stack clouds", DefaultAzureStackLoadBalancerSku)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase != overrideImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set MCRKubernetesImageBase to its expect value (%s) for Azure Stack clouds", overrideImageBase)
 	}
 }
 

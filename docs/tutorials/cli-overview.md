@@ -51,7 +51,7 @@ Usage:
 
 Flags:
   -m, --api-model string             path to your cluster definition file
-      --auth-method client_secret    auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --auth-method client_secret    auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "cli")
       --auto-suffix                  automatically append a compressed timestamp to the dnsPrefix to ensure unique cluster name automatically
       --azure-env string             the target Azure cloud (default "AzurePublicCloud")
       --ca-certificate-path string   path to the CA certificate to use for Kubernetes PKI assets
@@ -91,7 +91,7 @@ Usage:
 Flags:
   -m, --api-model string            path to the generated apimodel.json file
       --apiserver string            apiserver endpoint (required to cordon and drain nodes)
-      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "cli")
       --azure-env string            the target Azure cloud (default "AzurePublicCloud")
       --certificate-path string     path to client certificate (used with --auth-method=client_certificate)
       --client-id string            client id (used with --auth-method=[client_secret|client_certificate])
@@ -135,7 +135,7 @@ Usage:
 
 Flags:
   -m, --api-model string            path to the generated apimodel.json file
-      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "cli")
       --azure-env string            the target Azure cloud (default "AzurePublicCloud")
       --certificate-path string     path to client certificate (used with --auth-method=client_certificate)
       --client-id string            client id (used with --auth-method=[client_secret|client_certificate])
@@ -168,7 +168,7 @@ Usage:
 
 Flags:
   -m, --api-model string            path to the generated apimodel.json file
-      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "cli")
       --azure-env string            the target Azure cloud (default "AzurePublicCloud")
       --certificate-path string     path to client certificate (used with --auth-method=client_certificate)
       --client-id string            client id (used with --auth-method=[client_secret|client_certificate])
@@ -201,7 +201,7 @@ Usage:
 
 Flags:
   -m, --api-model string            path to the generated apimodel.json file
-      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "client_secret")
+      --auth-method client_secret   auth method (default:client_secret, `cli`, `client_certificate`, `device`) (default "cli")
       --azure-env string            the target Azure cloud (default "AzurePublicCloud")
       --certificate-path string     path to client certificate (used with --auth-method=client_certificate)
       --client-id string            client id (used with --auth-method=[client_secret|client_certificate])

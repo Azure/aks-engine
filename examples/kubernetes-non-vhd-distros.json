@@ -34,7 +34,7 @@
         "count": 1,
         "vmSize": "Standard_D2s_v3",
         "osType": "Windows"
-    }
+      }
     ],
     "linuxProfile": {
       "adminUsername": "azureuser",
@@ -55,10 +55,6 @@
       "windowsOffer": "WindowsServer",
       "windowsSku": "2019-datacenter-core-with-containers-smalldisk-g2",
       "imageVersion": "latest"
-  },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

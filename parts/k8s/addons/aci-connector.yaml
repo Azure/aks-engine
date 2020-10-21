@@ -61,7 +61,7 @@ data:
   cert.pem: <cert>
   key.pem: <key>
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aci-connector
@@ -73,11 +73,9 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       app: aci-connector
-{{- end}}
   template:
     metadata:
       labels:

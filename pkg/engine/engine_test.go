@@ -1710,7 +1710,7 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -1857,7 +1857,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -1936,7 +1936,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -2003,7 +2003,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{

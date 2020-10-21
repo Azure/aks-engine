@@ -1,4 +1,4 @@
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -10,11 +10,9 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       app: keyvault-flexvolume
-{{- end}}
   template:
     metadata:
       labels:

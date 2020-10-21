@@ -44,11 +44,7 @@ This is the prometheus-grafana extension.  Add this extension to the API model y
         "version": "v1",
         "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
       }
-    ],
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
+    ]
   }
 }
 ```

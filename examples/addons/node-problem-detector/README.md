@@ -43,10 +43,6 @@ The following is a sample API definition with the node-problem-detector addon en
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

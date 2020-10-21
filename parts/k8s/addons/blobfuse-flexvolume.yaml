@@ -1,4 +1,4 @@
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: blobfuse-flexvol-installer

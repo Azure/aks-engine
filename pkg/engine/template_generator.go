@@ -284,14 +284,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetMasterKubernetesLabels": func(rg string) string {
 			return common.GetMasterKubernetesLabels(rg, false)
 		},
-		"GetMasterKubernetesLabelsDeprecated": func(rg string) string {
-			return common.GetMasterKubernetesLabels(rg, true)
-		},
 		"GetAgentKubernetesLabels": func(profile *api.AgentPoolProfile, rg string) string {
 			return profile.GetKubernetesLabels(rg, false)
-		},
-		"GetAgentKubernetesLabelsDeprecated": func(profile *api.AgentPoolProfile, rg string) string {
-			return profile.GetKubernetesLabels(rg, true)
 		},
 		"GetKubeletConfigKeyVals": func(kc *api.KubernetesConfig) string {
 			if kc == nil {
@@ -373,7 +367,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 		},
 		"UseManagedIdentity": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)

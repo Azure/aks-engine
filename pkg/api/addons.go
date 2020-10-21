@@ -789,7 +789,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultPodSecurityPolicyAddonsConfig := KubernetesAddon{
 		Name:    common.PodSecurityPolicyAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") || to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy)),
+		Enabled: to.BoolPtr(true),
 	}
 
 	defaultAuditPolicyAddonsConfig := KubernetesAddon{
@@ -1082,8 +1082,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons[:i], o.KubernetesConfig.Addons[i+1:]...)
 	}
 
-	// Enable pod-security-policy addon during upgrade to 1.15 or greater scenarios, unless explicitly disabled
-	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
+	// Enable pod-security-policy addon during upgrade scenarios, unless explicitly disabled
+	if isUpgrade && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
 			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		}

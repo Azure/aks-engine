@@ -44,7 +44,7 @@ func createKubernetesSpAppGIdentityOperatorAccessRoleAssignment(prop *api.Proper
 	// determine objectId of the cluster identity used by the kubernetes cluster
 	if prop.OrchestratorProfile != nil &&
 		prop.OrchestratorProfile.KubernetesConfig != nil &&
-		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+		to.Bool(prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
 		kubernetesSpObjectID = "[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))).principalId]"
 	} else if prop.ServicePrincipalProfile.ObjectID != "" {
 		kubernetesSpObjectID = prop.ServicePrincipalProfile.ObjectID
