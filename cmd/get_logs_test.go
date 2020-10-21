@@ -149,11 +149,11 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 	}
 }
 
-func TestComputeControlPanelNodes(t *testing.T) {
+func TestComputeControlPlaneNodes(t *testing.T) {
 	t.Parallel()
 
 	g := NewGomegaWithT(t)
-	nodeList := computeControlPanelNodes(3, "12345678")
+	nodeList := computeControlPlaneNodes(3, "12345678")
 	for i, node := range nodeList {
 		g.Expect(node.Name).To(Equal(fmt.Sprintf("k8s-master-12345678-%d", i)))
 		g.Expect(node.Status.NodeInfo.OperatingSystem).To(Equal("linux"))

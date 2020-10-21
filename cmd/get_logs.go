@@ -210,9 +210,9 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
 		log.Warnf("Error getting node list: %s", err)
-		log.Infof("Collecting logs from control panel VMs")
+		log.Infof("Collecting logs from control plane VMs")
 		glc.controlPlaneOnly = true
-		glc.masterNodes = computeControlPanelNodes(glc.cs.Properties.MasterProfile.Count, glc.cs.Properties.GetClusterID())
+		glc.masterNodes = computeControlPlaneNodes(glc.cs.Properties.MasterProfile.Count, glc.cs.Properties.GetClusterID())
 		return nil
 	}
 	for _, node := range nodeList.Items {
@@ -366,7 +366,7 @@ func (glc *getLogsCmd) getCloudName() string {
 	return ""
 }
 
-func computeControlPanelNodes(nodesCount int, clusterID string) []v1.Node {
+func computeControlPlaneNodes(nodesCount int, clusterID string) []v1.Node {
 	var nodeList []v1.Node
 	for i := 0; i < nodesCount; i++ {
 		var node v1.Node
