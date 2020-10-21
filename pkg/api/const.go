@@ -202,6 +202,8 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginAzure is the string expression for Azure CNI plugin.
 	NetworkPluginAzure = "azure"
+	// NetworkModeTransparent is the string expression for transparent network mode config option
+	NetworkModeTransparent = "transparent"
 	// DefaultSinglePlacementGroup determines the aks-engine provided default for supporting large VMSS
 	// (true = single placement group 0-100 VMs, false = multiple placement group 0-1000 VMs)
 	DefaultSinglePlacementGroup = true
