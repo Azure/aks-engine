@@ -217,7 +217,11 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	}
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
-		return errors.Wrap(err, "listing cluster nodes")
+		log.Warnf("Error getting node list: %s", err)
+		log.Infof("Collecting logs from control plane VMs")
+		glc.controlPlaneOnly = true
+		glc.masterNodes = computeControlPlaneNodes(glc.cs.Properties.MasterProfile.Count, glc.cs.Properties.GetClusterID())
+		return nil
 	}
 	for _, node := range nodeList.Items {
 		if isLinuxNode(node) {
@@ -230,10 +234,10 @@ func (glc *getLogsCmd) getClusterNodes() error {
 			if glc.windowsSSHConfig != nil {
 				glc.windowsNodes = append(glc.windowsNodes, node)
 			} else {
-				log.Warnf("skipping node %s, SSH not enabled", node.Name)
+				log.Warnf("Skipping node %s, SSH not enabled", node.Name)
 			}
 		} else {
-			log.Warnf("skipping node %s, could not determine operating system", node.Name)
+			log.Warnf("Skipping node %s, could not determine operating system", node.Name)
 		}
 	}
 	return nil
@@ -425,6 +429,17 @@ func updateLinuxNodesList(nodeList []v1.Node, agentPoolName string) []v1.Node {
 		}
 	}
 	return linuxNodeList
+}
+
+func computeControlPlaneNodes(nodesCount int, clusterID string) []v1.Node {
+	var nodeList []v1.Node
+	for i := 0; i < nodesCount; i++ {
+		var node v1.Node
+		node.Name = fmt.Sprintf("%s-%s-%d", common.LegacyControlPlaneVMPrefix, clusterID, i)
+		node.Status.NodeInfo.OperatingSystem = "linux"
+		nodeList = append(nodeList, node)
+	}
+	return nodeList
 }
 
 type DownloadProgressWriter struct {
