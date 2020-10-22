@@ -244,8 +244,6 @@ func (o *OrchestratorProfile) UnmarshalJSON(b []byte) error {
 	switch {
 	case strings.EqualFold(orchestratorType, DCOS):
 		o.OrchestratorType = DCOS
-	case strings.EqualFold(orchestratorType, Swarm):
-		o.OrchestratorType = Swarm
 	case strings.EqualFold(orchestratorType, Kubernetes):
 		o.OrchestratorType = Kubernetes
 	default:

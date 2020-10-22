@@ -23,17 +23,14 @@ func init() {
 	funcmap = map[string]orchestratorsFunc{
 		Kubernetes: kubernetesInfo,
 		DCOS:       dcosInfo,
-		Swarm:      swarmInfo,
 	}
 	versionsMap = map[string][]string{
 		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false, false),
 		DCOS:       common.GetAllSupportedDCOSVersions(),
-		Swarm:      common.GetAllSupportedSwarmVersions(),
 	}
 	versionsMapAzureStack = map[string][]string{
 		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false, true),
 		DCOS:       common.GetAllSupportedDCOSVersions(),
-		Swarm:      common.GetAllSupportedSwarmVersions(),
 	}
 }
 
@@ -43,8 +40,6 @@ func validate(orchestrator, version string) (string, error) {
 		return Kubernetes, nil
 	case strings.EqualFold(orchestrator, DCOS):
 		return DCOS, nil
-	case strings.EqualFold(orchestrator, Swarm):
-		return Swarm, nil
 	case orchestrator == "":
 		if version != "" {
 			return "", errors.Errorf("Must specify orchestrator for version '%s'", version)
@@ -260,29 +255,4 @@ func dcosUpgrades(csOrch *OrchestratorProfile) []*OrchestratorProfile {
 		})
 	}
 	return ret
-}
-
-func swarmInfo(csOrch *OrchestratorProfile, hasWindows bool, isAzureStackCloud bool) ([]*OrchestratorVersionProfile, error) {
-	if csOrch.OrchestratorVersion == "" {
-		return []*OrchestratorVersionProfile{
-			{
-				OrchestratorProfile: OrchestratorProfile{
-					OrchestratorType:    Swarm,
-					OrchestratorVersion: SwarmVersion,
-				},
-			},
-		}, nil
-	}
-
-	if !isVersionSupported(csOrch, false) {
-		return nil, errors.Errorf("Swarm version %s is not supported", csOrch.OrchestratorVersion)
-	}
-	return []*OrchestratorVersionProfile{
-		{
-			OrchestratorProfile: OrchestratorProfile{
-				OrchestratorType:    Swarm,
-				OrchestratorVersion: csOrch.OrchestratorVersion,
-			},
-		},
-	}, nil
 }

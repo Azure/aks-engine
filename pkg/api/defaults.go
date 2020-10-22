@@ -718,12 +718,6 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
 					p.MasterProfile.FirstConsecutiveStaticIP = DefaultDCOSFirstConsecutiveStaticIP
 				}
-			} else if p.HasWindows() {
-				p.MasterProfile.Subnet = DefaultSwarmWindowsMasterSubnet
-				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-					p.MasterProfile.FirstConsecutiveStaticIP = DefaultSwarmWindowsFirstConsecutiveStaticIP
-				}
 			} else {
 				p.MasterProfile.Subnet = DefaultMasterSubnet
 				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists

@@ -9,8 +9,6 @@ const (
 	Mesos string = "Mesos"
 	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
 	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
 )
@@ -101,19 +99,9 @@ var AllDCOSSupportedVersions = []string{
 	DCOSVersion1Dot8Dot8,
 }
 
-const (
-	// SwarmVersion is the Swarm orchestrator version
-	SwarmVersion = "swarm:1.1.0"
-)
-
 // GetAllSupportedDCOSVersions returns a slice of all supported DCOS versions.
 func GetAllSupportedDCOSVersions() []string {
 	return AllDCOSSupportedVersions
-}
-
-// GetAllSupportedSwarmVersions returns a slice of all supported Swarm versions.
-func GetAllSupportedSwarmVersions() []string {
-	return []string{SwarmVersion}
 }
 
 // MinCloudProviderQPSToBucketFactor defines the minimum ratio between QPS and Bucket size for cloudprovider rate limiting

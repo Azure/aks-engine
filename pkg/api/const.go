@@ -9,8 +9,6 @@ const (
 	Mesos string = "Mesos"
 	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
 	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
 )
@@ -37,10 +35,6 @@ const (
 )
 
 const (
-	// SwarmVersion is the Swarm orchestrator version
-	SwarmVersion = "swarm:1.1.0"
-	// SwarmDockerComposeVersion is the Docker Compose version
-	SwarmDockerComposeVersion = "1.6.2"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
 	KubernetesWindowsDockerVersion = "19.03.11"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
@@ -350,14 +344,10 @@ const (
 )
 
 const (
-	// DefaultMasterSubnet specifies the default master subnet for DCOS or Swarm
+	// DefaultMasterSubnet specifies the default master subnet for DCOS
 	DefaultMasterSubnet = "172.16.0.0/24"
-	// DefaultFirstConsecutiveStaticIP specifies the static IP address on master 0 for DCOS or Swarm
+	// DefaultFirstConsecutiveStaticIP specifies the static IP address on master 0 for DCOS
 	DefaultFirstConsecutiveStaticIP = "172.16.0.5"
-	// DefaultSwarmWindowsMasterSubnet specifies the default master subnet for a Swarm Windows cluster
-	DefaultSwarmWindowsMasterSubnet = "192.168.255.0/24"
-	// DefaultSwarmWindowsFirstConsecutiveStaticIP specifies the static IP address on master 0 for a Swarm WIndows cluster
-	DefaultSwarmWindowsFirstConsecutiveStaticIP = "192.168.255.5"
 	// DefaultDCOSMasterSubnet specifies the default master subnet for a DCOS cluster
 	DefaultDCOSMasterSubnet = "192.168.255.0/24"
 	// DefaultDCOSFirstConsecutiveStaticIP  specifies the static IP address on master 0 for a DCOS cluster

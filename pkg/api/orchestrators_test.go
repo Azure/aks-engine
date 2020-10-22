@@ -144,33 +144,6 @@ func TestDcosInfo(t *testing.T) {
 	Expect(e).To(BeNil())
 }
 
-func TestSwarmInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"swarm:1.1.1",
-		"swarm:1.1.2",
-	}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    Swarm,
-			OrchestratorVersion: v,
-		}
-
-		_, e := swarmInfo(csOrch, false, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    Swarm,
-		OrchestratorVersion: common.SwarmVersion,
-	}
-
-	_, e := swarmInfo(csOrch, false, false)
-	Expect(e).To(BeNil())
-}
-
 func TestGetKubernetesAvailableUpgradeVersions(t *testing.T) {
 	RegisterTestingT(t)
 	cases := []struct {

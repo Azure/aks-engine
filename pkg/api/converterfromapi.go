@@ -48,8 +48,6 @@ func ConvertOrchestratorVersionProfileToVLabs(api *OrchestratorVersionProfile) *
 		vlabsProfile.OrchestratorType = vlabs.Kubernetes
 	case DCOS:
 		vlabsProfile.OrchestratorType = vlabs.DCOS
-	case Swarm:
-		vlabsProfile.OrchestratorType = vlabs.Swarm
 	}
 	vlabsProfile.OrchestratorVersion = api.OrchestratorVersion
 	vlabsProfile.Default = api.Default

@@ -8,8 +8,6 @@ const (
 	Mesos string = "Mesos"
 	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
 	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
 )
@@ -147,11 +145,6 @@ const (
 )
 
 const (
-	swarmProvision        = "swarm/configure-swarm-cluster.sh"
-	swarmWindowsProvision = "swarm/Install-ContainerHost-And-Join-Swarm.ps1"
-)
-
-const (
 	agentOutputs                  = "agentoutputs.t"
 	agentParams                   = "agentparams.t"
 	armParameters                 = "k8s/armparameters.t"
@@ -175,15 +168,6 @@ const (
 	kubernetesParams              = "k8s/kubernetesparams.t"
 	masterOutputs                 = "masteroutputs.t"
 	masterParams                  = "masterparams.t"
-	swarmBaseFile                 = "swarm/swarmbase.t"
-	swarmParams                   = "swarm/swarmparams.t"
-	swarmAgentResourcesVMAS       = "swarm/swarmagentresourcesvmas.t"
-	swarmAgentResourcesVMSS       = "swarm/swarmagentresourcesvmss.t"
-	swarmAgentVars                = "swarm/swarmagentvars.t"
-	swarmMasterResources          = "swarm/swarmmasterresources.t"
-	swarmMasterVars               = "swarm/swarmmastervars.t"
-	swarmWinAgentResourcesVMAS    = "swarm/swarmwinagentresourcesvmas.t"
-	swarmWinAgentResourcesVMSS    = "swarm/swarmwinagentresourcesvmss.t"
 	windowsParams                 = "windowsparams.t"
 )
 

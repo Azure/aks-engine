@@ -46,7 +46,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			addValue(parametersMap, "dnsServer", linuxProfile.CustomNodesDNS.DNSServer)
 		}
 	}
-	// masterEndpointDNSNamePrefix is the basis for storage account creation across dcos, swarm, and k8s
+	// masterEndpointDNSNamePrefix is the basis for storage account creation across dcos and k8s
 	if properties.MasterProfile != nil {
 		// MasterProfile exists, uses master DNS prefix
 		addValue(parametersMap, "masterEndpointDNSNamePrefix", properties.MasterProfile.DNSPrefix)
@@ -96,23 +96,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 				addValue(parametersMap, fmt.Sprintf("linuxKeyVaultID%dCertificateURL%d", i, j), c.CertificateURL)
 			}
 		}
-	}
-
-	//Swarm Parameters
-	if properties.OrchestratorProfile.OrchestratorType == api.Swarm {
-		var dockerEngineRepo, dockerComposeDownloadURL string
-		if cloudSpecConfig.DockerSpecConfig.DockerEngineRepo == "" {
-			dockerEngineRepo = DefaultDockerEngineRepo
-		} else {
-			dockerEngineRepo = cloudSpecConfig.DockerSpecConfig.DockerEngineRepo
-		}
-		if cloudSpecConfig.DockerSpecConfig.DockerComposeDownloadURL == "" {
-			dockerComposeDownloadURL = DefaultDockerComposeURL
-		} else {
-			dockerComposeDownloadURL = cloudSpecConfig.DockerSpecConfig.DockerComposeDownloadURL
-		}
-		addValue(parametersMap, "dockerEngineDownloadRepo", dockerEngineRepo)
-		addValue(parametersMap, "dockerComposeDownloadURL", dockerComposeDownloadURL)
 	}
 
 	// Kubernetes Parameters

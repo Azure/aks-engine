@@ -33,7 +33,6 @@ var commonTemplateFiles = []string{agentOutputs, agentParams, masterOutputs, iaa
 var dcosTemplateFiles = []string{dcosBaseFile, dcosAgentResourcesVMAS, dcosAgentResourcesVMSS, dcosAgentVars, dcosMasterResources, dcosMasterVars, dcosParams, dcosWindowsAgentResourcesVMAS, dcosWindowsAgentResourcesVMSS}
 var dcos2TemplateFiles = []string{dcos2BaseFile, dcosAgentResourcesVMAS, dcosAgentResourcesVMSS, dcosAgentVars, dcos2MasterResources, dcos2BootstrapResources, dcos2MasterVars, dcosParams, dcosWindowsAgentResourcesVMAS, dcosWindowsAgentResourcesVMSS, dcos2BootstrapVars, dcos2BootstrapParams}
 var kubernetesParamFiles = []string{armParameters, kubernetesParams, masterParams, agentParams, windowsParams}
-var swarmTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
 
 var keyvaultSecretPathRe *regexp.Regexp
 
@@ -1025,28 +1024,6 @@ touch /etc/mesosphere/roles/azure_master`
 	return strings.Replace(strings.Replace(b.String(), "\r\n", "\n", -1), "\n", "\n\n    ", -1)
 }
 
-func buildYamlFileWithWriteFiles(files []string, cs *api.ContainerService) string {
-	clusterYamlFile := `#cloud-config
-
-write_files:
-%s
-`
-	writeFileBlock := ` -  encoding: gzip
-    content: !!binary |
-        %s
-    path: /opt/azure/containers/%s
-    permissions: "0744"
-`
-
-	filelines := ""
-	for _, file := range files {
-		b64GzipString := getBase64EncodedGzippedCustomScript(file, cs)
-		fileNoPath := strings.TrimPrefix(file, "swarm/")
-		filelines += fmt.Sprintf(writeFileBlock, b64GzipString, fileNoPath)
-	}
-	return fmt.Sprintf(clusterYamlFile, filelines)
-}
-
 func getKubernetesSubnets(properties *api.Properties) string {
 	subnetString := `{
             "name": "podCIDR%d",
@@ -1236,10 +1213,6 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
-}
-
-func getSwarmVersions(orchestratorVersion, dockerComposeVersion string) string {
-	return fmt.Sprintf("\"orchestratorVersion\": \"%s\",\n\"dockerComposeVersion\": \"%s\",\n", orchestratorVersion, dockerComposeVersion)
 }
 
 func wrapAsVariableObject(o, v string) string {

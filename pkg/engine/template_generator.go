@@ -129,7 +129,6 @@ func (t *TemplateGenerator) verifyFiles() error {
 	allFiles := commonTemplateFiles
 	allFiles = append(allFiles, dcosTemplateFiles...)
 	allFiles = append(allFiles, dcos2TemplateFiles...)
-	allFiles = append(allFiles, swarmTemplateFiles...)
 	for _, file := range allFiles {
 		if _, err := Asset(file); err != nil {
 			return t.Translator.Errorf("template file %s does not exist", file)
@@ -150,9 +149,6 @@ func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]
 			files = append(commonTemplateFiles, dcos2TemplateFiles...)
 			baseFile = dcos2BaseFile
 		}
-	case api.Swarm:
-		files = append(commonTemplateFiles, swarmTemplateFiles...)
-		baseFile = swarmBaseFile
 	default:
 		return nil, "", t.Translator.Errorf("orchestrator '%s' is unsupported", properties.OrchestratorProfile.OrchestratorType)
 	}
@@ -426,9 +422,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDefaultVNETCIDRIPv6": func() string {
 			return DefaultVNETCIDRIPv6
 		},
-		"getSwarmVersions": func() string {
-			return getSwarmVersions(api.SwarmVersion, api.SwarmDockerComposeVersion)
-		},
 		"GetSizeMap": func() string {
 			return helpers.GetSizeMap()
 		},
@@ -457,36 +450,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return str
 		},
-		"GetMasterSwarmCustomData": func() string {
-			files := []string{swarmProvision}
-			str := buildYamlFileWithWriteFiles(files, cs)
-			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
-				extensionStr := makeMasterExtensionScriptCommands(cs)
-				str += "'runcmd:\n" + extensionStr + "\n\n'"
-			}
-			str = escapeSingleLine(str)
-			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
-		},
-		"GetAgentSwarmCustomData": func(profile *api.AgentPoolProfile) string {
-			files := []string{swarmProvision}
-			str := buildYamlFileWithWriteFiles(files, cs)
-			str = escapeSingleLine(str)
-			return fmt.Sprintf("\"customData\": \"[base64(concat('%s',variables('%sRunCmdFile'),variables('%sRunCmd')))]\",", str, profile.Name, profile.Name)
-		},
-		"GetSwarmAgentPreprovisionExtensionCommands": func(profile *api.AgentPoolProfile) string {
-			str := ""
-			if profile.PreprovisionExtension != nil {
-				makeAgentExtensionScriptCommands(cs, profile)
-			}
-			str = escapeSingleLine(str)
-			return str
-		},
 		"GetLocation": func() string {
 			return cs.Location
-		},
-		"GetWinAgentSwarmCustomData": func() string {
-			str := getBase64EncodedGzippedCustomScript(swarmWindowsProvision, cs)
-			return fmt.Sprintf("\"customData\": \"%s\"", str)
 		},
 		"GetKubernetesWindowsAgentFunctions": func() string {
 			// Collect all the parts into a zip
