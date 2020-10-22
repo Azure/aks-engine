@@ -7,12 +7,13 @@ package node
 import (
 	"context"
 	"encoding/json"
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"log"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
@@ -56,6 +57,7 @@ type Status struct {
 	NodeInfo      Info        `json:"nodeInfo"`
 	NodeAddresses []Address   `json:"addresses"`
 	Conditions    []Condition `json:"conditions"`
+	Capacity      Capacity    `json:capacity`
 }
 
 // Address contains an address and a type
@@ -71,6 +73,10 @@ type Info struct {
 	KubeletVersion          string `json:"kubeletVersion"`
 	OperatingSystem         string `json:"operatingSystem"`
 	OSImage                 string `json:"osImage"`
+}
+
+type Capacity struct {
+	CPU string `json:"cpu"`
 }
 
 // Condition contains various status information
@@ -96,7 +102,7 @@ type GetNodesResult struct {
 
 // TopNodesResult is the result type for TopNodesAsync
 type TopNodesResult struct {
-	Err   error
+	Err error
 }
 
 // GetNodesAsync wraps Get with a struct response for goroutine + channel usage
@@ -117,7 +123,7 @@ func GetNodesAsync() GetNodesResult {
 func TopNodesAsync() TopNodesResult {
 	err := TopNodes()
 	return TopNodesResult{
-		Err:   err,
+		Err: err,
 	}
 }
 
@@ -432,6 +438,14 @@ func TopNodes() error {
 		pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
 		return err
 	}
+
+	log.Printf("\n - %s", string(out))
+	if strings.Contains(string(out), "<unknown>") {
+		log.Printf("\n - %s", string(out))
+		pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
+		return errors.Errorf("Node contained unknown value")
+	}
+
 	return nil
 }
 

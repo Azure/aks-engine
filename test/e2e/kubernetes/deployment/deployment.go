@@ -185,7 +185,7 @@ func CreateDeployFromImageAsync(image, name, namespace, app, role string) GetRes
 	d, err := CreateLinuxDeploy(image, name, namespace, app, role)
 	return GetResult{
 		deployment: d,
-		err: err,
+		err:        err,
 	}
 }
 
@@ -400,6 +400,66 @@ func CreateWindowsDeployWithRetry(image, name, namespace, app, role string, slee
 			}
 		case <-ctx.Done():
 			return d, errors.Errorf("GetAllByPrefixWithRetry timed out: %s\n", mostRecentCreateWindowsDeployWithRetryError)
+		}
+	}
+}
+
+// CreateDeploymentFromFile will create a Deployment from file with a name
+func CreateDeploymentFromFile(filename, name, namespace string, sleep, timeout time.Duration) (*Deployment, error) {
+	cmd := exec.Command("k", "apply", "-f", filename)
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error trying to create Deployment %s:%s\n", name, string(out))
+		return nil, err
+	}
+	d, err := GetWithRetry(name, namespace, sleep, timeout)
+	if err != nil {
+		log.Printf("Error while trying to fetch Deployment %s:%s\n", name, err)
+		return nil, err
+	}
+	return d, nil
+}
+
+// CreateDeploymentFromFileAsync wraps CreateDeploymentFromFile with a struct response for goroutine + channel usage
+func CreateDeploymentFromFileAsync(filename, name, namespace string, sleep, timeout time.Duration) GetResult {
+	d, err := CreateDeploymentFromFile(filename, name, namespace, sleep, timeout)
+	return GetResult{
+		deployment: d,
+		err:        err,
+	}
+}
+
+// CreateDeploymentFromFileWithRetry will kubectl apply a Deployment from file with a name with retry toleration
+func CreateDeploymentFromFileWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateDeploymentFromFileWithRetryError error
+	var d *Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateDeploymentFromFileAsync(filename, name, namespace, sleep, timeout)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateDeploymentFromFileWithRetryError = result.err
+			d = result.deployment
+			if mostRecentCreateDeploymentFromFileWithRetryError == nil {
+				if d != nil {
+					return d, nil
+				}
+			}
+		case <-ctx.Done():
+			return d, errors.Errorf("CreateDeploymentFromFileWithRetry timed out: %s\n", mostRecentCreateDeploymentFromFileWithRetryError)
 		}
 	}
 }
@@ -846,6 +906,66 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 			mostRecentWaitForReplicasError = result.Err
 			pods = result.Pods
 			if mostRecentWaitForReplicasError == nil {
+				log.Printf("Waiting for min %d, max %d, current: %d", min, max, len(pods))
+				if min == -1 {
+					if len(pods) <= max {
+						return pods, nil
+					}
+				} else if max == -1 {
+					if len(pods) >= min {
+						return pods, nil
+					}
+				} else {
+					if len(pods) >= min && len(pods) <= max {
+						return pods, nil
+					}
+				}
+			}
+		case <-ctx.Done():
+			err := d.Describe()
+			if err != nil {
+				log.Printf("Unable to describe deployment %s: %s", d.Metadata.Name, err)
+			}
+			return pods, errors.Errorf("WaitForReplicas timed out: %s\n", mostRecentWaitForReplicasError)
+		}
+	}
+}
+
+// WaitForReplicas waits for a pod replica count between min and max
+func (d *Deployment) WaitForReplicasWithAction(min, max int, sleep, timeout time.Duration, action func() error) ([]pod.Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan pod.GetAllByPrefixResult)
+	var mostRecentWaitForReplicasError error
+	var pods []pod.Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- pod.GetAllRunningByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace)
+				time.Sleep(sleep)
+
+				err := action()
+				if err != nil {
+					ch <- pod.GetAllByPrefixResult{
+						Pods: nil,
+						Err:  err,
+					}
+					ctx.Done()
+				}
+
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentWaitForReplicasError = result.Err
+			pods = result.Pods
+			if mostRecentWaitForReplicasError == nil {
+				log.Printf("Waiting for min %d, max %d, current: %d", min, max, len(pods))
 				if min == -1 {
 					if len(pods) <= max {
 						return pods, nil
