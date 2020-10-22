@@ -388,10 +388,10 @@ func (glc *getLogsCmd) validateLogScript() error {
 	if glc.linuxScriptPath == "" && !glc.cs.Properties.MasterProfile.IsVHDDistro() {
 		if glc.controlPlaneOnly {
 			return errors.Errorf("No log collection script found for control plane nodes")
-		} else {
-			log.Warn("Skipping control plane nodes as flag '--linux-script' is not set and the distro in masterProfiles is not aks-ubuntu VHD")
-			glc.masterNodes = nil
 		}
+
+		log.Warn("Skipping control plane nodes as flag '--linux-script' is not set and the distro in masterProfiles is not aks-ubuntu VHD")
+		glc.masterNodes = nil
 	}
 	for _, profile := range glc.cs.Properties.AgentPoolProfiles {
 		if glc.linuxScriptPath == "" && strings.EqualFold(string(profile.OSType), "Linux") && !profile.IsVHDDistro() {
