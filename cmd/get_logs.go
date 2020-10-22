@@ -389,17 +389,17 @@ func (glc *getLogsCmd) validateLogScript() error {
 		if glc.controlPlaneOnly {
 			return errors.Errorf("No log collection script found for control plane nodes")
 		} else {
-			log.Warnf("Skipping master nodes nodes as no log collection script found")
+			log.Warn("Skipping control plane nodes as flag '--linux-script' is not set and the distro in masterProfiles is not aks-ubuntu VHD")
 			glc.masterNodes = nil
 		}
 	}
 	for _, profile := range glc.cs.Properties.AgentPoolProfiles {
-		if glc.linuxScriptPath == "" && profile.OSType == "Linux" && !profile.IsVHDDistro() {
-			log.Warnf("Skipping nodes in linux agentpool %s as no log collection script found", profile.Name)
-			glc.linuxNodes = updateLinuxNodesList(glc.linuxNodes, profile.Name)
+		if glc.linuxScriptPath == "" && strings.EqualFold(string(profile.OSType), "Linux") && !profile.IsVHDDistro() {
+			log.Warnf("Skipping linux agentpool %s as flag '--linux-script' is not set and the distro in agentPoolProfiles is not aks-ubuntu VHD", profile.Name)
+			glc.linuxNodes = filterNodesFromPool(glc.linuxNodes, profile.Name)
 		}
-		if glc.windowsScriptPath == "" && profile.OSType == "Windows" && !(glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows") {
-			log.Warnf("Skipping nodes in windows agentpools as no log collection script found")
+		if glc.windowsScriptPath == "" && strings.EqualFold(string(profile.OSType), "Windows") && !glc.cs.Properties.WindowsProfile.IsVHDDistro() {
+			log.Warnf("Skipping windows agentpool %s as flag '--windows-script' is not set and the distro in windowsProfiles is not aks-windows VHD", profile.Name)
 			glc.windowsNodes = nil
 		}
 	}
@@ -421,10 +421,10 @@ func (glc *getLogsCmd) getCloudName() string {
 	return ""
 }
 
-func updateLinuxNodesList(nodeList []v1.Node, agentPoolName string) []v1.Node {
+func filterNodesFromPool(nodeList []v1.Node, agentPoolName string) []v1.Node {
 	var linuxNodeList []v1.Node
 	for _, node := range nodeList {
-		if strings.Split(node.Name, "-")[1] != agentPoolName {
+		if strings.EqualFold(strings.Split(node.Name, "-")[1], agentPoolName) {
 			linuxNodeList = append(linuxNodeList, node)
 		}
 	}
@@ -440,6 +440,10 @@ func computeControlPlaneNodes(nodesCount int, clusterID string) []v1.Node {
 		nodeList = append(nodeList, node)
 	}
 	return nodeList
+}
+
+func (glc *getLogsCmd) windowsScriptAvailable() bool {
+	return glc.windowsScriptPath != "" || (glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows")
 }
 
 type DownloadProgressWriter struct {
