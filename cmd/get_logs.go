@@ -442,10 +442,6 @@ func computeControlPlaneNodes(nodesCount int, clusterID string) []v1.Node {
 	return nodeList
 }
 
-func (glc *getLogsCmd) windowsScriptAvailable() bool {
-	return glc.windowsScriptPath != "" || (glc.cs.Properties.WindowsProfile.WindowsPublisher == "microsoft-aks" && glc.cs.Properties.WindowsProfile.WindowsOffer == "aks-windows")
-}
-
 type DownloadProgressWriter struct {
 	Total uint64
 }
