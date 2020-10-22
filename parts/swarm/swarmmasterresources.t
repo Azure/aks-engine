@@ -205,13 +205,7 @@
         "osProfile": {
           "adminUsername": "[variables('adminUsername')]",
           "computername": "[concat(variables('masterVMNamePrefix'), copyIndex())]",
-          {{if .OrchestratorProfile.IsSwarmMode}}
-            {{if not .MasterProfile.IsRHEL}}
-              {{GetMasterSwarmModeCustomData}}
-            {{end}}
-          {{else}}
             {{GetMasterSwarmCustomData}}
-          {{end}}
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,
             "ssh": {
@@ -230,17 +224,10 @@
         },
         "storageProfile": {
           "imageReference": {
-            {{if .OrchestratorProfile.IsSwarmMode}}
-            "offer": "[variables('masterOSImageOffer')]",
-            "publisher": "[variables('masterOSImagePublisher')]",
-            "sku": "[variables('masterOSImageSKU')]",
-            "version": "[variables('masterOSImageVersion')]"
-            {{else}}
             "offer": "[variables('osImageOffer')]",
             "publisher": "[variables('osImagePublisher')]",
             "sku": "[variables('osImageSKU')]",
             "version": "[variables('osImageVersion')]"
-            {{end}}
           },
           "osDisk": {
             "caching": "ReadWrite"

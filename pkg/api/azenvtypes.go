@@ -8,17 +8,10 @@ import "fmt"
 //AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
 type AzureEnvironmentSpecConfig struct {
 	CloudName            string                        `json:"cloudName,omitempty"`
-	DockerSpecConfig     DockerSpecConfig              `json:"dockerSpecConfig,omitempty"`
 	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
 	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
 	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
-}
-
-//DockerSpecConfig is the configurations of docker
-type DockerSpecConfig struct {
-	DockerEngineRepo         string `json:"dockerEngineRepo,omitempty"`
-	DockerComposeDownloadURL string `json:"dockerComposeDownloadURL,omitempty"`
 }
 
 //DCOSSpecConfig is the configurations of DCOS
@@ -121,12 +114,6 @@ var (
 		DcosClusterPackageListID:        "248a66388bba1adbcb14a52fd3b7b424ab06fa76",
 	}
 
-	//DefaultDockerSpecConfig is the default Docker engine repo.
-	DefaultDockerSpecConfig = DockerSpecConfig{
-		DockerEngineRepo:         "https://aptdocker.azureedge.net/repo",
-		DockerComposeDownloadURL: "https://github.com/docker/compose/releases/download",
-	}
-
 	//Ubuntu1604OSImageConfig is the default Linux distribution.
 	Ubuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
@@ -210,8 +197,6 @@ var (
 	//AzureCloudSpec is the default configurations for global azure.
 	AzureCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzurePublicCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DefaultDockerSpecConfig,
 		//KubernetesSpecConfig is the default kubernetes container image url.
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
@@ -237,7 +222,6 @@ var (
 	//AzureGermanCloudSpec is the German cloud config.
 	AzureGermanCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName:            AzureGermanCloud,
-		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -259,7 +243,6 @@ var (
 	//AzureUSGovernmentCloudSpec is the US government config.
 	AzureUSGovernmentCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName:            AzureUSGovernmentCloud,
-		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
 		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -281,11 +264,6 @@ var (
 	//AzureChinaCloudSpec is the configurations for Azure China (Mooncake)
 	AzureChinaCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzureChinaCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DockerSpecConfig{
-			DockerEngineRepo:         "https://mirror.azk8s.cn/docker-engine/apt/repo/",
-			DockerComposeDownloadURL: "https://mirror.azk8s.cn/docker-toolbox/linux/compose",
-		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:    "gcr.azk8s.cn/google_containers/",

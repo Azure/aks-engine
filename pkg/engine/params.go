@@ -98,8 +98,8 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		}
 	}
 
-	//Swarm and SwarmMode Parameters
-	if properties.OrchestratorProfile.OrchestratorType == api.Swarm || properties.OrchestratorProfile.OrchestratorType == api.SwarmMode {
+	//Swarm Parameters
+	if properties.OrchestratorProfile.OrchestratorType == api.Swarm {
 		var dockerEngineRepo, dockerComposeDownloadURL string
 		if cloudSpecConfig.DockerSpecConfig.DockerEngineRepo == "" {
 			dockerEngineRepo = DefaultDockerEngineRepo

@@ -835,11 +835,6 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 		DcosClusterPackageListID:        vlabses.DCOSSpecConfig.DcosClusterPackageListID,
 		DcosProviderPackageID:           vlabses.DCOSSpecConfig.DcosProviderPackageID,
 	}
-
-	api.DockerSpecConfig = DockerSpecConfig{
-		DockerEngineRepo:         vlabses.DockerSpecConfig.DockerEngineRepo,
-		DockerComposeDownloadURL: vlabses.DockerSpecConfig.DockerComposeDownloadURL,
-	}
 	api.EndpointConfig = AzureEndpointConfig{
 		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}

@@ -17,12 +17,6 @@ type VlabsContainerService struct {
 	*vlabs.ContainerService
 }
 
-//DockerSpecConfig is the configurations of docker
-type DockerSpecConfig struct {
-	DockerEngineRepo         string
-	DockerComposeDownloadURL string
-}
-
 //DCOSSpecConfig is the configurations of DCOS
 type DCOSSpecConfig struct {
 	DCOS188BootstrapDownloadURL     string

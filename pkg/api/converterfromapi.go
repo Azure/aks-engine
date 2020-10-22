@@ -50,8 +50,6 @@ func ConvertOrchestratorVersionProfileToVLabs(api *OrchestratorVersionProfile) *
 		vlabsProfile.OrchestratorType = vlabs.DCOS
 	case Swarm:
 		vlabsProfile.OrchestratorType = vlabs.Swarm
-	case SwarmMode:
-		vlabsProfile.OrchestratorType = vlabs.SwarmMode
 	}
 	vlabsProfile.OrchestratorVersion = api.OrchestratorVersion
 	vlabsProfile.Default = api.Default
@@ -757,11 +755,6 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		DcosRepositoryURL:               api.DCOSSpecConfig.DcosRepositoryURL,
 		DcosClusterPackageListID:        api.DCOSSpecConfig.DcosClusterPackageListID,
 		DcosProviderPackageID:           api.DCOSSpecConfig.DcosProviderPackageID,
-	}
-
-	vlabses.DockerSpecConfig = vlabs.DockerSpecConfig{
-		DockerEngineRepo:         api.DockerSpecConfig.DockerEngineRepo,
-		DockerComposeDownloadURL: api.DockerSpecConfig.DockerComposeDownloadURL,
 	}
 	vlabses.EndpointConfig = vlabs.AzureEndpointConfig{
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,

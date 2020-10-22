@@ -12,8 +12,6 @@ const (
 	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
 )
 
 const (
@@ -149,10 +147,8 @@ const (
 )
 
 const (
-	swarmProvision            = "swarm/configure-swarm-cluster.sh"
-	swarmWindowsProvision     = "swarm/Install-ContainerHost-And-Join-Swarm.ps1"
-	swarmModeProvision        = "swarm/configure-swarmmode-cluster.sh"
-	swarmModeWindowsProvision = "swarm/Join-SwarmMode-cluster.ps1"
+	swarmProvision        = "swarm/configure-swarm-cluster.sh"
+	swarmWindowsProvision = "swarm/Install-ContainerHost-And-Join-Swarm.ps1"
 )
 
 const (

@@ -13,8 +13,6 @@ const (
 	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
 )
 
 // the OSTypes supported by vlabs
@@ -43,10 +41,6 @@ const (
 	SwarmVersion = "swarm:1.1.0"
 	// SwarmDockerComposeVersion is the Docker Compose version
 	SwarmDockerComposeVersion = "1.6.2"
-	// DockerCEVersion is the DockerCE orchestrator version
-	DockerCEVersion = "17.03.*"
-	// DockerCEDockerComposeVersion is the Docker Compose version
-	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
 	KubernetesWindowsDockerVersion = "19.03.11"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes

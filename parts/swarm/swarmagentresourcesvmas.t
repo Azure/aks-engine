@@ -181,13 +181,7 @@
         "osProfile": {
           "adminUsername": "[variables('adminUsername')]",
           "computername": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
-{{if IsSwarmMode}}
-  {{if not .IsRHEL}}
-            {{GetAgentSwarmModeCustomData .}} 
-  {{end}}
-{{else}}
-            {{GetAgentSwarmCustomData .}} 
-{{end}}
+            {{GetAgentSwarmCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
               "ssh": {

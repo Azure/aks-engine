@@ -13,8 +13,6 @@ const (
 	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
 )
 
 // validation values
@@ -106,8 +104,6 @@ var AllDCOSSupportedVersions = []string{
 const (
 	// SwarmVersion is the Swarm orchestrator version
 	SwarmVersion = "swarm:1.1.0"
-	// DockerCEVersion is the DockerCE orchestrator version
-	DockerCEVersion = "17.03.*"
 )
 
 // GetAllSupportedDCOSVersions returns a slice of all supported DCOS versions.
@@ -118,11 +114,6 @@ func GetAllSupportedDCOSVersions() []string {
 // GetAllSupportedSwarmVersions returns a slice of all supported Swarm versions.
 func GetAllSupportedSwarmVersions() []string {
 	return []string{SwarmVersion}
-}
-
-// GetAllSupportedDockerCEVersions returns a slice of all supported Docker CE versions.
-func GetAllSupportedDockerCEVersions() []string {
-	return []string{DockerCEVersion}
 }
 
 // MinCloudProviderQPSToBucketFactor defines the minimum ratio between QPS and Bucket size for cloudprovider rate limiting

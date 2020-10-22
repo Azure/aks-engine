@@ -183,11 +183,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 				AuthenticationMethod: ClientCertificateAuthMethod,
 				AzureEnvironmentSpecConfig: &AzureEnvironmentSpecConfig{
 					CloudName: "AzureStackCloud",
-					//DockerSpecConfig specify the docker engine download repo
-					DockerSpecConfig: DockerSpecConfig{
-						DockerEngineRepo:         "DockerEngineRepo",
-						DockerComposeDownloadURL: "DockerComposeDownloadURL",
-					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
 						AzureTelemetryPID:                    "AzureTelemetryPID",
@@ -301,14 +296,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 	if vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage != csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage {
 		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
-	}
-
-	//DockerSpecConfig
-	if vlabscsSpec.DockerSpecConfig.DockerComposeDownloadURL != csSpec.DockerSpecConfig.DockerComposeDownloadURL {
-		t.Errorf("incorrect DockerComposeDownloadURL, expect: '%s', actual: '%s'", csSpec.DockerSpecConfig.DockerComposeDownloadURL, vlabscsSpec.DockerSpecConfig.DockerComposeDownloadURL)
-	}
-	if vlabscsSpec.DockerSpecConfig.DockerEngineRepo != csSpec.DockerSpecConfig.DockerEngineRepo {
-		t.Errorf("incorrect DockerEngineRepo, expect: '%s', actual: '%s'", csSpec.DockerSpecConfig.DockerEngineRepo, vlabscsSpec.DockerSpecConfig.DockerEngineRepo)
 	}
 
 	//DCOSSpecConfig

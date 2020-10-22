@@ -131,9 +131,7 @@
 // ../../parts/masteroutputs.t
 // ../../parts/masterparams.t
 // ../../parts/swarm/Install-ContainerHost-And-Join-Swarm.ps1
-// ../../parts/swarm/Join-SwarmMode-cluster.ps1
 // ../../parts/swarm/configure-swarm-cluster.sh
-// ../../parts/swarm/configure-swarmmode-cluster.sh
 // ../../parts/swarm/swarmagentresourcesvmas.t
 // ../../parts/swarm/swarmagentresourcesvmss.t
 // ../../parts/swarm/swarmagentvars.t
@@ -25551,357 +25549,6 @@ func swarmInstallContainerhostAndJoinSwarmPs1() (*asset, error) {
 	return a, nil
 }
 
-var _swarmJoinSwarmmodeClusterPs1 = []byte(`############################################################
-# Script adapted from
-# https://raw.githubusercontent.com/Microsoft/Virtualization-Documentation/master/windows-server-container-tools/Install-ContainerHost/Install-ContainerHost.ps1
-
-<#
-    .NOTES
-        Copyright (c) Microsoft Corporation.  All rights reserved.
-
-        Use of this sample source code is subject to the terms of the Microsoft
-        license agreement under which you licensed this sample source code. If
-        you did not accept the terms of the license agreement, you are not
-        authorized to use this sample source code. For the terms of the license,
-        please see the license agreement between you and Microsoft or, if applicable,
-        see the LICENSE.RTF on your install media or the root of your tools installation.
-        THE SAMPLE SOURCE CODE IS PROVIDED "AS IS", WITH NO WARRANTIES.
-
-    .SYNOPSIS
-        Installs the prerequisites for creating Windows containers
-        Opens TCP ports (80,443,2375,8080) in Windows Firewall.
-        Connects Docker to a Swarm Mode master.
-
-    .DESCRIPTION
-        Installs the prerequisites for creating Windows containers
-        Opens TCP ports (80,443,2375,8080) in Windows Firewall.
-        Connects Docker to a Swarm Mode master.
-
-    .PARAMETER SwarmMasterIP
-        IP Address of Docker Swarm Mode Master
-
-    .EXAMPLE
-        .\Join-SwarmMode-cluster.ps1 -SwarmMasterIP 192.168.255.5
-
-#>
-#Requires -Version 5.0
-
-[CmdletBinding(DefaultParameterSetName="Standard")]
-param(
-    [string]
-    [ValidateNotNullOrEmpty()]
-    $SwarmMasterIP = "172.16.0.5"
-)
-
-$global:DockerServiceName = "Docker"
-$global:DockerBinariesURL = "https://acsengine.blob.core.windows.net/swarmm/docker.zip"
-$global:DockerExePath = "C:\Program Files\Docker"
-$global:IsNewDockerVersion = $false
-
-filter Timestamp {"$(Get-Date -Format o): $_"}
-
-function Write-Log($message)
-{
-    $msg = $message | Timestamp
-    Write-Output $msg
-}
-
-function Start-Docker()
-{
-    Write-Log "Starting $global:DockerServiceName..."
-    $startTime = Get-Date
-        
-    while (-not $dockerReady)
-    {
-        try
-        {
-            Start-Service -Name $global:DockerServiceName -ea Stop
-
-            $dockerReady = $true            
-        }
-        catch
-        {
-            $timeElapsed = $(Get-Date) - $startTime
-            if ($($timeElapsed).TotalMinutes -ge 5)
-            {
-                Write-Log "Docker Daemon did not start successfully within 5 minutes."
-                break
-            }
-
-            $errorStr = $_.Exception.Message
-            Write-Log "Starting Service failed: $errorStr" 
-            Write-Log "sleeping for 10 seconds..."
-            Start-Sleep -sec 10
-        }
-    }
-}
-
-function Stop-Docker()
-{
-    Write-Log "Stopping $global:DockerServiceName..."
-    try
-    {
-        Stop-Service -Name $global:DockerServiceName -ea Stop   
-    }
-    catch
-    {
-        Write-Log "Failed to stop Docker"
-    }
-}
-
-function Expand-ZIPFile($file, $destination)
-{
-    $shell = new-object -com shell.application
-    $zip = $shell.NameSpace($file)
-    foreach($item in $zip.items())
-    {
-        $shell.Namespace($destination).copyhere($item, 0x14)
-    }
-}
-
-function Install-DockerBinaries()
-{
-    if( $global:IsNewDockerVersion)
-    {
-        Write-Log "Skipping installation of new Docker binaries because latest is already installed."
-        return
-    }
-
-    $currentRetry = 0;
-    $success = $false;
-
-    $zipfile = "c:\swarmm.zip"
-
-    do {
-        try
-        {
-            Write-Log "Downloading and installing Docker binaries...."
-            Invoke-WebRequest -Uri $global:DockerBinariesURL -OutFile $zipfile
-            $success = $true;
-            Write-Log "Successfully downloaded Docker binaries. Number of retries: $currentRetry";
-        }
-        catch [System.Exception]
-        {
-            $message = 'Exception occurred while trying to download binaries:' + $_.Exception.ToString();
-            Write-Log $message;
-            if ($currentRetry -gt 5) {
-                $message = "Could not download Docker binaries, aborting install. Error: " + $_.Exception.ToString();
-                throw $message;
-            } else {
-                Write-Log "Sleeping before retry number: $currentRetry to download binaries.";
-                Start-Sleep -sec 5;
-            }
-            $currentRetry = $currentRetry + 1;
-        }
-    } while (!$success);
-      
-    Write-Log "Expanding zip file at destination: $global:DockerExePath"
-    Expand-ZIPFile -File $zipfile -Destination $global:DockerExePath
-
-    Write-Log "Deleting zip file at: $zipfile"
-    Remove-Item $zipfile
-}
-
-function Update-DockerServiceRecoveryPolicy()
-{
-    $dockerReady = $false
-    $startTime = Get-Date
-    
-    # wait until the service exists
-    while (-not $dockerReady)
-    {
-        if (Get-Service $global:DockerServiceName -ErrorAction SilentlyContinue)
-        {
-            $dockerReady = $true
-        }
-        else 
-        {
-            $timeElapsed = $(Get-Date) - $startTime
-            if ($($timeElapsed).TotalMinutes -ge 5)
-            {
-                Write-Log "Unable to find service $global:DockerServiceName within 5 minutes."
-                break
-            }
-            Write-Log "failed to find $global:DockerServiceName, sleeping for 5 seconds"
-            Start-Sleep -sec 5
-        }
-    }
-    
-    Write-Log "Updating docker restart policy, to ensure it restarts on error"
-    $services = Get-WMIObject win32_service | Where-Object {$_.name -imatch $global:DockerServiceName}
-    foreach ($service in $services)
-    {
-        sc.exe failure $service.name reset= 86400 actions= restart/5000
-    }
-}
-
-# Open Windows Firewall Ports Needed
-function Open-FirewallPorts()
-{
-    $tcpports = @(80,443,2375,8080,2377,7946,4789)
-    foreach ($tcpport in $tcpports)
-    {
-        $netsh = "netsh advfirewall firewall add rule name='Open Port $tcpport' dir=in action=allow protocol=TCP localport=$tcpport"
-        Write-Log "enabling port with command $netsh"
-        Invoke-Expression -Command:$netsh
-    }
-
-    $udpports = @(7946,4789)
-    foreach ($udpport in $udpports)
-    {
-        $netsh = "netsh advfirewall firewall add rule name='Open Port $udpport' dir=in action=allow protocol=UDP localport=$udpport"
-        Write-Log "enabling port with command $netsh"
-        Invoke-Expression -Command:$netsh
-    }
-}
-
-# Update Docker Config to have cluster-store=consul:// address configured for Swarm cluster.
-function Write-DockerDaemonJson()
-{
-    $dataDir = $env:ProgramData
-
-    # create the target directory
-    $targetDir = $dataDir + '\docker\config'
-    if(!(Test-Path -Path $targetDir )){
-        New-Item -ItemType directory -Path $targetDir
-    }
-
-    Write-Log "Delete key file, so that this node is unique to swarm"
-    $keyFileName = "$targetDir\key.json"
-    Write-Log "Removing $($keyFileName)"
-    if (Test-Path $keyFileName) {
-      Remove-Item $keyFileName
-    }
-
-    Write-Log "Configure Docker Engine to accept incoming connections on port 2375"
-    $OutFile = @"
-{
-    "hosts": ["tcp://0.0.0.0:2375", "npipe://"]
-}
-"@
-
-    $OutFile | Out-File -encoding ASCII -filepath "$targetDir\daemon.json"
-}
-
-function Join-Swarm()
-{
-    $currentRetry = 0;
-    $success = $false;
-    $getTokenCommand = "docker -H $($SwarmMasterIP):2375 swarm join-token -q worker"
-    $swarmmodetoken;
-
-    do {
-        try
-        {
-            Write-Log "Executing [$getTokenCommand] command...."
-            <#& $swarmmodetoken#>
-            $swarmmodetoken = Invoke-Expression -Command:$getTokenCommand
-            $success = $true;
-            Write-Log "Successfully executed [$getTokenCommand] command. Number of entries: $currentRetry. Token: [$swarmmodetoken]";
-        }
-        catch [System.Exception]
-        {
-            $message = 'Exception occurred while trying to execute command [$swarmmodetoken]:' + $_.Exception.ToString();
-            Write-Log $message;
-            if ($currentRetry -gt 120) {
-                $message = "Agent couldn't join Swarm, aborting install. Error: " + $_.Exception.ToString();
-                throw $message;
-            } else {
-                Write-Log "Sleeping before $currentRetry retry of [$getTokenCommand] command";
-                Start-Sleep -sec 5;
-            }
-            $currentRetry = $currentRetry + 1;
-        }
-    } while (!$success);
-
-    $joinSwarmCommand = "docker swarm join --token $($swarmmodetoken) $($SwarmMasterIP):2377"
-    Write-Log "Joining Swarm. Command [$joinSwarmCommand]...."
-    Invoke-Expression -Command:$joinSwarmCommand
-}
-
-function Confirm-DockerVersion()
-{
-   $dockerServerVersionCmd = "docker version --format '{{.Server.Version}}'"
-   Write-Log "Running command: $dockerServerVersionCmd"
-   $dockerServerVersion = Invoke-Expression -Command:$dockerServerVersionCmd
-
-   $dockerClientVersionCmd = "docker version --format '{{.Client.Version}}'"
-   Write-Log "Running command: $dockerClientVersionCmd"
-   $dockerClientVersion = Invoke-Expression -Command:$dockerClientVersionCmd
-
-   Write-Log "Docker Server version: $dockerServerVersion, Docker Client verison: $dockerClientVersion"
-   
-   $serverVersionData = $dockerServerVersion.Split(".")
-   $isNewServerVersion = $false;
-   if(($serverVersionData[0] -ge 1) -and ($serverVersionData[1] -ge 13)){
-       $isNewServerVersion = $true;
-       Write-Log "Setting isNewServerVersion to $isNewServerVersion"
-   }
-
-   $clientVersionData = $dockerClientVersion.Split(".")
-   $isNewClientVersion = $false;
-   if(($clientVersionData[0] -ge 1) -and ($clientVersionData[1] -ge 13)){
-       $isNewClientVersion = $true;
-       Write-Log "Setting  isNewClientVersion to $isNewClientVersion"   
-   }
-
-   if($isNewServerVersion -and $isNewClientVersion)
-   {
-       $global:IsNewDockerVersion = $true;
-       Write-Log "Setting IsNewDockerVersion to $global:IsNewDockerVersion"
-   }
-}
-
-try
-{
-    Write-Log "Provisioning $global:DockerServiceName... with Swarm IP $SwarmMasterIP"
-
-    Write-Log "Checking Docker version"
-    Confirm-DockerVersion
-
-    Write-Log "Stop Docker"
-    Stop-Docker
-
-    Write-Log "Installing Docker binaries"
-    Install-DockerBinaries
-
-    Write-Log "Opening firewall ports"
-    Open-FirewallPorts
-
-    Write-Log "Write Docker Configuration"
-    Write-DockerDaemonJson
-
-    Write-Log "Update Docker restart policy"
-    Update-DockerServiceRecoveryPolicy
-    
-    Write-Log "Start Docker"
-    Start-Docker
-    
-    Write-Log "Join existing Swarm"
-    Join-Swarm
-
-    Write-Log "Setup Complete"
-}
-catch
-{
-    Write-Error $_
-}`)
-
-func swarmJoinSwarmmodeClusterPs1Bytes() ([]byte, error) {
-	return _swarmJoinSwarmmodeClusterPs1, nil
-}
-
-func swarmJoinSwarmmodeClusterPs1() (*asset, error) {
-	bytes, err := swarmJoinSwarmmodeClusterPs1Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "swarm/Join-SwarmMode-cluster.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _swarmConfigureSwarmClusterSh = []byte(`#!/bin/bash
 
 set -x
@@ -26213,397 +25860,6 @@ func swarmConfigureSwarmClusterSh() (*asset, error) {
 	return a, nil
 }
 
-var _swarmConfigureSwarmmodeClusterSh = []byte(`#!/bin/bash
-
-###########################################################
-# Configure Swarm Mode One Box
-#
-# This installs the following components
-# - Docker
-# - Docker Compose
-# - Swarm Mode masters
-# - Swarm Mode agents
-###########################################################
-
-set -x
-
-echo "starting Swarm Mode cluster configuration"
-date
-ps ax
-
-#############
-# Parameters
-#############
-
-DOCKER_CE_VERSION=${1}
-DOCKER_COMPOSE_VERSION=${2}
-MASTERCOUNT=${3}
-MASTERPREFIX=${4}
-MASTERFIRSTADDR=${5}
-AZUREUSER=${6}
-POSTINSTALLSCRIPTURI=${7}
-BASESUBNET=${8}
-DOCKERENGINEDOWNLOADREPO=${9}
-DOCKERCOMPOSEDOWNLOADURL=${10}
-VMNAME=` + "`" + `hostname` + "`" + `
-VMNUMBER=` + "`" + `echo $VMNAME | sed 's/.*[^0-9]\([0-9]\+\)*$/\1/'` + "`" + `
-VMPREFIX=` + "`" + `echo $VMNAME | sed 's/\(.*[^0-9]\)*[0-9]\+$/\1/'` + "`" + `
-OS="$(. /etc/os-release; echo $ID)"
-
-echo "Master Count: $MASTERCOUNT"
-echo "Master Prefix: $MASTERPREFIX"
-echo "Master First Addr: $MASTERFIRSTADDR"
-echo "vmname: $VMNAME"
-echo "VMNUMBER: $VMNUMBER, VMPREFIX: $VMPREFIX"
-echo "BASESUBNET: $BASESUBNET"
-echo "AZUREUSER: $AZUREUSER"
-echo "OS ID: $OS"
-
-###################
-# Common Functions
-###################
-
-isUbuntu()
-{
-  if [ "$OS" == "ubuntu" ]
-  then
-    return 0
-  else
-    return 1
-  fi
-}
-
-isRHEL()
-{
-  if [ "$OS" == "rhel" ]
-  then
-    return 0
-  else
-    return 1
-  fi
-}
-
-ensureAzureNetwork()
-{
-  # ensure the network works
-  networkHealthy=1
-  for i in {1..12}; do
-    wget -O/dev/null http://bing.com
-    if [ $? -eq 0 ]
-    then
-      # hostname has been found continue
-      networkHealthy=0
-      echo "the network is healthy"
-      break
-    fi
-    sleep 10
-  done
-  if [ $networkHealthy -ne 0 ]
-  then
-    echo "the network is not healthy, aborting install"
-    ifconfig
-    ip a
-    exit 1
-  fi
-  # ensure the host ip can resolve
-  networkHealthy=1
-  for i in {1..120}; do
-    hostname -i
-    if [ $? -eq 0 ]
-    then
-      # hostname has been found continue
-      networkHealthy=0
-      echo "the network is healthy"
-      break
-    fi
-    sleep 1
-  done
-  # attempt to fix hostname, in case dns is not resolving Azure IPs (but can resolve public ips)
-  if [ $networkHealthy -ne 0 ]
-  then
-    HOSTNAME=` + "`" + `hostname` + "`" + `
-    HOSTADDR=` + "`" + `ip address show dev eth0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*'` + "`" + `
-    echo $HOSTADDR $HOSTNAME >> /etc/hosts
-    hostname -i
-    if [ $? -eq 0 ]
-    then
-      # hostname has been found continue
-      networkHealthy=0
-      echo "the network is healthy by updating /etc/hosts"
-    fi
-  fi
-  if [ $networkHealthy -ne 0 ]
-  then
-    echo "the network is not healthy, cannot resolve ip address, aborting install"
-    ifconfig
-    ip a
-    exit 2
-  fi
-}
-ensureAzureNetwork
-HOSTADDR=` + "`" + `hostname -i` + "`" + `
-
-# apply all Canonical security updates during provisioning
-/usr/lib/apt/apt.systemd.daily
-
-ismaster ()
-{
-  if [ "$MASTERPREFIX" == "$VMPREFIX" ]
-  then
-    return 0
-  else
-    return 1
-  fi
-}
-if ismaster ; then
-  echo "this node is a master"
-fi
-
-isagent()
-{
-  if ismaster ; then
-    return 1
-  else
-    return 0
-  fi
-}
-if isagent ; then
-  echo "this node is an agent"
-fi
-
-MASTER0IPADDR="${BASESUBNET}${MASTERFIRSTADDR}"
-
-######################
-# resolve self in DNS
-######################
-
-if [ -z "$(grep "$HOSTADDR $VMNAME" /etc/hosts)" ]; then
-    echo "$HOSTADDR $VMNAME" | sudo tee -a /etc/hosts
-fi
-
-################
-# Install Docker
-################
-
-echo "Installing and configuring Docker"
-
-installDockerUbuntu()
-{
-  for i in {1..10}; do
-    apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-    curl --max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    apt-get update
-    apt-get install -y docker-ce=${DOCKER_CE_VERSION}
-    if [ $? -eq 0 ]
-    then
-      systemctl restart docker
-      # hostname has been found continue
-      echo "Docker installed successfully"
-      break
-    fi
-    sleep 10
-  done
-}
-
-installDockerRHEL()
-{
-  for i in {1..10}; do
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    yum makecache fast
-    yum -y install docker-ce
-    if [ $? -eq 0 ]
-    then
-      systemctl enable docker
-      systemctl start docker
-      echo "Docker installed successfully"
-      break
-    fi
-    sleep 10
-  done
-}
-
-installDocker()
-{
-  if isUbuntu ; then
-    installDockerUbuntu
-  elif isRHEL ; then
-    installDockerRHEL
-  else
-    echo "OS not supported, aborting install"
-    exit 5
-  fi
-}
-
-time installDocker
-
-sudo usermod -aG docker $AZUREUSER
-
-echo "Updating Docker daemon options"
-
-updateDockerDaemonOptions()
-{
-    sudo mkdir -p /etc/systemd/system/docker.service.d
-    # Start Docker and listen on :2375 (no auth, but in vnet) and
-    # also have it bind to the unix socket at /var/run/docker.sock
-    sudo bash -c 'echo "[Service]
-    ExecStart=
-    ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock
-  " > /etc/systemd/system/docker.service.d/override.conf'
-}
-time updateDockerDaemonOptions
-
-echo "Installing Docker Compose"
-installDockerCompose()
-{
-  # sudo -i
-
-  for i in {1..10}; do
-    wget --tries 4 --retry-connrefused --waitretry=15 -qO- $DOCKERCOMPOSEDOWNLOADURL/$DOCKER_COMPOSE_VERSION/docker-compose-` + "`" + `uname -s` + "`" + `-` + "`" + `uname -m` + "`" + ` > /usr/local/bin/docker-compose
-    if [ $? -eq 0 ]
-    then
-      # hostname has been found continue
-      echo "docker-compose installed successfully"
-      break
-    fi
-    sleep 10
-  done
-}
-time installDockerCompose
-chmod +x /usr/local/bin/docker-compose
-
-if ismaster && isRHEL ; then
-  echo "Opening Docker ports"
-  firewall-cmd --add-port=2375/tcp --permanent
-  firewall-cmd --add-port=2377/tcp --permanent
-  firewall-cmd --reload
-fi
-
-echo "Restarting Docker"
-sudo systemctl daemon-reload
-sudo service docker restart
-
-ensureDocker()
-{
-  # ensure that docker is healthy
-  dockerHealthy=1
-  for i in {1..3}; do
-    sudo docker info
-    if [ $? -eq 0 ]
-    then
-      # hostname has been found continue
-      dockerHealthy=0
-      echo "Docker is healthy"
-      sudo docker ps -a
-      break
-    fi
-    sleep 10
-  done
-  if [ $dockerHealthy -ne 0 ]
-  then
-    echo "Docker is not healthy"
-  fi
-}
-ensureDocker
-
-##############################################
-# configure init rules restart all processes
-##############################################
-
-if ismaster ; then
-    if [ "$HOSTADDR" = "$MASTER0IPADDR" ]; then
-          echo "Creating a new Swarm on first master"
-          docker swarm init --advertise-addr $(hostname -i):2377 --listen-addr $(hostname -i):2377
-    else
-        echo "Secondary master attempting to join an existing Swarm"
-        swarmmodetoken=""
-        swarmmodetokenAcquired=1
-        for i in {1..120}; do
-            swarmmodetoken=$(docker -H $MASTER0IPADDR:2375 swarm join-token -q manager)
-            if [ $? -eq 0 ]; then
-                swarmmodetokenAcquired=0
-                break
-            fi
-            sleep 5
-        done
-        if [ $swarmmodetokenAcquired -ne 0 ]
-        then
-            echo "Secondary master couldn't connect to Swarm, aborting install"
-            exit 3
-        fi
-        docker swarm join --token $swarmmodetoken $MASTER0IPADDR:2377
-    fi
-fi
-
-if ismaster ; then
-  echo "Having ssh listen to port 2222 as well as 22"
-  sudo sed  -i "s/^Port 22$/Port 22\nPort 2222/1" /etc/ssh/sshd_config
-fi
-
-if ismaster ; then
-  echo "Setting availability of master node: '$VMNAME' to pause"
-  docker node update --availability pause $VMNAME
-fi
-
-if isagent ; then
-    echo "Agent attempting to join an existing Swarm"
-    swarmmodetoken=""
-    swarmmodetokenAcquired=1
-    for i in {1..120}; do
-        swarmmodetoken=$(docker -H $MASTER0IPADDR:2375 swarm join-token -q worker)
-        if [ $? -eq 0 ]; then
-            swarmmodetokenAcquired=0
-            break
-        fi
-        sleep 5
-    done
-    if [ $swarmmodetokenAcquired -ne 0 ]
-    then
-        echo "Agent couldn't join Swarm, aborting install"
-        exit 4
-    fi
-    docker swarm join --token $swarmmodetoken $MASTER0IPADDR:2377
-fi
-
-if [ $POSTINSTALLSCRIPTURI != "disabled" ]
-then
-  echo "downloading, and kicking off post install script"
-  /bin/bash -c "wget --tries 20 --retry-connrefused --waitretry=15 -qO- $POSTINSTALLSCRIPTURI | nohup /bin/bash >> /var/log/azure/cluster-bootstrap-postinstall.log 2>&1 &"
-fi
-
-# mitigation for bug https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1676635
-echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind
-sed -i "13i\echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind\n" /etc/rc.local
-
-echo "processes at end of script"
-ps ax
-date
-echo "completed Swarm Mode cluster configuration"
-
-echo "restart system to install any remaining software"
-if isagent ; then
-  shutdown -r now
-else
-  # wait 1 minute to restart master
-  /bin/bash -c "shutdown -r 1 &"
-fi
-`)
-
-func swarmConfigureSwarmmodeClusterShBytes() ([]byte, error) {
-	return _swarmConfigureSwarmmodeClusterSh, nil
-}
-
-func swarmConfigureSwarmmodeClusterSh() (*asset, error) {
-	bytes, err := swarmConfigureSwarmmodeClusterShBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "swarm/configure-swarmmode-cluster.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _swarmSwarmagentresourcesvmasT = []byte(`    {
       "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
@@ -26787,13 +26043,7 @@ var _swarmSwarmagentresourcesvmasT = []byte(`    {
         "osProfile": {
           "adminUsername": "[variables('adminUsername')]",
           "computername": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
-{{if IsSwarmMode}}
-  {{if not .IsRHEL}}
-            {{GetAgentSwarmModeCustomData .}} 
-  {{end}}
-{{else}}
-            {{GetAgentSwarmCustomData .}} 
-{{end}}
+            {{GetAgentSwarmCustomData .}}
           "linuxConfiguration": {
               "disablePasswordAuthentication": true,
               "ssh": {
@@ -27007,13 +26257,7 @@ var _swarmSwarmagentresourcesvmssT = []byte(`{{if .IsStorageAccount}}
           "osProfile": {
             "adminUsername": "[variables('adminUsername')]",
             "computerNamePrefix": "[variables('{{.Name}}VMNamePrefix')]",
-{{if IsSwarmMode}}
-  {{if not .IsRHEL}}
-            {{GetAgentSwarmModeCustomData .}}
-  {{end}}
-{{else}}
             {{GetAgentSwarmCustomData .}}
-{{end}}
             "linuxConfiguration": {
               "disablePasswordAuthentication": true,
               "ssh": {
@@ -27106,17 +26350,10 @@ var _swarmSwarmagentvarsT = []byte(`{{if not .IsRHEL}}
     "{{.Name}}RunCmd": "[concat('runcmd:\n {{GetSwarmAgentPreprovisionExtensionCommands .}} \n-  [ /bin/bash, /opt/azure/containers/install-cluster.sh ]\n\n')]",
     "{{.Name}}RunCmdFile": "[concat(' -  content: |\n        #!/bin/bash\n        ','sudo mkdir -p /var/log/azure\n        ',variables('agentCustomScript'),'\n    path: /opt/azure/containers/install-cluster.sh\n    permissions: \"0744\"\n')]",
 {{end}}
-{{if IsSwarmMode }}
-    "{{.Name}}OSImageOffer": {{GetAgentOSImageOffer .}},
-    "{{.Name}}OSImagePublisher": {{GetAgentOSImagePublisher .}},
-    "{{.Name}}OSImageSKU": {{GetAgentOSImageSKU .}},
-    "{{.Name}}OSImageVersion": {{GetAgentOSImageVersion .}},
-{{else}}
     "{{.Name}}OSImageOffer": "[variables('osImageOffer')]",
     "{{.Name}}OSImagePublisher": "[variables('osImagePublisher')]",
     "{{.Name}}OSImageSKU": "[variables('osImageSKU')]",
     "{{.Name}}OSImageVersion": "[variables('osImageVersion')]",
-{{end}}
     "{{.Name}}Count": "[parameters('{{.Name}}Count')]",
     "{{.Name}}VMNamePrefix": "[concat(variables('orchestratorName'), '-{{.Name}}-', variables('nameSuffix'))]",
     "{{.Name}}VMSize": "[parameters('{{.Name}}VMSize')]",
@@ -27444,13 +26681,7 @@ var _swarmSwarmmasterresourcesT = []byte(`{{if not .MasterProfile.IsCustomVNET}}
         "osProfile": {
           "adminUsername": "[variables('adminUsername')]",
           "computername": "[concat(variables('masterVMNamePrefix'), copyIndex())]",
-          {{if .OrchestratorProfile.IsSwarmMode}}
-            {{if not .MasterProfile.IsRHEL}}
-              {{GetMasterSwarmModeCustomData}}
-            {{end}}
-          {{else}}
             {{GetMasterSwarmCustomData}}
-          {{end}}
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,
             "ssh": {
@@ -27469,17 +26700,10 @@ var _swarmSwarmmasterresourcesT = []byte(`{{if not .MasterProfile.IsCustomVNET}}
         },
         "storageProfile": {
           "imageReference": {
-            {{if .OrchestratorProfile.IsSwarmMode}}
-            "offer": "[variables('masterOSImageOffer')]",
-            "publisher": "[variables('masterOSImagePublisher')]",
-            "sku": "[variables('masterOSImageSKU')]",
-            "version": "[variables('masterOSImageVersion')]"
-            {{else}}
             "offer": "[variables('osImageOffer')]",
             "publisher": "[variables('osImagePublisher')]",
             "sku": "[variables('osImageSKU')]",
             "version": "[variables('osImageVersion')]"
-            {{end}}
           },
           "osDisk": {
             "caching": "ReadWrite"
@@ -27544,11 +26768,7 @@ func swarmSwarmmasterresourcesT() (*asset, error) {
 var _swarmSwarmmastervarsT = []byte(`    "adminUsername": "[parameters('linuxAdminUsername')]",
     "maxVMsPerPool": 100,
     "apiVersionDefault": "2016-03-30",
-{{if .OrchestratorProfile.IsSwarmMode}}
-    "configureClusterScriptFile": "configure-swarmmode-cluster.sh",
-{{else}}
     "configureClusterScriptFile": "configure-swarm-cluster.sh",
-{{end}}
 {{if .MasterProfile.IsRHEL}}
     "agentCustomScript": "[concat('/usr/bin/nohup /bin/bash -c \"/bin/bash ',variables('configureClusterScriptFile'), ' ',variables('clusterInstallParameters'),' >> /var/log/azure/cluster-bootstrap.log 2>&1 &\" &')]",
 {{else}}
@@ -27639,21 +26859,12 @@ var _swarmSwarmmastervarsT = []byte(`    "adminUsername": "[parameters('linuxAdm
         }
       ]
     ],
-{{if .OrchestratorProfile.IsSwarmMode}}
-    "orchestratorName": "swarmm",
-    "masterOSImageOffer": {{GetMasterOSImageOffer}},
-    "masterOSImagePublisher": {{GetMasterOSImagePublisher}},
-    "masterOSImageSKU": {{GetMasterOSImageSKU}},
-    "masterOSImageVersion": {{GetMasterOSImageVersion}},
-    {{GetSwarmModeVersions}}
-{{else}}
     "orchestratorName": "swarm",
     "osImageOffer": "[parameters('osImageOffer')]",
     "osImagePublisher": "[parameters('osImagePublisher')]",
     "osImageSKU": "14.04.5-LTS",
     "osImageVersion": "14.04.201706190",
     {{getSwarmVersions}}
-{{end}}
     "locations": [
          "[resourceGroup().location]",
          "[parameters('location')]"
@@ -27718,7 +26929,6 @@ var _swarmSwarmmastervarsT = []byte(`    "adminUsername": "[parameters('linuxAdm
       ]
       {{end}}
 {{end}}
-
 `)
 
 func swarmSwarmmastervarsTBytes() ([]byte, error) {
@@ -27768,11 +26978,11 @@ func swarmSwarmparamsT() (*asset, error) {
 }
 
 var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
-      "apiVersion": "[variables('apiVersionDefault')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
         "name": "loop"
-      }, 
+      },
       "dependsOn": [
 {{if not .IsCustomVNET}}
       "[variables('vnetID')]"
@@ -27780,13 +26990,13 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{if IsPublic .Ports}}
 	  ,"[variables('{{.Name}}LbID')]"
 {{end}}
-      ], 
-      "location": "[variables('location')]", 
+      ],
+      "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "ipConfigurations": [
           {
-            "name": "ipConfigNode", 
+            "name": "ipConfigNode",
             "properties": {
 {{if IsPublic .Ports}}
               "loadBalancerBackendAddressPools": [
@@ -27799,24 +27009,24 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
                   "id": "[concat(variables('{{.Name}}LbID'), '/inboundNatPools/', 'RDP-', variables('{{.Name}}VMNamePrefix'))]"
                 }
               ],
-{{end}}  
-              "privateIPAllocationMethod": "Dynamic", 
+{{end}}
+              "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[variables('{{.Name}}VnetSubnetID')]"
              }
             }
           }
         ]
-      }, 
+      },
       "type": "Microsoft.Network/networkInterfaces"
     },
 {{if .IsManagedDisks}}
     {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]", 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}AvailabilitySet')]", 
-      "properties": { 
-        "platformFaultDomainCount": 2, 
+      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}AvailabilitySet')]",
+      "properties": {
+        "platformFaultDomainCount": 2,
         "platformUpdateDomainCount": 3,
         "managed": "true"
       },
@@ -27824,76 +27034,76 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     },
 {{else if .IsStorageAccount}}
     {
-      "apiVersion": "[variables('apiVersionStorage')]", 
+      "apiVersion": "[variables('apiVersionStorage')]",
       "copy": {
-        "count": "[variables('{{.Name}}StorageAccountsCount')]", 
+        "count": "[variables('{{.Name}}StorageAccountsCount')]",
         "name": "vmLoopNode"
-      }, 
+      },
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-      ], 
-      "location": "[variables('location')]", 
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]", 
+      ],
+      "location": "[variables('location')]",
+      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
       "properties": {
         "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-      }, 
+      },
       "type": "Microsoft.Storage/storageAccounts"
     },
   {{if .HasDisks}}
       {
-        "apiVersion": "[variables('apiVersionStorage')]", 
+        "apiVersion": "[variables('apiVersionStorage')]",
         "copy": {
-          "count": "[variables('{{.Name}}StorageAccountsCount')]", 
+          "count": "[variables('{{.Name}}StorageAccountsCount')]",
           "name": "datadiskLoop"
-        }, 
+        },
         "dependsOn": [
           "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-        ], 
-        "location": "[variables('location')]", 
-        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]", 
+        ],
+        "location": "[variables('location')]",
+        "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(variables('dataStorageAccountPrefixSeed')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
         "properties": {
           "accountType": "[variables('vmSizesMap')[variables('{{.Name}}VMSize')].storageAccountType]"
-        }, 
+        },
         "type": "Microsoft.Storage/storageAccounts"
-      }, 
+      },
   {{end}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}AvailabilitySet')]", 
-      "properties": {}, 
+      "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}AvailabilitySet')]",
+      "properties": {},
       "type": "Microsoft.Compute/availabilitySets"
     },
 {{end}}
 {{if IsPublic .Ports}}
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}IPAddressName')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}IPAddressName')]",
       "properties": {
         "dnsSettings": {
           "domainNameLabel": "[variables('{{.Name}}EndpointDNSNamePrefix')]"
-        }, 
+        },
         "publicIPAllocationMethod": "Dynamic"
-      }, 
+      },
       "type": "Microsoft.Network/publicIPAddresses"
-    }, 
+    },
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('{{.Name}}IPAddressName'))]"
-      ], 
-      "location": "[variables('location')]", 
-      "name": "[variables('{{.Name}}LbName')]", 
+      ],
+      "location": "[variables('location')]",
+      "name": "[variables('{{.Name}}LbName')]",
       "properties": {
         "backendAddressPools": [
           {
             "name": "[variables('{{.Name}}LbBackendPoolName')]"
           }
-        ], 
+        ],
         "frontendIPConfigurations": [
           {
-            "name": "[variables('{{.Name}}LbIPConfigName')]", 
+            "name": "[variables('{{.Name}}LbIPConfigName')]",
             "properties": {
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('{{.Name}}IPAddressName'))]"
@@ -27914,16 +27124,16 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
               "backendPort": "[variables('agentWindowsBackendPort')]"
             }
           }
-        ], 
+        ],
         "loadBalancingRules": [
           {{(GetLBRules .Name .Ports)}}
-        ], 
+        ],
         "probes": [
           {{(GetProbes .Ports)}}
         ]
-      }, 
+      },
       "type": "Microsoft.Network/loadBalancers"
-    }, 
+    },
 {{end}}
     {
 {{if .IsManagedDisks}}
@@ -27932,9 +27142,9 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
     "apiVersion": "[variables('apiVersionDefault')]",
 {{end}}
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
         "name": "vmLoopNode"
-      }, 
+      },
       "dependsOn": [
 {{if .IsStorageAccount}}
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}AccountName'))]",
@@ -27942,43 +27152,39 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
           "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(add(div(copyIndex(variables('{{.Name}}Offset')),variables('maxVMsPerStorageAccount')),variables('{{.Name}}StorageAccountOffset')),variables('dataStorageAccountPrefixSeed')),variables('storageAccountPrefixesCount'))],variables('{{.Name}}DataAccountName'))]",
   {{end}}
 {{end}}
-        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]", 
+        "[concat('Microsoft.Network/networkInterfaces/', variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset')))]",
         "[concat('Microsoft.Compute/availabilitySets/', variables('{{.Name}}AvailabilitySet'))]"
       ],
       "tags":
       {
         "creationSource" : "[concat('acsengine-', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
       },
-      "location": "[variables('location')]",  
+      "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]",
       "properties": {
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('{{.Name}}AvailabilitySet'))]"
-        }, 
+        },
         "hardwareProfile": {
           "vmSize": "[variables('{{.Name}}VMSize')]"
-        }, 
+        },
         "networkProfile": {
           "networkInterfaces": [
             {
               "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('{{.Name}}VMNamePrefix'), 'nic-', copyIndex(variables('{{.Name}}Offset'))))]"
             }
           ]
-        }, 
+        },
         "osProfile": {
           "computername": "[concat(substring(variables('nameSuffix'), 0, 5), 'acs', copyIndex(variables('{{.Name}}Offset')), add(900,variables('{{.Name}}Index')))]",
           "adminUsername": "[variables('windowsAdminUsername')]",
           "adminPassword": "[variables('windowsAdminPassword')]",
-          {{if IsSwarmMode}}
-            {{GetWinAgentSwarmModeCustomData}}           
-          {{else}}
             {{GetWinAgentSwarmCustomData}}
-          {{end}}
           {{if HasWindowsSecrets}}
               ,
               "secrets": "[variables('windowsProfileSecrets')]"
           {{end}}
-        }, 
+        },
         "storageProfile": {
           {{GetDataDisks .}}
           "imageReference": {
@@ -28001,19 +27207,19 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
 {{end}}
           }
         }
-      }, 
+      },
       "type": "Microsoft.Compute/virtualMachines"
-    }, 
+    },
     {
-      "apiVersion": "[variables('apiVersionDefault')]", 
+      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
-        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]", 
+        "count": "[sub(variables('{{.Name}}Count'), variables('{{.Name}}Offset'))]",
         "name": "vmLoopNode"
-      }, 
+      },
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')))]"
-      ], 
-      "location": "[variables('location')]", 
+      ],
+      "location": "[variables('location')]",
       "name": "[concat(variables('{{.Name}}VMNamePrefix'), copyIndex(variables('{{.Name}}Offset')), '/cse')]",
       "properties": {
         "publisher": "Microsoft.Compute",
@@ -28023,7 +27229,7 @@ var _swarmSwarmwinagentresourcesvmasT = []byte(`    {
         "settings": {
           "commandToExecute": "[variables('windowsCustomScript')]"
         }
-      }, 
+      },
       "type": "Microsoft.Compute/virtualMachines/extensions"
     }
 `)
@@ -28191,11 +27397,7 @@ var _swarmSwarmwinagentresourcesvmssT = []byte(`{{if .IsStorageAccount}}
             "computerNamePrefix": "[concat(substring(variables('nameSuffix'), 0, 5), 'acs')]",
             "adminUsername": "[variables('windowsAdminUsername')]",
             "adminPassword": "[variables('windowsAdminPassword')]",
-            {{if IsSwarmMode}}
-              {{GetWinAgentSwarmModeCustomData}}
-            {{else}}
-              {{GetWinAgentSwarmCustomData}}
-            {{end}}
+            {{GetWinAgentSwarmCustomData}}
             {{if HasWindowsSecrets}}
               ,
               "secrets": "[variables('windowsProfileSecrets')]"
@@ -28594,9 +27796,7 @@ var _bindata = map[string]func() (*asset, error){
 	"masteroutputs.t":                                                    masteroutputsT,
 	"masterparams.t":                                                     masterparamsT,
 	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                     swarmInstallContainerhostAndJoinSwarmPs1,
-	"swarm/Join-SwarmMode-cluster.ps1":                                   swarmJoinSwarmmodeClusterPs1,
 	"swarm/configure-swarm-cluster.sh":                                   swarmConfigureSwarmClusterSh,
-	"swarm/configure-swarmmode-cluster.sh":                               swarmConfigureSwarmmodeClusterSh,
 	"swarm/swarmagentresourcesvmas.t":                                    swarmSwarmagentresourcesvmasT,
 	"swarm/swarmagentresourcesvmss.t":                                    swarmSwarmagentresourcesvmssT,
 	"swarm/swarmagentvars.t":                                             swarmSwarmagentvarsT,
@@ -28796,9 +27996,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"masterparams.t":  {masterparamsT, map[string]*bintree{}},
 	"swarm": {nil, map[string]*bintree{
 		"Install-ContainerHost-And-Join-Swarm.ps1": {swarmInstallContainerhostAndJoinSwarmPs1, map[string]*bintree{}},
-		"Join-SwarmMode-cluster.ps1":               {swarmJoinSwarmmodeClusterPs1, map[string]*bintree{}},
 		"configure-swarm-cluster.sh":               {swarmConfigureSwarmClusterSh, map[string]*bintree{}},
-		"configure-swarmmode-cluster.sh":           {swarmConfigureSwarmmodeClusterSh, map[string]*bintree{}},
 		"swarmagentresourcesvmas.t":                {swarmSwarmagentresourcesvmasT, map[string]*bintree{}},
 		"swarmagentresourcesvmss.t":                {swarmSwarmagentresourcesvmssT, map[string]*bintree{}},
 		"swarmagentvars.t":                         {swarmSwarmagentvarsT, map[string]*bintree{}},

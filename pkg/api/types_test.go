@@ -3473,7 +3473,6 @@ func TestOrchestrator(t *testing.T) {
 		p                    Properties
 		expectedIsDCOS       bool
 		expectedIsKubernetes bool
-		expectedIsSwarmMode  bool
 	}{
 		{
 			p: Properties{
@@ -3483,7 +3482,6 @@ func TestOrchestrator(t *testing.T) {
 			},
 			expectedIsDCOS:       true,
 			expectedIsKubernetes: false,
-			expectedIsSwarmMode:  false,
 		},
 		{
 			p: Properties{
@@ -3493,17 +3491,6 @@ func TestOrchestrator(t *testing.T) {
 			},
 			expectedIsDCOS:       false,
 			expectedIsKubernetes: true,
-			expectedIsSwarmMode:  false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: SwarmMode,
-				},
-			},
-			expectedIsDCOS:       false,
-			expectedIsKubernetes: false,
-			expectedIsSwarmMode:  true,
 		},
 	}
 
@@ -3513,9 +3500,6 @@ func TestOrchestrator(t *testing.T) {
 		}
 		if c.expectedIsKubernetes != c.p.OrchestratorProfile.IsKubernetes() {
 			t.Fatalf("Expected IsKubernetes() to be %t with OrchestratorType=%s", c.expectedIsKubernetes, c.p.OrchestratorProfile.OrchestratorType)
-		}
-		if c.expectedIsSwarmMode != c.p.OrchestratorProfile.IsSwarmMode() {
-			t.Fatalf("Expected IsSwarmMode() to be %t with OrchestratorType=%s", c.expectedIsSwarmMode, c.p.OrchestratorProfile.OrchestratorType)
 		}
 	}
 }

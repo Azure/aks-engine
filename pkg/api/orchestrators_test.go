@@ -171,33 +171,6 @@ func TestSwarmInfo(t *testing.T) {
 	Expect(e).To(BeNil())
 }
 
-func TestDockerceInfoInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"17.02.1",
-		"43.156.89",
-	}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    SwarmMode,
-			OrchestratorVersion: v,
-		}
-
-		_, e := dockerceInfo(csOrch, false, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    SwarmMode,
-		OrchestratorVersion: common.DockerCEVersion,
-	}
-
-	_, e := dockerceInfo(csOrch, false, false)
-	Expect(e).To(BeNil())
-}
-
 func TestGetKubernetesAvailableUpgradeVersions(t *testing.T) {
 	RegisterTestingT(t)
 	cases := []struct {

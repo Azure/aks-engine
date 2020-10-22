@@ -4259,7 +4259,7 @@ func TestValidateProperties_CustomNodeLabels(t *testing.T) {
 	t.Run("Should not support orchestratorTypes other than Kubernetes/DCOS", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
-		cs.Properties.OrchestratorProfile.OrchestratorType = SwarmMode
+		cs.Properties.OrchestratorProfile.OrchestratorType = Swarm
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].CustomNodeLabels = map[string]string{
 			"foo": "bar",

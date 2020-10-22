@@ -146,11 +146,7 @@
             "computerNamePrefix": "[concat(substring(variables('nameSuffix'), 0, 5), 'acs')]",
             "adminUsername": "[variables('windowsAdminUsername')]",
             "adminPassword": "[variables('windowsAdminPassword')]",
-            {{if IsSwarmMode}}
-              {{GetWinAgentSwarmModeCustomData}}
-            {{else}}
-              {{GetWinAgentSwarmCustomData}}
-            {{end}}
+            {{GetWinAgentSwarmCustomData}}
             {{if HasWindowsSecrets}}
               ,
               "secrets": "[variables('windowsProfileSecrets')]"

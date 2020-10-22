@@ -2355,19 +2355,6 @@ func TestDistroDefaults(t *testing.T) {
 			AzurePublicCloud,
 		},
 		{
-			"default_swarmmode",
-			OrchestratorProfile{
-				OrchestratorType: SwarmMode,
-			},
-			"",
-			"",
-			Ubuntu,
-			Ubuntu,
-			false,
-			false,
-			AzurePublicCloud,
-		},
-		{
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,
@@ -3718,11 +3705,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	//Mock AzureEnvironmentSpecConfig
 	customCloudSpec := AzureEnvironmentSpecConfig{
 		CloudName: "AzuReStackCloud",
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DockerSpecConfig{
-			DockerEngineRepo:         "DockerEngineRepo",
-			DockerComposeDownloadURL: "DockerComposeDownloadURL",
-		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			AzureTelemetryPID:                    "AzureTelemetryPID",
@@ -3787,10 +3769,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	//Mock AzureEnvironmentSpecConfig
 	customCloudSpecP := AzureEnvironmentSpecConfig{
 		CloudName: "AzureStackCloud",
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DockerSpecConfig{
-			DockerEngineRepo: "DockerEngineRepo",
-		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:                  "KubernetesImageBase",
@@ -3833,9 +3811,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		t.Errorf("expected no error from SetPropertiesDefaults, instead got %s", err)
 	}
 
-	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerComposeDownloadURL != DefaultDockerSpecConfig.DockerComposeDownloadURL {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set DockerComposeDownloadURL with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.DockerSpecConfig.DockerComposeDownloadURL, DefaultDockerSpecConfig.DockerComposeDownloadURL)
-	}
 	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase != DefaultKubernetesSpecConfig.ACIConnectorImageBase {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set ACIConnectorImageBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase, DefaultKubernetesSpecConfig.ACIConnectorImageBase)
 	}
