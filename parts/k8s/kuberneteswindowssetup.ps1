@@ -79,6 +79,18 @@ $global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
 $global:DefaultContainerdRuntimeHandler = "{{WrapAsParameter "defaultContainerdRuntimeHandler"}}"
 $global:HypervRuntimeHandlers = "{{WrapAsParameter "hypervRuntimeHandlers"}}"
 
+# To support newer Windows OS version, we need to support set ContainerRuntime,
+# HypervRuntimeHandlers and DefaultContainerdRuntimeHandler per agent pool but
+# current code does not support this. Below is a workaround to set contianer
+# runtime variables per Windows OS version.
+#
+# Set default values for container runtime variables for AKS Windows 2004
+if ($([System.Environment]::OSVersion.Version).Build -eq "19041") {
+    $global:ContainerRuntime = "containerd"
+    $global:HypervRuntimeHandlers = "17763,19041"
+    $global:DefaultContainerdRuntimeHandler = "process"
+}
+
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
 {{if eq GetIdentitySystem "adfs"}}
