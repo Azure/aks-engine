@@ -68,8 +68,8 @@ In summary, using `aks-engine upgrade` means you will freshen and re-pave the en
 |--subscription-id|yes|The subscription id the cluster is deployed in.|
 |--resource-group|yes|The resource group the cluster is deployed in.|
 |--location|yes|The location to deploy to.|\
-|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to service_principal/client_certificate|
-|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to service_principal|
+|--client-id|depends| The Service Principal Client ID. This is required if the auth-method is set to client_secret or client_certificate|
+|--client-secret|depends| The Service Principal Client secret. This is required if the auth-method is set to client_secret|
 |--certificate-path|depends| The path to the file which contains the client certificate. This is required if the auth-method is set to client_certificate|
 |--identity-system|no|Identity system (default is azure_ad)|
 |--auth-method|no|The authentication method used. Default value is `client_secret`. Other supported values are: `cli`, `client_certificate`, and `device`.|
@@ -106,10 +106,7 @@ Once you have read all the [requirements](#pre-requirements), run `aks-engine up
   --api-model <generated apimodel.json> \
   --location <resource group location> \
   --resource-group <resource group name> \
-  --upgrade-version <desired Kubernetes version> \
-  --auth-method client_secret \
-  --client-id <service principal id> \
-  --client-secret <service principal secret>
+  --upgrade-version <desired Kubernetes version>
 ```
 
 For example,
@@ -120,9 +117,7 @@ For example,
   --api-model _output/mycluster/apimodel.json \
   --location westus \
   --resource-group test-upgrade \
-  --upgrade-version 1.8.7 \
-  --client-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
-  --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  --upgrade-version 1.8.7
 ```
 
 ### Steps to run when using Key Vault for secrets
@@ -131,13 +126,10 @@ If you use Key Vault for secrets, you must specify a local [kubeconfig file](htt
 
 ```bash
  ./bin/aks-engine upgrade \
-   --subscription-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
    --api-model _output/mycluster/apimodel.json \
    --location westus \
    --resource-group test-upgrade \
-   --upgrade-version 1.8.7 \
-   --client-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
-   --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
+   --upgrade-version 1.18.7 \
    --kubeconfig ./path/to/kubeconfig.json
 ```
 

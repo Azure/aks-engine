@@ -32,7 +32,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
 	if kubernetesConfig != nil {
-		useManagedIdentity = kubernetesConfig.UseManagedIdentity
+		useManagedIdentity = to.Bool(kubernetesConfig.UseManagedIdentity)
 		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 		createNewUserAssignedIdentity = kubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 	}
@@ -180,7 +180,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 	agentVMASVM := createAgentAvailabilitySetVM(cs, profile)
 	agentVMASResources = append(agentVMASResources, agentVMASVM)
 
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	useManagedIdentity := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 
 	if useManagedIdentity && !userAssignedIDEnabled {

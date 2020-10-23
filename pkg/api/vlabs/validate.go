@@ -158,10 +158,6 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validateManagedIdentity(); e != nil {
-		return e
-	}
-
 	if e := a.validateAADProfile(); e != nil {
 		return e
 	}
@@ -449,7 +445,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 			return errors.New("VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles")
 		}
 
-		if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity && a.OrchestratorProfile.KubernetesConfig.UserAssignedID == "" {
+		if a.OrchestratorProfile.KubernetesConfig != nil && to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) && a.OrchestratorProfile.KubernetesConfig.UserAssignedID == "" {
 			return errors.New("virtualMachineScaleSets for master profile can be used only with user assigned MSI ! Please specify \"userAssignedID\" in \"kubernetesConfig\"")
 		}
 	}
@@ -790,7 +786,7 @@ func (a *Properties) validateAddons() error {
 					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
-						!a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+						!to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
 						return errors.New("appgw-ingress add-ons requires 'objectID' to be specified or UseManagedIdentity to be true")
 					}
 
@@ -966,10 +962,10 @@ func (a *Properties) validateVNET() error {
 
 func (a *Properties) validateServicePrincipalProfile() error {
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		useManagedIdentity := a.OrchestratorProfile.KubernetesConfig != nil &&
-			a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+		useManagedIdentityDisabled := a.OrchestratorProfile.KubernetesConfig != nil &&
+			a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil && !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 
-		if !useManagedIdentity {
+		if useManagedIdentityDisabled {
 			if a.ServicePrincipalProfile == nil {
 				return errors.Errorf("ServicePrincipalProfile must be specified with Orchestrator %s", a.OrchestratorProfile.OrchestratorType)
 			}
@@ -996,44 +992,6 @@ func (a *Properties) validateServicePrincipalProfile() error {
 					return errors.Errorf("service principal client keyvault secret reference is of incorrect format")
 				}
 			}
-		}
-	}
-	return nil
-}
-
-func (a *Properties) validateManagedIdentity() error {
-	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		useManagedIdentity := a.OrchestratorProfile.KubernetesConfig != nil &&
-			a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-
-		if useManagedIdentity {
-			version := common.RationalizeReleaseAndVersion(
-				a.OrchestratorProfile.OrchestratorType,
-				a.OrchestratorProfile.OrchestratorRelease,
-				a.OrchestratorProfile.OrchestratorVersion,
-				false,
-				false,
-				false)
-			if version == "" {
-				return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
-			}
-			sv, err := semver.Make(version)
-			if err != nil {
-				return errors.Errorf("could not validate version %s", version)
-			}
-			minVersion, err := semver.Make("1.12.0")
-			if err != nil {
-				return errors.New("could not validate version")
-			}
-
-			if a.MasterProfile.IsVirtualMachineScaleSets() {
-				if sv.LT(minVersion) {
-					return errors.New("managed identity and VMSS masters can only be used with Kubernetes 1.12.0 or above. Please specify \"orchestratorRelease\": \"1.12\"")
-				}
-			} else if a.OrchestratorProfile.KubernetesConfig.UserAssignedID != "" && sv.LT(minVersion) {
-				return errors.New("user assigned identity can only be used with Kubernetes 1.12.0 or above. Please specify \"orchestratorRelease\": \"1.12\"")
-			}
-
 		}
 	}
 	return nil

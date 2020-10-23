@@ -56,9 +56,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"IsKubernetesVersionGe",
 		"IsKubernetesVersionLt",
 		"GetMasterKubernetesLabels",
-		"GetMasterKubernetesLabelsDeprecated",
 		"GetAgentKubernetesLabels",
-		"GetAgentKubernetesLabelsDeprecated",
 		"GetKubeletConfigKeyVals",
 		"GetKubeletConfigKeyValsPsh",
 		"GetK8sRuntimeConfigKeyVals",
@@ -707,7 +705,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						KubernetesConfig: &api.KubernetesConfig{
 							ContainerRuntime:        api.Docker,
 							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
-							UseManagedIdentity:      true,
+							UseManagedIdentity:      to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{

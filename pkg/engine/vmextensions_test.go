@@ -20,7 +20,7 @@ func TestCreateAKSBillingExtension(t *testing.T) {
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: true,
+					UseManagedIdentity: to.BoolPtr(true),
 				},
 			},
 		},
@@ -65,7 +65,7 @@ func TestCreateAKSBillingExtension(t *testing.T) {
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: false,
+					UseManagedIdentity: to.BoolPtr(false),
 				},
 			},
 		},
@@ -90,7 +90,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: true,
+					UseManagedIdentity: to.BoolPtr(true),
 				},
 			},
 			HostedMasterProfile: &api.HostedMasterProfile{
@@ -143,7 +143,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: true,
+					UseManagedIdentity: to.BoolPtr(true),
 				},
 			},
 			MasterProfile: &api.MasterProfile{
@@ -165,7 +165,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: true,
+					UseManagedIdentity: to.BoolPtr(true),
 				},
 			},
 			MasterProfile: &api.MasterProfile{
@@ -192,7 +192,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: true,
+					UseManagedIdentity: to.BoolPtr(true),
 				},
 			},
 			HostedMasterProfile: &api.HostedMasterProfile{
@@ -480,7 +480,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	// Test with Windows agent profile and managed Identity
 	cs.Properties.OrchestratorProfile = &api.OrchestratorProfile{
 		KubernetesConfig: &api.KubernetesConfig{
-			UseManagedIdentity: true,
+			UseManagedIdentity: to.BoolPtr(true),
 			UserAssignedID:     "fooAssignedID",
 		},
 	}

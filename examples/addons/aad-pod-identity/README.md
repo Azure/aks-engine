@@ -41,10 +41,6 @@ This is the AAD Pod Identity add-on.  Add this add-on to your json file as shown
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
   }

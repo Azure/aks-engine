@@ -109,7 +109,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	masterResources = append(masterResources, masterVM)
 
 	var useManagedIdentity, userAssignedIDEnabled bool
-	useManagedIdentity = kubernetesConfig.UseManagedIdentity
+	useManagedIdentity = to.Bool(kubernetesConfig.UseManagedIdentity)
 	userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 
 	if useManagedIdentity && !userAssignedIDEnabled {

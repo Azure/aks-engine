@@ -1458,7 +1458,7 @@
                 }
             ],
             "variables": {
-                "apiVersionAuthorizationSystem": "2018-01-01-preview",
+                "apiVersionAuthorizationSystem": "2018-09-01-preview",
                 "apiVersionAuthorizationUser": "2018-09-01-preview",
                 "apiVersionCompute": "2017-03-30",
                 "apiVersionKeyVault": "2016-10-01",

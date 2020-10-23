@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
@@ -17,7 +18,7 @@ func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
 		"location":   "[variables('location')]",
 	}
 
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	useManagedIdentity := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 	creatingNewUserAssignedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 	masterCount := cs.Properties.MasterProfile.Count
@@ -103,7 +104,7 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 		"location":   "[variables('location')]",
 	}
 
-	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	useManagedIdentity := to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 	creatingNewUserAssignedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 

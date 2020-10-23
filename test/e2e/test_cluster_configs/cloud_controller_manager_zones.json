@@ -40,10 +40,6 @@
                         }
                     ]
                 }
-            },
-            "servicePrincipalProfile": {
-                "clientId": "",
-                "secret": ""
             }
         }
     }

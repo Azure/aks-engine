@@ -32,7 +32,6 @@
 // ../../parts/dcos/dcosprovision.sh
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
-// ../../parts/k8s/addons/1.15/calico.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/aad-pod-identity.yaml
 // ../../parts/k8s/addons/aci-connector.yaml
@@ -6387,799 +6386,6 @@ func iaasoutputsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons115CalicoYaml = []byte(`{{- /* Source: calico/templates/calico-config.yaml
-This ConfigMap is used to configure a self-hosted Calico installation. */}}
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: calico-config
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-data:
-  {{- /* You must set a non-zero value for Typha replicas below. */}}
-  typha_service_name: "calico-typha"
-  {{- /* The CNI network configuration to install on each node.  The special
-  values in this config will be automatically populated. */}}
-  cni_network_config: |-
-    {
-      "name": "k8s-pod-network",
-      "cniVersion": "0.3.1",
-      "plugins": [
-        {
-          "type": "calico",
-          "log_level": "info",
-          "datastore_type": "kubernetes",
-          "nodename": "__KUBERNETES_NODE_NAME__",
-          "mtu": 1500,
-{{- if not IsAzureCNI}}
-          "ipam": {
-              "type": "host-local",
-              "subnet": "usePodCidr"
-          },
-{{- end}}
-          "policy": {
-              "type": "k8s"
-          },
-          "kubernetes": {
-              "kubeconfig": "__KUBECONFIG_FILEPATH__"
-          }
-        },
-        {
-          "type": "portmap",
-          "snat": true,
-          "capabilities": {"portMappings": true}
-        }
-      ]
-    }
-
----
-{{- /* Source: calico/templates/kdd-crds.yaml */}}
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: felixconfigurations.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Cluster
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: FelixConfiguration
-    plural: felixconfigurations
-    singular: felixconfiguration
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: bgpconfigurations.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Cluster
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: BGPConfiguration
-    plural: bgpconfigurations
-    singular: bgpconfiguration
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: ippools.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Cluster
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: IPPool
-    plural: ippools
-    singular: ippool
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: hostendpoints.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Cluster
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: HostEndpoint
-    plural: hostendpoints
-    singular: hostendpoint
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: clusterinformations.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Cluster
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: ClusterInformation
-    plural: clusterinformations
-    singular: clusterinformation
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: globalnetworkpolicies.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Cluster
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: GlobalNetworkPolicy
-    plural: globalnetworkpolicies
-    singular: globalnetworkpolicy
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: globalnetworksets.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Cluster
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: GlobalNetworkSet
-    plural: globalnetworksets
-    singular: globalnetworkset
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: networkpolicies.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Namespaced
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: NetworkPolicy
-    plural: networkpolicies
-    singular: networkpolicy
----
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: networksets.crd.projectcalico.org
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  scope: Namespaced
-  group: crd.projectcalico.org
-  version: v1
-  names:
-    kind: NetworkSet
-    plural: networksets
-    singular: networkset
----
-{{- /* Source: calico/templates/rbac.yaml
-Include a clusterrole for the calico-node DaemonSet,
-and bind it to the calico-node serviceaccount. */}}
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: calico-node
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-rules:
-{{- /* The CNI plugin needs to get pods, nodes, and namespaces. */}}
-- apiGroups: [""]
-  resources:
-  - pods
-  - nodes
-  - namespaces
-  verbs:
-  - get
-- apiGroups: [""]
-  resources:
-  - endpoints
-  - services
-  verbs:
-  {{- /* Used to discover service IPs for advertisement. */}}
-  - watch
-  - list
-  {{- /* Used to discover Typhas. */}}
-  - get
-- apiGroups: [""]
-  resources:
-  - nodes/status
-  verbs:
-  {{- /* Needed for clearing NodeNetworkUnavailable flag. */}}
-  - patch
-  {{- /* Calico stores some configuration information in node annotations. */}}
-  - update
-{{- /* Watch for changes to Kubernetes NetworkPolicies. */}}
-- apiGroups: ["networking.k8s.io"]
-  resources:
-  - networkpolicies
-  verbs:
-  - watch
-  - list
-{{- /* Used by Calico for policy information. */}}
-- apiGroups: [""]
-  resources:
-  - pods
-  - namespaces
-  - serviceaccounts
-  verbs:
-  - list
-  - watch
-{{- /* The CNI plugin patches pods/status. */}}
-- apiGroups: [""]
-  resources:
-  - pods/status
-  verbs:
-  - patch
-{{- /* Calico monitors various CRDs for config. */}}
-- apiGroups: ["crd.projectcalico.org"]
-  resources:
-  - globalfelixconfigs
-  - felixconfigurations
-  - bgppeers
-  - globalbgpconfigs
-  - bgpconfigurations
-  - ippools
-  - ipamblocks
-  - globalnetworkpolicies
-  - globalnetworksets
-  - networkpolicies
-  - networksets
-  - clusterinformations
-  - hostendpoints
-  verbs:
-  - get
-  - list
-  - watch
-{{- /* Calico must create and update some CRDs on startup. */}}
-- apiGroups: ["crd.projectcalico.org"]
-  resources:
-  - ippools
-  - felixconfigurations
-  - clusterinformations
-  verbs:
-  - create
-  - update
-{{- /* Calico stores some configuration information on the node. */}}
-- apiGroups: [""]
-  resources:
-  - nodes
-  verbs:
-  - get
-  - list
-  - watch
-{{- /* These permissions are only requried for upgrade from v2.6, and can
-be removed after upgrade or on fresh installations. */}}
-- apiGroups: ["crd.projectcalico.org"]
-  resources:
-  - bgpconfigurations
-  - bgppeers
-  verbs:
-  - create
-  - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: calico-node
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: calico-node
-subjects:
-- kind: ServiceAccount
-  name: calico-node
-  namespace: kube-system
----
-{{- /* Source: calico/templates/calico-typha.yaml
-This manifest creates a Service, which will be backed by Calico's Typha daemon.
-Typha sits in between Felix and the API server, reducing Calico's load on the API server. */}}
-apiVersion: v1
-kind: Service
-metadata:
-  name: calico-typha
-  namespace: kube-system
-  labels:
-    k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  ports:
-  - port: 5473
-    protocol: TCP
-    targetPort: calico-typha
-    name: calico-typha
-  selector:
-    k8s-app: calico-typha
----
-{{- /* This manifest creates a Deployment of Typha to back the above service. */}}
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: calico-typha
-  namespace: kube-system
-  labels:
-    k8s-app: calico-typha
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  {{- /* Number of Typha replicas.  To enable Typha, set this to a non-zero value *and* set the
-  typha_service_name variable in the calico-config ConfigMap above.
-  We recommend using Typha if you have more than 50 nodes.  Above 100 nodes it is essential
-  (when using the Kubernetes datastore).  Use one replica for every 100-200 nodes.  In
-  production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade. */}}
-  replicas: 1
-  revisionHistoryLimit: 2
-  selector:
-    matchLabels:
-      k8s-app: calico-typha
-  template:
-    metadata:
-      labels:
-        k8s-app: calico-typha
-      annotations:
-        {{- /* This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical
-        add-on, ensuring it gets priority scheduling and that its resources are reserved
-        if it ever gets evicted. */}}
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
-    spec:
-      nodeSelector:
-        kubernetes.io/os: linux
-      hostNetwork: true
-      tolerations:
-      {{- /* Mark the pod as a critical add-on for rescheduling. */}}
-      - key: CriticalAddonsOnly
-        operator: Exists
-      {{- /* Since Calico can't network a pod until Typha is up, we need to run Typha itself
-      as a host-networked pod. */}}
-      serviceAccountName: calico-node
-      priorityClassName: system-cluster-critical
-      containers:
-      - image: {{ContainerImage "calico-typha"}}
-        name: calico-typha
-        ports:
-        - containerPort: 5473
-          name: calico-typha
-          protocol: TCP
-        env:
-        {{- /* Enable "info" logging by default.  Can be set to "debug" to increase verbosity. */}}
-        - name: TYPHA_LOGSEVERITYSCREEN
-          value: "info"
-        {{- /* Disable logging to file and syslog since those don't make sense in Kubernetes. */}}
-        - name: TYPHA_LOGFILEPATH
-          value: "none"
-        - name: TYPHA_LOGSEVERITYSYS
-          value: "none"
-        {{- /* Monitor the Kubernetes API to find the number of running instances and rebalance
-        connections. */}}
-        - name: TYPHA_CONNECTIONREBALANCINGMODE
-          value: "kubernetes"
-        - name: TYPHA_DATASTORETYPE
-          value: "kubernetes"
-        - name: TYPHA_HEALTHENABLED
-          value: "true"
-        {{- /* Configure route aggregation based on pod CIDR. */}}
-        - name: USE_POD_CIDR
-          value: "true"
-        - name: FELIX_INTERFACEPREFIX
-          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
-        # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
-        # this opens a port on the host, which may need to be secured.
-        #- name: TYPHA_PROMETHEUSMETRICSENABLED
-        #  value: "true"
-        #- name: TYPHA_PROMETHEUSMETRICSPORT
-        #  value: "9093"
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 9098
-            host: localhost
-          periodSeconds: 30
-          initialDelaySeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 9098
-            host: localhost
-          periodSeconds: 10
----
-{{- /* Source: calico/templates/calico-node.yaml
-This manifest installs the calico-node container, as well
-as the CNI plugins and network config on
-each master and worker node in a Kubernetes cluster. */}}
-kind: DaemonSet
-apiVersion: apps/v1
-metadata:
-  name: calico-node
-  namespace: kube-system
-  labels:
-    k8s-app: calico-node
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  selector:
-    matchLabels:
-      k8s-app: calico-node
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-  template:
-    metadata:
-      labels:
-        k8s-app: calico-node
-      annotations:
-        {{- /* This, along with the CriticalAddonsOnly toleration below,
-        marks the pod as a critical add-on, ensuring it gets
-        priority scheduling and that its resources are reserved
-        if it ever gets evicted. */}}
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      nodeSelector:
-        kubernetes.io/os: linux
-      hostNetwork: true
-      tolerations:
-      {{- /* Make sure calico-node gets scheduled on all nodes. */}}
-      - effect: NoSchedule
-        operator: Exists
-      {{- /* Mark the pod as a critical add-on for rescheduling. */}}
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - effect: NoExecute
-        operator: Exists
-      serviceAccountName: calico-node
-      {{- /* Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force deletion":
-      https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods. */}}
-      terminationGracePeriodSeconds: 0
-      priorityClassName: system-node-critical
-      initContainers:
-{{- if not IsAzureCNI}}
-      {{- /* This container installs the CNI binaries
-      and CNI network config file on each node. */}}
-      - name: install-cni
-        image: {{ContainerImage "calico-cni"}}
-        command: ["/install-cni.sh"]
-        env:
-        {{- /* Name of the CNI config file to create. */}}
-        - name: CNI_CONF_NAME
-          value: "10-calico.conflist"
-        {{- /* The CNI network config to install on each node. */}}
-        - name: CNI_NETWORK_CONFIG
-          valueFrom:
-            configMapKeyRef:
-              name: calico-config
-              key: cni_network_config
-        {{- /* Set the hostname based on the k8s node name. */}}
-        - name: KUBERNETES_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        {{- /* Prevents the container from sleeping forever. */}}
-        - name: SLEEP
-          value: "false"
-        volumeMounts:
-        - mountPath: /host/opt/cni/bin
-          name: cni-bin-dir
-        - mountPath: /host/etc/cni/net.d
-          name: cni-net-dir
-{{- end}}
-      {{- /* Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
-      to communicate with Felix over the Policy Sync API. */}}
-      - name: flexvol-driver
-        image: {{ContainerImage "calico-pod2daemon"}}
-        volumeMounts:
-        - name: flexvol-driver-host
-          mountPath: /host/driver
-      containers:
-      {{- /* Runs calico-node container on each Kubernetes node.  This
-      container programs network policy and routes on each
-      host. */}}
-      - name: calico-node
-        image: {{ContainerImage "calico-node"}}
-        env:
-        {{- /* Use Kubernetes API as the backing datastore. */}}
-        - name: DATASTORE_TYPE
-          value: "kubernetes"
-        {{- /* Configure route aggregation based on pod CIDR. */}}
-        - name: USE_POD_CIDR
-          value: "true"
-        {{- /* Typha support: controlled by the ConfigMap. */}}
-        - name: FELIX_TYPHAK8SSERVICENAME
-          valueFrom:
-            configMapKeyRef:
-              name: calico-config
-              key: typha_service_name
-        {{- /* Wait for the datastore. */}}
-        - name: WAIT_FOR_DATASTORE
-          value: "true"
-        {{- /* Set based on the k8s node name. */}}
-        - name: NODENAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        {{- /* Don't enable BGP. */}}
-        - name: CALICO_NETWORKING_BACKEND
-          value: "none"
-        {{- /* Cluster type to identify the deployment type */}}
-        - name: CLUSTER_TYPE
-          value: "k8s"
-        {{- /* The default IPv4 pool to create on startup if none exists. Pod IPs will be
-        chosen from this range. Changing this value after installation will have
-        no effect. This should fall within ` + "`" + `--cluster-cidr` + "`" + `. */}}
-        - name: CALICO_IPV4POOL_CIDR
-          value: "{{GetClusterSubnet}}"
-        {{- /* Disable file logging so ` + "`" + `kubectl logs` + "`" + ` works. */}}
-        - name: CALICO_DISABLE_FILE_LOGGING
-          value: "true"
-        {{- /* Set Felix endpoint to host default action to ACCEPT. */}}
-        - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
-          value: "ACCEPT"
-        {{- /* Disable IPv6 on Kubernetes. */}}
-        - name: FELIX_IPV6SUPPORT
-          value: "false"
-        {{- /* Set Felix logging to "info" */}}
-        - name: FELIX_LOGSEVERITYSCREEN
-          value: {{ContainerConfig "logSeverityScreen"}}
-        - name: FELIX_HEALTHENABLED
-          value: "true"
-        - name: CALICO_IPV4POOL_IPIP
-          value: "off"
-        - name: FELIX_INTERFACEPREFIX
-          value: "{{if IsAzureCNI}}azv{{else}}cali{{end}}"
-        securityContext:
-          privileged: true
-        resources:
-          requests:
-            cpu: 250m
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 9099
-            host: localhost
-          periodSeconds: 10
-          initialDelaySeconds: 10
-          failureThreshold: 6
-        readinessProbe:
-          exec:
-            command:
-            - /bin/calico-node
-            - -felix-ready
-          periodSeconds: 10
-        volumeMounts:
-        - mountPath: /lib/modules
-          name: lib-modules
-          readOnly: true
-        - mountPath: /run/xtables.lock
-          name: xtables-lock
-          readOnly: false
-        - mountPath: /var/run/calico
-          name: var-run-calico
-          readOnly: false
-        - mountPath: /var/lib/calico
-          name: var-lib-calico
-          readOnly: false
-        - name: policysync
-          mountPath: /var/run/nodeagent
-      volumes:
-      {{- /* Used by calico-node. */}}
-      - name: lib-modules
-        hostPath:
-          path: /lib/modules
-      - name: var-run-calico
-        hostPath:
-          path: /var/run/calico
-      - name: var-lib-calico
-        hostPath:
-          path: /var/lib/calico
-      - name: xtables-lock
-        hostPath:
-          path: /run/xtables.lock
-          type: FileOrCreate
-      {{- /* Used to install CNI. */}}
-      - name: cni-bin-dir
-        hostPath:
-          path: /opt/cni/bin
-      - name: cni-net-dir
-        hostPath:
-          path: /etc/cni/net.d
-      {{- /* Used to create per-pod Unix Domain Sockets */}}
-      - name: policysync
-        hostPath:
-          type: DirectoryOrCreate
-          path: /var/run/nodeagent
-      {{- /* Used to install Flex Volume Driver */}}
-      - name: flexvol-driver-host
-        hostPath:
-          type: DirectoryOrCreate
-          path: /etc/kubernetes/volumeplugins/nodeagent~uds
----
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: calico-node
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
----
-{{- /* Typha Horizontal Autoscaler ConfigMap */}}
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: calico-typha-horizontal-autoscaler
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-data:
-  ladder: |-
-    {
-      "coresToReplicas": [],
-      "nodesToReplicas":
-      [
-        [1, 1],
-        [10, 2],
-        [100, 3],
-        [250, 4],
-        [500, 5],
-        [1000, 6],
-        [1500, 7],
-        [2000, 8]
-      ]
-    }
-
----
-{{- /* Typha Horizontal Autoscaler Deployment */}}
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: calico-typha-horizontal-autoscaler
-  namespace: kube-system
-  labels:
-    k8s-app: calico-typha-autoscaler
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        k8s-app: calico-typha-autoscaler
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-cluster-critical
-      securityContext:
-        supplementalGroups: [65534]
-        fsGroup: 65534
-      containers:
-      - image: {{ContainerImage "calico-cluster-proportional-autoscaler"}}
-        name: autoscaler
-        command:
-        - /cluster-proportional-autoscaler
-        - --namespace=kube-system
-        - --configmap=calico-typha-horizontal-autoscaler
-        - --target=deployment/calico-typha
-        - --logtostderr=true
-        - --v=2
-        resources:
-          requests:
-            cpu: 10m
-          limits:
-            cpu: 10m
-      serviceAccountName: typha-cpha
----
-{{- /* Typha Horizontal Autoscaler Cluster Role */}}
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: typha-cpha
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["list"]
-
----
-{{- /* Typha Horizontal Autoscaler Cluster Role Binding */}}
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: typha-cpha
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: typha-cpha
-subjects:
-- kind: ServiceAccount
-  name: typha-cpha
-  namespace: kube-system
----
-{{- /* Typha Horizontal Autoscaler Role */}}
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: typha-cpha
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["get"]
-- apiGroups: ["extensions"]
-  resources: ["deployments/scale"]
-  verbs: ["get", "update"]
-
----
-{{- /* Typha Horizontal Autoscaler Role Binding */}}
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: typha-cpha
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: typha-cpha
-subjects:
-- kind: ServiceAccount
-  name: typha-cpha
-  namespace: kube-system
----
-{{- /* Typha Horizontal Autoscaler Service Account */}}
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: typha-cpha
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-`)
-
-func k8sAddons115CalicoYamlBytes() ([]byte, error) {
-	return _k8sAddons115CalicoYaml, nil
-}
-
-func k8sAddons115CalicoYaml() (*asset, error) {
-	bytes, err := k8sAddons115CalicoYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.15/calico.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddonsAadDefaultAdminGroupRbacYaml = []byte(`kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -7324,7 +6530,7 @@ roleRef:
   name: aad-pod-id-nmi-role
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -7338,12 +6544,10 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       component: nmi
       tier: node
-{{- end}}
   template:
     metadata:
       labels:
@@ -7467,7 +6671,7 @@ roleRef:
   name: aad-pod-id-mic-role
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -7479,11 +6683,9 @@ metadata:
   namespace: kube-system
 spec:
   replicas: 2
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       component: mic
-{{- end}}
   template:
     metadata:
       labels:
@@ -7606,7 +6808,7 @@ data:
   cert.pem: <cert>
   key.pem: <key>
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aci-connector
@@ -7618,11 +6820,9 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       app: aci-connector
-{{- end}}
   template:
     metadata:
       labels:
@@ -8543,7 +7743,7 @@ func k8sAddonsArcOnboardingYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1{{ if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+var _k8sAddonsAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
 kind: Policy
 omitStages:
   - RequestReceived
@@ -8601,7 +7801,7 @@ func k8sAddonsAuditPolicyYaml() (*asset, error) {
 }
 
 var _k8sAddonsAzureCloudProviderYaml = []byte(`---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
@@ -8615,7 +7815,7 @@ rules:
   - patch
   - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -8630,7 +7830,7 @@ subjects:
   name: azure-cloud-provider
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: system:azure-persistent-volume-binder
@@ -8641,7 +7841,7 @@ rules:
   resources: ['secrets']
   verbs:     ['get','create']
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: system:azure-persistent-volume-binder
@@ -8656,7 +7856,7 @@ subjects:
   name: persistent-volume-binder
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
@@ -8668,7 +7868,7 @@ rules:
   verbs:
   - get
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -8894,11 +8094,7 @@ func k8sAddonsAzureCloudProviderYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsAzureCniNetworkmonitorYaml = []byte(`{{- if IsKubernetesVersionGe "1.16.0"}}
-apiVersion: apps/v1
-{{else}}
-apiVersion: extensions/v1beta1
-{{- end}}
+var _k8sAddonsAzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: azure-cni-networkmonitor
@@ -8916,10 +8112,6 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-{{- end}}
 {{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
@@ -9047,7 +8239,7 @@ roleRef:
   name: azure-npm
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: azure-npm
@@ -9065,12 +8257,10 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
-{{- if IsKubernetesVersionGe "1.16.0"}}
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
-  {{- if IsKubernetesVersionGe "1.17.0"}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-  {{- end}}
 {{- end}}
     spec:
       priorityClassName: system-node-critical
@@ -10552,7 +9742,6 @@ spec:
               cpu: {{ContainerCPUReqs "csi-snapshotter"}}
               memory: {{ContainerMemReqs "csi-snapshotter"}}
         {{end}}
-        {{if IsKubernetesVersionGe "1.16.0"}}
         - name: csi-resizer
           image: {{ContainerImage "csi-resizer"}}
           args:
@@ -10572,7 +9761,6 @@ spec:
             requests:
               cpu: {{ContainerCPUReqs "csi-resizer"}}
               memory: {{ContainerMemReqs "csi-resizer"}}
-        {{end}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -11942,7 +11130,6 @@ spec:
               cpu: {{ContainerCPUReqs "csi-snapshotter"}}
               memory: {{ContainerMemReqs "csi-snapshotter"}}
         {{end}}
-        {{if IsKubernetesVersionGe "1.16.0"}}
         - name: csi-resizer
           image: {{ContainerImage "csi-resizer"}}
           args:
@@ -11962,7 +11149,6 @@ spec:
             requests:
               cpu: {{ContainerCPUReqs "csi-resizer"}}
               memory: {{ContainerMemReqs "csi-resizer"}}
-        {{end}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -12059,7 +11245,7 @@ func k8sAddonsAzurefileCsiDriverDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsBlobfuseFlexvolumeYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+var _k8sAddonsBlobfuseFlexvolumeYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: blobfuse-flexvol-installer
@@ -14106,11 +13292,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
-{{- if IsKubernetesVersionGe "1.16.0"}}
 apiVersion: apps/v1
-{{else}}
-apiVersion: extensions/v1beta1
-{{- end}}
 kind: Deployment
 metadata:
   labels:
@@ -14137,7 +13319,7 @@ spec:
         value: "true"
         key: node-role.kubernetes.io/master
       nodeSelector:
-        kubernetes.{{if IsKubernetesVersionGe "1.16.0"}}azure.com{{else}}io{{end}}/role: master
+        kubernetes.azure.com/role: master
         kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
@@ -15135,7 +14317,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
         {{- if ContainerConfig "use-host-network"}}
-        kubernetes.{{if IsKubernetesVersionGe "1.16.0"}}azure.com{{else}}io{{end}}/role: agent
+        kubernetes.azure.com/role: agent
         {{end}}
       containers:
       - name: coredns
@@ -15380,7 +14562,7 @@ data:
       }
     }
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds
@@ -15390,21 +14572,15 @@ metadata:
     app: flannel
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       tier: node
       app: flannel
-{{- end}}
   template:
     metadata:
       labels:
         tier: node
         app: flannel
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-{{- end}}
 {{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
@@ -15525,7 +14701,7 @@ func k8sAddonsFlannelYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsIpMasqAgentYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+var _k8sAddonsIpMasqAgentYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: azure-ip-masq-agent
@@ -15536,12 +14712,10 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       k8s-app: azure-ip-masq-agent
       tier: node
-{{- end}}
   template:
     metadata:
       labels:
@@ -15571,10 +14745,8 @@ spec:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
         imagePullPolicy: IfNotPresent
-{{- if IsKubernetesVersionGe "1.16.0"}}
         args:
           - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
-{{- end}}
         securityContext:
           privileged: true
         volumeMounts:
@@ -15605,11 +14777,9 @@ data:
   ip-masq-agent: |-
     nonMasqueradeCIDRs:
       - {{ContainerConfig "non-masquerade-cidr"}}
-{{- if IsKubernetesVersionGe "1.16.0"}}
-  {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
+{{- if ContainerConfig "secondary-non-masquerade-cidr"}}
       - {{ContainerConfig "secondary-non-masquerade-cidr"}}
-  {{end -}}
-{{- end}}
+{{end -}}
 {{- if ContainerConfig "non-masq-cni-cidr"}}
       - {{ContainerConfig "non-masq-cni-cidr"}}
     masqLinkLocal: true
@@ -15634,7 +14804,7 @@ func k8sAddonsIpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKeyvaultFlexvolumeYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+var _k8sAddonsKeyvaultFlexvolumeYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -15646,11 +14816,9 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       app: keyvault-flexvolume
-{{- end}}
   template:
     metadata:
       labels:
@@ -15768,7 +14936,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: EnsureExists
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kube-dns
@@ -15793,11 +14961,6 @@ spec:
     metadata:
       labels:
         k8s-app: kube-dns
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
-{{- end}}
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -15944,8 +15107,7 @@ func k8sAddonsKubeDnsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubeProxyYaml = []byte(`{{if IsKubernetesVersionGe "1.16.0" -}}
-apiVersion: v1
+var _k8sAddonsKubeProxyYaml = []byte(`apiVersion: v1
 kind: ConfigMap
 data:
   config.yaml: |
@@ -15978,8 +15140,7 @@ metadata:
     tier: node
     k8s-app: kube-proxy
 ---
-{{- end}}
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -15994,10 +15155,8 @@ spec:
   selector:
     matchLabels:
       k8s-app: kube-proxy
-{{- if IsKubernetesVersionGe "1.16.0"}}
       component: kube-proxy
       tier: node
-{{- end}}
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
@@ -16028,18 +15187,8 @@ spec:
         operator: Exists
       containers:
       - command:
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-        - /hyperkube
-{{- end}}
         - kube-proxy
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-        - --kubeconfig=/var/lib/kubelet/kubeconfig
-        - --cluster-cidr={{ContainerConfig "cluster-cidr"}}
-        - --feature-gates=ExperimentalCriticalPodAnnotation=true
-        - --proxy-mode={{ContainerConfig "proxy-mode"}}
-{{else}}
         - --config=/var/lib/kube-proxy/config.yaml
-{{- end}}
         image: {{ContainerImage "kube-proxy"}}
         imagePullPolicy: IfNotPresent
         name: kube-proxy
@@ -16063,12 +15212,10 @@ spec:
         - mountPath: /lib/modules/
           name: kernelmodules
           readOnly: true
-{{- if IsKubernetesVersionGe "1.16.0"}}
         - mountPath: /var/lib/kube-proxy/config.yaml
           subPath: config.yaml
           name: kube-proxy-config-volume
           readOnly: true
-{{- end}}
       hostNetwork: true
       volumes:
       - hostPath:
@@ -16086,11 +15233,9 @@ spec:
       - hostPath:
           path: /lib/modules/
         name: kernelmodules
-{{- if IsKubernetesVersionGe "1.16.0"}}
       - configMap:
           name: kube-proxy-config
         name: kube-proxy-config-volume
-{{- end}}
       nodeSelector:
         kubernetes.io/os: linux
 `)
@@ -16110,7 +15255,7 @@ func k8sAddonsKubeProxyYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubeReschedulerYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+var _k8sAddonsKubeReschedulerYaml = []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rescheduler
@@ -16128,14 +15273,8 @@ spec:
     metadata:
       labels:
         k8s-app: rescheduler
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-{{- end}}
     spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
       priorityClassName: system-node-critical
-{{- end}}
       nodeSelector:
         kubernetes.io/os: linux
       containers:
@@ -16502,9 +15641,7 @@ rules:
   resources:
   - pods
   - nodes
-{{- if IsKubernetesVersionGe "1.16.0"}}
   - nodes/stats
-{{- end}}
   - namespaces
   verbs:
   - get
@@ -16585,11 +15722,7 @@ spec:
     protocol: TCP
     targetPort: 443
 ---
-{{- if IsKubernetesVersionGe "1.16.0"}}
 apiVersion: apps/v1
-{{else}}
-apiVersion: extensions/v1beta1
-{{- end}}
 kind: Deployment
 metadata:
   name: metrics-server
@@ -16616,11 +15749,8 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
         - /metrics-server
-{{- if IsKubernetesVersionGe "1.16.0"}}
         - --kubelet-insecure-tls
-{{else}}
-        - --source=kubernetes.summary_api:''
-{{- end}}
+        - --kubelet-preferred-address-types=InternalIP
       nodeSelector:
         kubernetes.io/os: linux
 ---
@@ -16808,10 +15938,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ""
-{{- end}}
 {{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
@@ -16877,7 +16003,7 @@ func k8sAddonsNvidiaDevicePluginYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsPodSecurityPolicyYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}policy{{else}}extensions{{end}}/v1beta1
+var _k8sAddonsPodSecurityPolicyYaml = []byte(`apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: privileged
@@ -16907,7 +16033,7 @@ spec:
   fsGroup:
     rule: RunAsAny
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}policy{{else}}extensions{{end}}/v1beta1
+apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: restricted
@@ -17903,7 +17029,7 @@ func k8sAddonsSecretsStoreCsiDriverYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsSmbFlexvolumeYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+var _k8sAddonsSmbFlexvolumeYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: smb-flexvol-installer
@@ -18022,7 +17148,7 @@ spec:
     name: tiller
   type: ClusterIP
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -18033,12 +17159,10 @@ metadata:
   name: tiller-deploy
   namespace: kube-system
 spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       app: helm
       name: tiller
-{{- end}}
   template:
     metadata:
       labels:
@@ -20683,6 +19807,11 @@ func k8sCloudInitArtifactsKubeletMonitorTimer() (*asset, error) {
 var _k8sCloudInitArtifactsKubeletService = []byte(`[Unit]
 Description=Kubelet
 ConditionPathExists=/usr/local/bin/kubelet
+{{- if NeedsContainerd}}
+Requires=containerd.service
+{{else}}
+Requires=docker.service
+{{- end}}
 
 [Service]
 Restart=always
@@ -21914,11 +21043,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
-{{- if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
-{{else}}
-    KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
-{{end}}
 {{- if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
@@ -22473,11 +21598,7 @@ write_files:
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-{{- if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
-{{else}}
-    KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
-{{end}}
 {{- if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
@@ -23667,11 +22788,7 @@ $global:PrimaryScaleSetName = "{{WrapAsVariable "primaryScaleSetName"}}"
 $global:KubeClusterCIDR = "{{WrapAsParameter "kubeClusterCidr"}}"
 $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
 $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
-{{if IsKubernetesVersionGe "1.16.0"}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
-{{else}}
-$global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}"
-{{end}}
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
@@ -29294,7 +28411,6 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovision.sh":                                              dcosDcosprovisionSh,
 	"dcos/dcosprovisionsource.sh":                                        dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                                      iaasoutputsT,
-	"k8s/addons/1.15/calico.yaml":                                        k8sAddons115CalicoYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                       k8sAddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/aad-pod-identity.yaml":                                   k8sAddonsAadPodIdentityYaml,
 	"k8s/addons/aci-connector.yaml":                                      k8sAddonsAciConnectorYaml,
@@ -29488,9 +28604,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"iaasoutputs.t": {iaasoutputsT, map[string]*bintree{}},
 	"k8s": {nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
-			"1.15": {nil, map[string]*bintree{
-				"calico.yaml": {k8sAddons115CalicoYaml, map[string]*bintree{}},
-			}},
 			"aad-default-admin-group-rbac.yaml":     {k8sAddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"aad-pod-identity.yaml":                 {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
 			"aci-connector.yaml":                    {k8sAddonsAciConnectorYaml, map[string]*bintree{}},
