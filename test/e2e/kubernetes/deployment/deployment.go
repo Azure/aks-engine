@@ -949,11 +949,8 @@ func (d *Deployment) WaitForReplicasWithAction(min, max int, sleep, timeout time
 
 				err := action()
 				if err != nil {
-					ch <- pod.GetAllByPrefixResult{
-						Pods: nil,
-						Err:  err,
-					}
-					ctx.Done()
+					mostRecentWaitForReplicasError = err
+					cancel()
 				}
 
 			}

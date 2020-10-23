@@ -2410,14 +2410,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("should be able to get nodes metrics")
 			checkMetrics := func() error {
 				log.Printf("running top nodes")
-				err = node.TopNodesWithRetry(1*time.Second, cfg.Timeout)
+				err = node.TopNodes()
 				return err
 			}
 			_, err = cpuDeployment.WaitForReplicasWithAction(deployCount, deployCount*2, 2*time.Second, cfg.Timeout, checkMetrics)
 			Expect(err).NotTo(HaveOccurred())
 			cpuPods, err := cpuDeployment.PodsRunning()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(cpuPods)).To(HaveCap(deployCount))
+			Expect(len(cpuPods)).To(BeNumerically(">=", deployCount))
 
 			By("should be able to get nodes metrics")
 			err = node.TopNodesWithRetry(1*time.Second, cfg.Timeout)

@@ -731,7 +731,9 @@ func GetAllRunningByPrefix(prefix, namespace string) ([]Pod, error) {
 		}
 		if matched {
 			if p.Status.Phase == "Running" {
+				log.Printf("matched pod name:%s\n", p.Metadata.Name)
 				pods = append(pods, p)
+				log.Printf("pods len:%v\n", len(pods))
 			}
 		}
 	}
