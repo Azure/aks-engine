@@ -267,46 +267,31 @@ func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (stri
 }
 
 func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, error) {
-	if glc.windowsScriptPath == "" && glc.linuxScriptPath == "" {
+	var script, cmd string
+	if isLinuxNode(node) && glc.linuxScriptPath != "" {
+		script = glc.linuxScriptPath
+		cmd = "bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""
+	} else if isWindowsNode(node) && glc.windowsScriptPath != "" {
+		script = glc.windowsScriptPath
+		cmd = "powershell -noprofile -command \"$Input > $env:temp\\collect-windows-logs.ps1\""
+	} else {
 		return "", nil
 	}
 
-	if isLinuxNode(node) && glc.linuxScriptPath != "" {
-		linuxScriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
-		if err != nil {
-			return "", errors.Wrap(err, "reading Linux log collection script content")
-		}
-
-		log.Debugf("Uploading Linux log collection script (%s)\n", glc.linuxScriptPath)
-		session, err := client.NewSession()
-		if err != nil {
-			return "", errors.Wrap(err, "creating SSH session")
-		}
-		defer session.Close()
-
-		session.Stdin = bytes.NewReader(linuxScriptContent)
-		if co, err := session.CombinedOutput("bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""); err != nil {
-			return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading Linux log collection script")
-		}
+	sc, err := ioutil.ReadFile(script)
+	if err != nil {
+		return "", errors.Wrapf(err, "reading log collection script %s", script)
 	}
+	session, err := client.NewSession()
+	if err != nil {
+		return "", errors.Wrap(err, "creating SSH session")
+	}
+	defer session.Close()
 
-	if isWindowsNode(node) && glc.windowsScriptPath != "" {
-		windowsScriptContent, err := ioutil.ReadFile(glc.windowsScriptPath)
-		if err != nil {
-			return "", errors.Wrap(err, "reading Windows log collection script content")
-		}
-
-		log.Debugf("Uploading Windows log collection script (%s)\n", glc.windowsScriptPath)
-		session, err := client.NewSession()
-		if err != nil {
-			return "", errors.Wrap(err, "creating SSH session")
-		}
-		defer session.Close()
-
-		session.Stdin = bytes.NewReader(windowsScriptContent)
-		if co, err := session.CombinedOutput("powershell -noprofile -command \"$Input > $env:temp\\collect-windows-logs.ps1\""); err != nil {
-			return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading Windows log collection script")
-		}
+	log.Debugf("Uploading log collection script (%s)\n", script)
+	session.Stdin = bytes.NewReader(sc)
+	if co, err := session.CombinedOutput(cmd); err != nil {
+		return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading log collection script")
 	}
 	return "", nil
 }
