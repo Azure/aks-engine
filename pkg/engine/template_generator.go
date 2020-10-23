@@ -136,14 +136,7 @@ func (t *TemplateGenerator) verifyFiles() error {
 }
 
 func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]string, string, error) {
-	var files []string
-	var baseFile string
-	switch properties.OrchestratorProfile.OrchestratorType {
-	default:
-		return nil, "", t.Translator.Errorf("orchestrator '%s' is unsupported", properties.OrchestratorProfile.OrchestratorType)
-	}
-
-	return files, baseFile, nil
+	return []string{}, "", t.Translator.Errorf("orchestrator '%s' is unsupported", properties.OrchestratorProfile.OrchestratorType)
 }
 
 func (t *TemplateGenerator) GetJumpboxCustomDataJSON(cs *api.ContainerService) string {
