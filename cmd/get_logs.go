@@ -263,7 +263,7 @@ func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (stri
 		return stdout, err
 	}
 	if glc.blobServiceSASURL != "" {
-		log.Debugf("Will upload logs to storage account")
+		log.Debug("Will upload logs to storage account")
 		err = glc.uploadLogsToStorageContainer(node)
 		if err != nil {
 			return "", errors.Wrap(err, "uploading logs to storage container")
@@ -371,12 +371,12 @@ func (glc *getLogsCmd) uploadLogsToStorageContainer(node v1.Node) error {
 	logFilePath := path.Join(glc.outputDirectory, logFileName)
 	logFile, err := os.Open(logFilePath)
 	if err != nil {
-		return errors.Wrap(err, "opening zipped log file")
+		return errors.Wrap(err, fmt.Sprintf("finding zipped log file %s", logFilePath))
 	}
 
 	urls := strings.Split(glc.blobServiceSASURL, "/?")
 	if len(urls) != 2 {
-		return errors.Wrap(err, "validating blob service SAS URL")
+		return errors.Wrap(err, fmt.Sprintf("validating blob service SAS URL %s", glc.blobServiceSASURL))
 	}
 	var fullURL string
 	if glc.storageContainerName == "" {
