@@ -18,7 +18,6 @@
 
 * [AKS Engine](docs/aksengine.md) - 演示如何使用ACS引擎来生成基于Docker的容器集群
 * [Cluster Definition](docs/clusterdefinition.md) - 详细介绍集群描述文件的格式
-* [DC/OS Walkthrough](docs/dcos.md) - 演示如何使用ACS引擎在Azure上创建DC/OS集群
 * [Kubernetes Walkthrough](docs/kubernetes.md) - 演示如何使用ACS引擎在Azure上创建Kubernetes集群
 * [Custom VNET](examples/vnet) - 演示如何在用户自定义VNET上创建容器集群
 * [Attached Disks](examples/disks-storageaccount) - 演示如何在一个集群节点上创建4个磁盘

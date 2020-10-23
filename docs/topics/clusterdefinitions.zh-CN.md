@@ -20,8 +20,7 @@
 
 可选的编排引擎如下所示：
 
-1. `DCOS` - 指定编排引擎为 [DC/OS编排引擎](dcos.md)。
-2. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
+1. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
 
 ### masterProfile
 `masterProfile` 指定了集群中master节点的各种配置。
@@ -105,8 +104,7 @@
 
 可选的编排引擎如下所示：
 
-1. `DCOS` - 指定编排引擎为 [DC/OS编排引擎](dcos.md)。
-2. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
+1. `Kubernetes` - 指定编排引擎为 [Kubernetes编排引擎](kubernetes.md)。
 
 ### masterProfile
 `masterProfile` 指定了集群中master节点的各种配置。

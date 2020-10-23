@@ -204,17 +204,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 						WindowsPauseImageURL:                 "WindowsPauseImageURL",
 						AlwaysPullWindowsPauseImage:          true,
 					},
-					DCOSSpecConfig: DCOSSpecConfig{
-						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
-						DCOS190BootstrapDownloadURL:     "DCOS190BootstrapDownloadURL",
-						DCOS198BootstrapDownloadURL:     "DCOS198BootstrapDownloadURL",
-						DCOS110BootstrapDownloadURL:     "DCOS110BootstrapDownloadURL",
-						DCOS111BootstrapDownloadURL:     "DCOS111BootstrapDownloadURL",
-						DCOSWindowsBootstrapDownloadURL: "DCOSWindowsBootstrapDownloadURL",
-						DcosRepositoryURL:               "DcosRepositoryURL",
-						DcosClusterPackageListID:        "DcosClusterPackageListID",
-						DcosProviderPackageID:           "DcosProviderPackageID",
-					},
 					EndpointConfig: AzureEndpointConfig{
 						ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
 					},
@@ -296,35 +285,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 	if vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage != csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage {
 		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
-	}
-
-	//DCOSSpecConfig
-	if vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS188BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS190BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS198BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS110BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS111BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL {
-		t.Errorf("incorrect DCOSWindowsBootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL != csSpec.DCOSSpecConfig.DcosRepositoryURL {
-		t.Errorf("incorrect DcosRepositoryURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DcosRepositoryURL, vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID != csSpec.DCOSSpecConfig.DcosClusterPackageListID {
-		t.Errorf("incorrect DcosClusterPackageListID, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DcosClusterPackageListID, vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID != csSpec.DCOSSpecConfig.DcosProviderPackageID {
-		t.Errorf("incorrect DcosProviderPackageID, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DcosProviderPackageID, vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID)
 	}
 
 	//EndpointConfig
@@ -484,23 +444,7 @@ func getDefaultContainerService() *ContainerService {
 			OrchestratorProfile: &OrchestratorProfile{
 				OrchestratorType:    "Kubernetes",
 				OrchestratorVersion: "1.11.6",
-				DcosConfig: &DcosConfig{
-					DcosBootstrapURL:         "SampleDcosBootstrapURL",
-					DcosWindowsBootstrapURL:  "SampleWindowsDcosBootstrapURL",
-					Registry:                 "SampleRegistry",
-					RegistryPass:             "SampleRegistryPass",
-					RegistryUser:             "SampleRegistryUser",
-					DcosClusterPackageListID: "SampleDcosClusterPackageListID",
-					DcosProviderPackageID:    "SampleDcosProviderPackageID",
-					BootstrapProfile: &BootstrapProfile{
-						VMSize:       "Standard_Ds1_v1",
-						OSDiskSizeGB: 256,
-						OAuthEnabled: true,
-						StaticIP:     "172.0.0.1",
-						Subnet:       "255.255.255.0",
-					},
-				},
-				KubernetesConfig: &KubernetesConfig{},
+				KubernetesConfig:    &KubernetesConfig{},
 			},
 			MasterProfile: &MasterProfile{
 				Count:     1,

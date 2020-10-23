@@ -412,7 +412,7 @@ func Test_GetValidPatchVersion(t *testing.T) {
 		t.Errorf("It is not the default Kubernetes version")
 	}
 
-	v = GetValidPatchVersion(Mesos, "1.6.0", false, false, false)
+	v = GetValidPatchVersion("BogusOrchestrator", "1.6.0", false, false, false)
 	if v != "" {
 		t.Errorf("Expected empty version for unsupported orchType")
 	}
@@ -445,7 +445,7 @@ func Test_GetValidPatchVersion(t *testing.T) {
 		t.Errorf("It is not the default Kubernetes version")
 	}
 
-	v = GetValidPatchVersion(Mesos, "1.6.0", false, false, true)
+	v = GetValidPatchVersion("BogusOrchestrator", "1.6.0", false, false, true)
 	if v != "" {
 		t.Errorf("Expected empty version for unsupported orchType")
 	}

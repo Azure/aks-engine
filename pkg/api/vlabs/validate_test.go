@@ -46,13 +46,13 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 		"should error when KubernetesConfig populated for non-Kubernetes OrchestratorType": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "DCOS",
+					OrchestratorType: "Bogus",
 					KubernetesConfig: &KubernetesConfig{
 						ClusterSubnet: "10.0.0.0/16",
 					},
 				},
 			},
-			expectedError: "KubernetesConfig can be specified only when OrchestratorType is Kubernetes",
+			expectedError: "OrchestratorProfile has unknown orchestrator: Bogus",
 		},
 		"should error when KubernetesConfig has invalid etcd version": {
 			properties: &Properties{
@@ -206,54 +206,8 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: "Kubernetes",
-					DcosConfig:       &DcosConfig{},
 				},
 			},
-		},
-		"should error when DcosConfig orchestrator has invalid configuration": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "DCOS",
-					OrchestratorVersion: "1.12.0",
-				},
-			},
-			expectedError: "the following OrchestratorProfile configuration is not supported: OrchestratorType: DCOS, OrchestratorRelease: , OrchestratorVersion: 1.12.0. Please check supported Release or Version for this build of aks-engine",
-		},
-		"should error when DcosConfig orchestrator configuration has invalid static IP": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "DCOS",
-					DcosConfig: &DcosConfig{
-						BootstrapProfile: &BootstrapProfile{
-							StaticIP: "0.0.0.0.0.0",
-						},
-					},
-				},
-			},
-			expectedError: "DcosConfig.BootstrapProfile.StaticIP '0.0.0.0.0.0' is an invalid IP address",
-		},
-		"should error when DcosConfig populated for non-Kubernetes OrchestratorType 1": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					DcosConfig: &DcosConfig{
-						DcosWindowsBootstrapURL: "http://www.microsoft.com",
-					},
-				},
-			},
-			expectedError: "DcosConfig can be specified only when OrchestratorType is DCOS",
-		},
-		"should error when DcosConfig populated for non-Kubernetes OrchestratorType 2": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					DcosConfig: &DcosConfig{
-						DcosWindowsBootstrapURL: "http://www.microsoft.com",
-						DcosBootstrapURL:        "http://www.microsoft.com",
-					},
-				},
-			},
-			expectedError: "DcosConfig can be specified only when OrchestratorType is DCOS",
 		},
 		"kubernetes should have failed on old patch version": {
 			properties: &Properties{
@@ -1649,7 +1603,7 @@ func Test_AadProfile_Validate(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
 		cs.Properties.OrchestratorProfile = &OrchestratorProfile{
-			OrchestratorType: DCOS,
+			OrchestratorType: "DCOS",
 		}
 		cs.Properties.AADProfile = &AADProfile{
 			ClientAppID: "92444486-5bc3-4291-818b-d53ae480991b",
@@ -4256,7 +4210,7 @@ func TestValidateProperties_CustomNodeLabels(t *testing.T) {
 		}
 	})
 
-	t.Run("Should not support orchestratorTypes other than Kubernetes/DCOS", func(t *testing.T) {
+	t.Run("Should not support orchestratorTypes other than Kubernetes", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)
 		cs.Properties.OrchestratorProfile.OrchestratorType = "Mesos"
@@ -4264,7 +4218,7 @@ func TestValidateProperties_CustomNodeLabels(t *testing.T) {
 		agentPoolProfiles[0].CustomNodeLabels = map[string]string{
 			"foo": "bar",
 		}
-		expectedMsg := "Agent CustomNodeLabels are only supported for DCOS and Kubernetes"
+		expectedMsg := "Agent CustomNodeLabels are only supported for Kubernetes"
 		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
@@ -5446,7 +5400,7 @@ func TestValidateAzureStackSupport(t *testing.T) {
 					break
 				}
 			}
-			cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.11"
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.13"
 			if err := cs.Validate(false); !helpers.EqualError(err, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Logf("FIXME: expected error: %v, got: %v", test.expectedErr, err)

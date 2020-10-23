@@ -2341,19 +2341,6 @@ func TestDistroDefaults(t *testing.T) {
 			true,
 			AzurePublicCloud,
 		},
-		{
-			"default_dcos",
-			OrchestratorProfile{
-				OrchestratorType: DCOS,
-			},
-			"",
-			"",
-			Ubuntu,
-			Ubuntu,
-			false,
-			false,
-			AzurePublicCloud,
-		},
 	}
 
 	for _, test := range tests {
@@ -3714,7 +3701,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			WindowsPauseImageURL:                 "WindowsPauseImageURL",
 			AlwaysPullWindowsPauseImage:          true,
 		},
-		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
 		},
@@ -3773,7 +3759,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			WindowsPauseImageURL:                 "WindowsPauseImageURL",
 			AlwaysPullWindowsPauseImage:          true,
 		},
-		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
 		},

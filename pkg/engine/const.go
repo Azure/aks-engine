@@ -4,10 +4,6 @@
 package engine
 
 const (
-	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
 )
@@ -131,44 +127,14 @@ const (
 )
 
 const (
-	dcosCustomData188       = "dcos/dcoscustomdata188.t"
-	dcosCustomData190       = "dcos/dcoscustomdata190.t"
-	dcosCustomData198       = "dcos/dcoscustomdata198.t"
-	dcosCustomData110       = "dcos/dcoscustomdata110.t"
-	dcosProvision           = "dcos/dcosprovision.sh"
-	dcosWindowsProvision    = "dcos/dcosWindowsProvision.ps1"
-	dcosProvisionSource     = "dcos/dcosprovisionsource.sh"
-	dcos2Provision          = "dcos/bstrap/dcosprovision.sh"
-	dcos2BootstrapProvision = "dcos/bstrap/bootstrapprovision.sh"
-	dcos2CustomData1110     = "dcos/bstrap/dcos1.11.0.customdata.t"
-	dcos2CustomData1112     = "dcos/bstrap/dcos1.11.2.customdata.t"
-)
-
-const (
-	agentOutputs                  = "agentoutputs.t"
-	agentParams                   = "agentparams.t"
-	armParameters                 = "k8s/armparameters.t"
-	dcosAgentResourcesVMAS        = "dcos/dcosagentresourcesvmas.t"
-	dcosWindowsAgentResourcesVMAS = "dcos/dcosWindowsAgentResourcesVmas.t"
-	dcosAgentResourcesVMSS        = "dcos/dcosagentresourcesvmss.t"
-	dcosWindowsAgentResourcesVMSS = "dcos/dcosWindowsAgentResourcesVmss.t"
-	dcosAgentVars                 = "dcos/dcosagentvars.t"
-	dcosBaseFile                  = "dcos/dcosbase.t"
-	dcosParams                    = "dcos/dcosparams.t"
-	dcosMasterResources           = "dcos/dcosmasterresources.t"
-	dcosMasterVars                = "dcos/dcosmastervars.t"
-	dcos2BaseFile                 = "dcos/bstrap/dcosbase.t"
-	dcos2BootstrapVars            = "dcos/bstrap/bootstrapvars.t"
-	dcos2BootstrapParams          = "dcos/bstrap/bootstrapparams.t"
-	dcos2BootstrapResources       = "dcos/bstrap/bootstrapresources.t"
-	dcos2BootstrapCustomdata      = "dcos/bstrap/bootstrapcustomdata.yml"
-	dcos2MasterVars               = "dcos/bstrap/dcosmastervars.t"
-	dcos2MasterResources          = "dcos/bstrap/dcosmasterresources.t"
-	iaasOutputs                   = "iaasoutputs.t"
-	kubernetesParams              = "k8s/kubernetesparams.t"
-	masterOutputs                 = "masteroutputs.t"
-	masterParams                  = "masterparams.t"
-	windowsParams                 = "windowsparams.t"
+	agentOutputs     = "agentoutputs.t"
+	agentParams      = "agentparams.t"
+	armParameters    = "k8s/armparameters.t"
+	iaasOutputs      = "iaasoutputs.t"
+	kubernetesParams = "k8s/kubernetesparams.t"
+	masterOutputs    = "masteroutputs.t"
+	masterParams     = "masterparams.t"
+	windowsParams    = "windowsparams.t"
 )
 
 // addons source and destination file references

@@ -127,8 +127,6 @@ func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerServ
 
 func (t *TemplateGenerator) verifyFiles() error {
 	allFiles := commonTemplateFiles
-	allFiles = append(allFiles, dcosTemplateFiles...)
-	allFiles = append(allFiles, dcos2TemplateFiles...)
 	for _, file := range allFiles {
 		if _, err := Asset(file); err != nil {
 			return t.Translator.Errorf("template file %s does not exist", file)
@@ -141,14 +139,6 @@ func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]
 	var files []string
 	var baseFile string
 	switch properties.OrchestratorProfile.OrchestratorType {
-	case api.DCOS:
-		if properties.OrchestratorProfile.DcosConfig == nil || properties.OrchestratorProfile.DcosConfig.BootstrapProfile == nil {
-			files = append(commonTemplateFiles, dcosTemplateFiles...)
-			baseFile = dcosBaseFile
-		} else {
-			files = append(commonTemplateFiles, dcos2TemplateFiles...)
-			baseFile = dcos2BaseFile
-		}
 	default:
 		return nil, "", t.Translator.Errorf("orchestrator '%s' is unsupported", properties.OrchestratorProfile.OrchestratorType)
 	}
@@ -265,9 +255,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsIPMasqAgentEnabled": func() bool {
 			return cs.Properties.IsIPMasqAgentEnabled()
 		},
-		"IsDCOS19": func() bool {
-			return cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.IsDCOS19()
-		},
 		"IsKubernetesVersionGe": func(version string) bool {
 			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
@@ -320,9 +307,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return string(cs.Properties.OrchestratorProfile.KubernetesConfig.ProxyMode)
 		},
 		"HasPrivateRegistry": func() bool {
-			if cs.Properties.OrchestratorProfile.DcosConfig != nil {
-				return cs.Properties.OrchestratorProfile.DcosConfig.HasPrivateRegistry()
-			}
 			return false
 		},
 		"IsKubernetes": func() bool {
@@ -383,34 +367,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDataDisks": func(profile *api.AgentPoolProfile) string {
 			return getDataDisks(profile)
 		},
-		"HasBootstrap": func() bool {
-			return cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.HasBootstrap()
-		},
-		"GetDCOSBootstrapCustomData": func() string {
-			return getDCOSBootstrapCustomData(cs.Properties)
-		},
-		"GetDCOSMasterCustomData": func() string {
-			return getDCOSMasterCustomData(cs)
-		},
-		"GetDCOSAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			return getDCOSAgentCustomData(cs, profile)
-		},
-		"GetDCOSWindowsAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			return getDCOSWindowsAgentCustomData(cs, profile)
-		},
-		"GetDCOSWindowsAgentCustomNodeAttributes": func(profile *api.AgentPoolProfile) string {
-			return getDCOSWindowsAgentCustomAttributes(profile)
-		},
-		"GetDCOSWindowsAgentPreprovisionParameters": func(profile *api.AgentPoolProfile) string {
-			if profile.PreprovisionExtension != nil {
-				return getDCOSWindowsAgentPreprovisionParameters(cs, profile)
-			}
-			return ""
-		},
 		"GetMasterAllowedSizes": func() string {
-			if cs.Properties.OrchestratorProfile.OrchestratorType == api.DCOS {
-				return helpers.GetDCOSMasterAllowedSizes()
-			}
 			return helpers.GetKubernetesAllowedVMSKUs()
 		},
 		"GetDefaultVNETCIDR": func() string {
@@ -424,9 +381,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"GetSizeMap": func() string {
 			return helpers.GetSizeMap()
-		},
-		"WriteLinkedTemplatesForExtensions": func() string {
-			return getLinkedTemplatesForExtensions(cs.Properties)
 		},
 		"GetSshPublicKeysPowerShell": func() string {
 			return getSSHPublicKeysPowerShell(cs.Properties.LinuxProfile)

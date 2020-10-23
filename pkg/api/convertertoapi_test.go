@@ -17,74 +17,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestAddDCOSPublicAgentPool(t *testing.T) {
-	expectedNumPools := 2
-	for _, masterCount := range [2]int{1, 3} {
-		profiles := []*AgentPoolProfile{}
-		profile := makeAgentPoolProfile(1, "agentprivate", "test-dcos-pool", "Standard_D2_v2", Linux)
-		profiles = append(profiles, profile)
-		master := makeMasterProfile(masterCount, "test-dcos", "Standard_D2_v2")
-		props := getProperties(profiles, master)
-		expectedPublicPoolName := props.AgentPoolProfiles[0].Name + publicAgentPoolSuffix
-		expectedPublicDNSPrefix := props.AgentPoolProfiles[0].DNSPrefix
-		expectedPrivateDNSPrefix := ""
-		expectedPublicOSType := props.AgentPoolProfiles[0].OSType
-		expectedPublicVMSize := props.AgentPoolProfiles[0].VMSize
-		addDCOSPublicAgentPool(props)
-		if len(props.AgentPoolProfiles) != expectedNumPools {
-			t.Fatalf("incorrect agent pools count. expected=%d actual=%d", expectedNumPools, len(props.AgentPoolProfiles))
-		}
-		if props.AgentPoolProfiles[1].Name != expectedPublicPoolName {
-			t.Fatalf("incorrect public pool name. expected=%s actual=%s", expectedPublicPoolName, props.AgentPoolProfiles[1].Name)
-		}
-		if props.AgentPoolProfiles[1].DNSPrefix != expectedPublicDNSPrefix {
-			t.Fatalf("incorrect public pool DNS prefix. expected=%s actual=%s", expectedPublicDNSPrefix, props.AgentPoolProfiles[1].DNSPrefix)
-		}
-		if props.AgentPoolProfiles[0].DNSPrefix != expectedPrivateDNSPrefix {
-			t.Fatalf("incorrect private pool DNS prefix. expected=%s actual=%s", expectedPrivateDNSPrefix, props.AgentPoolProfiles[0].DNSPrefix)
-		}
-		if props.AgentPoolProfiles[1].OSType != expectedPublicOSType {
-			t.Fatalf("incorrect public pool OS type. expected=%s actual=%s", expectedPublicOSType, props.AgentPoolProfiles[1].OSType)
-		}
-		if props.AgentPoolProfiles[1].VMSize != expectedPublicVMSize {
-			t.Fatalf("incorrect public pool VM size. expected=%s actual=%s", expectedPublicVMSize, props.AgentPoolProfiles[1].VMSize)
-		}
-		for i, port := range [3]int{80, 443, 8080} {
-			if props.AgentPoolProfiles[1].Ports[i] != port {
-				t.Fatalf("incorrect public pool port assignment. expected=%d actual=%d", port, props.AgentPoolProfiles[1].Ports[i])
-			}
-		}
-		if props.AgentPoolProfiles[1].Count != masterCount {
-			t.Fatalf("incorrect public pool VM size. expected=%d actual=%d", masterCount, props.AgentPoolProfiles[1].Count)
-		}
-	}
-}
-
-func makeAgentPoolProfile(count int, name, dNSPrefix, vMSize string, oSType OSType) *AgentPoolProfile {
-	return &AgentPoolProfile{
-		Name:      name,
-		Count:     count,
-		DNSPrefix: dNSPrefix,
-		OSType:    oSType,
-		VMSize:    vMSize,
-	}
-}
-
-func makeMasterProfile(count int, dNSPrefix, vMSize string) *MasterProfile {
-	return &MasterProfile{
-		Count:     count,
-		DNSPrefix: dNSPrefix,
-		VMSize:    vMSize,
-	}
-}
-
-func getProperties(profiles []*AgentPoolProfile, master *MasterProfile) *Properties {
-	return &Properties{
-		AgentPoolProfiles: profiles,
-		MasterProfile:     master,
-	}
-}
-
 func TestKubernetesOrchestratorVersionFailWhenInvalid(t *testing.T) {
 	vlabscs := &vlabs.ContainerService{
 		Properties: &vlabs.Properties{
@@ -378,17 +310,6 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 						WindowsPauseImageURL:                 "WindowsPauseImageURL",
 						AlwaysPullWindowsPauseImage:          true,
 					},
-					DCOSSpecConfig: vlabs.DCOSSpecConfig{
-						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
-						DCOS190BootstrapDownloadURL:     "DCOS190BootstrapDownloadURL",
-						DCOS198BootstrapDownloadURL:     "DCOS198BootstrapDownloadURL",
-						DCOS110BootstrapDownloadURL:     "DCOS110BootstrapDownloadURL",
-						DCOS111BootstrapDownloadURL:     "DCOS111BootstrapDownloadURL",
-						DCOSWindowsBootstrapDownloadURL: "DCOSWindowsBootstrapDownloadURL",
-						DcosRepositoryURL:               "DcosRepositoryURL",
-						DcosClusterPackageListID:        "DcosClusterPackageListID",
-						DcosProviderPackageID:           "DcosProviderPackageID",
-					},
 					EndpointConfig: vlabs.AzureEndpointConfig{
 						ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
 					},
@@ -476,35 +397,6 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
 	}
 
-	//DCOSSpecConfig
-	if csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS188BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL)
-	}
-	if csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS190BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL)
-	}
-	if csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS198BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL)
-	}
-	if csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS110BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL)
-	}
-	if csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS111BootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL)
-	}
-	if csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL != vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL {
-		t.Errorf("incorrect DCOSWindowsBootstrapDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL, csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL)
-	}
-	if csSpec.DCOSSpecConfig.DcosRepositoryURL != vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL {
-		t.Errorf("incorrect DcosRepositoryURL, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL, csSpec.DCOSSpecConfig.DcosRepositoryURL)
-	}
-	if csSpec.DCOSSpecConfig.DcosClusterPackageListID != vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID {
-		t.Errorf("incorrect DcosClusterPackageListID, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID, csSpec.DCOSSpecConfig.DcosClusterPackageListID)
-	}
-	if csSpec.DCOSSpecConfig.DcosProviderPackageID != vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID {
-		t.Errorf("incorrect DcosProviderPackageID, expect: '%s', actual: '%s'", vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID, csSpec.DCOSSpecConfig.DcosProviderPackageID)
-	}
-
 	//EndpointConfig
 	if csSpec.EndpointConfig.ResourceManagerVMDNSSuffix != vlabscsSpec.EndpointConfig.ResourceManagerVMDNSSuffix {
 		t.Errorf("incorrect ResourceManagerVMDNSSuffix, expect: '%s', actual: '%s'", vlabscsSpec.EndpointConfig.ResourceManagerVMDNSSuffix, csSpec.EndpointConfig.ResourceManagerVMDNSSuffix)
@@ -547,23 +439,7 @@ func TestConvertVLabsContainerService(t *testing.T) {
 		Properties: &vlabs.Properties{
 			ProvisioningState: vlabs.Succeeded,
 			OrchestratorProfile: &vlabs.OrchestratorProfile{
-				OrchestratorType: DCOS,
-				DcosConfig: &vlabs.DcosConfig{
-					DcosBootstrapURL:         "SampleDcosBootstrapURL",
-					DcosWindowsBootstrapURL:  "SampleWindowsDcosBootstrapURL",
-					Registry:                 "SampleRegistry",
-					RegistryPass:             "SampleRegistryPass",
-					RegistryUser:             "SampleRegistryUser",
-					DcosClusterPackageListID: "SampleDcosClusterPackageListID",
-					DcosProviderPackageID:    "SampleDcosProviderPackageID",
-					BootstrapProfile: &vlabs.BootstrapProfile{
-						VMSize:       "Standard_Ds1_v1",
-						OSDiskSizeGB: 256,
-						OAuthEnabled: true,
-						StaticIP:     "172.0.0.1",
-						Subnet:       "255.255.255.0",
-					},
-				},
+				OrchestratorType: Kubernetes,
 			},
 			WindowsProfile: &vlabs.WindowsProfile{
 				AdminUsername: "sampleAdminUsername",
@@ -691,7 +567,6 @@ func TestConvertVLabsContainerService(t *testing.T) {
 
 	//Test Vlabs with Kubernetes Orchestrator
 	vlabsCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	vlabsCS.Properties.OrchestratorProfile.DcosConfig = nil
 	vlabsCS.Properties.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{
 		Addons: []vlabs.KubernetesAddon{
 			{
@@ -766,23 +641,7 @@ func TestTelemetryEnabled(t *testing.T) {
 		Properties: &vlabs.Properties{
 			ProvisioningState: vlabs.Succeeded,
 			OrchestratorProfile: &vlabs.OrchestratorProfile{
-				OrchestratorType: DCOS,
-				DcosConfig: &vlabs.DcosConfig{
-					DcosBootstrapURL:         "SampleDcosBootstrapURL",
-					DcosWindowsBootstrapURL:  "SampleWindowsDcosBootstrapURL",
-					Registry:                 "SampleRegistry",
-					RegistryPass:             "SampleRegistryPass",
-					RegistryUser:             "SampleRegistryUser",
-					DcosClusterPackageListID: "SampleDcosClusterPackageListID",
-					DcosProviderPackageID:    "SampleDcosProviderPackageID",
-					BootstrapProfile: &vlabs.BootstrapProfile{
-						VMSize:       "Standard_Ds1_v1",
-						OSDiskSizeGB: 256,
-						OAuthEnabled: true,
-						StaticIP:     "172.0.0.1",
-						Subnet:       "255.255.255.0",
-					},
-				},
+				OrchestratorType: Kubernetes,
 			},
 			WindowsProfile: &vlabs.WindowsProfile{
 				AdminUsername: "sampleAdminUsername",

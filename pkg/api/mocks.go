@@ -218,7 +218,6 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 				CloudName: AzureStackCloud,
 				//KubernetesSpecConfig is the default kubernetes container image url.
 				KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-				DCOSSpecConfig:       DefaultDCOSSpecConfig,
 				EndpointConfig: AzureEndpointConfig{
 					ResourceManagerVMDNSSuffix: "",
 				},

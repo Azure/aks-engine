@@ -248,52 +248,9 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			isUpdate,
 			vp.HasWindows(),
 			vp.IsAzureStackCloud())
-
-	case DCOS:
-		if vlabscs.DcosConfig != nil {
-			api.DcosConfig = &DcosConfig{}
-			convertVLabsDcosConfig(vlabscs.DcosConfig, api.DcosConfig)
-		}
-		api.OrchestratorVersion = common.RationalizeReleaseAndVersion(
-			vlabscs.OrchestratorType,
-			vlabscs.OrchestratorRelease,
-			vlabscs.OrchestratorVersion,
-			isUpdate,
-			false,
-			false)
 	}
 
 	return nil
-}
-
-func convertVLabsDcosConfig(vlabs *vlabs.DcosConfig, api *DcosConfig) {
-	api.DcosBootstrapURL = vlabs.DcosBootstrapURL
-	api.DcosWindowsBootstrapURL = vlabs.DcosWindowsBootstrapURL
-
-	if len(vlabs.Registry) > 0 {
-		api.Registry = vlabs.Registry
-	}
-
-	if len(vlabs.RegistryUser) > 0 {
-		api.RegistryUser = vlabs.RegistryUser
-	}
-
-	if len(vlabs.RegistryPass) > 0 {
-		api.RegistryPass = vlabs.RegistryPass
-	}
-	api.DcosRepositoryURL = vlabs.DcosRepositoryURL
-	api.DcosClusterPackageListID = vlabs.DcosClusterPackageListID
-	api.DcosProviderPackageID = vlabs.DcosProviderPackageID
-
-	if vlabs.BootstrapProfile != nil {
-		api.BootstrapProfile = &BootstrapProfile{
-			VMSize:       vlabs.BootstrapProfile.VMSize,
-			OSDiskSizeGB: vlabs.BootstrapProfile.OSDiskSizeGB,
-			OAuthEnabled: vlabs.BootstrapProfile.OAuthEnabled,
-			StaticIP:     vlabs.BootstrapProfile.StaticIP,
-			Subnet:       vlabs.BootstrapProfile.Subnet,
-		}
-	}
 }
 
 func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *KubernetesConfig) {
@@ -749,30 +706,6 @@ func convertVLabsAADProfile(vlabs *vlabs.AADProfile, api *AADProfile) {
 	api.Authenticator = OIDC
 }
 
-func addDCOSPublicAgentPool(api *Properties) {
-	publicPool := &AgentPoolProfile{}
-	// tag this agent pool with a known suffix string
-	publicPool.Name = api.AgentPoolProfiles[0].Name + publicAgentPoolSuffix
-	// move DNS prefix to public pool
-	publicPool.DNSPrefix = api.AgentPoolProfiles[0].DNSPrefix
-	api.AgentPoolProfiles[0].DNSPrefix = ""
-	publicPool.VMSize = api.AgentPoolProfiles[0].VMSize // - use same VMsize for public pool
-	publicPool.OSType = api.AgentPoolProfiles[0].OSType // - use same OSType for public pool
-	api.AgentPoolProfiles[0].Ports = nil
-	for _, port := range [3]int{80, 443, 8080} {
-		publicPool.Ports = append(publicPool.Ports, port)
-	}
-	// - VM Count for public agents is based on the following:
-	// 1 master => 1 VM
-	// 3, 5 master => 3 VMsize
-	if api.MasterProfile.Count == 1 {
-		publicPool.Count = 1
-	} else {
-		publicPool.Count = 3
-	}
-	api.AgentPoolProfiles = append(api.AgentPoolProfiles, publicPool)
-}
-
 func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *CustomCloudProfile) {
 	if vlabs.Environment != nil {
 		api.Environment = &azure.Environment{}
@@ -824,17 +757,6 @@ func convertVLabsTelemetryProfile(vlabs *vlabs.TelemetryProfile, api *TelemetryP
 
 func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig, api *AzureEnvironmentSpecConfig) {
 	api.CloudName = vlabses.CloudName
-	api.DCOSSpecConfig = DCOSSpecConfig{
-		DCOS188BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS188BootstrapDownloadURL,
-		DCOS190BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS190BootstrapDownloadURL,
-		DCOS198BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS198BootstrapDownloadURL,
-		DCOS110BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS110BootstrapDownloadURL,
-		DCOS111BootstrapDownloadURL:     vlabses.DCOSSpecConfig.DCOS111BootstrapDownloadURL,
-		DCOSWindowsBootstrapDownloadURL: vlabses.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL,
-		DcosRepositoryURL:               vlabses.DCOSSpecConfig.DcosRepositoryURL,
-		DcosClusterPackageListID:        vlabses.DCOSSpecConfig.DcosClusterPackageListID,
-		DcosProviderPackageID:           vlabses.DCOSSpecConfig.DcosProviderPackageID,
-	}
 	api.EndpointConfig = AzureEndpointConfig{
 		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}

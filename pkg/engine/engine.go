@@ -30,8 +30,6 @@ import (
 )
 
 var commonTemplateFiles = []string{agentOutputs, agentParams, masterOutputs, iaasOutputs, masterParams, windowsParams}
-var dcosTemplateFiles = []string{dcosBaseFile, dcosAgentResourcesVMAS, dcosAgentResourcesVMSS, dcosAgentVars, dcosMasterResources, dcosMasterVars, dcosParams, dcosWindowsAgentResourcesVMAS, dcosWindowsAgentResourcesVMSS}
-var dcos2TemplateFiles = []string{dcos2BaseFile, dcosAgentResourcesVMAS, dcosAgentResourcesVMSS, dcosAgentVars, dcos2MasterResources, dcos2BootstrapResources, dcos2MasterVars, dcosParams, dcosWindowsAgentResourcesVMAS, dcosWindowsAgentResourcesVMSS, dcos2BootstrapVars, dcos2BootstrapParams}
 var kubernetesParamFiles = []string{armParameters, kubernetesParams, masterParams, agentParams, windowsParams}
 
 var keyvaultSecretPathRe *regexp.Regexp
@@ -231,157 +229,6 @@ func makeWindowsExtensionScriptCommands(extension *api.Extension, extensionProfi
 	scriptFileDir := fmt.Sprintf("$env:SystemDrive:/AzureData/extensions/%s", extensionProfile.Name)
 	scriptFilePath := fmt.Sprintf("%s/%s", scriptFileDir, extensionProfile.Script)
 	return fmt.Sprintf("New-Item -ItemType Directory -Force -Path \"%s\" ; Invoke-WebRequest -Uri \"%s\" -OutFile \"%s\" ; powershell \"%s `\"',parameters('%sParameters'),'`\"\"\n", scriptFileDir, scriptURL, scriptFilePath, scriptFilePath, extensionProfile.Name)
-}
-
-func getDCOSWindowsAgentPreprovisionParameters(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
-	extension := profile.PreprovisionExtension
-
-	var extensionProfile *api.ExtensionProfile
-
-	for _, eP := range cs.Properties.ExtensionProfiles {
-		if strings.EqualFold(eP.Name, extension.Name) {
-			extensionProfile = eP
-			break
-		}
-	}
-
-	parms := extensionProfile.ExtensionParameters
-	return parms
-}
-
-func getDCOSDefaultBootstrapInstallerURL(profile *api.OrchestratorProfile) string {
-	if profile.OrchestratorType == api.DCOS {
-		switch profile.OrchestratorVersion {
-		case common.DCOSVersion1Dot11Dot2:
-			return "https://dcos-mirror.azureedge.net/dcos-1-11-2/dcos_generate_config.sh"
-		case common.DCOSVersion1Dot11Dot0:
-			return "https://dcos-mirror.azureedge.net/dcos-1-11-0/dcos_generate_config.sh"
-		}
-	}
-	return ""
-}
-
-func getDCOSDefaultWindowsBootstrapInstallerURL(profile *api.OrchestratorProfile) string {
-	if profile.OrchestratorType == api.DCOS {
-		switch profile.OrchestratorVersion {
-		case common.DCOSVersion1Dot11Dot2:
-			return "https://dcos-mirror.azureedge.net/dcos-windows/1-11-2"
-		case common.DCOSVersion1Dot11Dot0:
-			return "https://dcos-mirror.azureedge.net/dcos-windows/1-11-0"
-		}
-	}
-	return ""
-}
-
-func getDCOSDefaultProviderPackageGUID(orchestratorType string, orchestratorVersion string, masterCount int) string {
-	if orchestratorType == api.DCOS {
-		switch orchestratorVersion {
-		case common.DCOSVersion1Dot10Dot0:
-			switch masterCount {
-			case 1:
-				return "c4ec6210f396b8e435177b82e3280a2cef0ce721"
-			case 3:
-				return "08197947cb57d479eddb077a429fa15c139d7d20"
-			case 5:
-				return "f286ad9d3641da5abb622e4a8781f73ecd8492fa"
-			}
-		case common.DCOSVersion1Dot9Dot0:
-			switch masterCount {
-			case 1:
-				return "bcc883b7a3191412cf41824bdee06c1142187a0b"
-			case 3:
-				return "dcff7e24c0c1827bebeb7f1a806f558054481b33"
-			case 5:
-				return "b41bfa84137a6374b2ff5eb1655364d7302bd257"
-			}
-		case common.DCOSVersion1Dot9Dot8:
-			switch masterCount {
-			case 1:
-				return "e8b0e3fc4a16394dc6dd5b19fc54bf1543bff429"
-			case 3:
-				return "2d36c3f570d9dd7d187c699f9a322ed9d95e7dfa"
-			case 5:
-				return "c03c9587f88929f310b80af4f448b7b51654f1c8"
-			}
-		case common.DCOSVersion1Dot8Dot8:
-			switch masterCount {
-			case 1:
-				return "441385ce2f5942df7e29075c12fb38fa5e92cbba"
-			case 3:
-				return "b1cd359287504efb780257bd12cc3a63704e42d4"
-			case 5:
-				return "d9b61156dfcc9383e014851529738aa550ef57d9"
-			}
-		}
-	}
-	return ""
-}
-
-func getDCOSDefaultRepositoryURL(orchestratorType string, orchestratorVersion string) string {
-	if orchestratorType == api.DCOS {
-		switch orchestratorVersion {
-		case common.DCOSVersion1Dot10Dot0:
-			return "https://dcosio.azureedge.net/dcos/stable/1.10.0"
-		case common.DCOSVersion1Dot9Dot8:
-			return "https://dcosio.azureedge.net/dcos/stable/1.9.8"
-		default:
-			return "https://dcosio.azureedge.net/dcos/stable"
-		}
-	}
-	return ""
-}
-
-func getDCOSMasterCustomNodeLabels() string {
-	// return empty string for DCOS since no attribtutes needed on master
-	return ""
-}
-
-func getDCOSAgentCustomNodeLabels(profile *api.AgentPoolProfile) string {
-	var buf bytes.Buffer
-	var attrstring string
-	buf.WriteString("")
-	// always write MESOS_ATTRIBUTES because
-	// the provision script will add FD/UD attributes
-	// at node provisioning time
-	if len(profile.OSType) > 0 {
-		attrstring = fmt.Sprintf("MESOS_ATTRIBUTES=\"os:%s", profile.OSType)
-	} else {
-		attrstring = fmt.Sprintf("MESOS_ATTRIBUTES=\"os:%s", api.Linux)
-	}
-
-	if len(profile.Ports) > 0 {
-		attrstring += ";public_ip:yes"
-	}
-
-	buf.WriteString(attrstring)
-	if len(profile.CustomNodeLabels) > 0 {
-		for k, v := range profile.CustomNodeLabels {
-			buf.WriteString(fmt.Sprintf(";%s:%s", k, v))
-		}
-	}
-	buf.WriteString("\"")
-	return buf.String()
-}
-
-func getDCOSWindowsAgentCustomAttributes(profile *api.AgentPoolProfile) string {
-	var buf bytes.Buffer
-	var attrstring string
-	buf.WriteString("")
-	if len(profile.OSType) > 0 {
-		attrstring = fmt.Sprintf("os:%s", profile.OSType)
-	} else {
-		attrstring = "os:windows"
-	}
-	if len(profile.Ports) > 0 {
-		attrstring += ";public_ip:yes"
-	}
-	buf.WriteString(attrstring)
-	if len(profile.CustomNodeLabels) > 0 {
-		for k, v := range profile.CustomNodeLabels {
-			buf.WriteString(fmt.Sprintf(";%s:%s", k, v))
-		}
-	}
-	return buf.String()
 }
 
 func getVNETAddressPrefixes(properties *api.Properties) string {
@@ -992,36 +839,6 @@ func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 		}
 	}
 	return result
-}
-
-func getDCOSMasterProvisionScript(orchProfile *api.OrchestratorProfile, bootstrapIP string) string {
-	scriptname := dcos2Provision
-	if orchProfile.DcosConfig == nil || orchProfile.DcosConfig.BootstrapProfile == nil {
-		scriptname = dcosProvision
-	}
-
-	// add the provision script
-	bp, err := Asset(scriptname)
-	if err != nil {
-		panic(fmt.Sprintf("BUG: %s", err.Error()))
-	}
-
-	provisionScript := string(bp)
-	if strings.Contains(provisionScript, "'") {
-		panic(fmt.Sprintf("BUG: %s may not contain character '", scriptname))
-	}
-
-	// the embedded roleFileContents
-	roleFileContents := `touch /etc/mesosphere/roles/master
-touch /etc/mesosphere/roles/azure_master`
-	provisionScript = strings.Replace(provisionScript, "ROLESFILECONTENTS", roleFileContents, -1)
-	provisionScript = strings.Replace(provisionScript, "BOOTSTRAP_IP", bootstrapIP, -1)
-
-	var b bytes.Buffer
-	b.WriteString(provisionScript)
-	b.WriteString("\n")
-
-	return strings.Replace(strings.Replace(b.String(), "\r\n", "\n", -1), "\n", "\n\n    ", -1)
 }
 
 func getKubernetesSubnets(properties *api.Properties) string {

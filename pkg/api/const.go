@@ -5,10 +5,6 @@ package api
 
 // the orchestrators supported by vlabs
 const (
-	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
 )
@@ -113,9 +109,6 @@ const (
 	// Ephemeral means that the node's os disk is ephemeral. This is not compatible with attached volumes.
 	Ephemeral = "Ephemeral"
 )
-
-// To identify programmatically generated public agent pools
-const publicAgentPoolSuffix = "-public"
 
 const (
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
@@ -317,11 +310,6 @@ const (
 )
 
 const (
-	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
-	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
-	//AzureChinaCloudDCOSBootstrapDownloadURL is the China specific DCOS package download url.
-	AzureChinaCloudDCOSBootstrapDownloadURL = "https://acsengine.blob.core.chinacloudapi.cn/dcos/%s.bootstrap.tar.xz"
-	//AzureEdgeDCOSWindowsBootstrapDownloadURL
 	DefaultMicrosoftAptRepositoryURL = "https://packages.microsoft.com"
 )
 
@@ -344,16 +332,6 @@ const (
 )
 
 const (
-	// DefaultMasterSubnet specifies the default master subnet for DCOS
-	DefaultMasterSubnet = "172.16.0.0/24"
-	// DefaultFirstConsecutiveStaticIP specifies the static IP address on master 0 for DCOS
-	DefaultFirstConsecutiveStaticIP = "172.16.0.5"
-	// DefaultDCOSMasterSubnet specifies the default master subnet for a DCOS cluster
-	DefaultDCOSMasterSubnet = "192.168.255.0/24"
-	// DefaultDCOSFirstConsecutiveStaticIP  specifies the static IP address on master 0 for a DCOS cluster
-	DefaultDCOSFirstConsecutiveStaticIP = "192.168.255.5"
-	// DefaultDCOSBootstrapStaticIP specifies the static IP address on bootstrap for a DCOS cluster
-	DefaultDCOSBootstrapStaticIP = "192.168.255.240"
 	// DefaultKubernetesMasterSubnet specifies the default subnet for masters and agents.
 	// Except when master VMSS is used, this specifies the default subnet for masters.
 	DefaultKubernetesMasterSubnet = "10.240.0.0/16"

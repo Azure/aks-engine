@@ -46,8 +46,6 @@ func ConvertOrchestratorVersionProfileToVLabs(api *OrchestratorVersionProfile) *
 	switch api.OrchestratorType {
 	case Kubernetes:
 		vlabsProfile.OrchestratorType = vlabs.Kubernetes
-	case DCOS:
-		vlabsProfile.OrchestratorType = vlabs.DCOS
 	}
 	vlabsProfile.OrchestratorVersion = api.OrchestratorVersion
 	vlabsProfile.Default = api.Default
@@ -237,41 +235,6 @@ func convertOrchestratorProfileToVLabs(api *OrchestratorProfile, o *vlabs.Orches
 	if api.KubernetesConfig != nil {
 		o.KubernetesConfig = &vlabs.KubernetesConfig{}
 		convertKubernetesConfigToVLabs(api.KubernetesConfig, o.KubernetesConfig)
-	}
-
-	if api.DcosConfig != nil {
-		o.DcosConfig = &vlabs.DcosConfig{}
-		convertDcosConfigToVLabs(api.DcosConfig, o.DcosConfig)
-	}
-}
-
-func convertDcosConfigToVLabs(api *DcosConfig, vl *vlabs.DcosConfig) {
-	vl.DcosBootstrapURL = api.DcosBootstrapURL
-	vl.DcosWindowsBootstrapURL = api.DcosWindowsBootstrapURL
-
-	if api.Registry != "" {
-		vl.Registry = api.Registry
-	}
-
-	if api.RegistryUser != "" {
-		vl.RegistryUser = api.RegistryUser
-	}
-
-	if api.RegistryPass != "" {
-		vl.RegistryPass = api.RegistryPass
-	}
-	vl.DcosRepositoryURL = api.DcosRepositoryURL
-	vl.DcosClusterPackageListID = api.DcosClusterPackageListID
-	vl.DcosProviderPackageID = api.DcosProviderPackageID
-
-	if api.BootstrapProfile != nil {
-		vl.BootstrapProfile = &vlabs.BootstrapProfile{
-			VMSize:       api.BootstrapProfile.VMSize,
-			OSDiskSizeGB: api.BootstrapProfile.OSDiskSizeGB,
-			OAuthEnabled: api.BootstrapProfile.OAuthEnabled,
-			StaticIP:     api.BootstrapProfile.StaticIP,
-			Subnet:       api.BootstrapProfile.Subnet,
-		}
 	}
 }
 
@@ -743,17 +706,6 @@ func convertTelemetryProfileToVLabs(api *TelemetryProfile, vlabstp *vlabs.Teleme
 
 func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, vlabses *vlabs.AzureEnvironmentSpecConfig) {
 	vlabses.CloudName = api.CloudName
-	vlabses.DCOSSpecConfig = vlabs.DCOSSpecConfig{
-		DCOS188BootstrapDownloadURL:     api.DCOSSpecConfig.DCOS188BootstrapDownloadURL,
-		DCOS190BootstrapDownloadURL:     api.DCOSSpecConfig.DCOS190BootstrapDownloadURL,
-		DCOS198BootstrapDownloadURL:     api.DCOSSpecConfig.DCOS198BootstrapDownloadURL,
-		DCOS110BootstrapDownloadURL:     api.DCOSSpecConfig.DCOS110BootstrapDownloadURL,
-		DCOS111BootstrapDownloadURL:     api.DCOSSpecConfig.DCOS111BootstrapDownloadURL,
-		DCOSWindowsBootstrapDownloadURL: api.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL,
-		DcosRepositoryURL:               api.DCOSSpecConfig.DcosRepositoryURL,
-		DcosClusterPackageListID:        api.DCOSSpecConfig.DcosClusterPackageListID,
-		DcosProviderPackageID:           api.DCOSSpecConfig.DcosProviderPackageID,
-	}
 	vlabses.EndpointConfig = vlabs.AzureEndpointConfig{
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}

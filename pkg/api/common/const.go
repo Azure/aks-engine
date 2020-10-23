@@ -5,10 +5,6 @@ package common
 
 // the orchestrators supported
 const (
-	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
 )
@@ -71,38 +67,6 @@ const (
 )
 
 const LegacyControlPlaneVMPrefix string = "k8s-master"
-
-const (
-	// DCOSVersion1Dot11Dot2 is the major.minor.patch string for 1.11.0 versions of DCOS
-	DCOSVersion1Dot11Dot2 string = "1.11.2"
-	// DCOSVersion1Dot11Dot0 is the major.minor.patch string for 1.11.0 versions of DCOS
-	DCOSVersion1Dot11Dot0 string = "1.11.0"
-	// DCOSVersion1Dot10Dot0 is the major.minor.patch string for 1.10.0 versions of DCOS
-	DCOSVersion1Dot10Dot0 string = "1.10.0"
-	// DCOSVersion1Dot9Dot0 is the major.minor.patch string for 1.9.0 versions of DCOS
-	DCOSVersion1Dot9Dot0 string = "1.9.0"
-	// DCOSVersion1Dot9Dot8 is the major.minor.patch string for 1.9.8 versions of DCOS
-	DCOSVersion1Dot9Dot8 string = "1.9.8"
-	// DCOSVersion1Dot8Dot8 is the major.minor.patch string for 1.8.8 versions of DCOS
-	DCOSVersion1Dot8Dot8 string = "1.8.8"
-	// DCOSDefaultVersion is the default major.minor.patch version for DCOS
-	DCOSDefaultVersion string = DCOSVersion1Dot11Dot0
-)
-
-// AllDCOSSupportedVersions maintain a list of available dcos versions in aks-engine
-var AllDCOSSupportedVersions = []string{
-	DCOSVersion1Dot11Dot2,
-	DCOSVersion1Dot11Dot0,
-	DCOSVersion1Dot10Dot0,
-	DCOSVersion1Dot9Dot8,
-	DCOSVersion1Dot9Dot0,
-	DCOSVersion1Dot8Dot8,
-}
-
-// GetAllSupportedDCOSVersions returns a slice of all supported DCOS versions.
-func GetAllSupportedDCOSVersions() []string {
-	return AllDCOSSupportedVersions
-}
 
 // MinCloudProviderQPSToBucketFactor defines the minimum ratio between QPS and Bucket size for cloudprovider rate limiting
 const MinCloudProviderQPSToBucketFactor float64 = 0.1

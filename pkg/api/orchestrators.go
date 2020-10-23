@@ -22,15 +22,12 @@ var versionsMapAzureStack map[string][]string
 func init() {
 	funcmap = map[string]orchestratorsFunc{
 		Kubernetes: kubernetesInfo,
-		DCOS:       dcosInfo,
 	}
 	versionsMap = map[string][]string{
 		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false, false),
-		DCOS:       common.GetAllSupportedDCOSVersions(),
 	}
 	versionsMapAzureStack = map[string][]string{
 		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false, true),
-		DCOS:       common.GetAllSupportedDCOSVersions(),
 	}
 }
 
@@ -38,8 +35,6 @@ func validate(orchestrator, version string) (string, error) {
 	switch {
 	case strings.EqualFold(orchestrator, Kubernetes):
 		return Kubernetes, nil
-	case strings.EqualFold(orchestrator, DCOS):
-		return DCOS, nil
 	case orchestrator == "":
 		if version != "" {
 			return "", errors.Errorf("Must specify orchestrator for version '%s'", version)
@@ -112,7 +107,7 @@ func GetOrchestratorVersionProfile(orch *OrchestratorProfile, hasWindows bool, i
 		return nil, errors.New("Missing Orchestrator Version")
 	}
 	switch orch.OrchestratorType {
-	case Kubernetes, DCOS:
+	case Kubernetes:
 		arr, err := funcmap[orch.OrchestratorType](orch, hasWindows, isAzureStackCloud)
 		if err != nil {
 			return nil, err
@@ -207,52 +202,4 @@ func getKubernetesAvailableUpgradeVersions(orchestratorVersion string, supported
 	}
 	return []string{}, nil
 
-}
-
-func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool, isAzureStackCloud bool) ([]*OrchestratorVersionProfile, error) {
-	orchs := []*OrchestratorVersionProfile{}
-	if csOrch.OrchestratorVersion == "" {
-		// get info for all supported versions
-		for _, ver := range common.AllDCOSSupportedVersions {
-			upgrades := dcosUpgrades(&OrchestratorProfile{OrchestratorVersion: ver})
-			orchs = append(orchs,
-				&OrchestratorVersionProfile{
-					OrchestratorProfile: OrchestratorProfile{
-						OrchestratorType:    DCOS,
-						OrchestratorVersion: ver,
-					},
-					Default:  ver == common.DCOSDefaultVersion,
-					Upgrades: upgrades,
-				})
-		}
-	} else {
-		if !isVersionSupported(csOrch, false) {
-			return nil, errors.Errorf("DCOS version %s is not supported", csOrch.OrchestratorVersion)
-		}
-
-		// get info for the specified version
-		upgrades := dcosUpgrades(csOrch)
-		orchs = append(orchs,
-			&OrchestratorVersionProfile{
-				OrchestratorProfile: OrchestratorProfile{
-					OrchestratorType:    DCOS,
-					OrchestratorVersion: csOrch.OrchestratorVersion,
-				},
-				Default:  csOrch.OrchestratorVersion == common.DCOSDefaultVersion,
-				Upgrades: upgrades,
-			})
-	}
-	return orchs, nil
-}
-
-func dcosUpgrades(csOrch *OrchestratorProfile) []*OrchestratorProfile {
-	ret := []*OrchestratorProfile{}
-
-	if csOrch.OrchestratorVersion == common.DCOSVersion1Dot11Dot0 {
-		ret = append(ret, &OrchestratorProfile{
-			OrchestratorType:    DCOS,
-			OrchestratorVersion: common.DCOSVersion1Dot11Dot2,
-		})
-	}
-	return ret
 }

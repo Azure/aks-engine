@@ -805,60 +805,6 @@ func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 	}
 }
 
-func TestGetDCOSWindowsAgentPreprovisionParameters(t *testing.T) {
-	cs := &api.ContainerService{
-		Properties: &api.Properties{
-			ExtensionProfiles: []*api.ExtensionProfile{
-				{
-					Name:                "fooExtension",
-					ExtensionParameters: "fooExtensionParams",
-				},
-			},
-		},
-	}
-
-	profile := &api.AgentPoolProfile{
-		PreprovisionExtension: &api.Extension{
-			Name: "fooExtension",
-		},
-	}
-
-	actual := getDCOSWindowsAgentPreprovisionParameters(cs, profile)
-
-	expected := "fooExtensionParams"
-
-	if actual != expected {
-		t.Errorf("expected to get %s, but got %s instead", expected, actual)
-	}
-}
-
-func TestGetDCOSWindowsAgentCustomAttributes(t *testing.T) {
-	profile := &api.AgentPoolProfile{
-		OSType: api.Windows,
-		Ports: []int{
-			8000,
-			8080,
-		},
-		CustomNodeLabels: map[string]string{
-			"foo":   "bar",
-			"abc":   "xyz",
-			"lorem": "ipsum",
-		},
-	}
-
-	actual := getDCOSWindowsAgentCustomAttributes(profile)
-
-	if !strings.Contains(actual, "os:Windows;public_ip:yes;") {
-		t.Errorf("expected output string of getDCOSWindowsAgentCustomAttributes %s to contain os:Windows;public_ip:yes;", actual)
-	}
-
-	for k, v := range profile.CustomNodeLabels {
-		if !strings.Contains(actual, fmt.Sprintf("%s:%s", k, v)) {
-			t.Errorf("expected output string of getDCOSWindowsAgentCustomAttributes %s to contain key-value pairs %s:%s", actual, k, v)
-		}
-	}
-}
-
 func TestGetKubernetesSubnets(t *testing.T) {
 	props := &api.Properties{
 		AgentPoolProfiles: []*api.AgentPoolProfile{

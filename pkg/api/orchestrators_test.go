@@ -113,37 +113,6 @@ func TestKubernetesInfo(t *testing.T) {
 
 }
 
-func TestDcosInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"invalid number",
-		"invalid.number",
-		"a4.b7.c3",
-		"31.29.",
-		".17.02",
-		"43.156.89.",
-		"1.2.a"}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    DCOS,
-			OrchestratorVersion: v,
-		}
-
-		_, e := dcosInfo(csOrch, false, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    DCOS,
-		OrchestratorVersion: common.DCOSDefaultVersion,
-	}
-
-	_, e := dcosInfo(csOrch, false, false)
-	Expect(e).To(BeNil())
-}
-
 func TestGetKubernetesAvailableUpgradeVersions(t *testing.T) {
 	RegisterTestingT(t)
 	cases := []struct {
