@@ -35,7 +35,7 @@ type Config struct {
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX" default:""`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX" default:""`
 	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
-	UseManagedIdentity             bool   `envconfig:"USE_MANAGED_IDENTITY" default:""`
+	UseManagedIdentity             bool   `envconfig:"USE_MANAGED_IDENTITY" default:"true"`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY" default:""`
 	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
@@ -151,9 +151,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
-	if config.UseManagedIdentity {
-		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
-	}
+	prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(config.UseManagedIdentity)
 
 	if config.ClientID != "" && config.ClientSecret != "" && !(prop.OrchestratorProfile.KubernetesConfig != nil && to.Bool(prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)) {
 		if !prop.IsAzureStackCloud() {
