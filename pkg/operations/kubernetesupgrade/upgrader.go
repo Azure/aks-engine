@@ -19,6 +19,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -791,7 +792,7 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 	return lastVMName, nil
 }
 
-func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesClient, oldNodeName string, newNodeName string) error {
+func (ku *Upgrader) copyCustomPropertiesToNewNode(client kubernetes.Client, oldNodeName string, newNodeName string) error {
 	// The new node is created without any taints, Kubernetes might schedule some pods on this newly created node before the taints/annotations/labels
 	// are copied over from corresponding old node. So drain the new node first before copying over the node properties.
 	// Note: SafelyDrainNodeWithClient() sets the Unschedulable of the node to true, set Unschedulable to false in copyCustomNodeProperties
@@ -846,7 +847,7 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	}
 }
 
-func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
+func (ku *Upgrader) copyCustomNodeProperties(client kubernetes.Client, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
 	// copy additional custom annotations from old node to new node
 	if oldNode.Annotations != nil {
 		if newNode.Annotations == nil {
@@ -893,7 +894,7 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	return err
 }
 
-func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (armhelpers.KubernetesClient, error) {
+func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (kubernetes.Client, error) {
 	apiserverURL := ku.DataModel.Properties.GetMasterFQDN()
 	if ku.DataModel.Properties.HostedMasterProfile != nil {
 		apiServerListeningPort := 443

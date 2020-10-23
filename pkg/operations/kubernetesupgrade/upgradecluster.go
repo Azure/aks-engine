@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -90,7 +91,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 	uc.UpgradedMasterVMs = &[]compute.VirtualMachine{}
 	uc.AgentPools = make(map[string]*AgentPoolTopology)
 
-	var kubeClient armhelpers.KubernetesClient
+	var kubeClient kubernetes.Client
 	if az != nil {
 		timeout := time.Duration(60) * time.Minute
 		k, err := az.GetKubernetesClient("", kubeConfig, interval, timeout)
@@ -146,7 +147,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 }
 
 // SetClusterAutoscalerReplicaCount changes the replica count of a cluster-autoscaler deployment.
-func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers.KubernetesClient, replicaCount int32) (int32, error) {
+func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient kubernetes.Client, replicaCount int32) (int32, error) {
 	if kubeClient == nil {
 		return 0, errors.New("no kubernetes client")
 	}
@@ -184,7 +185,7 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 	return u
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesClient, resourceGroup string) error {
+func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient kubernetes.Client, resourceGroup string) error {
 	goalVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -322,7 +323,7 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 // Also, if the latest VMSS model is applied, then we can get the version info from the tags.
 // Otherwise, we have to get version via K8s API. This is because VMSS does not support tags
 // for individual instances and old/new instances have the same tags.
-func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string, getVersionFromTags bool) string {
+func (uc *UpgradeCluster) getNodeVersion(client kubernetes.Client, name string, tags map[string]*string, getVersionFromTags bool) string {
 	if getVersionFromTags {
 		if tags != nil && tags["orchestrator"] != nil {
 			parts := strings.Split(*tags["orchestrator"], ":")
