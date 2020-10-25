@@ -409,7 +409,7 @@ func (glc *getLogsCmd) getCloudName() string {
 func filterNodesFromPool(nodeList []v1.Node, agentPoolName string) []v1.Node {
 	var linuxNodeList []v1.Node
 	for _, node := range nodeList {
-		if strings.EqualFold(strings.Split(node.Name, "-")[1], agentPoolName) {
+		if !strings.EqualFold(strings.Split(node.Name, "-")[1], agentPoolName) {
 			linuxNodeList = append(linuxNodeList, node)
 		}
 	}
