@@ -2422,6 +2422,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("should be able to get nodes metrics")
 			err = node.TopNodesWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
+
+			By("Verifying pods & services can be deleted")
+			err = cpuDeployment.Delete(util.DefaultDeleteRetries)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 
