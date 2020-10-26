@@ -406,6 +406,10 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 		}
 	}
 
+	if a.HasFlatcar() && o.KubernetesConfig.NetworkPlugin == "azure" && o.KubernetesConfig.NetworkMode == NetworkModeBridge {
+		return errors.Errorf("Flatcar node pools require 'transparent' networkMode with Azure CNI")
+	}
+
 	if o.OrchestratorType != Kubernetes && o.KubernetesConfig != nil {
 		return errors.Errorf("KubernetesConfig can be specified only when OrchestratorType is Kubernetes")
 	}

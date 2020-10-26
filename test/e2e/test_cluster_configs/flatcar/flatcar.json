@@ -1,13 +1,12 @@
 {
-	"env": {
-		"SKIP_TESTS": "true"
-	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
+					"networkPlugin": "azure",
+					"networkMode": "transparent",
 					"addons": [
 						{
 							"name": "cluster-autoscaler",
