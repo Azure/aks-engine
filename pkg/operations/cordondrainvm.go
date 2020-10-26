@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -25,7 +26,7 @@ const (
 )
 
 type drainOperation struct {
-	client  armhelpers.KubernetesClient
+	client  kubernetes.Client
 	node    *v1.Node
 	logger  *log.Entry
 	timeout time.Duration
@@ -44,7 +45,7 @@ func SafelyDrainNode(az armhelpers.AKSEngineClient, logger *log.Entry, apiserver
 }
 
 // SafelyDrainNodeWithClient safely drains a node so that it can be deleted from the cluster
-func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.Entry, nodeName string, timeout time.Duration) error {
+func SafelyDrainNodeWithClient(client kubernetes.Client, logger *log.Entry, nodeName string, timeout time.Duration) error {
 	nodeName = strings.ToLower(nodeName)
 	//Mark the node unschedulable
 	var node *v1.Node
