@@ -795,6 +795,14 @@ func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *Custom
 		api.Environment.ResourceManagerVMDNSSuffix = vlabs.Environment.ResourceManagerVMDNSSuffix
 		api.Environment.ContainerRegistryDNSSuffix = vlabs.Environment.ContainerRegistryDNSSuffix
 		api.Environment.TokenAudience = vlabs.Environment.TokenAudience
+		api.Environment.ResourceIdentifiers = azure.ResourceIdentifier{
+			Graph:               vlabs.Environment.ResourceIdentifiers.Graph,
+			KeyVault:            vlabs.Environment.ResourceIdentifiers.KeyVault,
+			Datalake:            vlabs.Environment.ResourceIdentifiers.Datalake,
+			Batch:               vlabs.Environment.ResourceIdentifiers.Batch,
+			OperationalInsights: vlabs.Environment.ResourceIdentifiers.OperationalInsights,
+			Storage:             vlabs.Environment.ResourceIdentifiers.Storage,
+		}
 	}
 	if vlabs.AzureEnvironmentSpecConfig != nil {
 		api.AzureEnvironmentSpecConfig = &AzureEnvironmentSpecConfig{}
