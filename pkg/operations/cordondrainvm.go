@@ -4,6 +4,7 @@
 package operations
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -173,24 +174,31 @@ func (o *drainOperation) deleteOrEvictPods(pods []v1.Pod) error {
 }
 
 func (o *drainOperation) evictPods(pods []v1.Pod, policyGroupVersion string) error {
+	ctx, cancel := context.WithCancel(context.Background())
 	doneCh := make(chan bool, len(pods))
 	errCh := make(chan error, 1)
 
 	for _, pod := range pods {
-		go func(pod v1.Pod, doneCh chan bool, errCh chan error) {
+		go func(ctx context.Context, pod v1.Pod, doneCh chan bool, errCh chan error) {
 			var err error
+		doneEviction:
 			for {
-				err = o.client.EvictPod(&pod, policyGroupVersion)
-				if err == nil {
-					break
-				} else if apierrors.IsNotFound(err) {
-					doneCh <- true
+				select {
+				case <-ctx.Done():
 					return
-				} else if apierrors.IsTooManyRequests(err) {
-					time.Sleep(5 * time.Second)
-				} else {
-					errCh <- errors.Wrapf(err, "error when evicting pod %q", pod.Name)
-					return
+				default:
+					err = o.client.EvictPod(&pod, policyGroupVersion)
+					if err == nil {
+						break doneEviction
+					} else if apierrors.IsNotFound(err) {
+						doneCh <- true
+						return
+					} else if apierrors.IsTooManyRequests(err) {
+						time.Sleep(5 * time.Second)
+					} else {
+						errCh <- errors.Wrapf(err, "error when evicting pod %q", pod.Name)
+						return
+					}
 				}
 			}
 			podArray := []v1.Pod{pod}
@@ -200,20 +208,23 @@ func (o *drainOperation) evictPods(pods []v1.Pod, policyGroupVersion string) err
 			} else {
 				errCh <- errors.Wrapf(err, "error when waiting for pod %q terminating", pod.Name)
 			}
-		}(pod, doneCh, errCh)
+		}(ctx, pod, doneCh, errCh)
 	}
 
 	doneCount := 0
 	for {
 		select {
 		case err := <-errCh:
+			cancel()
 			return err
 		case <-doneCh:
 			doneCount++
 			if doneCount == len(pods) {
+				cancel()
 				return nil
 			}
 		case <-time.After(o.timeout):
+			cancel()
 			return errors.Errorf("Drain did not complete within %v", o.timeout)
 		}
 	}
