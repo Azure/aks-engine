@@ -170,6 +170,13 @@ func (uc *upgradeCmd) loadCluster() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	// Set 60 minutes cordonDrainTimeout for Azure Stack Cloud to give it enough time to move around resources during Node Drain,
+	// especially disk detach/attach operations. We still honor the user's input.
+	if uc.cordonDrainTimeout == nil && uc.containerService.Properties.IsAzureStackCloud() {
+		cordonDrainTimeout := time.Duration(60) * time.Minute
+		uc.cordonDrainTimeout = &cordonDrainTimeout
+	}
+
 	// Use the Windows VHD associated with the aks-engine version if upgradeWindowsVHD is set to "true"
 	if uc.upgradeWindowsVHD && uc.containerService.Properties.WindowsProfile != nil {
 		windowsProfile := uc.containerService.Properties.WindowsProfile
