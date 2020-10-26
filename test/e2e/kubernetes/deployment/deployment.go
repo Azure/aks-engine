@@ -931,7 +931,7 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 	}
 }
 
-// WaitForReplicas waits for a pod replica count between min and max
+// WaitForReplicasWithAction waits for a pod replica count between min and max and runs an action after every check
 func (d *Deployment) WaitForReplicasWithAction(min, max int, sleep, timeout time.Duration, action func() error) ([]pod.Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
