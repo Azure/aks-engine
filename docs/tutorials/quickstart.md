@@ -81,7 +81,7 @@ $ aks-engine deploy --dns-prefix contoso-apple \
     --resource-group contoso-apple \
     --location westus2 \
     --api-model examples/kubernetes.json \
-    --auto-suffix"
+    --auto-suffix
 
 INFO[0000] No subscription provided, using selected subscription from azure CLI: 51ac25de-afdg-9201-d923-8d8e8e8e8e8e
 INFO[0003] Generated random suffix 5f776b0d, DNS Prefix is contoso-apple2-5f776b0d
