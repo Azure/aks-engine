@@ -1779,6 +1779,11 @@ func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) strin
 	return buf.String()
 }
 
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (w *WindowsProfile) IsVHDDistro() bool {
+	return w.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && w.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer
+}
+
 // IsCSIProxyEnabled returns true if csi proxy service should be enable for Windows nodes
 func (w *WindowsProfile) IsCSIProxyEnabled() bool {
 	if w.EnableCSIProxy != nil {

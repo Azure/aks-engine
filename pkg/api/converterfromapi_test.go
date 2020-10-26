@@ -19,26 +19,32 @@ const ValidSSHPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEApD8+lRvLtUcyfO8N2
 
 func TestConvertCloudProfileToVLabs(t *testing.T) {
 	const (
-		name                         = "AzureStackCloud"
-		managementPortalURL          = "https://management.local.azurestack.external/"
-		publishSettingsURL           = "https://management.local.azurestack.external/publishsettings/index"
-		serviceManagementEndpoint    = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
-		resourceManagerEndpoint      = "https://management.local.azurestack.external/"
-		activeDirectoryEndpoint      = "https://login.windows.net/"
-		galleryEndpoint              = "https://portal.local.azurestack.external=30015/"
-		keyVaultEndpoint             = "https://vault.azurestack.external/"
-		graphEndpoint                = "https://graph.windows.net/"
-		serviceBusEndpoint           = "https://servicebus.azurestack.external/"
-		batchManagementEndpoint      = "https://batch.azurestack.external/"
-		storageEndpointSuffix        = "core.azurestack.external"
-		sqlDatabaseDNSSuffix         = "database.azurestack.external"
-		trafficManagerDNSSuffix      = "trafficmanager.cn"
-		keyVaultDNSSuffix            = "vault.azurestack.external"
-		serviceBusEndpointSuffix     = "servicebus.azurestack.external"
-		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
-		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
-		containerRegistryDNSSuffix   = "azurecr.io"
-		tokenAudience                = "https://management.azurestack.external/"
+		name                                  = "AzureStackCloud"
+		managementPortalURL                   = "https://management.local.azurestack.external/"
+		publishSettingsURL                    = "https://management.local.azurestack.external/publishsettings/index"
+		serviceManagementEndpoint             = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
+		resourceManagerEndpoint               = "https://management.local.azurestack.external/"
+		activeDirectoryEndpoint               = "https://login.windows.net/"
+		galleryEndpoint                       = "https://portal.local.azurestack.external=30015/"
+		keyVaultEndpoint                      = "https://vault.azurestack.external/"
+		graphEndpoint                         = "https://graph.windows.net/"
+		serviceBusEndpoint                    = "https://servicebus.azurestack.external/"
+		batchManagementEndpoint               = "https://batch.azurestack.external/"
+		storageEndpointSuffix                 = "core.azurestack.external"
+		sqlDatabaseDNSSuffix                  = "database.azurestack.external"
+		trafficManagerDNSSuffix               = "trafficmanager.cn"
+		keyVaultDNSSuffix                     = "vault.azurestack.external"
+		serviceBusEndpointSuffix              = "servicebus.azurestack.external"
+		serviceManagementVMDNSSuffix          = "chinacloudapp.cn"
+		resourceManagerVMDNSSuffix            = "cloudapp.azurestack.external"
+		containerRegistryDNSSuffix            = "azurecr.io"
+		tokenAudience                         = "https://management.azurestack.external/"
+		graphResourceIdentifier               = "https://graph.azurestack.external/"
+		keyVaultResourceIdentifier            = "https://keyvault.azurestack.external/"
+		datalakeResourceIdentifier            = "https://datalake.azurestack.external/"
+		batchResourceIdentifier               = "https://batch.azurestack.external/"
+		operationalInsightsResourceIdentifier = "https://operationalinsights.azurestack.external/"
+		storageResourceIdentifier             = "https://storage.azurestack.external/"
 	)
 
 	cs := &ContainerService{
@@ -67,6 +73,14 @@ func TestConvertCloudProfileToVLabs(t *testing.T) {
 					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
 					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
 					TokenAudience:                tokenAudience,
+					ResourceIdentifiers: azure.ResourceIdentifier{
+						Graph:               graphResourceIdentifier,
+						KeyVault:            keyVaultResourceIdentifier,
+						Datalake:            datalakeResourceIdentifier,
+						Batch:               batchResourceIdentifier,
+						OperationalInsights: operationalInsightsResourceIdentifier,
+						Storage:             storageResourceIdentifier,
+					},
 				},
 			},
 		},
@@ -139,6 +153,24 @@ func TestConvertCloudProfileToVLabs(t *testing.T) {
 	}
 	if vlabscs.Properties.CustomCloudProfile.Environment.TokenAudience != tokenAudience {
 		t.Errorf("incorrect TokenAudience, expect: '%s', actual: '%s'", tokenAudience, vlabscs.Properties.CustomCloudProfile.Environment.TokenAudience)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Graph != graphResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Graph, expect: '%s', actual: '%s'", graphResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Graph)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.KeyVault != keyVaultResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.KeyVault, expect: '%s', actual: '%s'", keyVaultResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.KeyVault)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Datalake != datalakeResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Datalake, expect: '%s', actual: '%s'", datalakeResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Datalake)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Batch != batchResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Batch, expect: '%s', actual: '%s'", batchResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Batch)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.OperationalInsights != operationalInsightsResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.OperationalInsights, expect: '%s', actual: '%s'", operationalInsightsResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.OperationalInsights)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Storage != storageResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Storage, expect: '%s', actual: '%s'", storageResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Storage)
 	}
 }
 

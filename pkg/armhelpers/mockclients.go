@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
@@ -926,7 +927,7 @@ func (mc *MockAKSEngineClient) ListManagedDisksByResourceGroup(ctx context.Conte
 }
 
 //GetKubernetesClient mock
-func (mc *MockAKSEngineClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
+func (mc *MockAKSEngineClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (kubernetes.Client, error) {
 	if mc.FailGetKubernetesClient {
 		return nil, errors.New("GetKubernetesClient failed")
 	}
