@@ -906,7 +906,6 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 			mostRecentWaitForReplicasError = result.Err
 			pods = result.Pods
 			if mostRecentWaitForReplicasError == nil {
-				log.Printf("Waiting for min %d, max %d, current: %d", min, max, len(pods))
 				if min == -1 {
 					if len(pods) <= max {
 						return pods, nil
@@ -962,7 +961,6 @@ func (d *Deployment) WaitForReplicasWithAction(min, max int, sleep, timeout time
 			mostRecentWaitForReplicasError = result.Err
 			pods = result.Pods
 			if mostRecentWaitForReplicasError == nil {
-				log.Printf("Waiting for min %d, max %d, current: %d", min, max, len(pods))
 				if min == -1 {
 					if len(pods) <= max {
 						return pods, nil

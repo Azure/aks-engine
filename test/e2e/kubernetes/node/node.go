@@ -439,7 +439,6 @@ func TopNodes() error {
 		return err
 	}
 
-	log.Printf("\n - %s", string(out))
 	if strings.Contains(string(out), "<unknown>") {
 		log.Printf("\n - %s", string(out))
 		pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
