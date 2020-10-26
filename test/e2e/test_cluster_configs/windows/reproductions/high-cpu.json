@@ -1,5 +1,7 @@
 {
-	"env": {},
+	"env": {
+		"VALIDATE_CPU_LOAD": true
+	},
 	"options": {
 		"allowedOrchestratorVersions": ["1.17", "1.18", "1.19"]
 	},

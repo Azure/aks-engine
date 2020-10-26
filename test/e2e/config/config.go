@@ -57,6 +57,7 @@ type Config struct {
 	SubscriptionID          string `envconfig:"SUBSCRIPTION_ID"`
 	ClientID                string `envconfig:"CLIENT_ID"`
 	ClientSecret            string `envconfig:"CLIENT_SECRET"`
+	ValidateCPULoad         bool   `envconfig:"VALIDATE_CPU_LOAD`
 	*ArcOnboardingConfig
 }
 

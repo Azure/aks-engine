@@ -2371,11 +2371,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(logsRotated).To(Equal(true))
 		})
 
-		// metrics endpoints failing
+		// metrics endpoints failing in 1.18+
 		// https://github.com/kubernetes/kubernetes/issues/95735
 		It("windows should be able to get node metrics when high cpu", func() {
-			if !eng.HasWindowsAgents() {
-				Skip("No windows agent was provisioned for this Cluster Definition")
+			if !eng.HasWindowsAgents() || !cfg.ValidateNodeLoad {
+				Skip("Will not validate effects of CPU load against nodes")
 			}
 
 			windowsImages, err := eng.GetWindowsTestImages()
