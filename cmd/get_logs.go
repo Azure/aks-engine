@@ -41,6 +41,7 @@ type getLogsCmd struct {
 	sshHostURI             string
 	linuxSSHPrivateKeyPath string
 	linuxScriptPath        string
+	windowsScriptPath      string
 	outputDirectory        string
 	controlPlaneOnly       bool
 	// computed
@@ -75,14 +76,14 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
 	command.Flags().StringVar(&glc.sshHostURI, "ssh-host", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
 	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes (required)")
-	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
+	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required if distro is not aks-ubuntu)")
+	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes (required if distro is not aks-windows)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	_ = command.MarkFlagRequired("location")
 	_ = command.MarkFlagRequired("api-model")
 	_ = command.MarkFlagRequired("ssh-host")
 	_ = command.MarkFlagRequired("linux-ssh-private-key")
-	_ = command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
 }
 
@@ -107,11 +108,15 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	} else if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
 	}
-	if glc.linuxScriptPath == "" {
-		// optional once in VHD
-		return errors.New("--linux-script must be specified")
-	} else if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
-		return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+	if glc.linuxScriptPath != "" {
+		if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+		}
+	}
+	if glc.windowsScriptPath != "" {
+		if _, err := os.Stat(glc.windowsScriptPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --windows-script does not exist (%s)", glc.windowsScriptPath)
+		}
 	}
 	if glc.outputDirectory == "" {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
@@ -166,6 +171,9 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 func (glc *getLogsCmd) run() (err error) {
 	if err = glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
+	}
+	if err = glc.validateLogScript(); err != nil {
+		return errors.Wrap(err, "validating log collection scripts for nodes")
 	}
 	for _, n := range glc.masterNodes {
 		log.Infof("Processing master node: %s\n", n.Name)
@@ -259,24 +267,30 @@ func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (stri
 }
 
 func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, error) {
-	if isWindowsNode(node) || glc.linuxScriptPath == "" {
+	var script, cmd string
+	if isLinuxNode(node) && glc.linuxScriptPath != "" {
+		script = glc.linuxScriptPath
+		cmd = "bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""
+	} else if isWindowsNode(node) && glc.windowsScriptPath != "" {
+		script = glc.windowsScriptPath
+		cmd = "powershell -noprofile -command \"$Input > $env:temp\\collect-windows-logs.ps1\""
+	} else {
 		return "", nil
 	}
 
-	scriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
+	sc, err := ioutil.ReadFile(script)
 	if err != nil {
-		return "", errors.Wrap(err, "reading log collection script content")
+		return "", errors.Wrapf(err, "reading log collection script %s", script)
 	}
-
-	log.Debugf("Uploading log collection script (%s)\n", glc.linuxScriptPath)
 	session, err := client.NewSession()
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH session")
 	}
 	defer session.Close()
 
-	session.Stdin = bytes.NewReader(scriptContent)
-	if co, err := session.CombinedOutput("bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""); err != nil {
+	log.Debugf("Uploading log collection script (%s)\n", script)
+	session.Stdin = bytes.NewReader(sc)
+	if co, err := session.CombinedOutput(cmd); err != nil {
 		return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading log collection script")
 	}
 	return "", nil
@@ -300,8 +314,12 @@ func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, 
 			cmd = fmt.Sprintf("bash -c \"export AZURE_ENV=%s; sudo -E %s\"", glc.getCloudName(), script)
 		}
 	} else {
-		script = "c:\\k\\debug\\collect-windows-logs.ps1"
-		cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
+		if glc.windowsScriptPath != "" {
+			script = "$env:temp\\collect-windows-logs.ps1"
+		} else {
+			script = "c:\\k\\debug\\collect-windows-logs.ps1"
+		}
+		cmd = fmt.Sprintf("powershell -command \"iex %s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
 	}
 
 	if co, err := session.CombinedOutput(cmd); err != nil {
@@ -351,6 +369,28 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 	return "", nil
 }
 
+func (glc *getLogsCmd) validateLogScript() error {
+	if glc.linuxScriptPath == "" && !glc.cs.Properties.MasterProfile.IsVHDDistro() {
+		if glc.controlPlaneOnly {
+			return errors.Errorf("No log collection script found for control plane nodes")
+		}
+
+		log.Warn("Skipping control plane nodes as flag '--linux-script' is not set and the distro in masterProfiles is not aks-ubuntu VHD")
+		glc.masterNodes = nil
+	}
+	for _, profile := range glc.cs.Properties.AgentPoolProfiles {
+		if glc.linuxScriptPath == "" && strings.EqualFold(string(profile.OSType), "Linux") && !profile.IsVHDDistro() {
+			log.Warnf("Skipping linux agentpool %s as flag '--linux-script' is not set and the distro in agentPoolProfiles is not aks-ubuntu VHD", profile.Name)
+			glc.linuxNodes = filterNodesFromPool(glc.linuxNodes, profile.Name)
+		}
+		if glc.windowsScriptPath == "" && strings.EqualFold(string(profile.OSType), "Windows") && !glc.cs.Properties.WindowsProfile.IsVHDDistro() {
+			log.Warnf("Skipping windows agentpool %s as flag '--windows-script' is not set and the distro in windowsProfiles is not aks-windows VHD", profile.Name)
+			glc.windowsNodes = nil
+		}
+	}
+	return nil
+}
+
 func isLinuxNode(node v1.Node) bool {
 	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "linux")
 }
@@ -364,6 +404,16 @@ func (glc *getLogsCmd) getCloudName() string {
 		return "AzureStackCloud"
 	}
 	return ""
+}
+
+func filterNodesFromPool(nodeList []v1.Node, agentPoolName string) []v1.Node {
+	var linuxNodeList []v1.Node
+	for _, node := range nodeList {
+		if !strings.EqualFold(strings.Split(node.Name, "-")[1], agentPoolName) {
+			linuxNodeList = append(linuxNodeList, node)
+		}
+	}
+	return linuxNodeList
 }
 
 func computeControlPlaneNodes(nodesCount int, clusterID string) []v1.Node {

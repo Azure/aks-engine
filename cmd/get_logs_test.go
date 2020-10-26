@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestGetLogsCmd(t *testing.T) {
@@ -41,6 +42,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				apiModelPath:           missingFile,
 				linuxSSHPrivateKeyPath: "",
 				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
 			},
@@ -52,6 +54,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: "",
 				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
 			},
@@ -62,18 +65,8 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
-				linuxScriptPath:        "",
-				sshHostURI:             "server.example.com",
-				location:               "southcentralus",
-			},
-			expectedErr: errors.New("--linux-script must be specified"),
-			name:        "NeedsLinuxScript",
-		},
-		{
-			glc: &getLogsCmd{
-				apiModelPath:           existingFile,
-				linuxSSHPrivateKeyPath: existingFile,
 				linuxScriptPath:        missingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
 			},
@@ -85,6 +78,19 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
 				linuxScriptPath:        existingFile,
+				windowsScriptPath:      missingFile,
+				sshHostURI:             "server.example.com",
+				location:               "southcentralus",
+			},
+			expectedErr: errors.Errorf("specified --windows-script does not exist (%s)", missingFile),
+			name:        "BadWindowsScript",
+		},
+		{
+			glc: &getLogsCmd{
+				apiModelPath:           existingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "",
 			},
@@ -96,6 +102,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
 				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "",
 				location:               "southcentralus",
 			},
@@ -107,6 +114,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				apiModelPath:           "",
 				linuxSSHPrivateKeyPath: missingFile,
 				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
 			},
@@ -118,6 +126,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				apiModelPath:           missingFile,
 				linuxSSHPrivateKeyPath: existingFile,
 				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
 			},
@@ -129,6 +138,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
 				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
 			},
@@ -158,4 +168,26 @@ func TestComputeControlPlaneNodes(t *testing.T) {
 		g.Expect(node.Name).To(Equal(fmt.Sprintf("k8s-master-12345678-%d", i)))
 		g.Expect(node.Status.NodeInfo.OperatingSystem).To(Equal("linux"))
 	}
+}
+
+func TestFilterNodesFromPool(t *testing.T) {
+	t.Parallel()
+
+	g := NewGomegaWithT(t)
+	var nodeList []v1.Node
+	for i := 0; i < 3; i++ {
+		var node1, node2 v1.Node
+		node1.Name = fmt.Sprintf("k8s-linuxpool-12345678-%d", i)
+		node1.Status.NodeInfo.OperatingSystem = "linux"
+		nodeList = append(nodeList, node1)
+		node2.Name = fmt.Sprintf("k8s-linuxpoool-12345678-%d", i)
+		node2.Status.NodeInfo.OperatingSystem = "linux"
+		nodeList = append(nodeList, node2)
+	}
+	nodeListA := filterNodesFromPool(nodeList, "linuxpool")
+	g.Expect(len(nodeListA)).To(Equal(3))
+	nodeListB := filterNodesFromPool(nodeList, "linuxpoool")
+	g.Expect(len(nodeListB)).To(Equal(3))
+	nodeListC := filterNodesFromPool(nodeList, "linuxpol")
+	g.Expect(len(nodeListC)).To(Equal(6))
 }
