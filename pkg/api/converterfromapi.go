@@ -719,6 +719,14 @@ func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomC
 		vlabsccp.Environment.ResourceManagerVMDNSSuffix = api.Environment.ResourceManagerVMDNSSuffix
 		vlabsccp.Environment.ContainerRegistryDNSSuffix = api.Environment.ContainerRegistryDNSSuffix
 		vlabsccp.Environment.TokenAudience = api.Environment.TokenAudience
+		vlabsccp.Environment.ResourceIdentifiers = azure.ResourceIdentifier{
+			Graph:               api.Environment.ResourceIdentifiers.Graph,
+			KeyVault:            api.Environment.ResourceIdentifiers.KeyVault,
+			Datalake:            api.Environment.ResourceIdentifiers.Datalake,
+			Batch:               api.Environment.ResourceIdentifiers.Batch,
+			OperationalInsights: api.Environment.ResourceIdentifiers.OperationalInsights,
+			Storage:             api.Environment.ResourceIdentifiers.Storage,
+		}
 	}
 
 	if api.AzureEnvironmentSpecConfig != nil {
