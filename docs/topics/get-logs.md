@@ -26,11 +26,8 @@ If you choose to pass your own custom log collection script, make sure it zips a
 
 ### Upload logs to a Storage Account Container
 
-Logs collected by the scripts can be persisted on a Storage Container on Azure or custom cloud `with AAD identity system` if the SAS URL of the storage container is provided by setting `--storage-container-sas-url`. Custom cloud with identity system of adfs does not currently support upload logs.
-
-The storage container SAS URL can be constructed by adding the storage container name into the Blob Service SAS URL acquired from "Shared access signature" page on the Storage Account.
-
-For example, if the Blob Service SAS URL is "https://safortest.blob.core.windows.net/?sv=yyyy-mm-dd&ss=xxxx&srt=xxx&sp=xxxxxxx&se=yyyy-mm-ddThh:mm:ssZ&st=yyyy-mm-ddThh:mm:ssZ&spr=https&sig=XXXXXXXXXXXXXXXXXXXXX" and the Storage Container name is "sample-container", then then storage container SAS URL will be "https://safortest.blob.core.windows.net/`sample-container`?sv=yyyy-mm-dd&ss=xxxx&srt=xxx&sp=xxxxxxx&se=yyyy-mm-ddThh:mm:ssZ&st=yyyy-mm-ddThh:mm:ssZ&spr=https&sig=XXXXXXXXXXXXXXXXXXXXX"
+Once the cluster logs were successfully retrieved, AKS Engine can persist them to an Azure Storage Account container if optional parameter `--storage-container-sas-url` is set. AKS Engine expects the container name to be part of the provided [SAS URL](https://docs.microsoft.com/azure/storage/common/storage-sas-overview). The expected format is `https://{blob-service-uri}/{container-name}?{sas-token}`.
+Note: storage accounts on custom clouds using the `AD FS` identity provider are not yet supported
 
 ## Usage
 

@@ -221,6 +221,7 @@ func (glc *getLogsCmd) run() (err error) {
 	if glc.storageContainerSASURL != "" {
 		if glc.cs.Properties.CustomCloudProfile.IdentitySystem == "adfs" {
 			log.Warn("Failed uploading logs for custom cloud with identity system of adfs")
+			return nil
 		}
 		logFiles, err := ioutil.ReadDir(glc.outputDirectory)
 		if err != nil {
