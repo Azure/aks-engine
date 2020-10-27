@@ -175,6 +175,7 @@ func (o *drainOperation) deleteOrEvictPods(pods []v1.Pod) error {
 
 func (o *drainOperation) evictPods(pods []v1.Pod, policyGroupVersion string) error {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	doneCh := make(chan bool, len(pods))
 	errCh := make(chan error, 1)
 
@@ -215,16 +216,13 @@ func (o *drainOperation) evictPods(pods []v1.Pod, policyGroupVersion string) err
 	for {
 		select {
 		case err := <-errCh:
-			cancel()
 			return err
 		case <-doneCh:
 			doneCount++
 			if doneCount == len(pods) {
-				cancel()
 				return nil
 			}
 		case <-time.After(o.timeout):
-			cancel()
 			return errors.Errorf("Drain did not complete within %v", o.timeout)
 		}
 	}
