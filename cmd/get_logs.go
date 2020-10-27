@@ -219,7 +219,7 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	log.Infof("Logs downloaded to %s", glc.outputDirectory)
 	if glc.storageContainerSASURL != "" {
-		if glc.cs.Properties.CustomCloudProfile.IdentitySystem == "adfs" {
+		if glc.cs.Properties.IsCustomCloudProfile() && glc.cs.Properties.CustomCloudProfile.IdentitySystem == "adfs" {
 			log.Warn("Failed uploading logs for custom cloud with identity system of adfs")
 			return nil
 		}
@@ -404,7 +404,7 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 
 func (glc *getLogsCmd) uploadLogsToStorageContainer(fileName string) error {
 	log.Infof("Uploading log file %s", fileName)
-	logFileName := strings.Split(fileName, ".")[0]
+	logFileName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
 	logFilePath := path.Join(glc.outputDirectory, fileName)
 	logFile, err := os.Open(logFilePath)
 	if err != nil {
