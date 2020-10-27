@@ -219,6 +219,9 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	log.Infof("Logs downloaded to %s", glc.outputDirectory)
 	if glc.storageContainerSASURL != "" {
+		if glc.cs.Properties.CustomCloudProfile.IdentitySystem == "adfs" {
+			log.Warn("Failed uploading logs for custom cloud with identity system of adfs")
+		}
 		logFiles, err := ioutil.ReadDir(glc.outputDirectory)
 		if err != nil {
 			return errors.Wrapf(err, "finding output directory %s", glc.outputDirectory)
@@ -415,7 +418,7 @@ func (glc *getLogsCmd) uploadLogsToStorageContainer(fileName string) error {
 
 	_, err = azblob.UploadFileToBlockBlob(context.Background(), logFile, blockBlobURL, azblob.UploadToBlockBlobOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "uploading log file %s to storage container blob %s", logFile, fullURL)
+		return errors.Wrapf(err, "uploading log file %s to storage container blob %s", fileName, fullURL)
 	}
 	return nil
 }

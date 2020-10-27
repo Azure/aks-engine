@@ -24,7 +24,7 @@ To collect Windows nodes logs, specify the path to the script-to-execute on each
 
 If you choose to pass your own custom log collection script, make sure it zips all relevant files to file `"/tmp/logs.zip"` for Linux and `"%TEMP%\{NodeName}.zip"` for Windows. Needless to say, the custom script should only query for troubleshooting information and it should not change the cluster or node configuration.
 
-### Upload logs to Storage Container
+### Upload logs to a Storage Account Container
 
 Logs collected by the scripts can be persisted on a Storage Container on Azure or custom cloud `with AAD identity system` if the SAS URL of the storage container is provided by setting `--storage-container-sas-url`. Custom cloud with identity system of adfs does not currently support upload logs.
 
