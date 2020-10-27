@@ -284,7 +284,7 @@ func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (stri
 	if err != nil {
 		return stdout, err
 	}
-	//stdout, err = glc.executeScript(node, client)
+	stdout, err = glc.executeScript(node, client)
 	if err != nil {
 		return stdout, err
 	}
