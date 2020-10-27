@@ -357,11 +357,11 @@ func (cli *CLIProvisioner) waitForNodes() error {
 						return err
 					}
 					if !exp.MatchString(n.Metadata.Name) {
-						err = n.AddLabel("foo=bar")
+						err = n.AddLabelWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
 						if err != nil {
 							return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
 						}
-						err = n.AddAnnotation("foo=bar")
+						err = n.AddAnnotationWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
 						if err != nil {
 							return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
 						}
