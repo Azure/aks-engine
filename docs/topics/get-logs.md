@@ -24,6 +24,14 @@ To collect Windows nodes logs, specify the path to the script-to-execute on each
 
 If you choose to pass your own custom log collection script, make sure it zips all relevant files to file `"/tmp/logs.zip"` for Linux and `"%TEMP%\{NodeName}.zip"` for Windows. Needless to say, the custom script should only query for troubleshooting information and it should not change the cluster or node configuration.
 
+### Upload logs to Storage Container
+
+Logs collected by the scripts can be persisted on a Storage Container on Azure or custom cloud `with AAD identity system` if the SAS URL of the storage container is provided by setting `--storage-container-sas-url`. Custom cloud with identity system of adfs does not currently support upload logs.
+
+The storage container SAS URL can be constructed by adding the storage container name into the Blob Service SAS URL acquired from "Shared access signature" page on the Storage Account.
+
+For example, if the Blob Service SAS URL is "https://safortest.blob.core.windows.net/?sv=yyyy-mm-dd&ss=xxxx&srt=xxx&sp=xxxxxxx&se=yyyy-mm-ddThh:mm:ssZ&st=yyyy-mm-ddThh:mm:ssZ&spr=https&sig=XXXXXXXXXXXXXXXXXXXXX" and the Storage Container name is "sample-container", then then storage container SAS URL will be "https://safortest.blob.core.windows.net/`sample-container`?sv=yyyy-mm-dd&ss=xxxx&srt=xxx&sp=xxxxxxx&se=yyyy-mm-ddThh:mm:ssZ&st=yyyy-mm-ddThh:mm:ssZ&spr=https&sig=XXXXXXXXXXXXXXXXXXXXX"
+
 ## Usage
 
 Assuming that you have a cluster deployed and the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`, then you can collect logs running a command like:
@@ -35,7 +43,8 @@ $ aks-engine get-logs \
     --ssh-host <dnsPrefix>.<location>.cloudapp.azure.com \
     --linux-ssh-private-key ~/.ssh/id_rsa \
     --linux-script scripts/collect-logs.sh \
-    --windows-script scripts/collect-windows-logs.ps1
+    --windows-script scripts/collect-windows-logs.ps1 \
+    --storage-container-sas-url <storageContainerSASUrl>
 ```
 
 ### Parameters
@@ -50,3 +59,4 @@ $ aks-engine get-logs \
 |--windows-script|no|Custom log collection powershell script. It is required only when the Windows node distro is not `aks-windows` and it should produce file `%TEMP%\{NodeName}.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
 |--control-plane-only|no|Only collect logs from master nodes.|
+|--storage-container-sas-url|no|Upload collected logs to a storage container on Azure or custom cloud.|
