@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -2368,6 +2369,63 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			logsRotated, err := loggingPod.ValidateLogsRotate(20*time.Second, 2*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(logsRotated).To(Equal(true))
+		})
+
+		// metrics endpoints failing in 1.18+
+		// https://github.com/kubernetes/kubernetes/issues/95735
+		It("windows should be able to get node metrics when high cpu", func() {
+			if !eng.HasWindowsAgents() || !cfg.ValidateCPULoad {
+				Skip("Will not validate effects of CPU load against nodes")
+			}
+
+			windowsImages, err := eng.GetWindowsTestImages()
+			cpuConsumptionDeploymentFile, err := pod.ReplaceContainerImageFromFile(filepath.Join(WorkloadDir, "validate-windows-cpu-consumption.yaml"), windowsImages.ServerCore)
+			Expect(err).NotTo(HaveOccurred())
+			defer os.Remove(cpuConsumptionDeploymentFile)
+
+			By("launching a deployment that consumes too much CPU")
+			deploymentName := "validate-windows-cpu-consumption" // should be the same as in yaml
+			cpuDeployment, err := deployment.CreateDeploymentFromFileWithRetry(cpuConsumptionDeploymentFile, deploymentName, "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
+
+			By("Scaling deployment to consuming allocatable")
+			nodeList, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+			cpuCapacity := 0
+			for _, n := range nodeList {
+				if n.IsWindows() {
+					c, err := strconv.Atoi(n.Status.Capacity.CPU)
+					Expect(err).NotTo(HaveOccurred())
+					cpuCapacity = cpuCapacity + c
+				}
+			}
+
+			// scale over allocatable for windows to make sure it's packed (.25 is limit on deployment)
+			deployCount := int(math.Round((float64(cpuCapacity) / 0.25)))
+			err = cpuDeployment.ScaleDeployment(deployCount * 2)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("should be able to get nodes metrics")
+			checkMetrics := func() error {
+				log.Printf("running top nodes")
+				err = node.TopNodes()
+				return err
+			}
+			_, err = cpuDeployment.WaitForReplicasWithAction(deployCount, deployCount*2, 2*time.Second, cfg.Timeout, checkMetrics)
+			Expect(err).NotTo(HaveOccurred())
+			cpuPods, err := cpuDeployment.PodsRunning()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(cpuPods)).To(BeNumerically(">=", deployCount))
+
+			By("should be able to get nodes metrics")
+			err = node.TopNodesWithRetry(1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Verifying pods & services can be deleted")
+			err = cpuDeployment.Delete(util.DefaultDeleteRetries)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 

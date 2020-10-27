@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: validate-windows-cpu-consumption
+  labels:
+    app: validate-windows-cpu-consumption
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: iis-2019
+      labels:
+        app: iis-2019
+    spec:
+      containers:
+      - name: iis
+        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
+        command:
+          - powershell.exe
+          - "-command"
+          - "$result = 1; foreach ($number in 1..2147483647) {$result = $result * $number};"
+        resources:
+          limits:
+            cpu: .25
+            memory: 800m
+          requests:
+            cpu: .25
+            memory: 300m
+        ports:
+          - containerPort: 80
+      nodeSelector:
+        "kubernetes.io/os": windows
+  selector:
+    matchLabels:
+      app: iis-2019
