@@ -1,4 +1,4 @@
-# github.com/Azure/azure-pipeline-go v0.2.2
+# github.com/Azure/azure-pipeline-go v0.2.1
 github.com/Azure/azure-pipeline-go/pipeline
 # github.com/Azure/azure-sdk-for-go v43.0.0+incompatible
 github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac
@@ -20,7 +20,7 @@ github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb
 github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault
 github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-09-01-preview/authorization
 github.com/Azure/azure-sdk-for-go/version
-# github.com/Azure/azure-storage-blob-go v0.10.0
+# github.com/Azure/azure-storage-blob-go v0.7.0
 github.com/Azure/azure-storage-blob-go/azblob
 # github.com/Azure/go-autorest/autorest v0.9.6
 github.com/Azure/go-autorest/autorest/azure
@@ -107,7 +107,7 @@ github.com/leonelquinteros/gotext
 github.com/leonelquinteros/gotext/plurals
 # github.com/mattn/go-colorable v0.0.9
 github.com/mattn/go-colorable
-# github.com/mattn/go-ieproxy v0.0.0-20190702010315-6dee0af9227d
+# github.com/mattn/go-ieproxy v0.0.0-20190610004146-91bb50d98149
 github.com/mattn/go-ieproxy
 # github.com/mattn/go-isatty v0.0.10
 github.com/mattn/go-isatty

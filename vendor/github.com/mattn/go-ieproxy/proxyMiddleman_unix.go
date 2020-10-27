@@ -1,4 +1,4 @@
-// +build !windows
+//+build darwin unix linux
 
 package ieproxy
 

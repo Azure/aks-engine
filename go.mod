@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/Azure/azure-sdk-for-go v43.0.0+incompatible
-	github.com/Azure/azure-storage-blob-go v0.10.0
+	github.com/Azure/azure-storage-blob-go v0.7.0
 	github.com/Azure/go-autorest/autorest v0.9.6
 	github.com/Azure/go-autorest/autorest/adal v0.8.3
 	github.com/Azure/go-autorest/autorest/azure/cli v0.3.0
@@ -30,6 +30,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jarcoal/httpmock v1.0.1
 	github.com/json-iterator/go v1.1.7 // indirect
+	github.com/kr/pretty v0.2.1 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/leonelquinteros/gotext v1.4.0
 	github.com/mattn/go-colorable v0.0.9

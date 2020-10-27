@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/Azure/azure-pipeline-go/pipeline"
 )
@@ -37,19 +36,6 @@ func (s ServiceURL) GetUserDelegationCredential(ctx context.Context, info KeyInf
 		return UserDelegationCredential{}, err
 	}
 	return NewUserDelegationCredential(strings.Split(s.client.url.Host, ".")[0], *udk), nil
-}
-
-//TODO this was supposed to be generated
-//NewKeyInfo creates a new KeyInfo struct with the correct time formatting & conversion
-func NewKeyInfo(Start, Expiry time.Time) KeyInfo {
-	return KeyInfo{
-		Start:  Start.UTC().Format(SASTimeFormat),
-		Expiry: Expiry.UTC().Format(SASTimeFormat),
-	}
-}
-
-func (s ServiceURL) GetAccountInfo(ctx context.Context) (*ServiceGetAccountInfoResponse, error) {
-	return s.client.GetAccountInfo(ctx)
 }
 
 // URL returns the URL endpoint used by the ServiceURL object.
