@@ -316,6 +316,48 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "EtcdStorageLimitGB value of 1 is too small, the minimum allowed is 2",
 		},
+		"should error when using flatcar + Azure CNI + bridge mode": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: "azure",
+						NetworkMode:   NetworkModeBridge,
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "flatcarpool",
+						Count:  10,
+						Distro: Flatcar,
+					},
+				},
+			},
+			expectedError: "Flatcar node pools require 'transparent' networkMode with Azure CNI",
+		},
+		"should not error when using Azure CNI + bridge mode + ubuntu": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: "azure",
+						NetworkMode:   NetworkModeBridge,
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "ubuntu1604pool",
+						Count:  10,
+						Distro: AKSUbuntu1604,
+					},
+					{
+						Name:   "ubuntu1804pool",
+						Count:  10,
+						Distro: AKSUbuntu1804,
+					},
+				},
+			},
+		},
 	}
 
 	for testName, test := range tests {
