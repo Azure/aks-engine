@@ -259,6 +259,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	// for windows container, no requests should be specified or limits and requests should be same
+	// ref: https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#memory-reservations-and-handling
 	defaultContainerMonitoringAddonsConfig := KubernetesAddon{
 		Name:    common.ContainerMonitoringAddonName,
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
@@ -280,10 +282,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:           "omsagent-win",
-				CPURequests:    "150m",
-				MemoryRequests: "250Mi",
-				CPULimits:      "1",
-				MemoryLimits:   "750Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "600Mi",
 				Image:          omsagentWinImage,
 			},
 		},

@@ -14087,9 +14087,6 @@ spec:
             limits:
               cpu: {{ContainerCPULimits "omsagent-win"}}
               memory: {{ContainerMemLimits "omsagent-win"}}
-            requests:
-              cpu: {{ContainerCPUReqs "omsagent-win"}}
-              memory: {{ContainerMemReqs "omsagent-win"}}
           env:
             - name: ACS_RESOURCE_NAME
               value: {{ContainerConfig "clusterName"}}
