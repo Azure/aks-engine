@@ -224,6 +224,24 @@ func (n *Node) Describe() error {
 	return err
 }
 
+// Add Taint to node
+func (n *Node) AddLabel(label string) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "label", "node", n.Metadata.Name, label)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
+// Add Annotation to node
+func (n *Node) AddAnnotation(annotation string) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "annotate", "nodes", n.Metadata.Name, annotation)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // Add taint to node
 func (n *Node) AddTaint(taint Taint) error {
 	var commandTimeout time.Duration
