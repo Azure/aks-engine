@@ -69,12 +69,12 @@ func newGetLogsCmd() *cobra.Command {
 		Long:  getLogsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := glc.validateArgs(); err != nil {
-				_ = cmd.Usage()
 				return errors.Wrap(err, "validating get-logs args")
 			}
 			if err := glc.loadAPIModel(); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
+			cmd.SilenceUsage = true
 			return glc.run()
 		},
 	}
@@ -403,14 +403,15 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 
 func (glc *getLogsCmd) uploadLogsToStorageContainer(nodeName string) error {
 	log.Infof("Uploading log file %s.zip", nodeName)
-	logFilePath := path.Join(glc.outputDirectory, fmt.Sprintf("%s.zip", nodeName))
+	logFileName := fmt.Sprintf("%s.zip", nodeName)
+	logFilePath := path.Join(glc.outputDirectory, logFileName)
 	logFile, err := os.Open(logFilePath)
 	if err != nil {
 		return errors.Wrapf(err, "reading log file %s", logFilePath)
 	}
 
 	urls := strings.Split(glc.storageContainerSASURL, "?")
-	fullURL := fmt.Sprintf("%s/%s?%s", urls[0], nodeName, urls[1])
+	fullURL := fmt.Sprintf("%s/%s?%s", urls[0], logFileName, urls[1])
 	u, err := url.Parse(fullURL)
 	if err != nil {
 		return errors.Wrapf(err, "parsing the storage container SAS URL")

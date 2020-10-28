@@ -219,8 +219,8 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       --location $REGION \
       --ssh-host $API_SERVER \
       --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
-      --linux-script ./scripts/collect-logs.sh
-      # TODO remove --linux-script once collect-logs.sh is part of the VHD
+      --linux-script ./scripts/collect-logs.sh \
+      --windows-script ./scripts/collect-windows-logs.ps1
   fi
 
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
