@@ -31,21 +31,21 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		kubernetesImageBase = o.KubernetesConfig.KubernetesImageBase
 	}
 	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020"
-	omsagentWinImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020"
+	omsagentWinImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 	var workspaceDomain string
 	if cs.Properties.IsCustomCloudProfile() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod05262020"
-			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod10052020"
+			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 		}
 	} else {
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod05262020"
-			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod10052020"
+			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
@@ -259,6 +259,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	// for windows container, no requests should be specified or limits and requests should be same
+	// ref: https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#memory-reservations-and-handling
 	defaultContainerMonitoringAddonsConfig := KubernetesAddon{
 		Name:    common.ContainerMonitoringAddonName,
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
@@ -280,10 +282,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:           "omsagent-win",
-				CPURequests:    "150m",
-				MemoryRequests: "250Mi",
-				CPULimits:      "1",
-				MemoryLimits:   "750Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "600Mi",
 				Image:          omsagentWinImage,
 			},
 		},

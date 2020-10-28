@@ -13473,8 +13473,8 @@ rules:
   - apiGroups: [""]
     resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "nodes/spec", "nodes/proxy", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
-  - apiGroups: ["extensions", "apps"]
-    resources: ["replicasets"]
+  - apiGroups: ["apps", "extensions", "autoscaling"]
+    resources: ["replicasets", "deployments", "horizontalpodautoscalers"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
     resources: ["healthstates"]
@@ -13503,209 +13503,225 @@ apiVersion: v1
 data:
   kube.conf: |-
     # Fluentd config file for OMS Docker - cluster components (kubeAPI)
-    #fluent forward plugin
-    <source>
-     type forward
-     port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
-     bind 0.0.0.0
-     chunk_size_limit 4m
-    </source>
+     #fluent forward plugin
+     <source>
+      type forward
+      port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
+      bind 0.0.0.0
+      chunk_size_limit 4m
+     </source>
 
      #Kubernetes pod inventory
-    <source>
-     type kubepodinventory
-     tag oms.containerinsights.KubePodInventory
-     run_interval 60
-     log_level debug
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-    </source>
+     <source>
+      type kubepodinventory
+      tag oms.containerinsights.KubePodInventory
+      run_interval 60
+      log_level debug
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
+     </source>
 
      #Kubernetes events
-    <source>
-     type kubeevents
-     tag oms.containerinsights.KubeEvents
-     run_interval 60
-     log_level debug
-    </source>
+     <source>
+      type kubeevents
+      tag oms.containerinsights.KubeEvents
+      run_interval 60
+      log_level debug
+      </source>
 
-    #Kubernetes Nodes
-    <source>
-     type kubenodeinventory
-     tag oms.containerinsights.KubeNodeInventory
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes Nodes
+     <source>
+      type kubenodeinventory
+      tag oms.containerinsights.KubeNodeInventory
+      run_interval 60
+      log_level debug
+     </source>
 
-    #Kubernetes health
-    <source>
-     type kubehealth
-     tag kubehealth.ReplicaSet
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes health
+     <source>
+      type kubehealth
+      tag kubehealth.ReplicaSet
+      run_interval 60
+      log_level debug
+     </source>
 
-    #cadvisor perf- Windows nodes
-    <source>
-     type wincadvisorperf
-     tag oms.api.wincadvisorperf
-     run_interval 60
-     log_level debug
-    </source>
+     #cadvisor perf- Windows nodes
+     <source>
+      type wincadvisorperf
+      tag oms.api.wincadvisorperf
+      run_interval 60
+      log_level debug
+     </source>
 
-    <filter mdm.kubenodeinventory**>
-     type filter_inventory2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-     log_level info
-    </filter>
+     #Kubernetes object state - deployments
+     <source>
+      type kubestatedeployments
+      tag oms.containerinsights.KubeStateDeployments
+      run_interval 60
+      log_level debug
+     </source>
 
-    # custom_metrics_mdm filter plugin for perf data from windows nodes
-    <filter mdm.cadvisorperf**>
-     type filter_cadvisor2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-     metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
-     log_level info
-    </filter>
+     #Kubernetes object state - HPA
+     <source>
+      type kubestatehpa
+      tag oms.containerinsights.KubeStateHpa
+      run_interval 60
+      log_level debug
+     </source>
 
-    #health model aggregation filter
-    <filter kubehealth**>
-     type filter_health_model_builder
-    </filter>
+     <filter mdm.kubenodeinventory**>
+      type filter_inventory2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
+      log_level info
+     </filter>
 
-    <match oms.containerinsights.KubePodInventory**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     #custom_metrics_mdm filter plugin for perf data from windows nodes
+     <filter mdm.cadvisorperf**>
+      type filter_cadvisor2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast,eastus2,westus,australiasoutheast,brazilsouth,germanywestcentral,northcentralus,switzerlandnorth
+      metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes,pvUsedBytes
+      log_level info
+     </filter>
 
-    <match oms.containerinsights.KubeEvents**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     #health model aggregation filter
+     <filter kubehealth**>
+      type filter_health_model_builder
+     </filter>
 
-    <match oms.containerinsights.KubeServices**>
-     type out_oms
-     log_level debug
-     num_threads 2
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubePodInventory**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.containerinsights.KubeNodeInventory**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubeEvents**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.containerinsights.ContainerNodeInventory**>
-     type out_oms
-     log_level debug
-     num_threads 3
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
-     buffer_queue_limit 20
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubeServices**>
+      type out_oms
+      log_level debug
+      num_threads 2
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.api.KubePerf**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubeNodeInventory**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match mdm.kubepodinventory** mdm.kubenodeinventory** >
-     type out_mdm
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-     retry_mdm_post_wait_minutes 30
-    </match>
+     <match oms.containerinsights.ContainerNodeInventory**>
+      type out_oms
+      log_level debug
+      num_threads 3
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
+      buffer_queue_limit 20
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.api.wincadvisorperf**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.api.KubePerf**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match mdm.cadvisorperf**>
-     type out_mdm
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-     retry_mdm_post_wait_minutes 30
-    </match>
+     <match mdm.kubepodinventory** mdm.kubenodeinventory** >
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+      retry_mdm_post_wait_minutes 30
+     </match>
+
+     <match oms.api.wincadvisorperf**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match mdm.cadvisorperf**>
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+      retry_mdm_post_wait_minutes 30
+     </match>
 
     <match kubehealth.Signals**>
      type out_oms
@@ -13820,6 +13836,13 @@ spec:
               name: host-log
             - mountPath: /var/lib/docker/containers
               name: containerlog-path
+              readOnly: true
+            - mountPath: /mnt/docker
+              name: containerlog-path-2
+              readOnly: true
+            - mountPath: /mnt/containers
+              name: containerlog-path-3
+              readOnly: true
             - mountPath: /etc/kubernetes/host
               name: azure-json-path
             - mountPath: /etc/omsagent-secret
@@ -13827,6 +13850,10 @@ spec:
               readOnly: true
             - mountPath: /etc/config/settings
               name: settings-vol-config
+              readOnly: true
+            - mountPath: /etc/config/settings/adx
+              name: omsagent-adx-secret
+              readOnly: true
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -13864,6 +13891,12 @@ spec:
         - name: containerlog-path
           hostPath:
             path: /var/lib/docker/containers
+        - name: containerlog-path-2
+          hostPath:
+            path: /mnt/docker
+        - name: containerlog-path-3
+          hostPath:
+            path: /mnt/containers
         - name: azure-json-path
           hostPath:
             path: /etc/kubernetes
@@ -13873,6 +13906,10 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
+            optional: true
+        - name: omsagent-adx-secret
+          secret:
+            secretName: omsagent-adx-secret
             optional: true
   updateStrategy:
     type: RollingUpdate
@@ -13944,8 +13981,6 @@ spec:
               name: docker-sock
             - mountPath: /var/log
               name: host-log
-            - mountPath: /var/lib/docker/containers
-              name: containerlog-path
             - mountPath: /etc/kubernetes/host
               name: azure-json-path
             - mountPath: /etc/omsagent-secret
@@ -13955,6 +13990,9 @@ spec:
               name: omsagent-rs-config
             - mountPath: /etc/config/settings
               name: settings-vol-config
+              readOnly: true
+            - mountPath: /etc/config/settings/adx
+              name: omsagent-adx-secret
               readOnly: true
           livenessProbe:
             exec:
@@ -13995,9 +14033,6 @@ spec:
         - name: host-log
           hostPath:
             path: /var/log
-        - name: containerlog-path
-          hostPath:
-            path: /var/lib/docker/containers
         - name: azure-json-path
           hostPath:
             path: /etc/kubernetes
@@ -14010,6 +14045,10 @@ spec:
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
+            optional: true
+        - name: omsagent-adx-secret
+          secret:
+            secretName: omsagent-adx-secret
             optional: true
 ---
 apiVersion: apps/v1
@@ -14048,9 +14087,6 @@ spec:
             limits:
               cpu: {{ContainerCPULimits "omsagent-win"}}
               memory: {{ContainerMemLimits "omsagent-win"}}
-            requests:
-              cpu: {{ContainerCPUReqs "omsagent-win"}}
-              memory: {{ContainerMemReqs "omsagent-win"}}
           env:
             - name: ACS_RESOURCE_NAME
               value: {{ContainerConfig "clusterName"}}
@@ -14058,8 +14094,12 @@ spec:
               value: "DaemonSet"
             - name: HOSTNAME
               valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
+                 fieldRef:
+                   fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                 fieldRef:
+                   fieldPath: status.hostIP
           volumeMounts:
             - mountPath: C:\ProgramData\docker\containers
               name: docker-windows-containers
@@ -14071,6 +14111,9 @@ spec:
               readOnly: true
             - mountPath: C:\etc\omsagent-secret
               name: omsagent-secret
+              readOnly: true
+            - mountPath: C:\etc\config\adx
+              name: omsagent-adx-secret
               readOnly: true
           livenessProbe:
             exec:
@@ -14110,6 +14153,10 @@ spec:
         - name: omsagent-secret
           secret:
             secretName: omsagent-secret
+        - name: omsagent-adx-secret
+          secret:
+            secretName: omsagent-adx-secret
+            optional: true
 ---
 kind: Service
 apiVersion: v1
@@ -14127,6 +14174,30 @@ spec:
       port: 25227
       targetPort: in-rs-tcp
 ---
+# this is for versions >=1.19, for versions <1.19 we continue to use v1beta1
+{{- if IsKubernetesVersionGe "1.19.0"}}
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: healthstates.azmon.container.insights
+  namespace: kube-system
+spec:
+  group: azmon.container.insights
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          state:
+            type: string
+  scope: Namespaced
+  names:
+    plural: healthstates
+    kind: HealthState
+{{- else }}
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -14142,6 +14213,7 @@ spec:
   names:
     plural: healthstates
     kind: HealthState
+{{end}}
 `)
 
 func k8sAddonsContainerMonitoringYamlBytes() ([]byte, error) {
