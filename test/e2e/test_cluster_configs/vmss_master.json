@@ -4,7 +4,10 @@
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
+				"orchestratorType": "Kubernetes",
+				"kubernetesConfig": {
+					"useManagedIdentity": false
+				}
 			},
 			"masterProfile": {
 				"count": 3,
