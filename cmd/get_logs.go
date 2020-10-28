@@ -36,7 +36,7 @@ const (
 	getLogsName             = "get-logs"
 	getLogsShortDescription = "Collect logs and current cluster nodes configuration."
 	getLogsLongDescription  = "Collect deployment logs, running daemons/services logs and current nodes configuration."
-	uploadOperationTimeOut  = 30 * time.Second
+	uploadOperationTimeOut  = 300 * time.Second
 )
 
 type getLogsCmd struct {
@@ -189,8 +189,10 @@ func (glc *getLogsCmd) run() (err error) {
 	if err = glc.validateLogScript(); err != nil {
 		return errors.Wrap(err, "validating log collection scripts for nodes")
 	}
+	var nodeNameList []string
 	for _, n := range glc.masterNodes {
 		log.Infof("Processing master node: %s\n", n.Name)
+		nodeNameList = append(nodeNameList, n.Name)
 		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
@@ -202,6 +204,7 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	for _, n := range glc.linuxNodes {
 		log.Infof("Processing Linux node: %s\n", n.Name)
+		nodeNameList = append(nodeNameList, n.Name)
 		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
@@ -210,6 +213,7 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	for _, n := range glc.windowsNodes {
 		log.Infof("Processing Windows node: %s\n", n.Name)
+		nodeNameList = append(nodeNameList, n.Name)
 		out, err := glc.collectLogs(n, glc.windowsSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
@@ -218,18 +222,14 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	log.Infof("Logs downloaded to %s", glc.outputDirectory)
 	if glc.storageContainerSASURL != "" {
-		if glc.cs.Properties.IsCustomCloudProfile() && glc.cs.Properties.CustomCloudProfile.IdentitySystem == "adfs" {
-			log.Warn("Failed uploading logs for custom cloud with identity system of adfs")
+		if glc.cs.Properties.IsCustomCloudProfile() && strings.EqualFold(glc.cs.Properties.CustomCloudProfile.IdentitySystem, "adfs") {
+			log.Warn("Skipped uploading logs for custom cloud with identity system of adfs")
 			return nil
 		}
-		logFiles, err := ioutil.ReadDir(glc.outputDirectory)
-		if err != nil {
-			return errors.Wrapf(err, "reading output directory %s", glc.outputDirectory)
-		}
-		for _, logFile := range logFiles {
-			err = glc.uploadLogsToStorageContainer(logFile.Name())
+		for _, nodeName := range nodeNameList {
+			err = glc.uploadLogsToStorageContainer(nodeName)
 			if err != nil {
-				log.Warnf("Failed uploading logs %s to storage container", logFile)
+				log.Warnf("Failed uploading logs %s.zip to storage container", nodeName)
 				log.Warnf("Error: %s", err)
 			}
 		}
@@ -401,17 +401,16 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 	return "", nil
 }
 
-func (glc *getLogsCmd) uploadLogsToStorageContainer(fileName string) error {
-	log.Infof("Uploading log file %s", fileName)
-	logFileName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
-	logFilePath := path.Join(glc.outputDirectory, fileName)
+func (glc *getLogsCmd) uploadLogsToStorageContainer(nodeName string) error {
+	log.Infof("Uploading log file %s.zip", nodeName)
+	logFilePath := path.Join(glc.outputDirectory, fmt.Sprintf("%s.zip", nodeName))
 	logFile, err := os.Open(logFilePath)
 	if err != nil {
 		return errors.Wrapf(err, "reading log file %s", logFilePath)
 	}
 
 	urls := strings.Split(glc.storageContainerSASURL, "?")
-	fullURL := fmt.Sprintf("%s/%s?%s", urls[0], logFileName, urls[1])
+	fullURL := fmt.Sprintf("%s/%s?%s", urls[0], nodeName, urls[1])
 	u, err := url.Parse(fullURL)
 	if err != nil {
 		return errors.Wrapf(err, "parsing the storage container SAS URL")
@@ -424,7 +423,7 @@ func (glc *getLogsCmd) uploadLogsToStorageContainer(fileName string) error {
 
 	_, err = azblob.UploadFileToBlockBlob(ctx, logFile, blockBlobURL, azblob.UploadToBlockBlobOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "uploading log file %s to storage container blob %s", fileName, fullURL)
+		return errors.Wrapf(err, "uploading log file %s.zip to storage container blob %s", nodeName, fullURL)
 	}
 	return nil
 }

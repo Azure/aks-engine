@@ -154,6 +154,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
+				storageContainerSASURL: "https://blob-service-uri/container-name?sas-token",
 			},
 			expectedErr: nil,
 			name:        "IsValid",
