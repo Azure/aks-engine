@@ -10,7 +10,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
-// TODO This interface does not follow best practices
+// TODO These interfaces do not follow best practices
 // https://github.com/golang/go/wiki/CodeReviewComments#interfaces
 
 // Client interface models client for interacting with kubernetes api server
@@ -51,4 +51,10 @@ type Client interface {
 	WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error)
 	// UpdateDeployment updates a deployment to match the given specification.
 	UpdateDeployment(namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error)
+}
+
+// NodeLister is an interface implemented by Kubernetes clients
+// that are able to list cluster nodes
+type NodeLister interface {
+	ListNodes() (*v1.NodeList, error)
 }

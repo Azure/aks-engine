@@ -1010,6 +1010,11 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	return vmPrefix
 }
 
+// IsAgentPoolMember returns true the VM is a pool member
+func (p *Properties) IsAgentPoolMember(vmName string, a *AgentPoolProfile, index int) bool {
+	return strings.HasPrefix(vmName, p.GetAgentVMPrefix(a, index))
+}
+
 // GetVMType returns the type of VM "vmss" or "standard" to be passed to the cloud provider
 func (p *Properties) GetVMType() string {
 	if p.HasVMSSAgentPool() {

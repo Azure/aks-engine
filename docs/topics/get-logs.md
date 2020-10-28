@@ -27,7 +27,8 @@ If you choose to pass your own custom log collection script, make sure it zips a
 ### Upload logs to a Storage Account Container
 
 Once the cluster logs were successfully retrieved, AKS Engine can persist them to an Azure Storage Account container if optional parameter `--storage-container-sas-url` is set. AKS Engine expects the container name to be part of the provided [SAS URL](https://docs.microsoft.com/azure/storage/common/storage-sas-overview). The expected format is `https://{blob-service-uri}/{container-name}?{sas-token}`.
-Note: storage accounts on custom clouds using the `AD FS` identity provider are not yet supported
+
+*Note: storage accounts on custom clouds using the `AD FS` identity provider are not yet supported*
 
 ## Usage
 
@@ -40,8 +41,7 @@ $ aks-engine get-logs \
     --ssh-host <dnsPrefix>.<location>.cloudapp.azure.com \
     --linux-ssh-private-key ~/.ssh/id_rsa \
     --linux-script scripts/collect-logs.sh \
-    --windows-script scripts/collect-windows-logs.ps1 \
-    --storage-container-sas-url <storageContainerSASUrl>
+    --windows-script scripts/collect-windows-logs.ps1
 ```
 
 ### Parameters
@@ -52,8 +52,8 @@ $ aks-engine get-logs \
 |--api-model|yes|Path to the generated API model for the cluster.|
 |--ssh-host|yes|FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster.|
 |--linux-ssh-private-key|yes|Path to a SSH private key that can be use to create a remote session on the cluster Linux nodes.|
-|--linux-script|no|Custom log collection bash script. It it required only when the Linux node distro is not `aks-ubuntu` and it should produce file `/tmp/logs.zip`.|
-|--windows-script|no|Custom log collection powershell script. It is required only when the Windows node distro is not `aks-windows` and it should produce file `%TEMP%\{NodeName}.zip`.|
+|--linux-script|no|Custom log collection bash script. Required only when the Linux node distro is not `aks-ubuntu`. The script should produce file `/tmp/logs.zip`.|
+|--windows-script|no|Custom log collection powershell script. Required only when the Windows node distro is not `aks-windows`. The script should produce file `%TEMP%\{NodeName}.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
 |--control-plane-only|no|Only collect logs from master nodes.|
-|--storage-container-sas-url|no|Upload collected logs to a storage container on Azure or custom cloud.|
+|--upload-sas-url|no|Azure Storage Account SAS URL to upload the collected logs.|
