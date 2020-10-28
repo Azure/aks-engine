@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -35,6 +36,7 @@ const (
 	getLogsName             = "get-logs"
 	getLogsShortDescription = "Collect logs and current cluster nodes configuration."
 	getLogsLongDescription  = "Collect deployment logs, running daemons/services logs and current nodes configuration."
+	uploadOperationTimeOut  = 30 * time.Second
 )
 
 type getLogsCmd struct {
@@ -130,13 +132,10 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 		}
 	}
 	if glc.storageContainerSASURL != "" {
-		url := strings.Split(glc.storageContainerSASURL, "?")
-		if len(url) != 2 {
-			return errors.Errorf("error validating storage container SAS URL %s", glc.storageContainerSASURL)
-		}
-		urls := strings.Split(url[0], "/")
-		if len(urls) != 4 || urls[len(urls)-1] == "" {
-			return errors.Errorf("error validating storage container SAS URL %s", glc.storageContainerSASURL)
+		url := regexp.MustCompile(`\?`).Split(glc.storageContainerSASURL, 2)
+		urls := regexp.MustCompile(`\/`).Split(url[0], 4)
+		if urls[len(urls)-1] == "" {
+			return errors.Errorf("error validating storage container SAS URL %s. Expected SAS URL format is https://{blob-service-uri}/{container-name}?{sas-token}", glc.storageContainerSASURL)
 		}
 	}
 	return nil
@@ -225,7 +224,7 @@ func (glc *getLogsCmd) run() (err error) {
 		}
 		logFiles, err := ioutil.ReadDir(glc.outputDirectory)
 		if err != nil {
-			return errors.Wrapf(err, "finding output directory %s", glc.outputDirectory)
+			return errors.Wrapf(err, "reading output directory %s", glc.outputDirectory)
 		}
 		for _, logFile := range logFiles {
 			err = glc.uploadLogsToStorageContainer(logFile.Name())
@@ -408,16 +407,22 @@ func (glc *getLogsCmd) uploadLogsToStorageContainer(fileName string) error {
 	logFilePath := path.Join(glc.outputDirectory, fileName)
 	logFile, err := os.Open(logFilePath)
 	if err != nil {
-		return errors.Wrapf(err, "finding log file %s", logFilePath)
+		return errors.Wrapf(err, "reading log file %s", logFilePath)
 	}
 
 	urls := strings.Split(glc.storageContainerSASURL, "?")
 	fullURL := fmt.Sprintf("%s/%s?%s", urls[0], logFileName, urls[1])
-	u, _ := url.Parse(fullURL)
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		return errors.Wrapf(err, "parsing the storage container SAS URL")
+	}
 	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(azblob.NewAnonymousCredential(), azblob.PipelineOptions{}))
 	blockBlobURL := blobURL.ToBlockBlobURL()
 
-	_, err = azblob.UploadFileToBlockBlob(context.Background(), logFile, blockBlobURL, azblob.UploadToBlockBlobOptions{})
+	ctx, cancel := context.WithTimeout(context.Background(), uploadOperationTimeOut)
+	defer cancel()
+
+	_, err = azblob.UploadFileToBlockBlob(ctx, logFile, blockBlobURL, azblob.UploadToBlockBlobOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "uploading log file %s to storage container blob %s", fileName, fullURL)
 	}
