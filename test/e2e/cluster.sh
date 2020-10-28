@@ -14,6 +14,7 @@ ARC_LOCATION="eastus"
 GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST:-false}"
 TEST_PVC="${TEST_PVC:-false}"
 ROTATE_CERTS="${ROTATE_CERTS:-false}"
+VALIDATE_CPU_LOAD="${VALIDATE_CPU_LOAD:-false}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
