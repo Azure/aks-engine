@@ -281,10 +281,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          omsagentImage,
 			},
 			{
-				Name:           "omsagent-win",
-				CPULimits:      "200m",
-				MemoryLimits:   "600Mi",
-				Image:          omsagentWinImage,
+				Name:         "omsagent-win",
+				CPULimits:    "200m",
+				MemoryLimits: "600Mi",
+				Image:        omsagentWinImage,
 			},
 		},
 	}
