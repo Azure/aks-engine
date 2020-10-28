@@ -58,6 +58,7 @@ type Status struct {
 	NodeAddresses []Address   `json:"addresses"`
 	Conditions    []Condition `json:"conditions"`
 	Capacity      Capacity    `json:capacity`
+	Allocatable   Allocatable `json:allocatable`
 }
 
 // Address contains an address and a type
@@ -76,6 +77,10 @@ type Info struct {
 }
 
 type Capacity struct {
+	CPU string `json:"cpu"`
+}
+
+type Allocatable struct {
 	CPU string `json:"cpu"`
 }
 

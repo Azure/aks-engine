@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -23,6 +22,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -2404,17 +2404,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 			By("Scaling deployment to consuming allocatable")
 			nodeList, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
-			cpuCapacity := 0
+			allocatableCapacity := resource.NewQuantity(0, resource.DecimalSI)
 			for _, n := range nodeList {
 				if n.IsWindows() {
-					c, err := strconv.Atoi(n.Status.Capacity.CPU)
+					q, err := resource.ParseQuantity(n.Status.Allocatable.CPU)
 					Expect(err).NotTo(HaveOccurred())
-					cpuCapacity = cpuCapacity + c
+					allocatableCapacity.Add(q)
 				}
 			}
 
-			// scale over allocatable for windows to make sure it's packed (.25 is limit on deployment)
-			deployCount := int(math.Round((float64(cpuCapacity) / 0.25)))
+			// scale over allocatable for windows to make sure it's packed (.25 is limit on deployment being used)
+			limit, _ := resource.ParseQuantity("0.25")
+			deployCount := int((allocatableCapacity.MilliValue() / limit.MilliValue()) / 1000)
 			err = cpuDeployment.ScaleDeployment(deployCount * 2)
 			Expect(err).NotTo(HaveOccurred())
 
