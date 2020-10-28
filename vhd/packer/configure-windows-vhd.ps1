@@ -57,7 +57,7 @@ function Get-ContainerImages {
                 "mcr.microsoft.com/windows/nanoserver:2004",
                 "mcr.microsoft.com/oss/kubernetes/pause:1.4.0")
         }
-        default { 
+        default {
             $imagesToPull = @()
         }
     }
@@ -118,7 +118,8 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.8/windowszip/v1.18.8-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.9/windowszip/v1.18.9-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.1/windowszip/v1.19.1-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.2/windowszip/v1.19.2-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.2/windowszip/v1.19.2-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.3/windowszip/v1.19.3-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.3/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.3.zip",
