@@ -132,7 +132,7 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 		}
 	}
 	if glc.storageContainerSASURL != "" {
-		exp, err := regexp.Compile(`^/.+`)
+		exp, err := regexp.Compile(`^/\w+`)
 		if err != nil {
 			return err
 		}
