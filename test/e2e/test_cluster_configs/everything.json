@@ -48,10 +48,6 @@
 							}
 						},
 						{
-							"name": "tiller",
-							"enabled": true
-						},
-						{
 							"name": "kubernetes-dashboard",
 							"enabled": true
 						},
