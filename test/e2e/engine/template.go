@@ -292,12 +292,17 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
-	if config.EnableKMSEncryption && config.ClientObjectID != "" {
-		if prop.OrchestratorProfile.KubernetesConfig == nil {
-			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	if config.ClientObjectID != "" {
+		if prop.ServicePrincipalProfile == nil {
+			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{}
 		}
+		if prop.ServicePrincipalProfile.ObjectID == "" {
+			prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
+		}
+	}
+
+	if config.EnableKMSEncryption && prop.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms == nil {
 		prop.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = &config.EnableKMSEncryption
-		prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
 	}
 
 	var version string
