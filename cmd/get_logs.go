@@ -182,11 +182,12 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	return nil
 }
 
-func (glc *getLogsCmd) run() (err error) {
-	if err = glc.getClusterNodes(); err != nil {
+func (glc *getLogsCmd) run() error {
+
+	if err := glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
-	if err = glc.validateLogScript(); err != nil {
+	if err := glc.validateLogScript(); err != nil {
 		return errors.Wrap(err, "validating log collection scripts for nodes")
 	}
 	var nodeNameList []string
@@ -227,7 +228,7 @@ func (glc *getLogsCmd) run() (err error) {
 			return nil
 		}
 		for _, nodeName := range nodeNameList {
-			err = glc.uploadLogsToStorageContainer(nodeName)
+			err := glc.uploadLogsToStorageContainer(nodeName)
 			if err != nil {
 				log.Warnf("Failed uploading logs %s.zip to storage container", nodeName)
 				log.Warnf("Error: %s", err)
