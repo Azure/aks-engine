@@ -192,8 +192,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.8":         false,
 	"1.17.9":         false,
 	"1.17.10":        false, // replaced by 1.17.11 due to k8s release engineering issues
-	"1.17.11":        true,
+	"1.17.11":        false,
 	"1.17.12":        true,
+	"1.17.13":        true,
 	"1.18.0-alpha.1": false,
 	"1.18.0-alpha.2": false,
 	"1.18.0-alpha.3": false,
