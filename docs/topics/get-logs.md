@@ -24,6 +24,11 @@ To collect Windows nodes logs, specify the path to the script-to-execute on each
 
 If you choose to pass your own custom log collection script, make sure it zips all relevant files to file `"/tmp/logs.zip"` for Linux and `"%TEMP%\{NodeName}.zip"` for Windows. Needless to say, the custom script should only query for troubleshooting information and it should not change the cluster or node configuration.
 
+### Upload logs to a Storage Account Container
+
+Once the cluster logs were successfully retrieved, AKS Engine can persist them to an Azure Storage Account container if optional parameter `--storage-container-sas-url` is set. AKS Engine expects the container name to be part of the provided [SAS URL](https://docs.microsoft.com/azure/storage/common/storage-sas-overview). The expected format is `https://{blob-service-uri}/{container-name}?{sas-token}`.
+Note: storage accounts on custom clouds using the `AD FS` identity provider are not yet supported
+
 ## Usage
 
 Assuming that you have a cluster deployed and the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`, then you can collect logs running a command like:
@@ -35,7 +40,8 @@ $ aks-engine get-logs \
     --ssh-host <dnsPrefix>.<location>.cloudapp.azure.com \
     --linux-ssh-private-key ~/.ssh/id_rsa \
     --linux-script scripts/collect-logs.sh \
-    --windows-script scripts/collect-windows-logs.ps1
+    --windows-script scripts/collect-windows-logs.ps1 \
+    --storage-container-sas-url <storageContainerSASUrl>
 ```
 
 ### Parameters
@@ -50,3 +56,4 @@ $ aks-engine get-logs \
 |--windows-script|no|Custom log collection powershell script. It is required only when the Windows node distro is not `aks-windows` and it should produce file `%TEMP%\{NodeName}.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
 |--control-plane-only|no|Only collect logs from master nodes.|
+|--storage-container-sas-url|no|Upload collected logs to a storage container on Azure or custom cloud.|

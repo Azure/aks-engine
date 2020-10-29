@@ -5,12 +5,15 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,6 +23,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -32,6 +36,7 @@ const (
 	getLogsName             = "get-logs"
 	getLogsShortDescription = "Collect logs and current cluster nodes configuration."
 	getLogsLongDescription  = "Collect deployment logs, running daemons/services logs and current nodes configuration."
+	uploadOperationTimeOut  = 300 * time.Second
 )
 
 type getLogsCmd struct {
@@ -44,6 +49,7 @@ type getLogsCmd struct {
 	windowsScriptPath      string
 	outputDirectory        string
 	controlPlaneOnly       bool
+	storageContainerSASURL string
 	// computed
 	cs               *api.ContainerService
 	locale           *gotext.Locale
@@ -63,12 +69,12 @@ func newGetLogsCmd() *cobra.Command {
 		Long:  getLogsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := glc.validateArgs(); err != nil {
-				_ = cmd.Usage()
 				return errors.Wrap(err, "validating get-logs args")
 			}
 			if err := glc.loadAPIModel(); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
+			cmd.SilenceUsage = true
 			return glc.run()
 		},
 	}
@@ -80,6 +86,7 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes (required if distro is not aks-windows)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
+	command.Flags().StringVarP(&glc.storageContainerSASURL, "storage-container-sas-url", "", "", "blob service SAS URL of the storage container on Azure or custom cloud to upload kubernetes logs")
 	_ = command.MarkFlagRequired("location")
 	_ = command.MarkFlagRequired("api-model")
 	_ = command.MarkFlagRequired("ssh-host")
@@ -122,6 +129,19 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
 		if err := os.MkdirAll(glc.outputDirectory, 0755); err != nil {
 			return errors.Errorf("error creating output directory (%s)", glc.outputDirectory)
+		}
+	}
+	if glc.storageContainerSASURL != "" {
+		exp, err := regexp.Compile(`^/\w+`)
+		if err != nil {
+			return err
+		}
+		url, err := url.ParseRequestURI(glc.storageContainerSASURL)
+		if err != nil {
+			return errors.Errorf("error parsing upload SAS URL")
+		}
+		if !exp.MatchString(url.Path) {
+			return errors.New("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'")
 		}
 	}
 	return nil
@@ -168,15 +188,18 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	return nil
 }
 
-func (glc *getLogsCmd) run() (err error) {
-	if err = glc.getClusterNodes(); err != nil {
+func (glc *getLogsCmd) run() error {
+
+	if err := glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
-	if err = glc.validateLogScript(); err != nil {
+	if err := glc.validateLogScript(); err != nil {
 		return errors.Wrap(err, "validating log collection scripts for nodes")
 	}
+	var nodeNameList []string
 	for _, n := range glc.masterNodes {
 		log.Infof("Processing master node: %s\n", n.Name)
+		nodeNameList = append(nodeNameList, n.Name)
 		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
@@ -188,6 +211,7 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	for _, n := range glc.linuxNodes {
 		log.Infof("Processing Linux node: %s\n", n.Name)
+		nodeNameList = append(nodeNameList, n.Name)
 		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
@@ -196,6 +220,7 @@ func (glc *getLogsCmd) run() (err error) {
 	}
 	for _, n := range glc.windowsNodes {
 		log.Infof("Processing Windows node: %s\n", n.Name)
+		nodeNameList = append(nodeNameList, n.Name)
 		out, err := glc.collectLogs(n, glc.windowsSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
@@ -203,6 +228,17 @@ func (glc *getLogsCmd) run() (err error) {
 		}
 	}
 	log.Infof("Logs downloaded to %s", glc.outputDirectory)
+	if glc.storageContainerSASURL != "" {
+		//TODO: identify and skipping upload for SAS URL on custom cloud with identity system of ADFS
+		for _, nodeName := range nodeNameList {
+			err := glc.uploadLogsToStorageContainer(nodeName)
+			if err != nil {
+				log.Warnf("Failed uploading logs %s.zip to storage container", nodeName)
+				log.Warnf("Error: %s", err)
+			}
+		}
+	}
+	log.Infof("Logs uploaded to %s", glc.storageContainerSASURL)
 	return nil
 }
 
@@ -367,6 +403,34 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 
 	fmt.Println("")
 	return "", nil
+}
+
+func (glc *getLogsCmd) uploadLogsToStorageContainer(nodeName string) error {
+	log.Infof("Uploading log file %s.zip", nodeName)
+	logFileName := fmt.Sprintf("%s.zip", nodeName)
+	logFilePath := path.Join(glc.outputDirectory, logFileName)
+	logFile, err := os.Open(logFilePath)
+	if err != nil {
+		return errors.Wrapf(err, "reading log file %s", logFilePath)
+	}
+
+	urls := strings.Split(glc.storageContainerSASURL, "?")
+	fullURL := fmt.Sprintf("%s/%s?%s", urls[0], logFileName, urls[1])
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		return errors.Wrapf(err, "parsing the storage container SAS URL")
+	}
+	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(azblob.NewAnonymousCredential(), azblob.PipelineOptions{}))
+	blockBlobURL := blobURL.ToBlockBlobURL()
+
+	ctx, cancel := context.WithTimeout(context.Background(), uploadOperationTimeOut)
+	defer cancel()
+
+	_, err = azblob.UploadFileToBlockBlob(ctx, logFile, blockBlobURL, azblob.UploadToBlockBlobOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "uploading log file %s.zip to storage container blob %s", nodeName, fullURL)
+	}
+	return nil
 }
 
 func (glc *getLogsCmd) validateLogScript() error {
