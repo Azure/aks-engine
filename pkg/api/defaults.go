@@ -202,6 +202,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				}
 			}
 		}
+
+		if o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure {
+			if o.KubernetesConfig.NetworkMode == "" {
+				o.KubernetesConfig.NetworkMode = NetworkModeTransparent
+			}
+		}
 		if o.KubernetesConfig.ContainerRuntime == "" {
 			o.KubernetesConfig.ContainerRuntime = DefaultContainerRuntime
 		}

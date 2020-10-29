@@ -1093,6 +1093,16 @@ func TestNetworkPluginDefaults(t *testing.T) {
 		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginFlannel)
 	}
+
+	mockCS = getMockBaseContainerService("1.19.2")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkMode != NetworkModeTransparent {
+		t.Fatalf("NetworkMode did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.NetworkMode, NetworkModeTransparent)
+	}
 }
 
 func TestKubernetesImageBaseAppendSlash(t *testing.T) {

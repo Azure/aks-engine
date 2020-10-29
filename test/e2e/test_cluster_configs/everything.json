@@ -62,7 +62,7 @@
 							"name": "coredns",
 							"enabled": true,
 							"config": {
-								"min-replicas": "1",
+								"min-replicas": "3",
 								"nodes-per-replica": "8"
 							}
 						},
