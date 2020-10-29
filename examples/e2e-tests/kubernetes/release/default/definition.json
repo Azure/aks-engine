@@ -13,10 +13,6 @@
             "enabled": true
           },
           {
-            "name": "rescheduler",
-            "enabled": true
-          },
-          {
             "name": "cluster-autoscaler",
             "enabled": true,
             "pools": [

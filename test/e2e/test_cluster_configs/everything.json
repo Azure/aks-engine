@@ -52,10 +52,6 @@
 							"enabled": true
 						},
 						{
-							"name": "rescheduler",
-							"enabled": true
-						},
-						{
 							"name": "coredns",
 							"enabled": true,
 							"config": {
