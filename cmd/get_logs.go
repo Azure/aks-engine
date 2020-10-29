@@ -132,10 +132,16 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 		}
 	}
 	if glc.storageContainerSASURL != "" {
-		url := regexp.MustCompile(`\?`).Split(glc.storageContainerSASURL, 2)
-		urls := regexp.MustCompile(`\/`).Split(url[0], 4)
-		if urls[len(urls)-1] == "" {
-			return errors.Errorf("error validating storage container SAS URL %s. Expected SAS URL format is https://{blob-service-uri}/{container-name}?{sas-token}", glc.storageContainerSASURL)
+		exp, err := regexp.Compile(`^/.+`)
+		if err != nil {
+			return err
+		}
+		url, err := url.ParseRequestURI(glc.storageContainerSASURL)
+		if err != nil {
+			return errors.Errorf("error parsing upload SAS URL")
+		}
+		if !exp.MatchString(url.Path) {
+			return errors.New("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'")
 		}
 	}
 	return nil
@@ -223,10 +229,7 @@ func (glc *getLogsCmd) run() error {
 	}
 	log.Infof("Logs downloaded to %s", glc.outputDirectory)
 	if glc.storageContainerSASURL != "" {
-		if glc.cs.Properties.IsCustomCloudProfile() && strings.EqualFold(glc.cs.Properties.CustomCloudProfile.IdentitySystem, "adfs") {
-			log.Warn("Skipped uploading logs for custom cloud with identity system of adfs")
-			return nil
-		}
+		//TODO: identify and skipping upload for SAS URL on custom cloud with identity system of ADFS
 		for _, nodeName := range nodeNameList {
 			err := glc.uploadLogsToStorageContainer(nodeName)
 			if err != nil {

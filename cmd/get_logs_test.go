@@ -143,8 +143,47 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				location:               "southcentralus",
 				storageContainerSASURL: "https://blob-service-uri/?sas-token",
 			},
-			expectedErr: errors.Errorf("error validating storage container SAS URL https://blob-service-uri/?sas-token. Expected SAS URL format is https://{blob-service-uri}/{container-name}?{sas-token}"),
+			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
 			name:        "InvalidSASURL",
+		},
+		{
+			glc: &getLogsCmd{
+				apiModelPath:           existingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
+				sshHostURI:             "server.example.com",
+				location:               "southcentralus",
+				storageContainerSASURL: "https://blob-service-uri//?sas-token",
+			},
+			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
+			name:        "InvalidSASURL",
+		},
+		{
+			glc: &getLogsCmd{
+				apiModelPath:           existingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
+				sshHostURI:             "server.example.com",
+				location:               "southcentralus",
+				storageContainerSASURL: "https://blob-service-uri//folder-name?sas-token",
+			},
+			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
+			name:        "InvalidSASURL",
+		},
+		{
+			glc: &getLogsCmd{
+				apiModelPath:           existingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
+				sshHostURI:             "server.example.com",
+				location:               "southcentralus",
+				storageContainerSASURL: "https://blob-service-uri/container-name/folder-name?sas-token",
+			},
+			expectedErr: nil,
+			name:        "IsValid",
 		},
 		{
 			glc: &getLogsCmd{
