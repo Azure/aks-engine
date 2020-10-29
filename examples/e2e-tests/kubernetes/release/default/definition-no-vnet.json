@@ -4,6 +4,7 @@
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
             "kubernetesConfig": {
+                "enableEncryptionWithExternalKms": true,
                 "useManagedIdentity": true,
                 "addons": [
                     {
