@@ -224,7 +224,85 @@ func (n *Node) Describe() error {
 	return err
 }
 
-// Add taint to node
+// AddLabel adds a label to a node
+func (n *Node) AddLabel(label string) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "label", "node", n.Metadata.Name, label)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
+// AddLabelWithRetry add label to a node until success or timeout
+func (n *Node) AddLabelWithRetry(sleep, timeout time.Duration, label string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- n.AddLabel(label)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			if result == nil {
+				return nil
+			}
+			mostRecentRetryError = result
+		case <-ctx.Done():
+			return errors.Errorf("AddLabelWithRetry timed out: %s\n", mostRecentRetryError)
+		}
+	}
+}
+
+// AddAnnotation adds an annotation to node
+func (n *Node) AddAnnotation(annotation string) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "annotate", "nodes", n.Metadata.Name, annotation)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
+// AddAnnotationWithRetry adds annotation to node trying until success or timeout
+func (n *Node) AddAnnotationWithRetry(sleep, timeout time.Duration, annotation string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- n.AddAnnotation(annotation)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			if result == nil {
+				return nil
+			}
+			mostRecentRetryError = result
+		case <-ctx.Done():
+			return errors.Errorf("AddAnnotationWithRetry timed out: %s\n", mostRecentRetryError)
+		}
+	}
+}
+
+// AddTaint adds a taint to node
 func (n *Node) AddTaint(taint Taint) error {
 	var commandTimeout time.Duration
 	cmd := exec.Command("k", "taint", "nodes", n.Metadata.Name, taint.Key+"="+taint.Value+":"+taint.Effect)
@@ -233,7 +311,7 @@ func (n *Node) AddTaint(taint Taint) error {
 	return err
 }
 
-// Remove taint to node
+// RemoveTaint removes a taint from a node
 func (n *Node) RemoveTaint(taint Taint) error {
 	var commandTimeout time.Duration
 	cmd := exec.Command("k", "taint", "nodes", n.Metadata.Name, taint.Key+":"+taint.Effect+"-")

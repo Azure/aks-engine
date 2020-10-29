@@ -182,7 +182,7 @@
             "containers": [
               {
                 "name": "omsagent",
-                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020",
                 "cpuRequests": "150m",
                 "memoryRequests": "250Mi",
                 "cpuLimits": "1",
@@ -190,7 +190,7 @@
               },
               {
                 "name": "omsagentWin",
-                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020-2",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod10052020",
                 "cpuRequests": "150m",
                 "memoryRequests": "250Mi",
                 "cpuLimits": "1",

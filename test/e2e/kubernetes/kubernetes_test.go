@@ -1026,6 +1026,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have addon pods running", func() {
+			timeout := cfg.Timeout
 			for _, addonName := range []string{common.CoreDNSAddonName, common.TillerAddonName, common.AADPodIdentityAddonName, common.ACIConnectorAddonName,
 				common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName, common.CloudNodeManagerAddonName, common.ClusterAutoscalerAddonName,
 				common.BlobfuseFlexVolumeAddonName, common.SMBFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName, common.DashboardAddonName,
@@ -1045,6 +1046,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if eng.HasWindowsAgents() {
 						addonPods = append(addonPods, "omsagent-win")
 					}
+					timeout = 60 * time.Minute
 				case common.AzureNetworkPolicyAddonName:
 					addonPods = []string{"azure-npm"}
 				case common.DashboardAddonName:
@@ -1098,7 +1100,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							}
 						}
 						By(fmt.Sprintf("Ensuring that the %s pod(s) in the %s addon is Running", addonPod, addonName))
-						running, err := pod.WaitOnSuccesses(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+						running, err := pod.WaitOnSuccesses(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
 					}
