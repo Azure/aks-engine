@@ -15,6 +15,7 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
+					"enableEncryptionWithExternalKms": true,
 					"useManagedIdentity": true,
 					"containerRuntimeConfig": {
 						"dataDir": "/mnt/docker"
