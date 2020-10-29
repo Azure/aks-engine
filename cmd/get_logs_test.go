@@ -144,7 +144,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				storageContainerSASURL: "https://blob-service-uri/?sas-token",
 			},
 			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
-			name:        "InvalidSASURL",
+			name:        "InvalidSASURLNoPath",
 		},
 		{
 			glc: &getLogsCmd{
@@ -157,7 +157,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				storageContainerSASURL: "https://blob-service-uri//?sas-token",
 			},
 			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
-			name:        "InvalidSASURL2",
+			name:        "InvalidSASURLEmptyPath",
 		},
 		{
 			glc: &getLogsCmd{
@@ -170,7 +170,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				storageContainerSASURL: "https://blob-service-uri//folder-name?sas-token",
 			},
 			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
-			name:        "InvalidSASURL3",
+			name:        "InvalidSASURLNoContainerName",
 		},
 		{
 			glc: &getLogsCmd{
@@ -183,7 +183,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				storageContainerSASURL: "https://blob-service-uri/container-name/folder-name?sas-token",
 			},
 			expectedErr: nil,
-			name:        "ValidSASURL",
+			name:        "ValidSASURLWithDirectory",
 		},
 		{
 			glc: &getLogsCmd{
