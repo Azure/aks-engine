@@ -715,6 +715,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 				coreComponents = append(coreComponents, common.CloudControllerManagerComponentName)
 			}
+			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
+				coreComponents = append(coreComponents, common.AzureKMSProviderComponentName)
+			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
 				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)

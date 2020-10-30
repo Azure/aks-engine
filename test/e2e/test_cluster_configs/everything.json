@@ -15,6 +15,7 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
+					"enableEncryptionWithExternalKms": true,
 					"useManagedIdentity": true,
 					"containerRuntimeConfig": {
 						"dataDir": "/mnt/docker"
@@ -47,15 +48,7 @@
 							}
 						},
 						{
-							"name": "tiller",
-							"enabled": true
-						},
-						{
 							"name": "kubernetes-dashboard",
-							"enabled": true
-						},
-						{
-							"name": "rescheduler",
 							"enabled": true
 						},
 						{
