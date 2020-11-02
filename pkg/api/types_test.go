@@ -6103,6 +6103,138 @@ func TestGetAgentVMPrefix(t *testing.T) {
 	}
 }
 
+func TestIsAgentPoolMember(t *testing.T) {
+	tests := []struct {
+		name       string
+		vmName     string
+		properties *Properties
+		expected   bool
+	}{
+		{
+			name:   "Member of Linux VMAS agent pool profile",
+			vmName: "k8s-agentpool-99117399-",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Linux VMAS agent pool profile",
+			vmName: "k8s-blah-99117399-",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:   "Member of Linux VMSS agent pool profile",
+			vmName: "k8s-agentpool-99117399-vmss",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Linux VMSS agent pool profile",
+			vmName: "k8s-blah-99117399-vmss",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:   "Member of Windows agent pool profile",
+			vmName: "9911k8s00",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Windows agent pool profile",
+			vmName: "9911k8s01",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			p := test.properties
+			actual := p.IsAgentPoolMember(test.vmName, test.properties.AgentPoolProfiles[0], 0)
+			if actual != test.expected {
+				t.Errorf("expected %t, but got %t", test.expected, actual)
+			}
+		})
+	}
+}
+
 func TestFormatAzureProdFQDN(t *testing.T) {
 	dnsPrefix := "santest"
 	var actual []string

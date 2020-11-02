@@ -11,12 +11,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack"
+	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -340,4 +343,17 @@ func writeCustomCloudProfile(cs *api.ContainerService) error {
 	os.Setenv("AZURE_ENVIRONMENT_FILEPATH", tmpFileName)
 
 	return nil
+}
+
+func getKubeClient(cs *api.ContainerService, interval, timeout time.Duration) (kubernetes.Client, error) {
+	kubeconfig, err := engine.GenerateKubeConfig(cs.Properties, cs.Location)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating kubeconfig")
+	}
+	var az *armhelpers.AzureClient
+	client, err := az.GetKubernetesClient("", kubeconfig, interval, timeout)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
