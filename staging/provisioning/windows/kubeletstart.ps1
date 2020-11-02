@@ -27,7 +27,7 @@ $global:CNIConfigPath = [Io.path]::Combine("$global:CNIPath", "config")
 
 $UseContainerD = ($global:ContainerRuntime -eq "containerd")
 
-$KubeNetwork = "azure"
+ipmo $global:HNSModule
 
 #TODO ksbrmnn refactor to be sensical instead of if if if ...
 
@@ -184,6 +184,45 @@ Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW) {
     Add-Content -Path $global:CNIConfig -Value (ConvertTo-Json $configJson -Depth 20)
 }
 
+function CleanUpNetwork($networkname) {
+    $hnsNetwork = Get-HnsNetwork | ? Name -EQ $networkname
+    if ($hnsNetwork) {
+        # Cleanup all containers
+        Write-Log "Cleaning up containers"
+        if ($UseContainerD -eq $true) {
+            ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io tasks kill $_ }
+            ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io c rm $_ }
+        }
+        else {
+            docker.exe ps -q | ForEach-Object { docker rm $_ -f }
+        }
+
+        #
+        # Stop services
+        #
+        Write-Log "Stopping kubeproxy service"
+        Stop-Service kubeproxy
+
+        Write-Log "Stopping kubelet service"
+        Stop-Service kubelet
+
+        Write-Log "Cleaning up persisted HNS policy lists"
+        # Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+        # and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
+        #
+        # October patch 10.0.17763.1554 introduced a breaking change 
+        # which requires the hns policy list to be removed before network if it gets into a bad state
+        # See https://github.com/Azure/aks-engine/pull/3956#issuecomment-720797433 for more info
+        # Kubeproxy doesn't fail becuase errors are not handled: 
+        # https://github.com/delulu/kubernetes/blob/524de768bb64b7adff76792ca3bf0f0ece1e849f/pkg/proxy/winkernel/proxier.go#L532
+        Get-HnsPolicyList | Remove-HnsPolicyList
+
+        Write-Host "Cleaning up old HNS network found"
+        Remove-HnsNetwork $hnsNetwork
+        Start-Sleep 10
+    }
+}
+
 
 if ($global:NetworkPlugin -eq "azure") {
     Write-Host "NetworkPlugin azure, starting kubelet."
@@ -193,56 +232,38 @@ if ($global:NetworkPlugin -eq "azure") {
     # Cleanup all files related to cni
     taskkill /IM azure-vnet.exe /f
     taskkill /IM azure-vnet-ipam.exe /f
-    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
-    if ((Test-Path $cnijson)) {
-        Remove-Item $cnijson
-    }
-    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
-    if ((Test-Path $cnilock)) {
-        Remove-Item $cnilock
-    }
-    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json")
-    if ((Test-Path $cnijson)) {
-        Remove-Item $cnijson
-    }
-    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json.lock")
-    if ((Test-Path $cnilock)) {
-        Remove-Item $cnilock
-    }
-    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
-    if ((Test-Path $cnijson)) {
-        Remove-Item $cnijson
-    }
-    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
-    if ((Test-Path $cnilock)) {
-        Remove-Item $cnilock
-    }
 
-    # startup the service
+    $filesToRemove = @(
+        "c:\k\azure-vnet.json",
+        "c:\k\azure-vnet.json.lock",
+        "c:\k\azure-vnet-ipam.json",
+        "c:\k\azure-vnet-ipam.json.lock"
+        "c:\k\azure-vnet-ipamv6.json",
+        "c:\k\azure-vnet-ipamv6.json.lock"
+    )
+
+    foreach ($file in $filesToRemove) {
+        if (Test-Path $file) {
+            Write-Log "Deleting stale file at $file"
+            Remove-Item $file
+        }
+    }
 
     # Find if network created by CNI exists, if yes, remove it
     # This is required to keep the network non-persistent behavior
     # Going forward, this would be done by HNS automatically during restart of the node
-
-    $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
-    if ($hnsNetwork) {
-        # Cleanup all containers
-        docker ps -q | foreach { docker rm $_ -f }
-
-        Write-Host "Cleaning up old HNS network found"
-        Remove-HnsNetwork $hnsNetwork
-    }
-
+    CleanUpNetwork("azure")
+    
     # Restart Kubeproxy, which would wait, until the network is created
     # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
     Restart-Service Kubeproxy
 
+    # startup the service
     $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
     Invoke-Expression $KubeletCommandLine
 }
 
 if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "docker")) {
-    $KubeNetwork = "l2bridge"
     try {
         $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
 
@@ -270,22 +291,9 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "do
             $process | Stop-Process | Out-Null
         }
 
-        # startup the service
-        $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
-
-        if ($hnsNetwork) {
-            # Kubelet has been restarted with existing network.
-            # Cleanup all containers
-            docker ps -q | foreach { docker rm $_ -f }
-            # cleanup network
-            Write-Host "Cleaning up old HNS network found"
-            Remove-HnsNetwork $hnsNetwork
-            Start-Sleep 10
-        }
+        CleanUpNetwork($global:NetworkMode.ToLower())
 
         Write-Host "Creating a new hns Network"
-        ipmo $global:HNSModule
-
         $hnsNetwork = New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
         # New network has been created, Kubeproxy service has to be restarted
         # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
@@ -295,6 +303,7 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "do
         # Add route to all other POD networks
         Update-CNIConfigKubenetDocker $podCIDR $masterSubnetGW
 
+        # startup the service
         Invoke-Expression $KubeletCommandLine
     }
     catch {
@@ -304,7 +313,6 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "do
 }
 
 if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "containerd")) {
-    $KubeNetwork = "l2bridge"
     try {
         $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
         $podCIDR = Get-PodCIDR
@@ -330,23 +338,9 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "co
             $process | Stop-Process | Out-Null
         }
 
-        # startup the service
-        $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
-
-        if ($hnsNetwork) {
-            # Kubelet has been restarted with existing network.
-            # Cleanup all containers
-            # TODO: convert this to ctr.exe -n k8s.io container list ; container rm
-            docker ps -q | foreach { docker rm $_ -f }
-            # cleanup network
-            Write-Host "Cleaning up old HNS network found"
-            Remove-HnsNetwork $hnsNetwork
-            Start-Sleep 10
-        }
-
+        CleanUpNetwork($global:NetworkMode.ToLower())
+      
         Write-Host "Creating a new hns Network"
-        ipmo $global:HNSModule
-
         $hnsNetwork = New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
         # New network has been created, Kubeproxy service has to be restarted
         Restart-Service Kubeproxy
@@ -356,6 +350,7 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "co
         Write-Host "Updating CNI config"
         Update-CNIConfigKubenetContainerD $podCIDR $masterSubnetGW
 
+        # startup the service
         Invoke-Expression $KubeletCommandLine
     }
     catch {
