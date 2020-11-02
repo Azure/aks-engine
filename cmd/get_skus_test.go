@@ -24,7 +24,7 @@ func TestGetSkusCmd(t *testing.T) {
 	g.Expect(command.Long).Should(Equal(skusLongDescription))
 	g.Expect(command.Flags().Lookup("output")).NotTo(BeNil())
 
-	command.SetArgs([]string{})
+	command.SetArgs([]string{"--bogus"})
 	err := command.Execute()
 	g.Expect(err).To(HaveOccurred())
 }
