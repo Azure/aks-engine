@@ -2019,13 +2019,13 @@ func (a *Properties) validateAzureStackSupport() error {
 		if networkPlugin != "azure" && networkPlugin != "kubenet" && networkPlugin != "" {
 			return errors.Errorf("kubernetesConfig.networkPlugin '%s' is not supported on Azure Stack clouds", networkPlugin)
 		}
-		if a.MasterProfile.AvailabilityProfile == VirtualMachineScaleSets {
-			return errors.Errorf("masterProfile.availabilityProfile should be set to '%s' on Azure Stack clouds", AvailabilitySet)
+		if a.MasterProfile.AvailabilityProfile == VirtualMachineScaleSets && !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+			return errors.Errorf("masterProfile.availabilityProfile should be set to '%s' on Azure Stack clouds for Kubernetes versions 1.17 and earlier", AvailabilitySet)
 		}
 		for _, agentPool := range a.AgentPoolProfiles {
 			pool := agentPool
-			if pool.AvailabilityProfile != AvailabilitySet {
-				return errors.Errorf("agentPoolProfiles[%s].availabilityProfile should be set to '%s' on Azure Stack clouds", pool.Name, AvailabilitySet)
+			if pool.AvailabilityProfile == VirtualMachineScaleSets && !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+				return errors.Errorf("agentPoolProfiles[%s].availabilityProfile should be set to '%s' on Azure Stack clouds for Kubernetes versions 1.17 and earlier", pool.Name, AvailabilitySet)
 			}
 		}
 	}

@@ -111,7 +111,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	vmProperties := &compute.VirtualMachineScaleSetProperties{}
 
-	if masterProfile.PlatformFaultDomainCount != nil {
+	// Do not apply PlatformFaultDomainCount if IsAzureStackCloud() is true; current Azure Stack CRP API version does not support PlatformFaultDomainCount.
+	if masterProfile.PlatformFaultDomainCount != nil && !cs.Properties.IsAzureStackCloud() {
 		vmProperties.PlatformFaultDomainCount = to.Int32Ptr(int32(*masterProfile.PlatformFaultDomainCount))
 	}
 	if masterProfile.ProximityPlacementGroupID != "" {
@@ -459,7 +460,8 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		},
 	}
 
-	if profile.PlatformFaultDomainCount != nil {
+	// Do not apply PlatformFaultDomainCount if IsAzureStackCloud() is true; current Azure Stack CRP API version does not support PlatformFaultDomainCount.
+	if profile.PlatformFaultDomainCount != nil && !cs.Properties.IsAzureStackCloud() {
 		vmssProperties.PlatformFaultDomainCount = to.Int32Ptr(int32(*profile.PlatformFaultDomainCount))
 	}
 

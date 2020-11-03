@@ -5402,18 +5402,32 @@ func TestValidateAzureStackSupport(t *testing.T) {
 			expectedErr:        errors.New("kubernetesConfig.networkPlugin 'flannel' is not supported on Azure Stack clouds"),
 		},
 		{
-			name:               "AzureStack does not support VMSS on the master pool",
+			name:               "AzureStack does not support VMSS on the master pool on Kubernetes 1.17 and older",
 			networkPlugin:      "",
 			masterAvailability: VirtualMachineScaleSets,
 			agentAvailability:  VirtualMachineScaleSets,
-			expectedErr:        errors.New("masterProfile.availabilityProfile should be set to 'AvailabilitySet' on Azure Stack clouds"),
+			expectedErr:        errors.New("masterProfile.availabilityProfile should be set to 'AvailabilitySet' on Azure Stack clouds for Kubernetes versions 1.17 and earlier"),
 		},
 		{
-			name:               "AzureStack does not support VMSS on the agent pools",
+			name:               "AzureStack does not support VMSS on the agent pools on Kubernetes 1.17 and older",
 			networkPlugin:      "kubenet",
 			masterAvailability: AvailabilitySet,
 			agentAvailability:  VirtualMachineScaleSets,
-			expectedErr:        errors.New("agentPoolProfiles[agentpool].availabilityProfile should be set to 'AvailabilitySet' on Azure Stack clouds"),
+			expectedErr:        errors.New("agentPoolProfiles[agentpool].availabilityProfile should be set to 'AvailabilitySet' on Azure Stack clouds for Kubernetes versions 1.17 and earlier"),
+		},
+		{
+			name:               "AzureStack supports VMSS on the master pool on Kubernetes 1.18 and newer",
+			networkPlugin:      "",
+			masterAvailability: VirtualMachineScaleSets,
+			agentAvailability:  VirtualMachineScaleSets,
+			expectedErr:        nil,
+		},
+		{
+			name:               "AzureStack supports VMSS on the agent pools on Kubernetes 1.18 and newer",
+			networkPlugin:      "kubenet",
+			masterAvailability: AvailabilitySet,
+			agentAvailability:  VirtualMachineScaleSets,
+			expectedErr:        nil,
 		},
 		{
 			name:               "AzureStack defaults masterAvailabilityProfile to 'AvailabilitySet'",
@@ -5446,7 +5460,12 @@ func TestValidateAzureStackSupport(t *testing.T) {
 					break
 				}
 			}
-			cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.11"
+			if strings.Contains(test.name, "1.18") {
+				cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.18.10"
+			} else {
+				cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.14"
+			}
+
 			if err := cs.Validate(false); !helpers.EqualError(err, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Logf("FIXME: expected error: %v, got: %v", test.expectedErr, err)
