@@ -23522,6 +23522,10 @@ spec:
       env:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: "/etc/kubernetes/azurestackcloud.json"
+  {{- if IsAzureStackCloud}}
+      - name: AZURE_GO_SDK_LOG_LEVEL
+        value: INFO
+  {{end}}
 {{end}}
       volumeMounts:
         - name: etc-kubernetes
