@@ -28,6 +28,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 )
 
 const (
@@ -342,12 +343,12 @@ func (rcc *rotateCertsCmd) updateKubeconfig() error {
 	return nil
 }
 
-func (rcc *rotateCertsCmd) getKubeClient() (armhelpers.KubernetesClient, error) {
+func (rcc *rotateCertsCmd) getKubeClient() (kubernetes.Client, error) {
 	kubeconfig, err := engine.GenerateKubeConfig(rcc.containerService.Properties, rcc.location)
 	if err != nil {
 		return nil, errors.Wrap(err, "generating kubeconfig")
 	}
-	var kubeClient armhelpers.KubernetesClient
+	var kubeClient kubernetes.Client
 	if rcc.client != nil {
 		kubeClient, err = rcc.client.GetKubernetesClient("", kubeconfig, time.Second*1, time.Duration(60)*time.Minute)
 		if err != nil {

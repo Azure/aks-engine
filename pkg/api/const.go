@@ -202,6 +202,8 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginAzure is the string expression for Azure CNI plugin.
 	NetworkPluginAzure = "azure"
+	// NetworkModeTransparent is the string expression for transparent network mode config option
+	NetworkModeTransparent = "transparent"
 	// DefaultSinglePlacementGroup determines the aks-engine provided default for supporting large VMSS
 	// (true = single placement group 0-100 VMs, false = multiple placement group 0-1000 VMs)
 	DefaultSinglePlacementGroup = true
@@ -246,7 +248,7 @@ const (
 // Azure API Versions
 const (
 	APIVersionAuthorizationUser   = "2018-09-01-preview"
-	APIVersionAuthorizationSystem = "2018-01-01-preview"
+	APIVersionAuthorizationSystem = "2018-09-01-preview"
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2018-02-14"
@@ -339,11 +341,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.1.6"
+	AzureCniPluginVerLinux = "v1.1.8"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.1.6"
+	AzureCniPluginVerWindows = "v1.1.8"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.8.7"

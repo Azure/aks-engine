@@ -99,9 +99,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.1.8
 1.1.6
 1.1.3
-1.1.2
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -143,7 +143,6 @@ done
 
 ADDON_RESIZER_VERSIONS="
 1.8.7
-1.8.4
 "
 for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
@@ -236,11 +235,10 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.19.0
+1.19.1
 1.18.2
 1.17.3
 1.16.6
-1.15.7
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -365,20 +363,17 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.20.0-beta.0
+1.19.3
 1.19.2
-1.19.1
+1.18.10
+1.18.10-azs
 1.18.9
-1.18.8
+1.17.13
 1.17.12
-1.17.11
-1.17.11-azs
 1.16.15
 1.16.14
 1.16.14-azs
-1.15.12
-1.15.12-azs
-1.15.11
-1.15.11-azs
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then

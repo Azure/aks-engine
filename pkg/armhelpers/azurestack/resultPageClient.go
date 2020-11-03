@@ -161,7 +161,7 @@ func (page *DiskListPageClient) Next() error {
 
 // NotDone returns true if the page enumeration should be started or is not yet complete.
 func (page DiskListPageClient) NotDone() bool {
-	return !page.dlp.NotDone()
+	return page.dlp.NotDone()
 }
 
 // Response returns the raw server response from the last page request.

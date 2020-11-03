@@ -50,10 +50,6 @@ Here is an [example of a Kubernetes cluster with Availability Zones support](../
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
 }

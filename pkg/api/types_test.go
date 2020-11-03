@@ -42,7 +42,7 @@ const exampleAKSAPIModel = `{
 	"properties": {
 		"dnsPrefix": "agents006",
 		"fqdn": "agents006.azmk8s.io",
-		"kubernetesVersion": "1.15.11",
+		"kubernetesVersion": "1.16.14",
 		"agentPoolProfiles": [ { "name": "agentpool1", "count": 2, "vmSize": "Standard_D2_v2" } ],
 		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
 	},
@@ -3883,7 +3883,7 @@ func TestUserAssignedMSI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserailizing the example user msi api model: %s", err)
 	}
-	systemMSI := apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	systemMSI := to.Bool(apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	actualUserMSI := apiModel.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
 	if !systemMSI || actualUserMSI != "" {
 		t.Fatalf("found user msi: %t and usermsi: %s", systemMSI, actualUserMSI)
@@ -3897,7 +3897,7 @@ func TestUserAssignedMSI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserailizing the example user msi api model: %s", err)
 	}
-	systemMSI = apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	systemMSI = to.Bool(apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	actualUserMSI = apiModel.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
 	if !systemMSI && actualUserMSI != exampleUserMSI {
 		t.Fatalf("found user msi: %t and usermsi: %s", systemMSI, actualUserMSI)
@@ -6103,6 +6103,138 @@ func TestGetAgentVMPrefix(t *testing.T) {
 	}
 }
 
+func TestIsAgentPoolMember(t *testing.T) {
+	tests := []struct {
+		name       string
+		vmName     string
+		properties *Properties
+		expected   bool
+	}{
+		{
+			name:   "Member of Linux VMAS agent pool profile",
+			vmName: "k8s-agentpool-99117399-",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Linux VMAS agent pool profile",
+			vmName: "k8s-blah-99117399-",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:   "Member of Linux VMSS agent pool profile",
+			vmName: "k8s-agentpool-99117399-vmss",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Linux VMSS agent pool profile",
+			vmName: "k8s-blah-99117399-vmss",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:   "Member of Windows agent pool profile",
+			vmName: "9911k8s00",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Windows agent pool profile",
+			vmName: "9911k8s01",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			p := test.properties
+			actual := p.IsAgentPoolMember(test.vmName, test.properties.AgentPoolProfiles[0], 0)
+			if actual != test.expected {
+				t.Errorf("expected %t, but got %t", test.expected, actual)
+			}
+		})
+	}
+}
+
 func TestFormatAzureProdFQDN(t *testing.T) {
 	dnsPrefix := "santest"
 	var actual []string
@@ -6429,7 +6561,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 
 func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "fooID",
 	}
 	if !k.UserAssignedIDEnabled() {
@@ -6437,7 +6569,7 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: false,
+		UseManagedIdentity: to.BoolPtr(false),
 		UserAssignedID:     "fooID",
 	}
 
@@ -6448,7 +6580,7 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 
 func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "fooID",
 	}
 	if !k.ShouldCreateNewUserAssignedIdentity() {
@@ -6456,7 +6588,7 @@ func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     exampleUserMSI,
 	}
 
@@ -6467,7 +6599,7 @@ func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 
 func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "",
 	}
 	if !k.SystemAssignedIDEnabled() {
@@ -6475,7 +6607,7 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "foo",
 	}
 
@@ -6484,7 +6616,7 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: false,
+		UseManagedIdentity: to.BoolPtr(false),
 		UserAssignedID:     "",
 	}
 

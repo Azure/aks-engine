@@ -4,34 +4,41 @@
 package cmd
 
 import (
-	"bytes"
+	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/helpers/ssh"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh"
-	v1 "k8s.io/api/core/v1"
 )
 
 const (
 	getLogsName             = "get-logs"
 	getLogsShortDescription = "Collect logs and current cluster nodes configuration."
 	getLogsLongDescription  = "Collect deployment logs, running daemons/services logs and current nodes configuration."
+)
+
+const (
+	getLogsLinuxVHDScriptPath      = "/opt/azure/containers/collect-logs.sh"
+	getLogsCustomLinuxScriptPath   = "/tmp/collect-logs.sh"
+	getLogsWindowsVHDScriptPath    = "c:\\k\\debug\\collect-windows-logs.ps1"
+	getLogsCustomWindowsScriptPath = "$env:temp\\collect-windows-logs.ps1"
+	getLogsUploadTimeout           = 300 * time.Second
 )
 
 type getLogsCmd struct {
@@ -41,17 +48,20 @@ type getLogsCmd struct {
 	sshHostURI             string
 	linuxSSHPrivateKeyPath string
 	linuxScriptPath        string
+	windowsScriptPath      string
 	outputDirectory        string
 	controlPlaneOnly       bool
+	uploadSASURL           string
 	// computed
-	cs               *api.ContainerService
-	locale           *gotext.Locale
-	armClient        armhelpers.AKSEngineClient
-	masterNodes      []v1.Node
-	linuxNodes       []v1.Node
-	linuxSSHConfig   *ssh.ClientConfig
-	windowsNodes     []v1.Node
-	windowsSSHConfig *ssh.ClientConfig
+	cs                  *api.ContainerService
+	locale              *gotext.Locale
+	linuxAuthConfig     *ssh.AuthConfig
+	linuxVHDScript      *ssh.RemoteFile
+	linuxCustomScript   *ssh.RemoteFile
+	windowsAuthConfig   *ssh.AuthConfig
+	windowsVHDScript    *ssh.RemoteFile
+	windowsCustomScript *ssh.RemoteFile
+	jumpbox             *ssh.JumpBox
 }
 
 func newGetLogsCmd() *cobra.Command {
@@ -62,12 +72,15 @@ func newGetLogsCmd() *cobra.Command {
 		Long:  getLogsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := glc.validateArgs(); err != nil {
-				_ = cmd.Usage()
 				return errors.Wrap(err, "validating get-logs args")
 			}
 			if err := glc.loadAPIModel(); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
+			if err := glc.init(); err != nil {
+				return errors.Wrap(err, "loading API model")
+			}
+			cmd.SilenceUsage = true
 			return glc.run()
 		},
 	}
@@ -75,14 +88,15 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
 	command.Flags().StringVar(&glc.sshHostURI, "ssh-host", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
 	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes (required)")
-	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
+	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required if distro is not aks-ubuntu)")
+	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes (required if distro is not aks-windows)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
+	command.Flags().StringVarP(&glc.uploadSASURL, "upload-sas-url", "", "", "Azure Storage Account SAS URL to upload the collected logs")
 	_ = command.MarkFlagRequired("location")
 	_ = command.MarkFlagRequired("api-model")
 	_ = command.MarkFlagRequired("ssh-host")
 	_ = command.MarkFlagRequired("linux-ssh-private-key")
-	_ = command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
 }
 
@@ -107,16 +121,33 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	} else if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
 	}
-	if glc.linuxScriptPath == "" {
-		// optional once in VHD
-		return errors.New("--linux-script must be specified")
-	} else if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
-		return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+	if glc.linuxScriptPath != "" {
+		if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+		}
+	}
+	if glc.windowsScriptPath != "" {
+		if _, err := os.Stat(glc.windowsScriptPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --windows-script does not exist (%s)", glc.windowsScriptPath)
+		}
 	}
 	if glc.outputDirectory == "" {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
 		if err := os.MkdirAll(glc.outputDirectory, 0755); err != nil {
 			return errors.Errorf("error creating output directory (%s)", glc.outputDirectory)
+		}
+	}
+	if glc.uploadSASURL != "" {
+		exp, err := regexp.Compile(`^/\w+`)
+		if err != nil {
+			return err
+		}
+		sasURL, err := url.ParseRequestURI(glc.uploadSASURL)
+		if err != nil {
+			return errors.Errorf("error parsing upload SAS URL")
+		}
+		if !exp.MatchString(sasURL.Path) {
+			return errors.New("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'")
 		}
 	}
 	return nil
@@ -139,238 +170,240 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 			return errors.Wrap(err, "error parsing the api model")
 		}
 	}
-
 	if glc.cs.Location == "" {
 		glc.cs.Location = glc.location
 	} else if glc.cs.Location != glc.location {
 		return errors.New("--location flag does not match api-model location")
 	}
-
-	lauth, err := helpers.PublicKeyAuth(glc.linuxSSHPrivateKeyPath)
-	if err != nil {
-		return errors.Wrap(err, "creating linux SSH config")
-	}
-	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, lauth)
-
-	if glc.cs.Properties.WindowsProfile != nil && glc.cs.Properties.WindowsProfile.GetSSHEnabled() {
-		glc.windowsSSHConfig = helpers.SSHClientConfig(
-			glc.cs.Properties.WindowsProfile.AdminUsername,
-			ssh.Password(glc.cs.Properties.WindowsProfile.AdminPassword))
-	}
-
-	var client *armhelpers.AzureClient
-	glc.armClient = client
-	return nil
+	return
 }
 
-func (glc *getLogsCmd) run() (err error) {
-	if err = glc.getClusterNodes(); err != nil {
-		return errors.Wrap(err, "listing cluster nodes")
-	}
-	for _, n := range glc.masterNodes {
-		log.Infof("Processing master node: %s\n", n.Name)
-		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
+func (glc *getLogsCmd) init() (err error) {
+	if glc.linuxScriptPath != "" {
+		sc, err := ioutil.ReadFile(glc.linuxScriptPath)
 		if err != nil {
-			log.Warnf("Remote command output: %s", out)
-			log.Warnf("Error: %s", err)
+			return errors.Wrapf(err, "error reading log collection script %s", glc.linuxScriptPath)
+		}
+		glc.linuxCustomScript = &ssh.RemoteFile{
+			Path: getLogsCustomLinuxScriptPath, Permissions: "744", Owner: "root:root", Content: sc}
+	}
+	glc.linuxVHDScript = &ssh.RemoteFile{Path: getLogsLinuxVHDScriptPath}
+	glc.linuxAuthConfig = &ssh.AuthConfig{
+		User:           glc.cs.Properties.LinuxProfile.AdminUsername,
+		PrivateKeyPath: glc.linuxSSHPrivateKeyPath,
+	}
+	if glc.windowsScriptPath != "" {
+		sc, err := ioutil.ReadFile(glc.windowsScriptPath)
+		if err != nil {
+			return errors.Wrapf(err, "error reading log collection script %s", glc.windowsScriptPath)
+		}
+		glc.windowsCustomScript = &ssh.RemoteFile{
+			Path: getLogsCustomWindowsScriptPath, Permissions: "", Owner: "", Content: sc}
+	}
+	glc.windowsVHDScript = &ssh.RemoteFile{Path: getLogsWindowsVHDScriptPath}
+	if glc.cs.Properties.WindowsProfile != nil {
+		if glc.cs.Properties.WindowsProfile.GetSSHEnabled() {
+			glc.windowsAuthConfig = &ssh.AuthConfig{
+				User:     glc.cs.Properties.WindowsProfile.AdminUsername,
+				Password: glc.cs.Properties.WindowsProfile.AdminPassword,
+			}
+		} else {
+			log.Warn("Skipping Windows nodes as SSH is not enabled")
 		}
 	}
-	if glc.controlPlaneOnly {
-		return nil
-	}
-	for _, n := range glc.linuxNodes {
-		log.Infof("Processing Linux node: %s\n", n.Name)
-		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
-		if err != nil {
-			log.Warnf("Remote command output: %s", out)
-			log.Warnf("Error: %s", err)
-		}
-	}
-	for _, n := range glc.windowsNodes {
-		log.Infof("Processing Windows node: %s\n", n.Name)
-		out, err := glc.collectLogs(n, glc.windowsSSHConfig)
-		if err != nil {
-			log.Warnf("Remote command output: %s", out)
-			log.Warnf("Error: %s", err)
-		}
-	}
-	log.Infof("Logs downloaded to %s", glc.outputDirectory)
-	return nil
+	glc.jumpbox = &ssh.JumpBox{
+		URI: glc.sshHostURI, Port: 22, OperatingSystem: api.Linux, AuthConfig: glc.linuxAuthConfig}
+	return
 }
 
-func (glc *getLogsCmd) getClusterNodes() error {
-	kubeconfig, err := engine.GenerateKubeConfig(glc.cs.Properties, glc.location)
-	if err != nil {
-		return errors.Wrap(err, "generating kubeconfig")
-	}
-	kubeClient, err := glc.armClient.GetKubernetesClient("", kubeconfig, time.Second*1, time.Duration(60)*time.Minute)
+func (glc *getLogsCmd) run() error {
+	kubeClient, err := getKubeClient(glc.cs, 10*time.Second, 10*time.Minute)
 	if err != nil {
 		return errors.Wrap(err, "creating Kubernetes client")
 	}
+	nodes := getClusterNodes(glc, kubeClient)
+	nodeScripts := getClusterNodeScripts(glc, nodes)
+	if len(nodeScripts) == 0 {
+		log.Info("All nodes skipped")
+		return nil
+	}
+	for node, script := range nodeScripts {
+		err = collectLogs(glc, node, script)
+		if err != nil {
+			return err
+		}
+	}
+	log.Infof("Logs downloaded to %s", glc.outputDirectory)
+	if glc.uploadSASURL != "" {
+		for node := range nodeScripts {
+			err = uploadLogs(node, glc.outputDirectory, glc.uploadSASURL)
+			if err != nil {
+				log.Warnf("Error uploading %s logs", node.URI)
+				log.Debugf("Error: %s", err)
+			}
+		}
+	}
+	return err
+}
+
+// getClusterNodes returns the target node list
+func getClusterNodes(glc *getLogsCmd, kubeClient kubernetes.NodeLister) (nodes []*ssh.RemoteHost) {
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
-		return errors.Wrap(err, "listing cluster nodes")
+		log.Warnf("Error retrieving node list from apiserver: %s", err)
+		log.Info("Collecting logs from control plane nodes only")
+		for i := 0; i < glc.cs.Properties.MasterProfile.Count; i++ {
+			name := fmt.Sprintf("%s%d", glc.cs.Properties.GetMasterVMPrefix(), i)
+			nodes = append(nodes, &ssh.RemoteHost{
+				URI: name, Port: 22, OperatingSystem: api.Linux, AuthConfig: glc.linuxAuthConfig, Jumpbox: glc.jumpbox})
+		}
+		return nodes
 	}
 	for _, node := range nodeList.Items {
-		if isLinuxNode(node) {
-			if strings.HasPrefix(node.Name, common.LegacyControlPlaneVMPrefix) {
-				glc.masterNodes = append(glc.masterNodes, node)
-			} else {
-				glc.linuxNodes = append(glc.linuxNodes, node)
+		if isMasterNode(node.Name, glc.cs.Properties.GetMasterVMPrefix()) || !glc.controlPlaneOnly {
+			switch api.OSType(strings.Title(node.Status.NodeInfo.OperatingSystem)) {
+			case api.Linux:
+				nodes = append(nodes, &ssh.RemoteHost{
+					URI: node.Name, Port: 22, OperatingSystem: api.Linux, AuthConfig: glc.linuxAuthConfig, Jumpbox: glc.jumpbox})
+			case api.Windows:
+				if glc.windowsAuthConfig != nil {
+					nodes = append(nodes, &ssh.RemoteHost{
+						URI: node.Name, Port: 22, OperatingSystem: api.Windows, AuthConfig: glc.windowsAuthConfig, Jumpbox: glc.jumpbox})
+				}
+			default:
+				log.Infof("Skipping node %s, could not determine operating system", node.Name)
 			}
-		} else if isWindowsNode(node) {
-			if glc.windowsSSHConfig != nil {
-				glc.windowsNodes = append(glc.windowsNodes, node)
-			} else {
-				log.Warnf("skipping node %s, SSH not enabled", node.Name)
-			}
-		} else {
-			log.Warnf("skipping node %s, could not determine operating system", node.Name)
 		}
+	}
+	return nodes
+}
+
+// getClusterNodeScripts maps target nodes with a log collection script
+func getClusterNodeScripts(glc *getLogsCmd, nodes []*ssh.RemoteHost) map[*ssh.RemoteHost]*ssh.RemoteFile {
+	nodeScript := make(map[*ssh.RemoteHost]*ssh.RemoteFile)
+	poolHasScript := make(map[string]bool)
+	isWindowsSkipped := false
+	for _, node := range nodes {
+		switch node.OperatingSystem {
+		case api.Linux:
+			if isMasterNode(node.URI, glc.cs.Properties.GetMasterVMPrefix()) && glc.cs.Properties.MasterProfile.IsVHDDistro() {
+				nodeScript[node] = glc.linuxVHDScript
+			} else {
+				for i, pool := range glc.cs.Properties.AgentPoolProfiles {
+					if pool.IsVHDDistro() && glc.cs.Properties.IsAgentPoolMember(node.URI, pool, i) {
+						nodeScript[node] = glc.linuxVHDScript
+					}
+				}
+			}
+			if glc.linuxCustomScript != nil {
+				nodeScript[node] = glc.linuxCustomScript
+			}
+			_, ok := nodeScript[node]
+			poolName := strings.Split(node.URI, "-")[1]
+			poolHasScript[poolName] = ok
+		case api.Windows:
+			if glc.cs.Properties.WindowsProfile != nil && glc.cs.Properties.WindowsProfile.IsVHDDistro() {
+				nodeScript[node] = glc.windowsVHDScript
+			}
+			if glc.windowsCustomScript != nil {
+				nodeScript[node] = glc.windowsCustomScript
+			}
+			if _, ok := nodeScript[node]; !ok {
+				isWindowsSkipped = true
+			}
+		}
+	}
+	for pool, hasScript := range poolHasScript {
+		if !hasScript {
+			log.Warnf("Skipping node pool '%s' as flag '--linux-script' is not set and the pool distro is not aks-ubuntu", pool)
+		}
+	}
+	if isWindowsSkipped {
+		log.Warn("Skipping Windows nodes as flag '--windows-script' is not set and the profile distro is not aks-windows")
+	}
+	return nodeScript
+}
+
+// collectLogs uploads the log collection script (if needed), executes the script and downloads the collected logs
+func collectLogs(glc *getLogsCmd, node *ssh.RemoteHost, script *ssh.RemoteFile) error {
+	log.Infof("Processing node: %s", node.URI)
+	if script.Content != nil {
+		stdout, err := ssh.CopyToRemote(node, script)
+		if err != nil {
+			return errors.Wrap(err, stdout)
+		}
+	}
+	isAzureStack := glc.cs.Properties.IsAzureStackCloud()
+	stdout, err := ssh.ExecuteRemote(node, collectLogsScript(script, node.OperatingSystem, isAzureStack))
+	if err != nil {
+		return errors.Wrap(err, stdout)
+	}
+	src := fileToDownload(node.OperatingSystem, node.URI)
+	dst := path.Join(glc.outputDirectory, fmt.Sprintf("%s.zip", node.URI))
+	stdout, err = ssh.CopyFromRemote(node, src, dst)
+	if err != nil {
+		return errors.Wrap(err, stdout)
+	}
+	return err
+}
+
+// uploadLogs uploads collected logs to an azure storage account
+func uploadLogs(node *ssh.RemoteHost, outputDirectory, uploadSASURL string) error {
+	log.Infof("Uploading %s logs", node.URI)
+	ctx, cancel := context.WithTimeout(context.Background(), getLogsUploadTimeout)
+	defer cancel()
+	fp := path.Join(outputDirectory, fmt.Sprintf("%s.zip", node.URI))
+	f, err := os.Open(fp)
+	if err != nil {
+		return errors.Wrapf(err, "reading file %s", fp)
+	}
+	sas, err := url.Parse(uploadSASURL)
+	if err != nil {
+		return errors.Wrap(err, "parsing upload SAS URL")
+	}
+	sas.Path = path.Join(sas.Path, fmt.Sprintf("%s.zip", node.URI))
+	_, err = uploadToSASURL(ctx, f, sas)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (string, error) {
-	jumpboxPort := "22"
-	client, err := helpers.SSHClient(glc.sshHostURI, jumpboxPort, node.Name, glc.linuxSSHConfig, config)
+func uploadToSASURL(ctx context.Context, file *os.File, destination *url.URL) (azblob.CommonResponse, error) {
+	p := azblob.NewPipeline(azblob.NewAnonymousCredential(), azblob.PipelineOptions{})
+	u := azblob.NewBlobURL(*destination, p).ToBlockBlobURL()
+	cr, err := azblob.UploadFileToBlockBlob(ctx, file, u, azblob.UploadToBlockBlobOptions{})
 	if err != nil {
-		return "", errors.Wrap(err, "creating SSH client")
+		return nil, errors.Wrap(err, "uploading to storage account")
 	}
-	defer client.Close()
-
-	stdout, err := glc.uploadScript(node, client)
-	if err != nil {
-		return stdout, err
-	}
-	stdout, err = glc.executeScript(node, client)
-	if err != nil {
-		return stdout, err
-	}
-	stdout, err = glc.downloadLogs(node, client)
-	if err != nil {
-		return stdout, err
-	}
-	return "", nil
+	return cr, nil
 }
 
-func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, error) {
-	if isWindowsNode(node) || glc.linuxScriptPath == "" {
-		return "", nil
-	}
-
-	scriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
-	if err != nil {
-		return "", errors.Wrap(err, "reading log collection script content")
-	}
-
-	log.Debugf("Uploading log collection script (%s)\n", glc.linuxScriptPath)
-	session, err := client.NewSession()
-	if err != nil {
-		return "", errors.Wrap(err, "creating SSH session")
-	}
-	defer session.Close()
-
-	session.Stdin = bytes.NewReader(scriptContent)
-	if co, err := session.CombinedOutput("bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""); err != nil {
-		return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading log collection script")
-	}
-	return "", nil
-}
-
-func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, error) {
-	log.Debug("Collecting logs\n")
-	session, err := client.NewSession()
-	if err != nil {
-		return "", errors.Wrap(err, "creating SSH session")
-	}
-	defer session.Close()
-
-	var script, cmd string
-	if isLinuxNode(node) {
-		if glc.linuxScriptPath != "" {
-			script = "/tmp/collect-logs.sh"
-			cmd = fmt.Sprintf("bash -c \"sudo chmod +x %s; export AZURE_ENV=%s; sudo -E %s; rm %s\"", script, glc.getCloudName(), script, script)
-		} else {
-			script = "/opt/azure/containers/collect-logs.sh"
-			cmd = fmt.Sprintf("bash -c \"export AZURE_ENV=%s; sudo -E %s\"", glc.getCloudName(), script)
+func collectLogsScript(f *ssh.RemoteFile, os api.OSType, isAzureStack bool) string {
+	switch os {
+	case api.Linux:
+		if isAzureStack {
+			return fmt.Sprintf("sudo -E bash -c \"AZURE_ENV=AzureStackCloud %s\"", f.Path)
 		}
-	} else {
-		script = "c:\\k\\debug\\collect-windows-logs.ps1"
-		cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
+		return fmt.Sprintf("sudo -E bash -c %s", f.Path)
+	case api.Windows:
+		return fmt.Sprintf("powershell -command \"iex %s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", f.Path)
+	default:
+		return ""
 	}
-
-	if co, err := session.CombinedOutput(cmd); err != nil {
-		return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "collecting logs on remote host")
-	}
-	return "", nil
 }
 
-func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, error) {
-	log.Debug("Downloading logs\n")
-	session, err := client.NewSession()
-	if err != nil {
-		return "", errors.Wrap(err, "creating SSH session")
+func fileToDownload(os api.OSType, nodeName string) *ssh.RemoteFile {
+	switch os {
+	case api.Linux:
+		return &ssh.RemoteFile{Path: "/tmp/logs.zip"}
+	case api.Windows:
+		return &ssh.RemoteFile{Path: fmt.Sprintf("%%TEMP%%\\%s.zip", nodeName)}
+	default:
+		return nil
 	}
-	defer session.Close()
-
-	localFileName := fmt.Sprintf("%s.zip", node.Name)
-	localFilePath := path.Join(glc.outputDirectory, localFileName)
-	file, err := os.OpenFile(localFilePath, os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return "", errors.Wrap(err, "opening destination file")
-	}
-	defer file.Close()
-
-	stdout, err := session.StdoutPipe()
-	if err != nil {
-		return "", errors.Wrap(err, "opening SSH session stdout pipe")
-	}
-
-	var cmd string
-	if isLinuxNode(node) {
-		cmd = "bash -c \"cat /tmp/logs.zip > /dev/stdout\""
-	} else {
-		cmd = "type %TEMP%"
-		cmd = fmt.Sprintf("%s\\%s.zip", cmd, node.Name)
-	}
-
-	if err = session.Start(cmd); err != nil {
-		return fmt.Sprintf("%s -> %s", node.Name, session.Stderr), errors.Wrap(err, "downloading logs from remote host")
-	}
-	_, err = io.Copy(file, io.TeeReader(stdout, &DownloadProgressWriter{}))
-	if err != nil {
-		return "", errors.Wrap(err, "downloading logs")
-	}
-
-	fmt.Println("")
-	return "", nil
 }
 
-func isLinuxNode(node v1.Node) bool {
-	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "linux")
-}
-
-func isWindowsNode(node v1.Node) bool {
-	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "windows")
-}
-
-func (glc *getLogsCmd) getCloudName() string {
-	if glc.cs.Properties.IsAzureStackCloud() {
-		return "AzureStackCloud"
-	}
-	return ""
-}
-
-type DownloadProgressWriter struct {
-	Total uint64
-}
-
-func (wc *DownloadProgressWriter) Write(p []byte) (int, error) {
-	// TODO maybe something like DownloadProgressWriter already exists
-	n := len(p)
-	wc.Total += uint64(n)
-	fmt.Printf("\r%s", strings.Repeat(" ", 35))
-	fmt.Printf("\rDownloading... %d bytes complete", wc.Total)
-	return n, nil
+func isMasterNode(vmName, masterPrefix string) bool {
+	return strings.HasPrefix(vmName, masterPrefix)
 }

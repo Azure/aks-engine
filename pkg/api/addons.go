@@ -31,21 +31,21 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		kubernetesImageBase = o.KubernetesConfig.KubernetesImageBase
 	}
 	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020"
-	omsagentWinImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020"
+	omsagentWinImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 	var workspaceDomain string
 	if cs.Properties.IsCustomCloudProfile() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod05262020"
-			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod10052020"
+			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 		}
 	} else {
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod05262020"
-			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
+			omsagentImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:ciprod10052020"
+			omsagentWinImage = "mcr.azk8s.cn/azuremonitor/containerinsights/ciprod:win-ciprod10052020"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
@@ -259,6 +259,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	// for windows container, no requests should be specified or limits and requests should be same
+	// ref: https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#memory-reservations-and-handling
 	defaultContainerMonitoringAddonsConfig := KubernetesAddon{
 		Name:    common.ContainerMonitoringAddonName,
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
@@ -279,12 +281,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          omsagentImage,
 			},
 			{
-				Name:           "omsagent-win",
-				CPURequests:    "150m",
-				MemoryRequests: "250Mi",
-				CPULimits:      "1",
-				MemoryLimits:   "750Mi",
-				Image:          omsagentWinImage,
+				Name:         "omsagent-win",
+				CPULimits:    "200m",
+				MemoryLimits: "600Mi",
+				Image:        omsagentWinImage,
 			},
 		},
 	}
@@ -789,7 +789,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultPodSecurityPolicyAddonsConfig := KubernetesAddon{
 		Name:    common.PodSecurityPolicyAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") || to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy)),
+		Enabled: to.BoolPtr(true),
 	}
 
 	defaultAuditPolicyAddonsConfig := KubernetesAddon{
@@ -1082,8 +1082,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons[:i], o.KubernetesConfig.Addons[i+1:]...)
 	}
 
-	// Enable pod-security-policy addon during upgrade to 1.15 or greater scenarios, unless explicitly disabled
-	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
+	// Enable pod-security-policy addon during upgrade scenarios, unless explicitly disabled
+	if isUpgrade && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
 			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		}

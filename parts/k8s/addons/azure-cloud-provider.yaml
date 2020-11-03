@@ -1,5 +1,5 @@
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
@@ -13,7 +13,7 @@ rules:
   - patch
   - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -28,7 +28,7 @@ subjects:
   name: azure-cloud-provider
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: system:azure-persistent-volume-binder
@@ -39,7 +39,7 @@ rules:
   resources: ['secrets']
   verbs:     ['get','create']
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: system:azure-persistent-volume-binder
@@ -54,7 +54,7 @@ subjects:
   name: persistent-volume-binder
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
@@ -66,7 +66,7 @@ rules:
   verbs:
   - get
 ---
-apiVersion: rbac.authorization.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:

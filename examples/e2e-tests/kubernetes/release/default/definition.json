@@ -4,15 +4,12 @@
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
+        "enableEncryptionWithExternalKms": true,
         "useManagedIdentity": true,
         "clusterSubnet": "10.239.0.0/16",
         "addons": [
           {
             "name": "kubernetes-dashboard",
-            "enabled": true
-          },
-          {
-            "name": "rescheduler",
             "enabled": true
           },
           {
@@ -41,7 +38,7 @@
             "name": "coredns",
             "enabled": true,
             "config": {
-              "min-replicas": "1",
+              "min-replicas": "3",
               "nodes-per-replica": "10"
             }
           },

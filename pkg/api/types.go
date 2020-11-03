@@ -456,7 +456,7 @@ type KubernetesConfig struct {
 	DockerBridgeSubnet                string                `json:"dockerBridgeSubnet,omitempty"`
 	DNSServiceIP                      string                `json:"dnsServiceIP,omitempty"`
 	ServiceCIDR                       string                `json:"serviceCidr,omitempty"`
-	UseManagedIdentity                bool                  `json:"useManagedIdentity,omitempty"`
+	UseManagedIdentity                *bool                 `json:"useManagedIdentity,omitempty"`
 	UserAssignedID                    string                `json:"userAssignedID,omitempty"`
 	UserAssignedClientID              string                `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage              string                `json:"customHyperkubeImage,omitempty"`
@@ -1008,6 +1008,11 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 		}
 	}
 	return vmPrefix
+}
+
+// IsAgentPoolMember returns true the VM is a pool member
+func (p *Properties) IsAgentPoolMember(vmName string, a *AgentPoolProfile, index int) bool {
+	return strings.HasPrefix(vmName, p.GetAgentVMPrefix(a, index))
 }
 
 // GetVMType returns the type of VM "vmss" or "standard" to be passed to the cloud provider
@@ -1779,6 +1784,11 @@ func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) strin
 	return buf.String()
 }
 
+// IsVHDDistro returns true if the distro uses VHD SKUs
+func (w *WindowsProfile) IsVHDDistro() bool {
+	return w.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && w.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer
+}
+
 // IsCSIProxyEnabled returns true if csi proxy service should be enable for Windows nodes
 func (w *WindowsProfile) IsCSIProxyEnabled() bool {
 	if w.EnableCSIProxy != nil {
@@ -2075,12 +2085,12 @@ func (k *KubernetesConfig) IsRBACEnabled() bool {
 
 // UserAssignedIDEnabled checks if the user assigned ID is enabled or not.
 func (k *KubernetesConfig) UserAssignedIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedID != ""
+	return to.Bool(k.UseManagedIdentity) && k.UserAssignedID != ""
 }
 
 // SystemAssignedIDEnabled checks if system assigned IDs should be used.
 func (k *KubernetesConfig) SystemAssignedIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedID == ""
+	return to.Bool(k.UseManagedIdentity) && k.UserAssignedID == ""
 }
 
 func (k *KubernetesConfig) ShouldCreateNewUserAssignedIdentity() bool {
@@ -2508,7 +2518,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"CLOUDPROVIDER_RATELIMIT_BUCKET":       strconv.Itoa(kubernetesConfig.CloudProviderRateLimitBucket),
 		"CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE": strconv.Itoa(kubernetesConfig.CloudProviderRateLimitBucketWrite),
 		"LOAD_BALANCER_DISABLE_OUTBOUND_SNAT":  strconv.FormatBool(to.Bool(kubernetesConfig.CloudProviderDisableOutboundSNAT)),
-		"USE_MANAGED_IDENTITY_EXTENSION":       strconv.FormatBool(kubernetesConfig.UseManagedIdentity),
+		"USE_MANAGED_IDENTITY_EXTENSION":       strconv.FormatBool(to.Bool(kubernetesConfig.UseManagedIdentity)),
 		"USE_INSTANCE_METADATA":                strconv.FormatBool(to.Bool(kubernetesConfig.UseInstanceMetadata)),
 		"LOAD_BALANCER_SKU":                    kubernetesConfig.LoadBalancerSku,
 		"EXCLUDE_MASTER_FROM_STANDARD_LB":      strconv.FormatBool(to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)),

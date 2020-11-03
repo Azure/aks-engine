@@ -108,7 +108,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		}
 
 		if kubernetesConfig == nil ||
-			!kubernetesConfig.UseManagedIdentity ||
+			!to.Bool(kubernetesConfig.UseManagedIdentity) ||
 			properties.IsHostedMasterProfile() {
 			servicePrincipalProfile := properties.ServicePrincipalProfile
 
@@ -128,7 +128,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 					if kubernetesConfig.KeyVaultSku != "" {
 						addValue(parametersMap, "clusterKeyVaultSku", kubernetesConfig.KeyVaultSku)
 					}
-					if !kubernetesConfig.UseManagedIdentity && servicePrincipalProfile.ObjectID != "" {
+					if !to.Bool(kubernetesConfig.UseManagedIdentity) && servicePrincipalProfile.ObjectID != "" {
 						addValue(parametersMap, "servicePrincipalObjectId", servicePrincipalProfile.ObjectID)
 					}
 				}

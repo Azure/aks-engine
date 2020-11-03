@@ -18,11 +18,17 @@ A valid SSH private key is always required to stablish a SSH session to the clus
 
 ### Log Collection Scripts
 
-To collect Linux nodes logs, specify the path to the script-to-execute on each node by setting [parameter](#Parameters) `--linux-script`. A sample script can be found [here](/scripts/collect-logs.sh).
+To collect Linux nodes logs, specify the path to the script-to-execute on each node by setting [parameter](#Parameters) `--linux-script` if the node distro is not `aks-ubuntu`. A sample script can be found [here](/scripts/collect-logs.sh).
 
-If you choose to pass your own custom log collection script, make sure it zips all relevant files to file `/tmp/logs.zip`. Needless to say, the custom script should only query for troubleshooting information and it should not change the cluster or node configuration.
+To collect Windows nodes logs, specify the path to the script-to-execute on each node by setting [parameter](#Parameters) `--windows-script` if the node distro is not `aks-windows`. A sample script can be found [here](/scripts/collect-windows-logs.ps1).
 
-The default OS distro for Windows node pools already includes a [log collection script](./scripts/collect-windows-logs.ps1). There is no support to pass your own custom script at this point.
+If you choose to pass your own custom log collection script, make sure it zips all relevant files to file `"/tmp/logs.zip"` for Linux and `"%TEMP%\{NodeName}.zip"` for Windows. Needless to say, the custom script should only query for troubleshooting information and it should not change the cluster or node configuration.
+
+### Upload logs to a Storage Account Container
+
+Once the cluster logs were successfully retrieved, AKS Engine can persist them to an Azure Storage Account container if optional parameter `--storage-container-sas-url` is set. AKS Engine expects the container name to be part of the provided [SAS URL](https://docs.microsoft.com/azure/storage/common/storage-sas-overview). The expected format is `https://{blob-service-uri}/{container-name}?{sas-token}`.
+
+*Note: storage accounts on custom clouds using the `AD FS` identity provider are not yet supported*
 
 ## Usage
 
@@ -34,7 +40,8 @@ $ aks-engine get-logs \
     --api-model _output/<dnsPrefix>/apimodel.json \
     --ssh-host <dnsPrefix>.<location>.cloudapp.azure.com \
     --linux-ssh-private-key ~/.ssh/id_rsa \
-    --linux-script scripts/collect-logs.sh
+    --linux-script scripts/collect-logs.sh \
+    --windows-script scripts/collect-windows-logs.ps1
 ```
 
 ### Parameters
@@ -45,6 +52,8 @@ $ aks-engine get-logs \
 |--api-model|yes|Path to the generated API model for the cluster.|
 |--ssh-host|yes|FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster.|
 |--linux-ssh-private-key|yes|Path to a SSH private key that can be use to create a remote session on the cluster Linux nodes.|
-|--linux-script|yes|Custom log collection script. It should produce file `/tmp/logs.zip`.|
+|--linux-script|no|Custom log collection bash script. Required only when the Linux node distro is not `aks-ubuntu`. The script should produce file `/tmp/logs.zip`.|
+|--windows-script|no|Custom log collection powershell script. Required only when the Windows node distro is not `aks-windows`. The script should produce file `%TEMP%\{NodeName}.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
 |--control-plane-only|no|Only collect logs from master nodes.|
+|--upload-sas-url|no|Azure Storage Account SAS URL to upload the collected logs.|

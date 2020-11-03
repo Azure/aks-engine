@@ -1,0 +1,36 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Every day at midnight
+
+jobs:
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Make releases
+        run: |
+          docker run --rm \
+          -v ${GITHUB_WORKSPACE}:/go/src/github.com/Azure/aks-engine \
+          -w /go/src/github.com/Azure/aks-engine \
+          quay.io/deis/go-dev:v1.27.3 make dist
+
+      - name: Rename outputs
+        run: |
+          mkdir ./outputs
+          cp _dist/aks-engine-*-linux-amd64.tar.gz outputs/aks-engine-nightly-linux-amd64.tar.gz
+
+      - name: Update nightly release
+        uses: eine/tip@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: nightly
+          files: |
+            outputs/*

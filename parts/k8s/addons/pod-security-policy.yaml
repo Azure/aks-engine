@@ -1,4 +1,4 @@
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}policy{{else}}extensions{{end}}/v1beta1
+apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: privileged
@@ -28,7 +28,7 @@ spec:
   fsGroup:
     rule: RunAsAny
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}policy{{else}}extensions{{end}}/v1beta1
+apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: restricted

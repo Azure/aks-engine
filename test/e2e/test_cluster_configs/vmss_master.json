@@ -4,13 +4,20 @@
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
+				"orchestratorType": "Kubernetes",
+				"kubernetesConfig": {
+					"useManagedIdentity": false
+				}
 			},
 			"masterProfile": {
 				"count": 3,
 				"dnsPrefix": "",
 				"vmSize": "Standard_D2_v3",
-				"availabilityProfile": "VirtualMachineScaleSets"
+				"availabilityProfile": "VirtualMachineScaleSets",
+				"availabilityZones": [
+					"1",
+					"2"
+				]
 			},
 			"agentPoolProfiles": [
 				{
@@ -30,10 +37,6 @@
 						}
 					]
 				}
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	}

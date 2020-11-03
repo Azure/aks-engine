@@ -15,6 +15,7 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
+					"enableEncryptionWithExternalKms": true,
 					"useManagedIdentity": true,
 					"containerRuntimeConfig": {
 						"dataDir": "/mnt/docker"
@@ -47,28 +48,33 @@
 							}
 						},
 						{
-							"name": "tiller",
-							"enabled": true
-						},
-						{
 							"name": "kubernetes-dashboard",
-							"enabled": true
-						},
-						{
-							"name": "rescheduler",
 							"enabled": true
 						},
 						{
 							"name": "coredns",
 							"enabled": true,
 							"config": {
-								"min-replicas": "1",
+								"min-replicas": "3",
 								"nodes-per-replica": "8"
 							}
 						},
 						{
 							"name": "node-problem-detector",
 							"enabled": true
+						},
+						{
+							"name": "azure-arc-onboarding",
+							"enabled": true,
+							"config": {
+								"tenantID": "",
+								"subscriptionID": "",
+								"resourceGroup": "",
+								"clusterName": "",
+								"clientID": "",
+								"clientSecret": "",
+								"location": "eastus"
+							}
 						}
 					],
 					"components": [

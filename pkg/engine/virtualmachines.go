@@ -22,7 +22,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 
 	var useManagedIdentity, userAssignedIDEnabled bool
 	if kubernetesConfig != nil {
-		useManagedIdentity = kubernetesConfig.UseManagedIdentity
+		useManagedIdentity = to.Bool(kubernetesConfig.UseManagedIdentity)
 		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 	}
 
@@ -334,7 +334,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	var useManagedIdentity, userAssignedIDEnabled bool
 
 	if kubernetesConfig != nil {
-		useManagedIdentity = kubernetesConfig.UseManagedIdentity
+		useManagedIdentity = to.Bool(kubernetesConfig.UseManagedIdentity)
 		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 	}
 

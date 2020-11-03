@@ -148,11 +148,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
-{{- if IsKubernetesVersionGe "1.16.0"}}
 apiVersion: apps/v1
-{{else}}
-apiVersion: extensions/v1beta1
-{{- end}}
 kind: Deployment
 metadata:
   labels:
@@ -179,7 +175,7 @@ spec:
         value: "true"
         key: node-role.kubernetes.io/master
       nodeSelector:
-        kubernetes.{{if IsKubernetesVersionGe "1.16.0"}}azure.com{{else}}io{{end}}/role: master
+        kubernetes.azure.com/role: master
         kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}

@@ -108,40 +108,6 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		securityRules = append(securityRules, blockOutBoundRule)
 	}
 
-	if cs.Properties.IsAzureStackCloud() {
-		allowVnetInbound := network.SecurityRule{
-			Name: to.StringPtr("allow_vnet_inbound"),
-			SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
-				Access:                   network.SecurityRuleAccessAllow,
-				Description:              to.StringPtr("Allow traffic inbound within vnet"),
-				DestinationAddressPrefix: to.StringPtr("10.0.0.0/8"),
-				DestinationPortRange:     to.StringPtr("*"),
-				Direction:                network.SecurityRuleDirectionInbound,
-				Priority:                 to.Int32Ptr(4095),
-				Protocol:                 network.SecurityRuleProtocolAsterisk,
-				SourceAddressPrefix:      to.StringPtr("10.0.0.0/8"),
-				SourcePortRange:          to.StringPtr("*"),
-			},
-		}
-		securityRules = append(securityRules, allowVnetInbound)
-
-		allowVnetOutbound := network.SecurityRule{
-			Name: to.StringPtr("allow_vnet_outbound"),
-			SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
-				Access:                   network.SecurityRuleAccessAllow,
-				Description:              to.StringPtr("Allow traffic outbound within vnet"),
-				DestinationAddressPrefix: to.StringPtr("10.0.0.0/8"),
-				DestinationPortRange:     to.StringPtr("*"),
-				Direction:                network.SecurityRuleDirectionOutbound,
-				Priority:                 to.Int32Ptr(4095),
-				Protocol:                 network.SecurityRuleProtocolAsterisk,
-				SourceAddressPrefix:      to.StringPtr("10.0.0.0/8"),
-				SourcePortRange:          to.StringPtr("*"),
-			},
-		}
-		securityRules = append(securityRules, allowVnetOutbound)
-	}
-
 	nsg := network.SecurityGroup{
 		Location: to.StringPtr("[variables('location')]"),
 		Name:     to.StringPtr("[variables('nsgName')]"),

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement"
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
@@ -72,6 +73,11 @@ type AzureClient struct {
 
 	applicationsClient      graphrbac.ApplicationsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
+}
+
+// GetKubernetesClient returns a KubernetesClient hooked up to the api server at the apiserverURL.
+func (az *AzureClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (kubernetes.Client, error) {
+	return kubernetes.NewClient(apiserverURL, kubeConfig, interval, timeout)
 }
 
 // NewAzureClientWithClientSecret returns an AzureClient via client_id and client_secret

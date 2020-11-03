@@ -35,6 +35,7 @@ type Config struct {
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX" default:""`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX" default:""`
 	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
+	UseManagedIdentity             bool   `envconfig:"USE_MANAGED_IDENTITY" default:"true"`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY" default:""`
 	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
@@ -141,7 +142,20 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		isAzureStackCloud = true
 	}
 
-	if config.ClientID != "" && config.ClientSecret != "" && !(prop.OrchestratorProfile.KubernetesConfig != nil && prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
+	if prop.OrchestratorProfile.KubernetesConfig == nil {
+		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	}
+
+	if config.MSIUserAssignedID != "" {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
+		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
+	}
+
+	if prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity == nil {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(config.UseManagedIdentity)
+	}
+
+	if config.ClientID != "" && config.ClientSecret != "" && !(prop.OrchestratorProfile.KubernetesConfig != nil && to.Bool(prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)) {
 		if !prop.IsAzureStackCloud() {
 			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
 				ClientID: config.ClientID,
@@ -158,10 +172,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		for idx, pool := range prop.AgentPoolProfiles {
 			pool.DNSPrefix = fmt.Sprintf("%v-%v", config.AgentDNSPrefix, idx)
 		}
-	}
-
-	if prop.OrchestratorProfile.KubernetesConfig == nil {
-		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 	}
 
 	if prop.LinuxProfile != nil {
@@ -235,14 +245,16 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		if prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
 			prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
 		}
-		if prop.WindowsProfile.WindowsPublisher == "" &&
-			prop.WindowsProfile.WindowsOffer == "" &&
-			prop.WindowsProfile.WindowsSku == "" &&
-			prop.WindowsProfile.ImageVersion == "" {
-			prop.WindowsProfile.WindowsPublisher = "microsoft-aks"
-			prop.WindowsProfile.WindowsOffer = "aks-windows"
-			prop.WindowsProfile.WindowsSku = "2019-datacenter-core-smalldisk-containerd-2005"
-			prop.WindowsProfile.ImageVersion = "latest"
+		if prop.WindowsProfile != nil {
+			if prop.WindowsProfile.WindowsPublisher == "" &&
+				prop.WindowsProfile.WindowsOffer == "" &&
+				prop.WindowsProfile.WindowsSku == "" &&
+				prop.WindowsProfile.ImageVersion == "" {
+				prop.WindowsProfile.WindowsPublisher = "microsoft-aks"
+				prop.WindowsProfile.WindowsOffer = "aks-windows"
+				prop.WindowsProfile.WindowsSku = "2019-datacenter-core-smalldisk-containerd-2005"
+				prop.WindowsProfile.ImageVersion = "latest"
+			}
 		}
 	}
 
@@ -280,12 +292,17 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
-	if config.EnableKMSEncryption && config.ClientObjectID != "" {
-		if prop.OrchestratorProfile.KubernetesConfig == nil {
-			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	if config.ClientObjectID != "" {
+		if prop.ServicePrincipalProfile == nil {
+			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{}
 		}
+		if prop.ServicePrincipalProfile.ObjectID == "" {
+			prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
+		}
+	}
+
+	if config.EnableKMSEncryption && prop.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms == nil {
 		prop.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = &config.EnableKMSEncryption
-		prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
 	}
 
 	var version string
@@ -371,11 +388,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				pool.Distro = vlabs.Distro(config.Distro)
 			}
 		}
-	}
-
-	if config.MSIUserAssignedID != "" {
-		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
 	if config.LinuxContainerdURL != "" {

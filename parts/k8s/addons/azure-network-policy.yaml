@@ -49,7 +49,7 @@ roleRef:
   name: azure-npm
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: azure-npm
@@ -67,12 +67,10 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
-{{- if IsKubernetesVersionGe "1.16.0"}}
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
-  {{- if IsKubernetesVersionGe "1.17.0"}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-  {{- end}}
 {{- end}}
     spec:
       priorityClassName: system-node-critical

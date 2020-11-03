@@ -57,7 +57,7 @@ function Get-ContainerImages {
                 "mcr.microsoft.com/windows/nanoserver:2004",
                 "mcr.microsoft.com/oss/kubernetes/pause:1.4.0")
         }
-        default { 
+        default {
             $imagesToPull = @()
         }
     }
@@ -99,41 +99,30 @@ function Get-FilesToCacheOnVHD {
         );
 
         "c:\akse-cache\win-k8s\"      = @(
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-azs/windowszip/v1.15.11-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-azs/windowszip/v1.15.12-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-azs/windowszip/v1.16.13-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.14-azs/windowszip/v1.16.14-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9-azs/windowszip/v1.17.9-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.11-azs/windowszip/v1.17.11-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.10/windowszip/v1.15.10-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11/windowszip/v1.15.11-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-hotfix.20200714/windowszip/v1.15.11-hotfix.20200714-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-hotfix.20200817/windowszip/v1.15.11-hotfix.20200817-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12/windowszip/v1.15.12-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-hotfix.20200714/windowszip/v1.15.12-hotfix.20200714-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-hotfix.20200623/windowszip/v1.15.12-hotfix.20200623-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-hotfix.20200817/windowszip/v1.15.12-hotfix.20200817-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.10-azs/windowszip/v1.18.10-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13/windowszip/v1.16.13-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-hotfix.20200714/windowszip/v1.16.13-hotfix.20200714-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-hotfix.20200817/windowszip/v1.16.13-hotfix.20200817-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.14/windowszip/v1.16.14-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.15/windowszip/v1.16.15-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9/windowszip/v1.17.9-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9-hotfix.20200714/windowszip/v1.17.9-hotfix.20200714-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.9-hotfix.20200817/windowszip/v1.17.9-hotfix.20200817-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.11/windowszip/v1.17.11-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.12/windowszip/v1.17.12-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.6/windowszip/v1.18.6-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.6-hotfix.20200723/windowszip/v1.18.6-hotfix.20200723-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.13/windowszip/v1.17.13-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.8/windowszip/v1.18.8-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.9/windowszip/v1.18.9-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.10/windowszip/v1.18.10-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.1/windowszip/v1.19.1-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.2/windowszip/v1.19.2-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.2/windowszip/v1.19.2-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.3/windowszip/v1.19.3-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.0-beta.0/windowszip/v1.20.0-beta.0-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.2/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.2.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.3/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.3.zip"
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.6/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.6.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.3/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.3.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.6/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.6.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.8/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.8.zip"
         )
     }
 

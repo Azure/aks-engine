@@ -1576,15 +1576,13 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "250Mi",
 							CPULimits:      "1",
 							MemoryLimits:   "750Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020",
 						},
 						{
-							Name:           "omsagent-win",
-							CPURequests:    "150m",
-							MemoryRequests: "250Mi",
-							CPULimits:      "1",
-							MemoryLimits:   "750Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2",
+							Name:         "omsagent-win",
+							CPULimits:    "200m",
+							MemoryLimits: "600Mi",
+							Image:        "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod10052020",
 						},
 					},
 				},
@@ -4853,7 +4851,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
@@ -4917,7 +4915,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
@@ -4970,7 +4968,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 								},
 							},
-							UseManagedIdentity: true,
+							UseManagedIdentity: to.BoolPtr(true),
 						},
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
@@ -5176,13 +5174,10 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 				},
 			},
 		},
-	}
-
-	if common.IsKubernetesVersionGe(version, "1.15.0") {
-		addons = append(addons, KubernetesAddon{
+		{
 			Name:    common.PodSecurityPolicyAddonName,
 			Enabled: to.BoolPtr(true),
-		})
+		},
 	}
 
 	if !common.IsKubernetesVersionGe(version, "1.16.0") {

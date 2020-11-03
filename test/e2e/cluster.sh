@@ -14,6 +14,7 @@ ARC_LOCATION="eastus"
 GINKGO_FAIL_FAST="${GINKGO_FAIL_FAST:-false}"
 TEST_PVC="${TEST_PVC:-false}"
 ROTATE_CERTS="${ROTATE_CERTS:-false}"
+VALIDATE_CPU_LOAD="${VALIDATE_CPU_LOAD:-false}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
@@ -187,6 +188,7 @@ docker run --rm \
 -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
 -e LINUX_CONTAINERD_URL=${LINUX_CONTAINERD_URL} \
 -e WINDOWS_CONTAINERD_URL=${WINDOWS_CONTAINERD_URL} \
+-e VALIDATE_CPU_LOAD=${VALIDATE_CPU_LOAD} \
 "${DEV_IMAGE}" make test-kubernetes || tryExit && renameResultsFile "deploy"
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ] || [ "${ROTATE_CERTS}" = "true" ]; then
@@ -218,8 +220,8 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       --location $REGION \
       --ssh-host $API_SERVER \
       --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
-      --linux-script ./scripts/collect-logs.sh
-      # TODO remove --linux-script once collect-logs.sh is part of the VHD
+      --linux-script ./scripts/collect-logs.sh \
+      --windows-script ./scripts/collect-windows-logs.ps1
   fi
 
   if [ $(( RANDOM % 4 )) -eq 3 ]; then

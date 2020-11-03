@@ -137,9 +137,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
 			if !strings.EqualFold(o.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR) {
-				log.Warnf("apimodel: orchestratorProfile.kubernetesConfig.KubernetesImageBaseType forced to \"%s\"\n", common.KubernetesImageBaseTypeMCR)
+				log.Warnf("apimodel: orchestratorProfile.kubernetesConfig.kubernetesImageBaseType forced to \"%s\"\n", common.KubernetesImageBaseTypeMCR)
 			}
 			o.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
+			if isUpgrade && strings.EqualFold(o.KubernetesConfig.MCRKubernetesImageBase, "mcr.microsoft.com/k8s/core/") {
+				log.Warn("apimodel: clearing deprecated orchestratorProfile.kubernetesConfig.mcrKubernetesImageBase value\n")
+				o.KubernetesConfig.MCRKubernetesImageBase = ""
+			}
 		}
 
 		if isUpgrade {
@@ -177,6 +181,14 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if !isUpgrade && !isScale &&
+			!cs.Properties.IsHostedMasterProfile() &&
+			!cs.Properties.IsCustomCloudProfile() &&
+			!cs.Properties.MasterProfile.IsVirtualMachineScaleSets() &&
+			o.KubernetesConfig.UseManagedIdentity == nil {
+			o.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
+		}
+
 		if a.HasWindows() {
 			if o.KubernetesConfig.NetworkPlugin == "" {
 				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPluginWindows
@@ -188,6 +200,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				} else {
 					o.KubernetesConfig.NetworkPlugin = DefaultNetworkPlugin
 				}
+			}
+		}
+
+		if o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure {
+			if o.KubernetesConfig.NetworkMode == "" {
+				o.KubernetesConfig.NetworkMode = NetworkModeTransparent
 			}
 		}
 		if o.KubernetesConfig.ContainerRuntime == "" {

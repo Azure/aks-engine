@@ -11,12 +11,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack"
+	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -121,7 +124,7 @@ type authArgs struct {
 func addAuthFlags(authArgs *authArgs, f *flag.FlagSet) {
 	f.StringVar(&authArgs.RawAzureEnvironment, "azure-env", "AzurePublicCloud", "the target Azure cloud")
 	f.StringVarP(&authArgs.rawSubscriptionID, "subscription-id", "s", "", "azure subscription id (required)")
-	f.StringVar(&authArgs.AuthMethod, "auth-method", "client_secret", "auth method (default:`client_secret`, `cli`, `client_certificate`, `device`)")
+	f.StringVar(&authArgs.AuthMethod, "auth-method", "cli", "auth method (default:`client_secret`, `cli`, `client_certificate`, `device`)")
 	f.StringVar(&authArgs.rawClientID, "client-id", "", "client id (used with --auth-method=[client_secret|client_certificate])")
 	f.StringVar(&authArgs.ClientSecret, "client-secret", "", "client secret (used with --auth-method=client_secret)")
 	f.StringVar(&authArgs.CertificatePath, "certificate-path", "", "path to client certificate (used with --auth-method=client_certificate)")
@@ -144,6 +147,11 @@ func (authArgs *authArgs) validateAuthArgs() error {
 
 	if authArgs.AuthMethod == "" {
 		return errors.New("--auth-method is a required parameter")
+	}
+
+	// Back-compat to accommodate existing client usage patterns that assume that "client-secret" is the default
+	if authArgs.AuthMethod == "cli" && authArgs.rawClientID != "" && authArgs.ClientSecret != "" {
+		authArgs.AuthMethod = "client_secret"
 	}
 
 	if authArgs.AuthMethod == "client_secret" || authArgs.AuthMethod == "client_certificate" {
@@ -335,4 +343,17 @@ func writeCustomCloudProfile(cs *api.ContainerService) error {
 	os.Setenv("AZURE_ENVIRONMENT_FILEPATH", tmpFileName)
 
 	return nil
+}
+
+func getKubeClient(cs *api.ContainerService, interval, timeout time.Duration) (kubernetes.Client, error) {
+	kubeconfig, err := engine.GenerateKubeConfig(cs.Properties, cs.Location)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating kubeconfig")
+	}
+	var az *armhelpers.AzureClient
+	client, err := az.GetKubernetesClient("", kubeconfig, interval, timeout)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }

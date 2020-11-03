@@ -1,0 +1,125 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "kubernetesConfig": {
+                "enableEncryptionWithExternalKms": true,
+                "useManagedIdentity": true,
+                "addons": [
+                    {
+                        "name": "cluster-autoscaler",
+                        "enabled": true,
+                        "pools": [
+                            {
+                                "name": "poollinux",
+                                "config": {
+                                    "min-nodes": "1",
+                                    "max-nodes": "3"
+                                }
+                            }
+                        ],
+                        "config": {
+                            "scan-interval": "1m",
+                            "scale-down-delay-after-add": "1m0s",
+                            "scale-down-unneeded-time": "2m0s"
+                        }
+                    },
+                    {
+                        "name": "aad-pod-identity",
+                        "enabled": true
+                    },
+                    {
+                        "name": "coredns",
+                        "enabled": true,
+                        "config": {
+                            "min-replicas": "1",
+                            "nodes-per-replica": "10"
+                        }
+                    },
+                    {
+                        "name": "azure-policy",
+                        "enabled": true
+                    }
+                ]
+            }
+        },
+        "masterProfile": {
+            "count": 3,
+            "dnsPrefix": "",
+            "vmSize": "Standard_D2_v3",
+            "OSDiskSizeGB": 200,
+            "availabilityZones": [
+                "1",
+                "2"
+            ]
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "poollinux",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "OSDiskSizeGB": 200,
+                "storageProfile": "ManagedDisks",
+                "diskSizesGB": [
+                    128
+                ],
+                "availabilityProfile": "VirtualMachineScaleSets",
+                "osDiskCachingType": "ReadOnly",
+                "dataDiskCachingType": "ReadWrite"
+            },
+            {
+                "name": "poolwin",
+                "count": 1,
+                "vmSize": "Standard_D2s_v3",
+                "OSDiskSizeGB": 256,
+                "availabilityProfile": "VirtualMachineScaleSets",
+                "osType": "Windows"
+            },
+            {
+                "name": "pool1604vhd",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "distro": "aks-ubuntu-16.04",
+                "availabilityProfile": "VirtualMachineScaleSets"
+            },
+            {
+                "name": "pool1604",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "distro": "ubuntu",
+                "availabilityProfile": "VirtualMachineScaleSets"
+            },
+            {
+                "name": "pool1804",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "distro": "ubuntu-18.04",
+                "availabilityProfile": "VirtualMachineScaleSets"
+            },
+            {
+                "name": "pool1804gen2",
+                "count": 1,
+                "vmSize": "Standard_D2s_v3",
+                "distro": "ubuntu-18.04-gen2",
+                "availabilityProfile": "VirtualMachineScaleSets"
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        },
+        "windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "replacepassword1234$",
+            "sshEnabled": true,
+            "enableAutomaticUpdates": false
+        }
+    }
+}

@@ -37,10 +37,6 @@
         "name": "hello-world-k8s",
         "version": "v1"
       }
-    ],
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
+    ]
   }
 }
