@@ -304,6 +304,32 @@ func TestAPIServerConfigDisableRbac(t *testing.T) {
 	}
 }
 
+func TestAPIServerServiceAccountFlags(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", "1.20.0-alpha.3", 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--service-account-issuer"] != "kubernetes.default.svc" {
+		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-issuer"])
+	}
+	if a["--service-account-signing-key-file"] != "/etc/kubernetes/certs/apiserver.key" {
+		t.Fatalf("got unexpected '--service-account-signing-key-file' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-signing-key-file"])
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.19.0", 3, 2, false)
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--service-account-issuer"] != "" {
+		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-issuer"])
+	}
+	if a["--service-account-signing-key-file"] != "" {
+		t.Fatalf("got unexpected '--service-account-signing-key-file' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-signing-key-file"])
+	}
+}
+
 func TestAPIServerConfigEnableSecureKubelet(t *testing.T) {
 	// Test EnableSecureKubelet = true
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)

@@ -104,6 +104,11 @@ func (cs *ContainerService) setAPIServerConfig() {
 		}
 	}
 
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.1") {
+		defaultAPIServerConfig["--service-account-issuer"] = "kubernetes.default.svc"
+		defaultAPIServerConfig["--service-account-signing-key-file"] = "/etc/kubernetes/certs/apiserver.key"
+	}
+
 	// Set default admission controllers
 	admissionControlKey, admissionControlValues := getDefaultAdmissionControls(cs)
 	defaultAPIServerConfig[admissionControlKey] = admissionControlValues
