@@ -236,9 +236,9 @@ done
 
 CLUSTER_AUTOSCALER_VERSIONS="
 1.19.1
-1.18.2
-1.17.3
-1.16.6
+1.18.3
+1.17.4
+1.16.7
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
