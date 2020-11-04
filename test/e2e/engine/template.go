@@ -71,6 +71,7 @@ type Config struct {
 	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
 	LinuxContainerdURL             string `envconfig:"LINUX_CONTAINERD_URL"`
 	WindowsContainerdURL           string `envconfig:"WINDOWS_CONTAINERD_URL"`
+	WindowsProvisioningScriptsURL  string `envconfig:"WINDOWS_PROVISIONING_SCRIPTS_URL" default:""`
 	*ArcOnboardingConfig
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
@@ -209,6 +210,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.WindowsProfile.ImageRef.Version = config.WindowsNodeImageVersion
 		}
 		log.Printf("Windows nodes will use image reference name:%s, rg:%s, sub:%s, gallery:%s, version:%s for test pass", config.WindowsNodeImageName, config.WindowsNodeImageResourceGroup, config.WindowsNodeImageSubscriptionID, config.WindowsNodeImageGallery, config.WindowsNodeImageVersion)
+	}
+
+	if config.WindowsProvisioningScriptsURL != "" {
+		prop.WindowsProfile.ProvisioningScriptsPackageURL = config.WindowsProvisioningScriptsURL
+		log.Printf("Windows nodes will use provisioning scripts from: %s", config.WindowsProvisioningScriptsURL)
 	}
 
 	if config.LinuxNodeImageName != "" && config.LinuxNodeImageResourceGroup != "" {
