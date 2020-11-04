@@ -23534,6 +23534,9 @@ spec:
         - name: etc-ssl
           mountPath: /etc/ssl
           readOnly: true
+        - name: ca-certificates
+          mountPath: /usr/local/share/ca-certificates
+          readOnly: true
 {{end}}
         - name: var-lib-kubelet
           mountPath: /var/lib/kubelet
@@ -23551,6 +23554,9 @@ spec:
     - name: etc-ssl
       hostPath:
         path: /etc/ssl
+    - name: ca-certificates
+      hostPath:
+        path: /usr/local/share/ca-certificates
 {{end}}
     - name: var-lib-kubelet
       hostPath:
