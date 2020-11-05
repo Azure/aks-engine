@@ -42,6 +42,7 @@
 // ../../parts/k8s/addons/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/azure-network-policy.yaml
 // ../../parts/k8s/addons/azure-policy-deployment.yaml
+// ../../parts/k8s/addons/azureblob-csi-driver-deployment.yaml
 // ../../parts/k8s/addons/azuredisk-csi-driver-deployment.yaml
 // ../../parts/k8s/addons/azurefile-csi-driver-deployment.yaml
 // ../../parts/k8s/addons/blobfuse-flexvolume.yaml
@@ -9036,6 +9037,444 @@ func k8sAddonsAzurePolicyDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/azure-policy-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsAzureblobCsiDriverDeploymentYaml = []byte(`apiVersion: storage.k8s.io/v1beta1
+kind: CSIDriver
+metadata:
+  name: blob.csi.azure.com
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  attachRequired: false
+  podInfoOnMount: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-blob-controller-sa
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: blob-external-provisioner-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csinodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: blob-csi-provisioner-binding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+subjects:
+  - kind: ServiceAccount
+    name: csi-blob-controller-sa
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: blob-external-provisioner-role
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-blob-controller-secret-role
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-blob-controller-secret-binding
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+subjects:
+  - kind: ServiceAccount
+    name: csi-blob-controller-sa
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: csi-blob-controller-secret-role
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: csi-blob-controller
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: {{CSIControllerReplicas}}
+  selector:
+    matchLabels:
+      app: csi-blob-controller
+  template:
+    metadata:
+      labels:
+        app: csi-blob-controller
+    spec:
+      hostNetwork: true
+      serviceAccountName: csi-blob-controller-sa
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      containers:
+        - name: csi-provisioner
+          image: {{ContainerImage "csi-provisioner"}}
+          args:
+            - "-v=5"
+            - "--csi-address=$(ADDRESS)"
+            - "--enable-leader-election"
+            - "--leader-election-type=leases"
+            - "--timeout=60s"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-provisioner"}}
+              memory: {{ContainerMemLimits "csi-provisioner"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-provisioner"}}
+              memory: {{ContainerMemReqs "csi-provisioner"}}
+        - name: liveness-probe
+          image: {{ContainerImage "livenessprobe"}}
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=3s
+            - --health-port=29632
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
+        - name: blob
+          image: {{ContainerImage "azureblob-csi"}}
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--v=5"
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--metrics-address=0.0.0.0:29634"
+          ports:
+            - containerPort: 29632
+              name: healthz
+              protocol: TCP
+            - containerPort: 29634
+              name: metrics
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            periodSeconds: 30
+          env:
+            - name: AZURE_CREDENTIAL_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: azure-cred-file
+                  key: path
+                  optional: true
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+{{- if IsCustomCloudProfile}}
+            - name: AZURE_ENVIRONMENT_FILEPATH
+              value: /etc/kubernetes/azurestackcloud.json
+{{end}}
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+            - mountPath: /etc/kubernetes/
+              name: azure-cred
+            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
+              readOnly: true
+              name: msi
+            - name: ssl
+              mountPath: /etc/ssl/certs
+              readOnly: true
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azureblob-csi"}}
+              memory: {{ContainerMemLimits "azureblob-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azureblob-csi"}}
+              memory: {{ContainerMemReqs "azureblob-csi"}}
+      volumes:
+        - name: socket-dir
+          emptyDir: {}
+        - name: azure-cred
+          hostPath:
+            path: /etc/kubernetes/
+            type: Directory
+        - name: msi
+          hostPath:
+            path: /var/lib/waagent/ManagedIdentity-Settings
+        - name: ssl
+          hostPath:
+            path: /etc/ssl/certs
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-blob-node-sa
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-blob-node-secret-role
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-blob-node-secret-binding
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+subjects:
+  - kind: ServiceAccount
+    name: csi-blob-node-sa
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: csi-blob-node-secret-role
+  apiGroup: rbac.authorization.k8s.io
+{{if HasLinux}}
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: csi-blob-node
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      app: csi-blob-node
+  template:
+    metadata:
+      labels:
+        app: csi-blob-node
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: csi-blob-node-sa
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      tolerations:
+        - operator: "Exists"
+      containers:
+        - name: liveness-probe
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+          image: {{ContainerImage "livenessprobe"}}
+          args:
+            - --csi-address=/csi/csi.sock
+            - --probe-timeout=3s
+            - --health-port=29633
+            - --v=5
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
+        - name: node-driver-registrar
+          image: {{ContainerImage "csi-node-driver-registrar"}}
+          args:
+            - --csi-address=$(ADDRESS)
+            - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+            - --v=5
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /registration/blob.csi.azure.com-reg.sock /csi/csi.sock"]
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+            - name: DRIVER_REG_SOCK_PATH
+              value: /var/lib/kubelet/plugins/blob.csi.azure.com/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
+        - name: blob
+          image: {{ContainerImage "azureblob-csi"}}
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--v=5"
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--nodeid=$(KUBE_NODE_NAME)"
+            - "--metrics-address=0.0.0.0:29635"
+          ports:
+            - containerPort: 29633
+              name: healthz
+              protocol: TCP
+            - containerPort: 29635
+              name: metrics
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+            periodSeconds: 30
+          env:
+            - name: AZURE_CREDENTIAL_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: azure-cred-file
+                  key: path
+                  optional: true
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+{{- if IsCustomCloudProfile}}
+            - name: AZURE_ENVIRONMENT_FILEPATH
+              value: /etc/kubernetes/azurestackcloud.json
+{{end}}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+            - mountPath: /var/lib/kubelet/
+              mountPropagation: Bidirectional
+              name: mountpoint-dir
+            - mountPath: /etc/kubernetes/
+              name: azure-cred
+            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
+              readOnly: true
+              name: msi
+            - mountPath: /mnt
+              name: blob-cache
+            - name: ssl
+              mountPath: /etc/ssl/certs
+              readOnly: true
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azureblob-csi"}}
+              memory: {{ContainerMemLimits "azureblob-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azureblob-csi"}}
+              memory: {{ContainerMemReqs "azureblob-csi"}}
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/plugins/blob.csi.azure.com
+            type: DirectoryOrCreate
+          name: socket-dir
+        - hostPath:
+            path: /var/lib/kubelet/
+            type: DirectoryOrCreate
+          name: mountpoint-dir
+        - hostPath:
+            path: /var/lib/kubelet/plugins_registry/
+            type: DirectoryOrCreate
+          name: registration-dir
+        - hostPath:
+            path: /etc/kubernetes/
+            type: Directory
+          name: azure-cred
+        - hostPath:
+            path: /var/lib/waagent/ManagedIdentity-Settings
+          name: msi
+        - hostPath:
+            path: /mnt
+          name: blob-cache
+        - name: ssl
+          hostPath:
+            path: /etc/ssl/certs
+{{end}}
+`)
+
+func k8sAddonsAzureblobCsiDriverDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddonsAzureblobCsiDriverDeploymentYaml, nil
+}
+
+func k8sAddonsAzureblobCsiDriverDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddonsAzureblobCsiDriverDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/azureblob-csi-driver-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -28503,6 +28942,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/azure-cni-networkmonitor.yaml":                           k8sAddonsAzureCniNetworkmonitorYaml,
 	"k8s/addons/azure-network-policy.yaml":                               k8sAddonsAzureNetworkPolicyYaml,
 	"k8s/addons/azure-policy-deployment.yaml":                            k8sAddonsAzurePolicyDeploymentYaml,
+	"k8s/addons/azureblob-csi-driver-deployment.yaml":                    k8sAddonsAzureblobCsiDriverDeploymentYaml,
 	"k8s/addons/azuredisk-csi-driver-deployment.yaml":                    k8sAddonsAzurediskCsiDriverDeploymentYaml,
 	"k8s/addons/azurefile-csi-driver-deployment.yaml":                    k8sAddonsAzurefileCsiDriverDeploymentYaml,
 	"k8s/addons/blobfuse-flexvolume.yaml":                                k8sAddonsBlobfuseFlexvolumeYaml,
@@ -28696,6 +29136,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"azure-cni-networkmonitor.yaml":         {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
 			"azure-network-policy.yaml":             {k8sAddonsAzureNetworkPolicyYaml, map[string]*bintree{}},
 			"azure-policy-deployment.yaml":          {k8sAddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
+			"azureblob-csi-driver-deployment.yaml":  {k8sAddonsAzureblobCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"azuredisk-csi-driver-deployment.yaml":  {k8sAddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"azurefile-csi-driver-deployment.yaml":  {k8sAddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"blobfuse-flexvolume.yaml":              {k8sAddonsBlobfuseFlexvolumeYaml, map[string]*bintree{}},

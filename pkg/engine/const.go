@@ -205,6 +205,8 @@ const (
 	azureDiskCSIAddonDestinationFilename           string = "azuredisk-csi-driver-deployment.yaml"
 	azureFileCSIAddonSourceFilename                string = "azurefile-csi-driver-deployment.yaml"
 	azureFileCSIAddonDestinationFilename           string = "azurefile-csi-driver-deployment.yaml"
+	azureBlobCSIAddonSourceFilename                string = "azureblob-csi-driver-deployment.yaml"
+	azureBlobCSIAddonDestinationFilename           string = "azureblob-csi-driver-deployment.yaml"
 	clusterAutoscalerAddonSourceFilename           string = "cluster-autoscaler.yaml"
 	clusterAutoscalerAddonDestinationFilename      string = "cluster-autoscaler.yaml"
 	blobfuseFlexVolumeAddonSourceFilename          string = "blobfuse-flexvolume.yaml"

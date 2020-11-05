@@ -210,11 +210,11 @@ const (
 	AppGwIngressAddonName = "appgw-ingress"
 	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
 	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
-	// CSIProvisionerContainerName is the name of the csi-provisioner container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	// CSIProvisionerContainerName is the name of the csi-provisioner container in the azureblob-csi-driver, azuredisk-csi-driver and azurefile-csi-driver addons
 	CSIProvisionerContainerName = "csi-provisioner"
 	// CSIAttacherContainerName is the name of the csi-attacher container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSIAttacherContainerName = "csi-attacher"
-	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver, azurefile-csi-driver and secrets-store-csi-driver addons
+	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azureblob-csi-driver, azuredisk-csi-driver, azurefile-csi-driver and secrets-store-csi-driver addons
 	CSILivenessProbeContainerName = "livenessprobe"
 	// CSILivenessProbeWindowsContainerName is the name of the livenessprobe-windows container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSILivenessProbeWindowsContainerName = "livenessprobe-windows"
@@ -234,6 +234,10 @@ const (
 	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
 	// CSIAzureFileContainerName is the name of the azurefile-csi container in the azurefile-csi-driver addon
 	CSIAzureFileContainerName = "azurefile-csi"
+	// AzureBlobCSIDriverAddonName is the name of Azure File CSI Driver addon
+	AzureBlobCSIDriverAddonName = "azureblob-csi-driver"
+	// CSIAzureBlobContainerName is the name of the azureblob-csi container in the azureblob-csi-driver addon
+	CSIAzureBlobContainerName = "azureblob-csi"
 	// AzureStorageClassesAddonName is the name of the azure storage classes addon
 	AzureStorageClassesAddonName = "azure-storage-classes"
 	// Hyperkube is the common "hyperkube" string reference

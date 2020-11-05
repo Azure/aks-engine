@@ -146,6 +146,8 @@ const (
 	DefaultAzureDiskCSIDriverAddonEnabled = true
 	// DefaultAzureFileCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure File CSI Driver
 	DefaultAzureFileCSIDriverAddonEnabled = true
+	// DefaultAzureBlobCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure Blob CSI Driver
+	DefaultAzureBlobCSIDriverAddonEnabled = false
 	// DefaultClusterAutoscalerAddonEnabled determines the aks-engine provided default for enabling cluster autoscaler addon
 	DefaultClusterAutoscalerAddonEnabled = false
 	// DefaultBlobfuseFlexVolumeAddonEnabled determines the aks-engine provided default for enabling blobfuse flexvolume addon

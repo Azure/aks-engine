@@ -105,6 +105,11 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.AzureFileCSIDriverAddonName),
 			destinationFile: azureFileCSIAddonDestinationFilename,
 		},
+		common.AzureBlobCSIDriverAddonName: {
+			sourceFile:      azureBlobCSIAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AzureBlobCSIDriverAddonName),
+			destinationFile: azureBlobCSIAddonDestinationFilename,
+		},
 		common.ClusterAutoscalerAddonName: {
 			sourceFile:      clusterAutoscalerAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.ClusterAutoscalerAddonName),

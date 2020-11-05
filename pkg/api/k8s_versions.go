@@ -45,6 +45,7 @@ const (
 	csiSnapshotControllerImageReference               string = "oss/kubernetes-csi/snapshot-controller:v2.0.0"
 	csiAzureDiskImageReference                        string = "k8s/csi/azuredisk-csi:v0.7.0"
 	csiAzureFileImageReference                        string = "k8s/csi/azurefile-csi:v0.6.0"
+	csiAzureBlobImageReference                        string = "k8s/csi/blob-csi:latest"
 	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.5.1"
 	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.5.1"
 	dashboardImageReference                           string = "mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.4"
@@ -601,6 +602,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+			common.CSIAzureBlobContainerName:                  csiAzureBlobImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -686,6 +688,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+			common.CSIAzureBlobContainerName:                  csiAzureBlobImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -769,6 +772,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+			common.CSIAzureBlobContainerName:                  csiAzureBlobImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -848,6 +852,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+			common.CSIAzureBlobContainerName:                  csiAzureBlobImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -925,6 +930,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+			common.CSIAzureBlobContainerName:                  csiAzureBlobImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,

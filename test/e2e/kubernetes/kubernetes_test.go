@@ -1031,7 +1031,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have addon pods running", func() {
 			timeout := cfg.Timeout
 			for _, addonName := range []string{common.CoreDNSAddonName, common.TillerAddonName, common.AADPodIdentityAddonName, common.ACIConnectorAddonName,
-				common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName, common.CloudNodeManagerAddonName, common.ClusterAutoscalerAddonName,
+				common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName, common.AzureBlobCSIDriverAddonName, common.CloudNodeManagerAddonName, common.ClusterAutoscalerAddonName,
 				common.BlobfuseFlexVolumeAddonName, common.SMBFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName, common.DashboardAddonName,
 				common.ReschedulerAddonName, common.MetricsServerAddonName, common.NVIDIADevicePluginAddonName, common.ContainerMonitoringAddonName,
 				common.AzureCNINetworkMonitorAddonName, common.CalicoAddonName, common.AzureNetworkPolicyAddonName, common.IPMASQAgentAddonName,
@@ -1070,6 +1070,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
 						addonPods = append(addonPods, "csi-azurefile-node-windows")
 					}
+				case common.AzureBlobCSIDriverAddonName:
+					addonPods = []string{"csi-blob-node", "csi-blob-controller"}
 				case common.CloudNodeManagerAddonName:
 					addonPods = []string{common.CloudNodeManagerAddonName}
 					if eng.HasWindowsAgents() {
@@ -1410,6 +1412,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			addons := map[string]string{
 				common.AzureDiskCSIDriverAddonName: "azuredisk",
 				common.AzureFileCSIDriverAddonName: "azurefile",
+				common.AzureBlobCSIDriverAddonName: "blob",
 			}
 			for addonName, shortenedAddonName := range addons {
 				if hasAddon, _ := eng.HasAddon(addonName); !hasAddon {
@@ -1433,6 +1436,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 							containers = append(containers, "csi-snapshotter")
 						}
+					case common.AzureBlobCSIDriverAddonName:
+						containers = []string{"csi-provisioner", "liveness-probe", shortenedAddonName}
 					}
 				}
 				By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
@@ -1445,7 +1450,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
 
 				// Validate CSI node windows pod
-				if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+				if addonName != common.AzureBlobCSIDriverAddonName && eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
 					addonPod = fmt.Sprintf("csi-%s-node-windows", shortenedAddonName)
 					containers = []string{"liveness-probe", "node-driver-registrar", shortenedAddonName}
 					By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))

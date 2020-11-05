@@ -703,6 +703,45 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultAzureBlobCSIDriverAddonsConfig := KubernetesAddon{
+		Name:    common.AzureBlobCSIDriverAddonName,
+		Enabled: to.BoolPtr(DefaultAzureBlobCSIDriverAddonEnabled),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           common.CSIProvisionerContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureBlobCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponents),
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "100Mi",
+			},
+			{
+				Name:           common.CSILivenessProbeContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureBlobCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponents),
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "100Mi",
+			},
+			{
+				Name:           common.CSINodeDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureBlobCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponents),
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "100Mi",
+			},
+			{
+				Name:           common.CSIAzureBlobContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureBlobCSIDriverAddonName, common.CSIAzureBlobContainerName, k8sComponents),
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "2",
+				MemoryLimits:   "2Gi",
+			},
+		},
+	}
+
 	defaultKubeDNSAddonsConfig := KubernetesAddon{
 		Name:    common.KubeDNSAddonName,
 		Enabled: to.BoolPtr(DefaultKubeDNSAddonEnabled),
@@ -921,6 +960,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultAppGwAddonsConfig,
 		defaultAzureDiskCSIDriverAddonsConfig,
 		defaultAzureFileCSIDriverAddonsConfig,
+		defaultAzureBlobCSIDriverAddonsConfig,
 		defaultsAzurePolicyAddonsConfig,
 		defaultNodeProblemDetectorConfig,
 		defaultKubeDNSAddonsConfig,
