@@ -9,6 +9,7 @@ set -o pipefail
 required_env_vars=(
     "CLIENT_ID"
     "CLIENT_SECRET"
+    "LOCATION"
     "RESOURCE_GROUP_NAME"
     "STORAGE_ACCOUNT_NAME"
     "STORAGE_CONTAINER_NAME"
@@ -32,6 +33,14 @@ fi
 
 CREATE_TIME="$(date +%s)"
 az login --service-principal -u $CLIENT_ID -p $CLIENT_SECRET --tenant $TENANT_ID
+
+rg_exists=$(az group exists -g $RESOURCE_GROUP_NAME --subscription $SUBSCRIPTION_ID -o json)
+if $rg_exists ; then
+    echo "resource group '${RESOURCE_GROUP_NAME}' exists"
+else
+    echo "creating new resource group: ${RESOURCE_GROUP_NAME}"
+    az group create -l $LOCATION -g $RESOURCE_GROUP_NAME --subscription $SUBSCRIPTION_ID
+fi
 
 avail=$(az storage account check-name -n ${STORAGE_ACCOUNT_NAME} -o json | jq -r .nameAvailable)
 if $avail ; then
