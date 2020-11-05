@@ -34,6 +34,7 @@ jobs:
       -w /go/src/github.com/Azure/aks-engine \
       ${DEIS_GO_DEV_IMAGE} make all
     displayName: Build aks-engine-test - make all
+    condition: succeeded()
 
   - script: |
       SCRIPT_PACKAGE_URL="$(cat output.log | grep https.*zip)" && \
@@ -52,12 +53,14 @@ jobs:
       -e USE_MANAGED_IDENTITY="false" \
       ${DEIS_GO_DEV_IMAGE} make test-kubernetes
     displayName: Run e2e tests
+    condition: succeeded()
 
   - script: |
       SA_NAME="$(cat sa_name)" && \
       az login --service-principal -u ${CLIENT_ID} -p "$(CLIENT_SECRET)" --tenant ${TENANT_ID} && \
       az storage account delete -y -n ${SA_NAME} -g ${RESOURCE_GROUP_NAME}
     displayName: Delete storage account
+    condition: always()
 
   - script: |
       sudo chown -R $USER:$USER .
