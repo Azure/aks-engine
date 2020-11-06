@@ -24,10 +24,7 @@ $global:CNIPath = [Io.path]::Combine("$global:KubeDir", "cni")
 $global:CNIConfig = [Io.path]::Combine($global:CNIPath, "config", "$global:NetworkMode.conf")
 $global:CNIConfigPath = [Io.path]::Combine("$global:CNIPath", "config")
 
-
-$UseContainerD = ($global:ContainerRuntime -eq "containerd")
-
-$KubeNetwork = "azure"
+ipmo $global:HNSModule
 
 #TODO ksbrmnn refactor to be sensical instead of if if if ...
 
@@ -56,7 +53,7 @@ else {
 }
 
 # Update args to use ContainerD if needed
-if ($UseContainerD -eq $true) {
+if ($global:ContainerRuntime -eq "containerd") {
     $KubeletArgList += @("--container-runtime=remote", "--container-runtime-endpoint=npipe://./pipe/containerd-containerd")
 }
 
@@ -184,128 +181,31 @@ Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW) {
     Add-Content -Path $global:CNIConfig -Value (ConvertTo-Json $configJson -Depth 20)
 }
 
+# Required to clean up the HNS policy lists properly
+Write-Host "Stopping kubeproxy service"
+Stop-Service kubeproxy
 
 if ($global:NetworkPlugin -eq "azure") {
     Write-Host "NetworkPlugin azure, starting kubelet."
 
-    Write-Host "Cleaning stale CNI data"
-    # Kill all cni instances & stale data left by cni
-    # Cleanup all files related to cni
-    taskkill /IM azure-vnet.exe /f
-    taskkill /IM azure-vnet-ipam.exe /f
-    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
-    if ((Test-Path $cnijson)) {
-        Remove-Item $cnijson
-    }
-    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
-    if ((Test-Path $cnilock)) {
-        Remove-Item $cnilock
-    }
-    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json")
-    if ((Test-Path $cnijson)) {
-        Remove-Item $cnijson
-    }
-    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json.lock")
-    if ((Test-Path $cnilock)) {
-        Remove-Item $cnilock
-    }
-    $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
-    if ((Test-Path $cnijson)) {
-        Remove-Item $cnijson
-    }
-    $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
-    if ((Test-Path $cnilock)) {
-        Remove-Item $cnilock
-    }
-
-    # startup the service
-
     # Find if network created by CNI exists, if yes, remove it
     # This is required to keep the network non-persistent behavior
     # Going forward, this would be done by HNS automatically during restart of the node
-
-    $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
-    if ($hnsNetwork) {
-        # Cleanup all containers
-        docker ps -q | foreach { docker rm $_ -f }
-
-        Write-Host "Cleaning up old HNS network found"
-        Remove-HnsNetwork $hnsNetwork
-    }
-
+    ./cleanupnetwork.ps1 
+    
     # Restart Kubeproxy, which would wait, until the network is created
     # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
     Restart-Service Kubeproxy
 
+    # startup the service
     $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
     Invoke-Expression $KubeletCommandLine
 }
 
-if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "docker")) {
-    $KubeNetwork = "l2bridge"
+if ($global:NetworkPlugin -eq "kubenet") {
     try {
         $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
 
-        $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
-        $podCIDR = Get-PodCIDR
-        $podCidrDiscovered = Test-PodCIDR($podCIDR)
-
-        # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
-        if (-not $podCidrDiscovered) {
-            $argList = $KubeletArgListStr
-
-            $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $kubeletArgList
-
-            # run kubelet until podCidr is discovered
-            Write-Host "waiting to discover pod CIDR"
-            while (-not $podCidrDiscovered) {
-                Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
-                Start-Sleep 10
-
-                $podCIDR = Get-PodCIDR
-                $podCidrDiscovered = Test-PodCIDR($podCIDR)
-            }
-
-            # stop the kubelet process now that we have our CIDR, discard the process output
-            $process | Stop-Process | Out-Null
-        }
-
-        # startup the service
-        $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
-
-        if ($hnsNetwork) {
-            # Kubelet has been restarted with existing network.
-            # Cleanup all containers
-            docker ps -q | foreach { docker rm $_ -f }
-            # cleanup network
-            Write-Host "Cleaning up old HNS network found"
-            Remove-HnsNetwork $hnsNetwork
-            Start-Sleep 10
-        }
-
-        Write-Host "Creating a new hns Network"
-        ipmo $global:HNSModule
-
-        $hnsNetwork = New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
-        # New network has been created, Kubeproxy service has to be restarted
-        # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
-        Restart-Service Kubeproxy
-
-        Start-Sleep 10
-        # Add route to all other POD networks
-        Update-CNIConfigKubenetDocker $podCIDR $masterSubnetGW
-
-        Invoke-Expression $KubeletCommandLine
-    }
-    catch {
-        Write-Error $_
-    }
-
-}
-
-if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "containerd")) {
-    $KubeNetwork = "l2bridge"
-    try {
         $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
         $podCIDR = Get-PodCIDR
         $podCidrDiscovered = Test-PodCIDR($podCIDR)
@@ -330,35 +230,31 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "co
             $process | Stop-Process | Out-Null
         }
 
-        # startup the service
-        $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
-
-        if ($hnsNetwork) {
-            # Kubelet has been restarted with existing network.
-            # Cleanup all containers
-            # TODO: convert this to ctr.exe -n k8s.io container list ; container rm
-            docker ps -q | foreach { docker rm $_ -f }
-            # cleanup network
-            Write-Host "Cleaning up old HNS network found"
-            Remove-HnsNetwork $hnsNetwork
-            Start-Sleep 10
-        }
+        ./cleanupnetwork.ps1 
 
         Write-Host "Creating a new hns Network"
-        ipmo $global:HNSModule
-
         $hnsNetwork = New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
         # New network has been created, Kubeproxy service has to be restarted
+        # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
         Restart-Service Kubeproxy
 
         Start-Sleep 10
-        # Add route to all other POD networks
-        Write-Host "Updating CNI config"
-        Update-CNIConfigKubenetContainerD $podCIDR $masterSubnetGW
 
+        if  ($global:ContainerRuntime -eq "containerd") {
+            Write-Host "Updating CNI config"
+            Update-CNIConfigKubenetContainerD $podCIDR $masterSubnetGW
+        }
+
+        if  ($global:ContainerRuntime -eq "docker") {
+            # Add route to all other POD networks
+            Update-CNIConfigKubenetDocker $podCIDR $masterSubnetGW
+        }
+
+        # startup the service
         Invoke-Expression $KubeletCommandLine
     }
     catch {
         Write-Error $_
     }
+
 }

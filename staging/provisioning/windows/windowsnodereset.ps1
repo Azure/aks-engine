@@ -49,44 +49,7 @@ if ($global:EnableHostsConfigAgent) {
 # Perform cleanup
 #
 
-$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
-if ($hnsNetwork) {
-    Write-Log "Cleaning up containers"
-    if ($UseContainerD -eq $true) {
-        ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io tasks kill $_ }
-        ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io c rm $_ }
-    }
-    else {
-        docker.exe ps -q | ForEach-Object { docker rm $_ -f }
-    }
-
-    Write-Log "Removing old HNS network 'azure'"
-    Remove-HnsNetwork $hnsNetwork
-
-    taskkill /IM azure-vnet.exe /f
-    taskkill /IM azure-vnet-ipam.exe /f
-
-    $filesToRemove = @(
-        "c:\k\azure-vnet.json",
-        "c:\k\azure-vnet.json.lock",
-        "c:\k\azure-vnet-ipam.json",
-        "c:\k\azure-vnet-ipam.json.lock"
-        "c:\k\azure-vnet-ipamv6.json",
-        "c:\k\azure-vnet-ipamv6.json.lock"
-    )
-
-    foreach ($file in $filesToRemove) {
-        if (Test-Path $file) {
-            Write-Log "Deleting stale file at $file"
-            Remove-Item $file
-        }
-    }
-}
-
-Write-Log "Cleaning up persisted HNS policy lists"
-# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
-# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
-Get-HnsPolicyList | Remove-HnsPolicyList
+./cleanupnetwork.ps1 
 
 #
 # Create required networks

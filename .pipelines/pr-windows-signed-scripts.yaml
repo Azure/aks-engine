@@ -3,6 +3,7 @@ pr: none
 
 jobs:
 - job: test_staged_windows_provisioning_scripts
+  timeoutInMinutes: 150
   pool:
     name: $(BUILD_POOL)
   steps:
