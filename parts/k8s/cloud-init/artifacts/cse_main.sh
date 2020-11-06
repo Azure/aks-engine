@@ -88,7 +88,7 @@ fi
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   if apt list --installed | grep 'chrony'; then
-    time_metric "Configurehrony" configureChrony
+    time_metric "configureChrony" configureChrony
     time_metric "EnsureChrony" ensureChrony
   fi
 fi
