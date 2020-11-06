@@ -19,7 +19,7 @@ Changes to the provisioning scripts packaged in the .zip can be tested by:
 
 ### CI Pipeline validation
 
-Changes to the privisioing scripts are also tested with an Azure DevOps pipeline job enabled in Azure/aks-engine.
+Changes to the provisioning scripts are also tested with an Azure DevOps pipeline job enabled in Azure/aks-engine.
 This pipeline triggers when files under [staging/provisioning/windows](../../staging/provisioning/windows) are detected in a PR.
 Pipeline definition file: [pr-windows-signed-scripts.yaml](../../.pipelines/pr-windows-signed-scripts.yaml)
 
