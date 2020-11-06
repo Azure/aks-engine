@@ -1,3 +1,14 @@
+# Required pipeline variables:
+# - BUILD_POOL - Azure DevOps build pool to use
+# - CLIENT_ID - Service principal ID
+# - CLIENT_SECRET - Service principal secret
+# - CLUSTER_DEFINITION - Relative path to a cluster definition file used when running e2e tests
+# - DEIS_GO_DEV_IMAGE - Dev container to use
+# - LOCATION - Azure region to create resources in
+# - RESOURCE_GROUP_NAME - Name of resource group to use or create
+# - SUBSCRIPTION_ID - Azure subscription to use
+# - TENANT_ID - Tenant Id used for service principal login
+
 trigger: none
 pr: none
 
