@@ -17,6 +17,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     sudo timedatectl status | grep 'NTP synchronized: yes' || exit 1
   elif [[ $RELEASE == "18.04" ]]; then
     sudo ntpstat | grep 'synchronised to NTP server' || exit 1
+    sudo chronyc sources | grep '#* PHC' || exit 1 # Make sure chrony is running and synced with host-based PTP source clock
     sudo timedatectl status | grep 'System clock synchronized: yes' || exit 1
   fi
 fi

@@ -41,7 +41,7 @@ installDeps() {
     packages+=" cgroup-lite ceph-common glusterfs-client"
     if [[ $UBUNTU_RELEASE == "18.04" ]]; then
       disableTimeSyncd
-      packages+=" ntp ntpstat"
+      packages+=" ntp ntpstat chrony"
     fi
   elif [[ $OS == $DEBIAN_OS_NAME ]]; then
     packages+=" gpg cgroup-bin"
