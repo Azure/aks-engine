@@ -46,7 +46,7 @@ jobs:
       -e CLEANUP_ON_EXIT="true" \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-      -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
+      -e CLUSTER_DEFINITION="${CLUSTER_DEFINITION}" \
       -e LOCATION=${LOCATION} \
       -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
       -e TENANT_ID=${TENANT_ID} \
