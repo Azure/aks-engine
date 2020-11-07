@@ -9,11 +9,21 @@ This document details how to update and test changes to these files.
 
 ## Testing
 
+### Local Validation
+
 Changes to the provisioning scripts packaged in the .zip can be tested by:
 
 - Running [scripts/build-windows-provisioning-scripts.sh](../../scripts/build-windows-provisioning-scripts.sh) which will create a .zip and upload it to a storage account.
 - Create/update a cluster definition file and set `windowsProfile.provisioningScriptsPackageURL' to point to the uploaded back.
 - Perform a cluster deployment with aks-engine.
+
+### CI Pipeline validation
+
+Changes to the provisioning scripts are also tested with an Azure DevOps pipeline job enabled in Azure/aks-engine.
+This pipeline triggers when files under [staging/provisioning/windows](../../staging/provisioning/windows) are detected in a PR.
+Pipeline definition file: [pr-windows-signed-scripts.yaml](../../.pipelines/pr-windows-signed-scripts.yaml)
+
+Note: By default this pipeline will use [examples/e2e-tests/kubernetes/windows/hybrid/definition.json](../../examples/e2e-tests/kubernetes/windows/hybrid/definition.json). This can be set as a schedule-time variable by aks-engine maintainers to validate other cluster configurations.
 
 ## Updates
 
