@@ -58,9 +58,11 @@ apt packages:
   - zip
 EOF
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
-  echo "  - ntp" >> ${VHD_LOGS_FILEPATH}
-  echo "  - ntpstat" >> ${VHD_LOGS_FILEPATH}
-  echo "  - chrony" >> ${VHD_LOGS_FILEPATH}
+{
+  echo "  - ntp"
+  echo "  - ntpstat"
+  echo "  - chrony"
+} >> ${VHD_LOGS_FILEPATH}
 fi
 
 chmod a-x /etc/update-motd.d/??-{motd-news,release-upgrade}
