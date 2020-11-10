@@ -585,6 +585,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsKubenet": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginKubenet
 		},
+		"HasLinuxMobyURL": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxMobyURL != ""
+		},
+		"GetLinuxMobyURL": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxMobyURL
+		},
 		"NeedsContainerd": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()
 		},

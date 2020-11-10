@@ -71,6 +71,7 @@ type Config struct {
 	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
 	LinuxContainerdURL             string `envconfig:"LINUX_CONTAINERD_URL"`
 	WindowsContainerdURL           string `envconfig:"WINDOWS_CONTAINERD_URL"`
+	LinuxMobyURL                   string `envconfig:"LINUX_MOBY_URL"`
 	WindowsProvisioningScriptsURL  string `envconfig:"WINDOWS_PROVISIONING_SCRIPTS_URL" default:""`
 	ArcClientID                    string `envconfig:"ARC_CLIENT_ID" default:""`
 	ArcClientSecret                string `envconfig:"ARC_CLIENT_SECRET" default:""`
@@ -424,6 +425,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.WindowsContainerdURL != "" {
 		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = config.WindowsContainerdURL
+	}
+
+	if config.LinuxMobyURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.LinuxMobyURL = config.LinuxMobyURL
 	}
 
 	return &Engine{

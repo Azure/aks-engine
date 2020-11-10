@@ -408,6 +408,7 @@ type KubernetesConfig struct {
 	CustomKubeBinaryURL               string                `json:"customKubeBinaryURL,omitempty"`
 	DockerEngineVersion               string                `json:"dockerEngineVersion,omitempty"` // Deprecated
 	MobyVersion                       string                `json:"mobyVersion,omitempty"`
+	LinuxMobyURL                      string                `json:"linuxMobyURL,omitempty"`
 	ContainerdVersion                 string                `json:"containerdVersion,omitempty"`
 	LinuxContainerdURL                string                `json:"linuxContainerdURL,omitempty"`
 	CustomCcmImage                    string                `json:"customCcmImage,omitempty"` // Image for cloud-controller-manager
