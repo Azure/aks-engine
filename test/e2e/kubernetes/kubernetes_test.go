@@ -168,13 +168,9 @@ var _ = BeforeSuite(func() {
 	if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
 		dnsAddonName = common.CoreDNSAddonName
 	}
-	stabilityCommandTimeout = 3 * time.Second
-	if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == api.NetworkPolicyCalico {
-		stabilityCommandTimeout = 10 * time.Second
-	} else if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == api.NetworkPolicyAzure {
-		stabilityCommandTimeout = 15 * time.Second
-	}
 	Expect(dnsAddonName).NotTo(Equal(""))
+
+	stabilityCommandTimeout = cfg.StabilityTimeoutSeconds * time.Second
 
 	if !cfg.IsCustomCloudProfile() {
 		env, err = azure.EnvironmentFromName("AzurePublicCloud") // TODO get this programmatically

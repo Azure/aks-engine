@@ -1,4 +1,7 @@
 {
+	"env": {
+		"STABILITY_TIMEOUT_SECONDS": "15"
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {

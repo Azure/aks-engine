@@ -1,6 +1,7 @@
 {
 	"env": {
-		"STABILITY_ITERATIONS": "0"
+		"STABILITY_ITERATIONS": "0",
+		"STABILITY_TIMEOUT_SECONDS": "10"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
