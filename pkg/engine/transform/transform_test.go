@@ -106,7 +106,7 @@ func TestNormalizeResourcesForK8sMasterUpgrade(t *testing.T) {
 		},
 	}
 	agentsToKeepMap := make(map[string]bool)
-	agentsToKeepMap["agentpool1"] = true
+	agentsToKeepMap["agentppol1"] = true // keep the typo or update the templates in ./transformtestfiles
 	agentsToKeepMap["agentpool2"] = true
 	e = transformer.NormalizeResourcesForK8sMasterUpgrade(logger, templateMap, false, agentsToKeepMap)
 	Expect(e).To(BeNil())
@@ -131,7 +131,7 @@ func TestNormalizeResourcesForK8sAgentUpgrade(t *testing.T) {
 		},
 	}
 	agentsToKeepMap := make(map[string]bool)
-	agentsToKeepMap["agentpool1"] = true
+	agentsToKeepMap["agentppol1"] = true // keep the typo or update the templates in ./transformtestfiles
 	agentsToKeepMap["agentpool2"] = false
 	e = transformer.NormalizeResourcesForK8sAgentUpgrade(logger, templateMap, false, agentsToKeepMap)
 	Expect(e).To(BeNil())
