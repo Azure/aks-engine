@@ -2,7 +2,7 @@
     "env": {},
     "options": {
         "allowedOrchestratorVersions": [
-            "latestReleasedVersion"
+            "1.20"
         ]
     },
     "apiModel": {
