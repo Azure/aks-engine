@@ -1759,6 +1759,23 @@
       "type": "Microsoft.Compute/virtualMachines"
     },
     {
+      "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
+      "copy": {
+        "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
+        "name": "vmLoopNode"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')))]"
+      ],
+      "name": "[guid(concat('Microsoft.Compute/virtualMachines/', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')), 'vmidentity'))]",
+      "properties": {
+        "principalId": "[reference(concat('Microsoft.Compute/virtualMachines/', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset'))), '2017-03-30', 'Full').identity.principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('readerRoleDefinitionId')]"
+      },
+      "type": "Microsoft.Authorization/roleAssignments"
+    },
+    {
       "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
@@ -1891,6 +1908,23 @@
         "resourceNameSuffix": "[parameters('nameSuffix')]"
       },
       "type": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
+      "copy": {
+        "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
+        "name": "vmLoopNode"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]"
+      ],
+      "name": "[guid(concat('Microsoft.Compute/virtualMachines/', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')), 'vmidentity'))]",
+      "properties": {
+        "principalId": "[reference(concat('Microsoft.Compute/virtualMachines/', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset'))), '2017-03-30', 'Full').identity.principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('readerRoleDefinitionId')]"
+      },
+      "type": "Microsoft.Authorization/roleAssignments"
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
