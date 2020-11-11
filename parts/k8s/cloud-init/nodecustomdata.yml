@@ -169,7 +169,7 @@ write_files:
     APT::Periodic::AutocleanInterval "0";
     APT::Periodic::Unattended-Upgrade "0";
 
-{{- if IsIPv6Enabled}}
+{{- if and IsIPv6Enabled .IsUbuntu1604}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip

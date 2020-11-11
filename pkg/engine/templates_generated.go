@@ -17911,10 +17911,12 @@ ensureDocker() {
 {{end}}
 {{- if IsIPv6Enabled}}
 ensureDHCPv6() {
-  wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  systemctlEnableAndStart dhcpv6 || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
-  retrycmd 120 5 25 modprobe ip6_tables || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
+  if [[ ${UBUNTU_RELEASE} == "16.04" ]]; then
+    wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    systemctlEnableAndStart dhcpv6 || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+    retrycmd 120 5 25 modprobe ip6_tables || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
+  fi
 }
 {{end}}
 ensureKubelet() {
@@ -20891,7 +20893,7 @@ write_files:
     APT::Periodic::AutocleanInterval "0";
     APT::Periodic::Unattended-Upgrade "0";
 
-{{- if IsIPv6Enabled}}
+{{- if and IsIPv6Enabled .MasterProfile.IsUbuntu1604}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -21428,7 +21430,7 @@ write_files:
     APT::Periodic::AutocleanInterval "0";
     APT::Periodic::Unattended-Upgrade "0";
 
-{{- if IsIPv6Enabled}}
+{{- if and IsIPv6Enabled .IsUbuntu1604}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
