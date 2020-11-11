@@ -321,10 +321,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		if prop.OrchestratorProfile.KubernetesConfig == nil {
 			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 		}
-		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{
-			"--horizontal-pod-autoscaler-downscale-stabilization":   "30s",
-			"--horizontal-pod-autoscaler-cpu-initialization-period": "30s",
+		if prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig == nil {
+			prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{}
 		}
+		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["--horizontal-pod-autoscaler-downscale-stabilization"] = "30s"
+		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["--horizontal-pod-autoscaler-cpu-initialization-period"] = "30s"
 	}
 
 	if config.LogAnalyticsWorkspaceKey != "" && len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
