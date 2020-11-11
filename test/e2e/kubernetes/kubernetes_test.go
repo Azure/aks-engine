@@ -170,7 +170,7 @@ var _ = BeforeSuite(func() {
 	}
 	Expect(dnsAddonName).NotTo(Equal(""))
 
-	stabilityCommandTimeout = cfg.StabilityTimeoutSeconds * time.Second
+	stabilityCommandTimeout = time.Duration(cfg.StabilityTimeoutSeconds) * time.Second
 
 	if !cfg.IsCustomCloudProfile() {
 		env, err = azure.EnvironmentFromName("AzurePublicCloud") // TODO get this programmatically
