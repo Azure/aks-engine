@@ -1030,6 +1030,14 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 					}
 					duration := t2.Sub(t1)
 					if duration >= containerExecutionTimeout {
+						err := pod.Logs()
+						if err != nil {
+							log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+						}
+						err = pod.Describe()
+						if err != nil {
+							log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+						}
 						return false, errors.Errorf("execution time %s is greater than timeout %s\n", duration.String(), containerExecutionTimeout.String())
 					}
 					return true, nil
