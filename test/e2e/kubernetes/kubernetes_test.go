@@ -889,6 +889,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(ready).To(Equal(true))
 			}
 
+			By("Ensuring that we have stable and responsive DNS resolution")
+			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
+			out, err := p.Exec("--", "dns-loop", "100", "google.com", "0.3", "5")
+			log.Printf("%s\n", string(out))
+			Expect(err).NotTo(HaveOccurred())
+
 			By("Ensuring that we have stable external DNS resolution as we recycle a bunch of pods")
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
 			command := fmt.Sprintf("time nc -vz bbc.co.uk 80 || nc -vz google.com 443 || nc -vz microsoft.com 80")
