@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dns-loop
+spec:
+  containers:
+  - name: dns-loop
+    image: sturrent/dns-loop
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do sleep 1000; done"]
+  nodeSelector:
+    kubernetes.io/os: linux
+# See https://github.com/sturrent/dns-loop-container
