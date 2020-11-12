@@ -46,6 +46,7 @@ const (
 	vmasResourceType = "Microsoft.Compute/availabilitySets"
 	vmssResourceType = "Microsoft.Compute/virtualMachineScaleSets"
 	lbResourceType   = "Microsoft.Network/loadBalancers"
+	roleResourceType = "Microsoft.Authorization/roleAssignments"
 
 	// resource ids
 	nsgID     = "nsgID"
@@ -422,9 +423,10 @@ func (t *Transformer) removeImageReference(logger *logrus.Entry, resourcePropert
 // NormalizeResourcesForK8sMasterUpgrade takes a template and removes elements that are unwanted in any scale up/down case
 func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry, templateMap map[string]interface{}, isMasterManagedDisk bool, agentPoolsToPreserve map[string]bool) error {
 	resources := templateMap[resourcesFieldName].([]interface{})
-	resourceTypeToProcess := map[string]bool{vmResourceType: true, vmExtensionType: true,
-		nicResourceType: true, vnetResourceType: true, nsgResourceType: true,
-		lbResourceType: true, vmssResourceType: true, vmasResourceType: true}
+	resourceTypeToProcess := map[string]bool{
+		vmResourceType: true, vmExtensionType: true, nicResourceType: true,
+		vnetResourceType: true, nsgResourceType: true, lbResourceType: true,
+		vmssResourceType: true, vmasResourceType: true, roleResourceType: true}
 	logger.Infoln(fmt.Sprintf("Resource count before running NormalizeResourcesForK8sMasterUpgrade: %d", len(resources)))
 
 	filteredResources := resources[:0]
@@ -539,6 +541,26 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
 			}
+		} else if resourceType == roleResourceType {
+			logger.Infoln(fmt.Sprintf("Evaluating if agent resource: %s needs to be removed", resourceName))
+			removeRole := true
+			// The usage of NormalizeResourcesForK8sMasterUpgrade across the code base seems to indicate that
+			// agentPoolsToPreserve == nil => master node upgrade
+			if len(agentPoolsToPreserve) == 0 && strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
+				removeRole = false
+			} else {
+				for pool, preserve := range agentPoolsToPreserve {
+					if strings.Contains(resourceName, "variables('"+pool) && preserve {
+						removeRole = false
+					}
+				}
+			}
+			if removeRole {
+				logger.Infoln(fmt.Sprintf("Removing agent resource: %s from template", resourceName))
+				if len(filteredResources) > 0 {
+					filteredResources = filteredResources[:len(filteredResources)-1]
+				}
+			}
 		} else if resourceType == vmExtensionType {
 			logger.Infoln(fmt.Sprintf("Evaluating if extension: %s needs to be removed", resourceName))
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
@@ -562,10 +584,8 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			}
 		} else if resourceType == nsgResourceType {
 			logger.Infoln(fmt.Sprintf("Removing nsg resource: %s from template", resourceName))
-			{
-				if len(filteredResources) > 0 {
-					filteredResources = filteredResources[:len(filteredResources)-1]
-				}
+			if len(filteredResources) > 0 {
+				filteredResources = filteredResources[:len(filteredResources)-1]
 			}
 		}
 	}
