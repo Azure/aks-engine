@@ -486,7 +486,7 @@ const (
 // TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
 // This is not used by AKS. Update it for tracking.
 const (
-	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.3"
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.4"
 )
 
 const (
