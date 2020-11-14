@@ -146,18 +146,18 @@ var _ = BeforeSuite(func() {
 		Expect(success).To(BeTrue())
 		firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
 		Expect(err).NotTo(HaveOccurred())
-		if hasAddon, addon := eng.HasAddon(common.ClusterAutoscalerAddonName); hasAddon {
-			clusterAutoscalerAddon = addon
-			if len(addon.Pools) > 0 {
-				for _, pool := range addon.Pools {
-					p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
-					maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
-					minNodes, _ := strconv.Atoi(pool.Config["min-nodes"])
-					if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count &&
-						minNodes <= eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
-						clusterAutoscalerEngaged = true
-						break
-					}
+	}
+	if hasAddon, addon := eng.HasAddon(common.ClusterAutoscalerAddonName); hasAddon {
+		clusterAutoscalerAddon = addon
+		if len(addon.Pools) > 0 {
+			for _, pool := range addon.Pools {
+				p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
+				maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
+				minNodes, _ := strconv.Atoi(pool.Config["min-nodes"])
+				if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count &&
+					minNodes <= eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
+					clusterAutoscalerEngaged = true
+					break
 				}
 			}
 		}
