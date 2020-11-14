@@ -17,7 +17,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 
-	"github.com/blang/semver"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -53,7 +52,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(params.IsUpgrade)
+		properties.setMasterProfileDefaults()
 	}
 
 	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
@@ -652,28 +651,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		cs.setComponentsConfig(isUpgrade)
 		// Configure Linux kernel runtime values via sysctl.d
 		cs.setSysctlDConfig()
-
-	case DCOS:
-		if o.DcosConfig == nil {
-			o.DcosConfig = &DcosConfig{}
-		}
-		dcosSemVer, _ := semver.Make(o.OrchestratorVersion)
-		dcosBootstrapSemVer, _ := semver.Make(common.DCOSVersion1Dot11Dot0)
-		if !dcosSemVer.LT(dcosBootstrapSemVer) {
-			if o.DcosConfig.BootstrapProfile == nil {
-				o.DcosConfig.BootstrapProfile = &BootstrapProfile{}
-			}
-			if len(o.DcosConfig.BootstrapProfile.VMSize) == 0 {
-				o.DcosConfig.BootstrapProfile.VMSize = "Standard_D2s_v3"
-			}
-		}
-		if !cs.Properties.MasterProfile.IsCustomVNET() {
-			if cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-				if !isUpgrade || len(cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP) == 0 {
-					cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP = DefaultDCOSBootstrapStaticIP
-				}
-			}
-		}
 	}
 }
 
@@ -688,7 +665,7 @@ func (p *Properties) setExtensionDefaults() {
 	}
 }
 
-func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
+func (p *Properties) setMasterProfileDefaults() {
 	// set default to VMAS for now
 	if p.MasterProfile.AvailabilityProfile == "" {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet
@@ -706,31 +683,6 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.IsCustomVNET() && p.MasterProfile.IsVirtualMachineScaleSets() {
 		if p.OrchestratorProfile.OrchestratorType == Kubernetes {
 			p.MasterProfile.FirstConsecutiveStaticIP = p.MasterProfile.GetFirstConsecutiveStaticIPAddress(p.MasterProfile.VnetCidr)
-		}
-	}
-
-	if !p.OrchestratorProfile.IsKubernetes() {
-		p.MasterProfile.Distro = Ubuntu
-		if !p.MasterProfile.IsCustomVNET() {
-			if p.OrchestratorProfile.OrchestratorType == DCOS {
-				p.MasterProfile.Subnet = DefaultDCOSMasterSubnet
-				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-					p.MasterProfile.FirstConsecutiveStaticIP = DefaultDCOSFirstConsecutiveStaticIP
-				}
-			} else if p.HasWindows() {
-				p.MasterProfile.Subnet = DefaultSwarmWindowsMasterSubnet
-				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-					p.MasterProfile.FirstConsecutiveStaticIP = DefaultSwarmWindowsFirstConsecutiveStaticIP
-				}
-			} else {
-				p.MasterProfile.Subnet = DefaultMasterSubnet
-				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-					p.MasterProfile.FirstConsecutiveStaticIP = DefaultFirstConsecutiveStaticIP
-				}
-			}
 		}
 	}
 

@@ -466,8 +466,6 @@ func GetSupportedVersions(orchType string, isUpdate, hasWindows bool, isAzureSta
 	switch orchType {
 	case Kubernetes:
 		return GetAllSupportedKubernetesVersions(isUpdate, hasWindows, isAzureStackCloud), GetDefaultKubernetesVersion(hasWindows, isAzureStackCloud)
-	case DCOS:
-		return AllDCOSSupportedVersions, DCOSDefaultVersion
 	default:
 		return nil, ""
 	}
