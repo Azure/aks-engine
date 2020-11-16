@@ -155,15 +155,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-var _agentoutputsT = []byte(`{{if IsPublic .Ports}}
-  {{ if not IsKubernetes }}
-    "{{.Name}}FQDN": {
-        "type": "string",
-        "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('{{.Name}}IPAddressName'))).dnsSettings.fqdn]"
-    },
-  {{end}}
-{{end}}
-{{if and .IsAvailabilitySets .IsStorageAccount}}
+var _agentoutputsT = []byte(`{{if and .IsAvailabilitySets .IsStorageAccount}}
   "{{.Name}}StorageAccountOffset": {
       "type": "int",
       "value": "[variables('{{.Name}}StorageAccountOffset')]"
@@ -176,7 +168,8 @@ var _agentoutputsT = []byte(`{{if IsPublic .Ports}}
       "type": "string",
       "value": "[variables('{{.Name}}SubnetName')]"
     },
-{{end}}`)
+{{end}}
+`)
 
 func agentoutputsTBytes() ([]byte, error) {
 	return _agentoutputsT, nil
@@ -19358,8 +19351,7 @@ func masterparamsT() (*asset, error) {
 	return a, nil
 }
 
-var _windowsparamsT = []byte(` {{if IsKubernetes}}
-    "kubeBinariesSASURL": {
+var _windowsparamsT = []byte(`    "kubeBinariesSASURL": {
       "metadata": {
         "description": "The download url for kubernetes windows binaries package"
       },
@@ -19401,7 +19393,6 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
       },
       "type": "string"
     },
- {{end}}
     "windowsAdminUsername": {
       "type": "string",
       "metadata": {

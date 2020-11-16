@@ -169,12 +169,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.MasterProfile.DNSPrefix = config.MasterDNSPrefix
 	}
 
-	if !cfg.IsKubernetes() && config.AgentDNSPrefix != "" {
-		for idx, pool := range prop.AgentPoolProfiles {
-			pool.DNSPrefix = fmt.Sprintf("%v-%v", config.AgentDNSPrefix, idx)
-		}
-	}
-
 	if prop.LinuxProfile != nil {
 		if config.PublicSSHKey != "" {
 			prop.LinuxProfile.SSH.PublicKeys[0].KeyData = config.PublicSSHKey

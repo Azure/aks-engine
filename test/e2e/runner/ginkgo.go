@@ -68,14 +68,12 @@ func (g *Ginkgo) Run() error {
 	err = cmd.Wait()
 	if err != nil {
 		g.Point.RecordTestError()
-		if g.Config.IsKubernetes() {
-			kubectl := exec.Command("k", "get", "all", "--all-namespaces", "-o", "wide")
-			util.PrintCommand(kubectl)
-			kubectl.CombinedOutput()
-			kubectl = exec.Command("k", "get", "nodes", "-o", "wide")
-			util.PrintCommand(kubectl)
-			kubectl.CombinedOutput()
-		}
+		kubectl := exec.Command("k", "get", "all", "--all-namespaces", "-o", "wide")
+		util.PrintCommand(kubectl)
+		kubectl.CombinedOutput()
+		kubectl = exec.Command("k", "get", "nodes", "-o", "wide")
+		util.PrintCommand(kubectl)
+		kubectl.CombinedOutput()
 		return err
 	}
 	g.Point.RecordTestSuccess()

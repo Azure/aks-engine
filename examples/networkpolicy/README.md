@@ -17,7 +17,6 @@ The kubernetes-calico deployment template enables Calico networking and policies
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "calico",
         "networkPlugin": "azure|kubenet"
@@ -43,7 +42,6 @@ The kubernetes-cilium deployment template enables Cilium networking and policies
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "cilium"
       }
@@ -56,7 +54,6 @@ The kubernetes-cilium deployment template enables Cilium networking and policies
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "orchestratorRelease": "1.10",
       "kubernetesConfig": {
         "networkPlugin": "cilium",
@@ -81,7 +78,6 @@ The kubernetes-antrea deployment template enables Antrea networking and policies
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "antrea",
         "networkPlugin": "antrea"
@@ -95,7 +91,6 @@ Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antr
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "antrea"
       }

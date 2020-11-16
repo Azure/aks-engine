@@ -2,7 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "orchestratorRelease": "1.16",
       "kubernetesConfig": {
         "useManagedIdentity": true,

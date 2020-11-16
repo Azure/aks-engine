@@ -43,17 +43,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 		expectedError string
 		isUpdate      bool
 	}{
-		"should error when KubernetesConfig populated for non-Kubernetes OrchestratorType": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Bogus",
-					KubernetesConfig: &KubernetesConfig{
-						ClusterSubnet: "10.0.0.0/16",
-					},
-				},
-			},
-			expectedError: "OrchestratorProfile has unknown orchestrator: Bogus",
-		},
 		"should error when KubernetesConfig has invalid etcd version": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -1598,31 +1587,6 @@ func Test_AadProfile_Validate(t *testing.T) {
 			}
 		}
 	})
-
-	t.Run("aadProfiles should not be supported non-Kubernetes orchestrators", func(t *testing.T) {
-		t.Parallel()
-		cs := getK8sDefaultContainerService(false)
-		cs.Properties.OrchestratorProfile = &OrchestratorProfile{
-			OrchestratorType: "DCOS",
-		}
-		cs.Properties.AADProfile = &AADProfile{
-			ClientAppID: "92444486-5bc3-4291-818b-d53ae480991b",
-			ServerAppID: "403f018b-4d89-495b-b548-0cf9868cdb0a",
-		}
-		expectedMsg := "'aadProfile' is only supported by orchestrator 'Kubernetes'"
-		if err := cs.Properties.validateAADProfile(); err == nil || err.Error() != expectedMsg {
-			t.Errorf("error should have occurred with msg : %s, but got : %s", expectedMsg, err.Error())
-		}
-	})
-}
-
-func TestProperties_ValidateInvalidStruct(t *testing.T) {
-	cs := getK8sDefaultContainerService(false)
-	cs.Properties.OrchestratorProfile = &OrchestratorProfile{}
-	expectedMsg := "missing Properties.OrchestratorProfile.OrchestratorType"
-	if err := cs.Validate(false); err == nil || err.Error() != expectedMsg {
-		t.Errorf("expected validation error with message : %s", err.Error())
-	}
 }
 
 func getK8sDefaultContainerService(hasWindows bool) *ContainerService {
@@ -4205,20 +4169,6 @@ func TestValidateProperties_CustomNodeLabels(t *testing.T) {
 			"fookey": "b$$a$$r",
 		}
 		expectedMsg := "Label value 'b$$a$$r' is invalid. Valid label values must be 63 characters or less and must be empty or begin and end with an alphanumeric character ([a-z0-9A-Z]) with dashes (-), underscores (_), dots (.), and alphanumerics between"
-		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-	})
-
-	t.Run("Should not support orchestratorTypes other than Kubernetes", func(t *testing.T) {
-		t.Parallel()
-		cs := getK8sDefaultContainerService(false)
-		cs.Properties.OrchestratorProfile.OrchestratorType = "Mesos"
-		agentPoolProfiles := cs.Properties.AgentPoolProfiles
-		agentPoolProfiles[0].CustomNodeLabels = map[string]string{
-			"foo": "bar",
-		}
-		expectedMsg := "Agent CustomNodeLabels are only supported for Kubernetes"
 		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}

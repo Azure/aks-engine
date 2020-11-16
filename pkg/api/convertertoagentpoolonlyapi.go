@@ -140,13 +140,6 @@ func convertVLabsAgentPoolOnlyProperties(vlabs *vlabs.Properties, api *Propertie
 	for _, p := range vlabs.AgentPoolProfiles {
 		apiProfile := &AgentPoolProfile{}
 		convertVLabsAgentPoolOnlyAgentPoolProfile(p, apiProfile)
-		// by default vlabs will use managed disks for all orchestrators but kubernetes as it has encryption at rest.
-		if !api.OrchestratorProfile.IsKubernetes() {
-			// by default vlabs will use managed disks for all orchestrators but kubernetes as it has encryption at rest.
-			if len(p.StorageProfile) == 0 {
-				apiProfile.StorageProfile = ManagedDisks
-			}
-		}
 		api.AgentPoolProfiles = append(api.AgentPoolProfiles, apiProfile)
 	}
 	if vlabs.LinuxProfile != nil {

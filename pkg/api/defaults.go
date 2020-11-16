@@ -89,7 +89,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	if a.OrchestratorProfile == nil {
-		return
+		a.OrchestratorProfile = &OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		}
 	}
 	o := a.OrchestratorProfile
 	o.OrchestratorVersion = common.GetValidPatchVersion(
@@ -561,13 +563,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					if !cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
 						profile.Subnet = cs.Properties.MasterProfile.Subnet
 					}
-					if cs.Properties.OrchestratorProfile.OrchestratorType == Kubernetes {
-						if !cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
-							profile.Subnet = cs.Properties.MasterProfile.Subnet
-						}
-					} else {
-						profile.Subnet = fmt.Sprintf(DefaultAgentSubnetTemplate, subnetCounter)
-					}
 					subnetCounter++
 				}
 			}
@@ -583,7 +578,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 						// Ensure deprecated distros are overridden
 						// Previous versions of aks-engine required the docker-engine distro for N series vms,
 						// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
-					} else if cs.Properties.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
+					} else if isUpgrade || isScale {
 						if profile.Distro == AKSDockerEngine || profile.Distro == AKS1604Deprecated {
 							profile.Distro = AKSUbuntu1604
 						} else if profile.Distro == AKS1804Deprecated {
@@ -681,9 +676,7 @@ func (p *Properties) setMasterProfileDefaults() {
 	}
 
 	if p.MasterProfile.IsCustomVNET() && p.MasterProfile.IsVirtualMachineScaleSets() {
-		if p.OrchestratorProfile.OrchestratorType == Kubernetes {
-			p.MasterProfile.FirstConsecutiveStaticIP = p.MasterProfile.GetFirstConsecutiveStaticIPAddress(p.MasterProfile.VnetCidr)
-		}
+		p.MasterProfile.FirstConsecutiveStaticIP = p.MasterProfile.GetFirstConsecutiveStaticIPAddress(p.MasterProfile.VnetCidr)
 	}
 
 	if p.MasterProfile.HTTPSourceAddressPrefix == "" {
@@ -770,10 +763,6 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 
 		if profile.EnableVMSSNodePublicIP == nil {
 			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
-		}
-
-		if !p.OrchestratorProfile.IsKubernetes() {
-			profile.Distro = Ubuntu
 		}
 
 		if profile.OSDiskCachingType == "" {
@@ -887,19 +876,11 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 // setStorageDefaults for agents
 func (p *Properties) setStorageDefaults() {
 	if p.MasterProfile != nil && len(p.MasterProfile.StorageProfile) == 0 {
-		if p.OrchestratorProfile.OrchestratorType == Kubernetes {
-			p.MasterProfile.StorageProfile = ManagedDisks
-		} else {
-			p.MasterProfile.StorageProfile = StorageAccount
-		}
+		p.MasterProfile.StorageProfile = ManagedDisks
 	}
 	for _, profile := range p.AgentPoolProfiles {
 		if len(profile.StorageProfile) == 0 {
-			if p.OrchestratorProfile.OrchestratorType == Kubernetes {
-				profile.StorageProfile = ManagedDisks
-			} else {
-				profile.StorageProfile = StorageAccount
-			}
+			profile.StorageProfile = ManagedDisks
 		}
 	}
 }
@@ -926,7 +907,7 @@ type DefaultCertParams struct {
 // SetDefaultCerts generates and sets defaults for the container certificateProfile, returns true if certs are generated
 func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []net.IP, error) {
 	p := cs.Properties
-	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
+	if p.MasterProfile == nil {
 		return false, nil, nil
 	}
 

@@ -6,9 +6,6 @@
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
-			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
-			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",

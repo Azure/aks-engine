@@ -168,39 +168,6 @@ func TestLoadContainerServiceForAgentPoolOnlyCluster(t *testing.T) {
 	})
 }
 
-func TestLoadContainerServiceWithNilProperties(t *testing.T) {
-	jsonWithoutProperties := `{
-        "type": "Microsoft.ContainerService/managedClusters",
-        "name": "[parameters('clusterName')]",
-        "apiVersion": "vlabs",
-        "location": "[resourceGroup().location]"
-        }`
-
-	tmpFile, err := ioutil.TempFile("", "containerService-invalid")
-	if err != nil {
-		t.Error(err)
-	}
-	fileName := tmpFile.Name()
-	defer os.Remove(fileName)
-
-	err = ioutil.WriteFile(fileName, []byte(jsonWithoutProperties), os.ModeAppend)
-	if err != nil {
-		t.Error(err)
-	}
-
-	apiloader := &Apiloader{}
-	existingContainerService := &ContainerService{Name: "test",
-		Properties: &Properties{OrchestratorProfile: &OrchestratorProfile{OrchestratorType: Kubernetes, OrchestratorVersion: "1.7.16"}}}
-	_, _, err = apiloader.LoadContainerServiceFromFile(fileName, true, false, existingContainerService)
-	if err == nil {
-		t.Errorf("Expected error to be thrown")
-	}
-	expectedMsg := "missing ContainerService Properties"
-	if err.Error() != expectedMsg {
-		t.Errorf("Expected error with message %s but got %s", expectedMsg, err.Error())
-	}
-}
-
 func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 	jsonWithoutlocationcustomcloud := `{
 		"apiVersion": "vlabs",
@@ -371,9 +338,6 @@ func TestDeserializeContainerService(t *testing.T) {
 	if version != vlabs.APIVersion {
 		t.Errorf("expected apiVersion %s, instead got: %s", vlabs.APIVersion, version)
 	}
-	if cs.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
-		t.Errorf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
-	}
 
 	// Test AKS api model
 	cs, version, err = apiloader.DeserializeContainerService([]byte(exampleAKSAPIModel), false, false, nil)
@@ -382,9 +346,6 @@ func TestDeserializeContainerService(t *testing.T) {
 	}
 	if version != v20180331.APIVersion {
 		t.Errorf("expected apiVersion %s, instead got: %s", v20180331.APIVersion, version)
-	}
-	if cs.Properties.OrchestratorProfile.OrchestratorType != Kubernetes {
-		t.Errorf("expected cs.Properties.OrchestratorProfile.OrchestratorType %s, instead got: %s", Kubernetes, cs.Properties.OrchestratorProfile.OrchestratorType)
 	}
 	if cs.Properties.MasterProfile != nil {
 		t.Errorf("expected nil MasterProfile for AKS container service object")

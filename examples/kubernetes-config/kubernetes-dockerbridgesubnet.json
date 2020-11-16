@@ -2,7 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "dockerBridgeSubnet": "192.168.21.5/24"
       }

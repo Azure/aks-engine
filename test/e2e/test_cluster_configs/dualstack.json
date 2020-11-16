@@ -12,7 +12,6 @@
                 "enableIPv6DualStack": true
             },
             "orchestratorProfile": {
-                "orchestratorType": "Kubernetes",
                 "kubernetesConfig": {
                     "loadBalancerSku": "Standard",
                     "excludeMasterFromStandardLB": true,
