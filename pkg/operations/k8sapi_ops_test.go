@@ -34,7 +34,7 @@ func TestGetNodes_ShouldReturnAResultSetWithNodes(t *testing.T) {
 	g.Expect(result.nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(result.nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.10"))
 	g.Expect(result.nodes[1].Name).To(Equal("k8s-agentpool3-1234"))
-	g.Expect(result.nodes[1].Status.Conditions[0].Type).To(Equal(v1.NodeOutOfDisk))
+	g.Expect(result.nodes[1].Status.Conditions[0].Type).To(Equal(v1.NodeMemoryPressure))
 	g.Expect(result.nodes[1].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(result.nodes[1].Status.NodeInfo.KubeletVersion).To(Equal("1.9.9"))
 }
@@ -93,7 +93,7 @@ func TestGetNodes_ShouldReturnNodes(t *testing.T) {
 	g.Expect(nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.10"))
 	g.Expect(nodes[1].Name).To(Equal("k8s-agentpool3-1234"))
-	g.Expect(nodes[1].Status.Conditions[0].Type).To(Equal(v1.NodeOutOfDisk))
+	g.Expect(nodes[1].Status.Conditions[0].Type).To(Equal(v1.NodeMemoryPressure))
 	g.Expect(nodes[1].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[1].Status.NodeInfo.KubeletVersion).To(Equal("1.9.9"))
 }
@@ -112,7 +112,7 @@ func TestGetNodes_ShouldReturnNodesInAPoolWhenAPoolStringIsSpecified(t *testing.
 	g.Expect(err).To(BeNil())
 	g.Expect(nodes).To(HaveLen(1))
 	g.Expect(nodes[0].Name).To(Equal("k8s-agentpool3-1234"))
-	g.Expect(nodes[0].Status.Conditions[0].Type).To(Equal(v1.NodeOutOfDisk))
+	g.Expect(nodes[0].Status.Conditions[0].Type).To(Equal(v1.NodeMemoryPressure))
 	g.Expect(nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.9"))
 
@@ -140,7 +140,7 @@ func TestGetNodes_ShouldRespectTheWaitForNumNodesArg(t *testing.T) {
 	g.Expect(nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.10"))
 	g.Expect(nodes[1].Name).To(Equal("k8s-agentpool3-1234"))
-	g.Expect(nodes[1].Status.Conditions[0].Type).To(Equal(v1.NodeOutOfDisk))
+	g.Expect(nodes[1].Status.Conditions[0].Type).To(Equal(v1.NodeMemoryPressure))
 	g.Expect(nodes[1].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[1].Status.NodeInfo.KubeletVersion).To(Equal("1.9.9"))
 
@@ -165,7 +165,7 @@ func TestGetNodes_ShouldRespectTheWaitForNumNodesArg(t *testing.T) {
 	g.Expect(err).To(BeNil())
 	g.Expect(nodes).To(HaveLen(1))
 	g.Expect(nodes[0].Name).To(Equal("k8s-agentpool3-1234"))
-	g.Expect(nodes[0].Status.Conditions[0].Type).To(Equal(v1.NodeOutOfDisk))
+	g.Expect(nodes[0].Status.Conditions[0].Type).To(Equal(v1.NodeMemoryPressure))
 	g.Expect(nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.9"))
 }
