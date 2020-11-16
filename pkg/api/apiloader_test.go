@@ -331,7 +331,7 @@ func TestDeserializeContainerService(t *testing.T) {
 	}
 
 	// Test AKS Engine api model
-	cs, version, err := apiloader.DeserializeContainerService([]byte(exampleAPIModel), false, false, nil)
+	_, version, err := apiloader.DeserializeContainerService([]byte(exampleAPIModel), false, false, nil)
 	if err != nil {
 		t.Errorf("unexpected error deserializing the example apimodel: %s", err)
 	}
@@ -340,7 +340,7 @@ func TestDeserializeContainerService(t *testing.T) {
 	}
 
 	// Test AKS api model
-	cs, version, err = apiloader.DeserializeContainerService([]byte(exampleAKSAPIModel), false, false, nil)
+	cs, version, err := apiloader.DeserializeContainerService([]byte(exampleAKSAPIModel), false, false, nil)
 	if err != nil {
 		t.Errorf("unexpected error deserializing the example apimodel: %s", err)
 	}

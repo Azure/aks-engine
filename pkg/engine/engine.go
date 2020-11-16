@@ -884,11 +884,9 @@ func getKubernetesPodStartIndex(properties *api.Properties) int {
 func getMasterLinkedTemplateText(orchestratorType string, extensionProfile *api.ExtensionProfile, singleOrAll string) (string, error) {
 	extTargetVMNamePrefix := "variables('masterVMNamePrefix')"
 
-	loopCount := "[variables('masterCount')]"
-	loopOffset := ""
 	// Due to upgrade k8s sometimes needs to install just some of the nodes.
-	loopCount = "[sub(variables('masterCount'), variables('masterOffset'))]"
-	loopOffset = "variables('masterOffset')"
+	loopCount := "[sub(variables('masterCount'), variables('masterOffset'))]"
+	loopOffset := "variables('masterOffset')"
 
 	if strings.EqualFold(singleOrAll, "single") {
 		loopCount = "1"
