@@ -194,8 +194,8 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				o.OrchestratorRelease,
 				o.OrchestratorVersion,
 				isUpdate,
-				a.HasWindows(),
-				a.IsAzureStackCloud())
+				false,
+				false)
 			if version == "" {
 				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
 			}
@@ -1172,7 +1172,7 @@ func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 			o.OrchestratorRelease,
 			o.OrchestratorVersion,
 			isUpdate,
-			a.HasWindows(),
+			hasWindowsAgentPools,
 			a.IsAzureStackCloud())
 
 		if version == "" {
