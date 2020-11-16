@@ -80,6 +80,11 @@ type MockKubernetesClient struct {
 	FailListPods              bool
 	FailListNodes             bool
 	FailListServiceAccounts   bool
+	FailListDeployments       bool
+	FailListDaemonSets        bool
+	FailListSecretList        bool
+	FailPatchDeployment       bool
+	FailPatchDaemonSet        bool
 	FailGetNode               bool
 	UpdateNodeFunc            func(*v1.Node) (*v1.Node, error)
 	GetNodeFunc               func(name string) (*v1.Node, error)
@@ -88,6 +93,8 @@ type MockKubernetesClient struct {
 	FailDeleteServiceAccount  bool
 	FailSupportEviction       bool
 	FailDeletePod             bool
+	FailDeletePods            bool
+	FailDeleteSecret          bool
 	FailDeleteClusterRole     bool
 	FailDeleteDaemonSet       bool
 	FailDeleteDeployment      bool
@@ -96,6 +103,9 @@ type MockKubernetesClient struct {
 	ShouldSupportEviction     bool
 	PodsList                  *v1.PodList
 	ServiceAccountList        *v1.ServiceAccountList
+	DeploymentList            *appsv1.DeploymentList
+	DaemonSetList             *appsv1.DaemonSetList
+	SecretList                *v1.SecretList
 	FailGetDeploymentCount    int
 	FailUpdateDeploymentCount int
 }
@@ -287,21 +297,10 @@ func (page MockRoleAssignmentListResultPage) Values() []authorization.RoleAssign
 	return *page.Ralr.Value
 }
 
-//ListPods returns Pods running on the passed in node
-func (mkc *MockKubernetesClient) ListPods(node *v1.Node) (*v1.PodList, error) {
+// ListPods returns Pods based on the passed in list options.
+func (mkc *MockKubernetesClient) ListPods(namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
 	if mkc.FailListPods {
 		return nil, errors.New("ListPods failed")
-	}
-	if mkc.PodsList != nil {
-		return mkc.PodsList, nil
-	}
-	return &v1.PodList{}, nil
-}
-
-//ListAllPods returns all Pods running
-func (mkc *MockKubernetesClient) ListAllPods() (*v1.PodList, error) {
-	if mkc.FailListPods {
-		return nil, errors.New("ListAllPods failed")
 	}
 	if mkc.PodsList != nil {
 		return mkc.PodsList, nil
@@ -334,7 +333,7 @@ func (mkc *MockKubernetesClient) ListNodesByOptions(opts metav1.ListOptions) (*v
 }
 
 // ListServiceAccounts returns a list of Service Accounts in the provided namespace
-func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error) {
+func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string, opts metav1.ListOptions) (*v1.ServiceAccountList, error) {
 	if mkc.FailListServiceAccounts {
 		return nil, errors.New("ListServiceAccounts failed")
 	}
@@ -351,6 +350,55 @@ func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.Serv
 	saList.Items = append(saList.Items, *sa)
 	saList.Items = append(saList.Items, *sa2)
 	return saList, nil
+}
+
+// ListDeployments returns a list of deployments in the provided namespace.
+func (mkc *MockKubernetesClient) ListDeployments(namespace string, opts metav1.ListOptions) (*appsv1.DeploymentList, error) {
+	if mkc.FailListDeployments {
+		return nil, errors.New("ListDeployments failed")
+	}
+	if mkc.DeploymentList != nil {
+		return mkc.DeploymentList, nil
+	}
+	return &appsv1.DeploymentList{}, nil
+}
+
+// ListDaemonSets returns a list of daemonsets in the provided namespace.
+func (mkc *MockKubernetesClient) ListDaemonSets(namespace string, opts metav1.ListOptions) (*appsv1.DaemonSetList, error) {
+	if mkc.FailListDaemonSets {
+		return nil, errors.New("ListDaemonSets failed")
+	}
+	if mkc.DaemonSetList != nil {
+		return mkc.DaemonSetList, nil
+	}
+	return &appsv1.DaemonSetList{}, nil
+}
+
+// ListSecrets returns a list of secrets in the provided namespace.
+func (mkc *MockKubernetesClient) ListSecrets(namespace string, opts metav1.ListOptions) (*v1.SecretList, error) {
+	if mkc.FailListDaemonSets {
+		return nil, errors.New("ListSecrets failed")
+	}
+	if mkc.SecretList != nil {
+		return mkc.SecretList, nil
+	}
+	return &v1.SecretList{}, nil
+}
+
+// PatchDeployment applies a JSON patch to a deployment in the provided namespace.
+func (mkc *MockKubernetesClient) PatchDeployment(namespace, name, jsonPatch string) (*appsv1.Deployment, error) {
+	if mkc.FailPatchDeployment {
+		return nil, errors.New("PatchDeployment failed")
+	}
+	return &appsv1.Deployment{}, nil
+}
+
+// PatchDaemonSet applies a JSON patch to a daemonset in the provided namespace.
+func (mkc *MockKubernetesClient) PatchDaemonSet(namespace, name, jsonPatch string) (*appsv1.DaemonSet, error) {
+	if mkc.FailPatchDaemonSet {
+		return nil, errors.New("PatchDaemonSet failed")
+	}
+	return &appsv1.DaemonSet{}, nil
 }
 
 //GetNode returns details about node with passed in name
@@ -433,6 +481,22 @@ func (mkc *MockKubernetesClient) DeleteDeployment(pod *appsv1.Deployment) error 
 func (mkc *MockKubernetesClient) DeletePod(pod *v1.Pod) error {
 	if mkc.FailDeletePod {
 		return errors.New("DeletePod failed")
+	}
+	return nil
+}
+
+// DeletePods deletes all pods in a namespace that match the option filters.
+func (mkc *MockKubernetesClient) DeletePods(namespace string, opts metav1.ListOptions) error {
+	if mkc.FailDeletePods {
+		return errors.New("FailDeletePods failed")
+	}
+	return nil
+}
+
+// DeleteSecret deletes the passed in secret.
+func (mkc *MockKubernetesClient) DeleteSecret(sa *v1.Secret) error {
+	if mkc.FailDeleteSecret {
+		return errors.New("DeleteSecret failed")
 	}
 	return nil
 }

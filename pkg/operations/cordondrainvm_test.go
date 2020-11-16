@@ -132,7 +132,7 @@ var _ = Describe("Safely Drain node operation tests", func() {
 			},
 		}
 		mockClient.ShouldSupportEviction = true
-		o := drainOperation{client: mockClient}
+		o := drainOperation{client: mockClient, node: &v1.Node{}}
 		pods, err := o.getPodsForDeletion()
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(len(pods)).Should(Equal(2))

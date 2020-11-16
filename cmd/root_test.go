@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	. "github.com/onsi/gomega"
 )
 
@@ -580,4 +581,31 @@ func prepareCustomCloudProfile() (*api.ContainerService, error) {
 	}
 
 	return cs, nil
+}
+
+func TestWriteArtifacts(t *testing.T) {
+	t.Parallel()
+	g := NewGomegaWithT(t)
+
+	cs := api.CreateMockContainerService("testcluster", "1.16.14", 3, 2, false)
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	g.Expect(err).NotTo(HaveOccurred())
+
+	outdir, del := makeTmpDir(t)
+	defer del()
+
+	err = writeArtifacts(outdir, cs, "vlabs", &i18n.Translator{})
+	g.Expect(err).NotTo(HaveOccurred())
+}
+
+func makeTmpDir(t *testing.T) (string, func()) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "_tmp_dir")
+	if err != nil {
+		t.Fatalf("unable to create dir: %s", err.Error())
+	}
+	return tmpDir, func() { defer os.RemoveAll(tmpDir) }
 }

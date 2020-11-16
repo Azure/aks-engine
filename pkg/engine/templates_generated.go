@@ -68,6 +68,8 @@
 // ../../parts/k8s/cloud-init/artifacts/pam-d-su
 // ../../parts/k8s/cloud-init/artifacts/profile-d-cis.sh
 // ../../parts/k8s/cloud-init/artifacts/pwquality-CIS.conf
+// ../../parts/k8s/cloud-init/artifacts/rotate-certs.ps1
+// ../../parts/k8s/cloud-init/artifacts/rotate-certs.sh
 // ../../parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf
 // ../../parts/k8s/cloud-init/artifacts/setup-custom-search-domains.sh
 // ../../parts/k8s/cloud-init/artifacts/sshd_config
@@ -14294,6 +14296,242 @@ func k8sCloudInitArtifactsPwqualityCisConf() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsRotateCertsPs1 = []byte(`<#
+.DESCRIPTION
+    This script rotates a windows node certificates.
+    It assumes that client.key, client.crt and ca.crt will be dropped in $env:temp.
+#>
+
+. c:\AzureData\k8s\windowskubeletfunc.ps1
+. c:\AzureData\k8s\kuberneteswindowsfunctions.ps1
+
+$global:KubeDir = "c:\k"
+
+$global:AgentKeyPath = [io.path]::Combine($env:temp, "client.key")
+$global:AgentCertificatePath = [io.path]::Combine($env:temp, "client.crt")
+$global:CACertificatePath = [io.path]::Combine($env:temp, "ca.crt")
+
+function Prereqs {
+    Assert-FileExists $global:AgentKeyPath
+    Assert-FileExists $global:AgentCertificatePath
+    Assert-FileExists $global:CACertificatePath
+}
+
+function Backup {
+    cp "c:\k\config" "c:\k\config.bak"
+    cp "c:\k\ca.crt" "c:\k\ca.crt.bak"
+}
+
+function Update-CACertificate {
+    Write-Log "Write ca root"
+    Write-CACert -CACertificate $global:CACertificate -KubeDir $global:KubeDir
+}
+
+function Update-KubeConfig {
+    Write-Log "Write kube config"
+    $ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string) 
+    $MasterIP = $ClusterConfiguration.Kubernetes.ControlPlane.IpAddress
+
+    $CloudProviderConfig = ConvertFrom-Json ((Get-Content "c:\k\azure.json" -ErrorAction Stop) | out-string) 
+    $MasterFQDNPrefix = $CloudProviderConfig.ResourceGroup
+
+    $AgentKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $AgentKeyPath)))
+    $AgentCertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $AgentCertificatePath)))
+
+    Write-KubeConfig -CACertificate $global:CACertificate ` + "`" + `
+        -KubeDir $global:KubeDir ` + "`" + `
+        -MasterFQDNPrefix $MasterFQDNPrefix ` + "`" + `
+        -MasterIP $MasterIP ` + "`" + `
+        -AgentKey $AgentKey ` + "`" + `
+        -AgentCertificate $AgentCertificate
+}
+
+function Force-Kubelet-CertRotation {
+    Remove-Item "/var/lib/kubelet/pki/kubelet-client-current.pem" -Force -ErrorAction Ignore
+    Remove-Item "/var/lib/kubelet/pki/kubelet.crt" -Force -ErrorAction Ignore
+    Remove-Item "/var/lib/kubelet/pki/kubelet.key" -Force -ErrorAction Ignore
+
+    $err = Retry-Command -Command "c:\k\windowsnodereset.ps1" -Args @{Foo="Bar"} -Retries 1 -RetryDelaySeconds 10
+    if(!$err) {
+        Write-Error 'Error reseting Windows node'
+        throw $_
+    }
+}
+
+try
+{
+    $global:CACertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $CACertificatePath)))
+
+    Prereqs
+    Backup
+    Update-CACertificate
+    Update-KubeConfig
+    Force-Kubelet-CertRotation
+}
+catch
+{
+    Write-Error $_
+    throw $_
+}
+`)
+
+func k8sCloudInitArtifactsRotateCertsPs1Bytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsRotateCertsPs1, nil
+}
+
+func k8sCloudInitArtifactsRotateCertsPs1() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsRotateCertsPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/rotate-certs.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsRotateCertsSh = []byte(`#!/bin/bash -ex
+
+export WD=/tmp/akse
+export NEW_CERTS_DIR=${WD}/certs
+export STEPS_DIR=${WD}/steps
+export SKIP_EXIT_CODE=25
+
+mkdir -p ${STEPS_DIR}
+
+# copied from cse_helpers.sh, sourcing that file not always works
+systemctl_restart() {
+  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
+  for i in $(seq 1 $retries); do
+    timeout $timeout systemctl daemon-reload
+    timeout $timeout systemctl restart $svcname && break ||
+      if [ $i -eq $retries ]; then
+        return 1
+      else
+        sleep $wait_sleep
+      fi
+  done
+}
+
+backup() {
+  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
+
+  cp -rp /etc/kubernetes/certs/ /etc/kubernetes/certs.bak
+
+  if [[ -f /etc/default/etcd ]]; then
+    cp -p /etc/environment ${WD}
+    cp -p /etc/default/etcd ${WD}
+    cp -p /etc/kubernetes/manifests/kube-apiserver.yaml ${WD}
+    cp -p /etc/kubernetes/manifests/kube-controller-manager.yaml ${WD}
+    cat /etc/kubernetes/certs/ca.crt ${NEW_CERTS_DIR}/ca.crt > ${NEW_CERTS_DIR}/cabundle.crt
+    chmod 644 ${NEW_CERTS_DIR}/cabundle.crt
+  fi
+  
+  touch ${STEPS_DIR}/${FUNCNAME[0]}
+}
+
+etcd_cabundle() {
+  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
+
+  cp -p ${NEW_CERTS_DIR}/cabundle.crt /etc/kubernetes/certs/
+  sed -i 's|"--etcd-cafile=/etc/kubernetes/certs/ca.crt"|"--etcd-cafile=/etc/kubernetes/certs/cabundle.crt"|g' /etc/kubernetes/manifests/kube-apiserver.yaml
+  sed -i 's|/etc/kubernetes/certs/ca.crt|/etc/kubernetes/certs/cabundle.crt|g' /etc/default/etcd
+  systemctl_restart 10 5 10 etcd
+
+  touch ${STEPS_DIR}/${FUNCNAME[0]}
+}
+
+etcd_certs() {
+  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
+
+  cp -p ${NEW_CERTS_DIR}/etcdpeer* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/etcdclient* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/etcdserver* /etc/kubernetes/certs/
+  systemctl_restart 10 5 10 etcd
+
+  touch ${STEPS_DIR}/${FUNCNAME[0]}
+}
+
+etcd_ca() {
+  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
+
+  cp -p ${NEW_CERTS_DIR}/ca.crt /etc/kubernetes/certs/etcdca.crt
+
+  sed -i 's|"--etcd-cafile=/etc/kubernetes/certs/cabundle.crt"|"--etcd-cafile=/etc/kubernetes/certs/etcdca.crt"|g' /etc/kubernetes/manifests/kube-apiserver.yaml
+  sed -i 's|/etc/kubernetes/certs/cabundle.crt|/etc/kubernetes/certs/etcdca.crt|g' /etc/default/etcd
+  systemctl_restart 10 5 10 etcd
+
+  sed -i 's|ETCDCTL_CA_FILE=/etc/kubernetes/certs/ca.crt|ETCDCTL_CA_FILE=/etc/kubernetes/certs/etcdca.crt|g' /etc/environment
+  source /etc/environment
+  /etc/kubernetes/generate-proxy-certs.sh
+
+  touch ${STEPS_DIR}/${FUNCNAME[0]}
+}
+
+sa_token_signer() {
+  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
+
+  cp -p ${NEW_CERTS_DIR}/cabundle.crt /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/apiserver.key /etc/kubernetes/certs/sa.key
+
+  sed -i 's|"--service-account-key-file=/etc/kubernetes/certs/apiserver.key"|"--service-account-key-file=/etc/kubernetes/certs/sa.key"|g' /etc/kubernetes/manifests/kube-apiserver.yaml
+  sed -i 's|"--root-ca-file=/etc/kubernetes/certs/ca.crt"|"--root-ca-file=/etc/kubernetes/certs/cabundle.crt"|g' /etc/kubernetes/manifests/kube-controller-manager.yaml
+  sed -i 's|"--service-account-private-key-file=/etc/kubernetes/certs/apiserver.key"|"--service-account-private-key-file=/etc/kubernetes/certs/sa.key"|g' /etc/kubernetes/manifests/kube-controller-manager.yaml
+
+  touch ${STEPS_DIR}/${FUNCNAME[0]}
+}
+
+apiserver_kubelet() {
+  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
+
+  cp -p ${NEW_CERTS_DIR}/ca.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/client.* /etc/kubernetes/certs/
+
+  if [[ -f /etc/default/etcd ]]; then
+      cp -p ${NEW_CERTS_DIR}/kubeconfig ~/.kube/config
+      cp -p ${NEW_CERTS_DIR}/apiserver.* /etc/kubernetes/certs/
+      cp -p ${WD}/kube-apiserver.yaml /etc/kubernetes/manifests/kube-apiserver.yaml
+      cp -p ${WD}/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml
+  fi
+
+  rm -f /var/lib/kubelet/pki/kubelet-client-current.pem
+  systemctl_restart 10 5 10 kubelet
+
+  if [[ -f /etc/default/etcd ]]; then
+      cp -p ${WD}/etcd /etc/default/etcd
+      cp -p ${WD}/environment /etc/environment
+      systemctl_restart 10 5 10 etcd
+  fi
+
+  touch ${STEPS_DIR}/${FUNCNAME[0]}
+}
+
+cleanup() {
+  rm -rf ${WD}
+  rm -f /etc/kubernetes/certs/sa.*
+  rm -f /etc/kubernetes/certs/etcdca.*
+  rm -f /etc/kubernetes/certs/cabundle.*
+  rm -rf /etc/kubernetes/certs.bak
+}
+
+"$@"
+`)
+
+func k8sCloudInitArtifactsRotateCertsShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsRotateCertsSh, nil
+}
+
+func k8sCloudInitArtifactsRotateCertsSh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsRotateCertsShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/rotate-certs.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsRsyslogD60CisConf = []byte(`# 4.2.1.2 Ensure logging is configured (Not Scored)
 *.emerg                            :omusrmsg:*
 mail.*                             -/var/log/mail
@@ -19534,6 +19772,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/pam-d-su":                                  k8sCloudInitArtifactsPamDSu,
 	"k8s/cloud-init/artifacts/profile-d-cis.sh":                          k8sCloudInitArtifactsProfileDCisSh,
 	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                        k8sCloudInitArtifactsPwqualityCisConf,
+	"k8s/cloud-init/artifacts/rotate-certs.ps1":                          k8sCloudInitArtifactsRotateCertsPs1,
+	"k8s/cloud-init/artifacts/rotate-certs.sh":                           k8sCloudInitArtifactsRotateCertsSh,
 	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                     k8sCloudInitArtifactsRsyslogD60CisConf,
 	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":            k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
 	"k8s/cloud-init/artifacts/sshd_config":                               k8sCloudInitArtifactsSshd_config,
@@ -19684,6 +19924,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"pam-d-su":                                  {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},
 				"profile-d-cis.sh":                          {k8sCloudInitArtifactsProfileDCisSh, map[string]*bintree{}},
 				"pwquality-CIS.conf":                        {k8sCloudInitArtifactsPwqualityCisConf, map[string]*bintree{}},
+				"rotate-certs.ps1":                          {k8sCloudInitArtifactsRotateCertsPs1, map[string]*bintree{}},
+				"rotate-certs.sh":                           {k8sCloudInitArtifactsRotateCertsSh, map[string]*bintree{}},
 				"rsyslog-d-60-CIS.conf":                     {k8sCloudInitArtifactsRsyslogD60CisConf, map[string]*bintree{}},
 				"setup-custom-search-domains.sh":            {k8sCloudInitArtifactsSetupCustomSearchDomainsSh, map[string]*bintree{}},
 				"sshd_config":                               {k8sCloudInitArtifactsSshd_config, map[string]*bintree{}},

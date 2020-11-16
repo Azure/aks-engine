@@ -164,3 +164,24 @@ func (a *Apiloader) LoadAgentPoolProfile(contents []byte) (*AgentPoolProfile, er
 	}
 	return agentPoolProfile, nil
 }
+
+// LoadCertificateProfileFromFile loads an CertificateProfile object from a JSON file
+func (a *Apiloader) LoadCertificateProfileFromFile(jsonFile string) (*CertificateProfile, error) {
+	contents, e := ioutil.ReadFile(jsonFile)
+	if e != nil {
+		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, e.Error())
+	}
+	return a.LoadCertificateProfile(contents)
+}
+
+// LoadCertificateProfile marshalls raw data into a strongly typed AgentPoolProfile return object
+func (a *Apiloader) LoadCertificateProfile(contents []byte) (*CertificateProfile, error) {
+	certificateProfile := &CertificateProfile{}
+	if e := json.Unmarshal(contents, &certificateProfile); e != nil {
+		return nil, e
+	}
+	if e := checkJSONKeys(contents, reflect.TypeOf(*certificateProfile), reflect.TypeOf(TypeMeta{})); e != nil {
+		return nil, e
+	}
+	return certificateProfile, nil
+}

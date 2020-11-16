@@ -5,6 +5,7 @@ package operations
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -135,7 +136,8 @@ func daemonSetPodFilter(pod v1.Pod) bool {
 // getPodsForDeletion returns all the pods we're going to delete.  If there are
 // any pods preventing us from deleting, we return that list in an error.
 func (o *drainOperation) getPodsForDeletion() (pods []v1.Pod, err error) {
-	podList, err := o.client.ListPods(o.node)
+	podList, err := o.client.ListPods(metav1.NamespaceAll, metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("spec.nodeName=%s", o.node.Name)})
 	if err != nil {
 		return pods, err
 	}

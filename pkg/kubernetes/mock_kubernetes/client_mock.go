@@ -41,33 +41,18 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // ListPods mocks base method
-func (m *MockClient) ListPods(node *v10.Node) (*v10.PodList, error) {
+func (m *MockClient) ListPods(namespace string, opts v12.ListOptions) (*v10.PodList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListPods", node)
+	ret := m.ctrl.Call(m, "ListPods", namespace, opts)
 	ret0, _ := ret[0].(*v10.PodList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListPods indicates an expected call of ListPods
-func (mr *MockClientMockRecorder) ListPods(node interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) ListPods(namespace, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPods", reflect.TypeOf((*MockClient)(nil).ListPods), node)
-}
-
-// ListAllPods mocks base method
-func (m *MockClient) ListAllPods() (*v10.PodList, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAllPods")
-	ret0, _ := ret[0].(*v10.PodList)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListAllPods indicates an expected call of ListAllPods
-func (mr *MockClientMockRecorder) ListAllPods() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllPods", reflect.TypeOf((*MockClient)(nil).ListAllPods))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPods", reflect.TypeOf((*MockClient)(nil).ListPods), namespace, opts)
 }
 
 // ListNodes mocks base method
@@ -101,18 +86,93 @@ func (mr *MockClientMockRecorder) ListNodesByOptions(opts interface{}) *gomock.C
 }
 
 // ListServiceAccounts mocks base method
-func (m *MockClient) ListServiceAccounts(namespace string) (*v10.ServiceAccountList, error) {
+func (m *MockClient) ListServiceAccounts(namespace string, opts v12.ListOptions) (*v10.ServiceAccountList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListServiceAccounts", namespace)
+	ret := m.ctrl.Call(m, "ListServiceAccounts", namespace, opts)
 	ret0, _ := ret[0].(*v10.ServiceAccountList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListServiceAccounts indicates an expected call of ListServiceAccounts
-func (mr *MockClientMockRecorder) ListServiceAccounts(namespace interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) ListServiceAccounts(namespace, opts interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServiceAccounts", reflect.TypeOf((*MockClient)(nil).ListServiceAccounts), namespace)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServiceAccounts", reflect.TypeOf((*MockClient)(nil).ListServiceAccounts), namespace, opts)
+}
+
+// ListDeployments mocks base method
+func (m *MockClient) ListDeployments(namespace string, opts v12.ListOptions) (*v1.DeploymentList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDeployments", namespace, opts)
+	ret0, _ := ret[0].(*v1.DeploymentList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDeployments indicates an expected call of ListDeployments
+func (mr *MockClientMockRecorder) ListDeployments(namespace, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeployments", reflect.TypeOf((*MockClient)(nil).ListDeployments), namespace, opts)
+}
+
+// ListDaemonSets mocks base method
+func (m *MockClient) ListDaemonSets(namespace string, opts v12.ListOptions) (*v1.DaemonSetList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDaemonSets", namespace, opts)
+	ret0, _ := ret[0].(*v1.DaemonSetList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDaemonSets indicates an expected call of ListDaemonSets
+func (mr *MockClientMockRecorder) ListDaemonSets(namespace, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDaemonSets", reflect.TypeOf((*MockClient)(nil).ListDaemonSets), namespace, opts)
+}
+
+// ListSecrets mocks base method
+func (m *MockClient) ListSecrets(namespace string, opts v12.ListOptions) (*v10.SecretList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSecrets", namespace, opts)
+	ret0, _ := ret[0].(*v10.SecretList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSecrets indicates an expected call of ListSecrets
+func (mr *MockClientMockRecorder) ListSecrets(namespace, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSecrets", reflect.TypeOf((*MockClient)(nil).ListSecrets), namespace, opts)
+}
+
+// PatchDeployment mocks base method
+func (m *MockClient) PatchDeployment(namespace, name, jsonPatch string) (*v1.Deployment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PatchDeployment", namespace, name, jsonPatch)
+	ret0, _ := ret[0].(*v1.Deployment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PatchDeployment indicates an expected call of PatchDeployment
+func (mr *MockClientMockRecorder) PatchDeployment(namespace, name, jsonPatch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchDeployment", reflect.TypeOf((*MockClient)(nil).PatchDeployment), namespace, name, jsonPatch)
+}
+
+// PatchDaemonSet mocks base method
+func (m *MockClient) PatchDaemonSet(namespace, name, jsonPatch string) (*v1.DaemonSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PatchDaemonSet", namespace, name, jsonPatch)
+	ret0, _ := ret[0].(*v1.DaemonSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PatchDaemonSet indicates an expected call of PatchDaemonSet
+func (mr *MockClientMockRecorder) PatchDaemonSet(namespace, name, jsonPatch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchDaemonSet", reflect.TypeOf((*MockClient)(nil).PatchDaemonSet), namespace, name, jsonPatch)
 }
 
 // GetDaemonSet mocks base method
@@ -258,6 +318,34 @@ func (m *MockClient) DeletePod(pod *v10.Pod) error {
 func (mr *MockClientMockRecorder) DeletePod(pod interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePod", reflect.TypeOf((*MockClient)(nil).DeletePod), pod)
+}
+
+// DeletePods mocks base method
+func (m *MockClient) DeletePods(namespace string, opts v12.ListOptions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePods", namespace, opts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePods indicates an expected call of DeletePods
+func (mr *MockClientMockRecorder) DeletePods(namespace, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePods", reflect.TypeOf((*MockClient)(nil).DeletePods), namespace, opts)
+}
+
+// DeleteSecret mocks base method
+func (m *MockClient) DeleteSecret(secret *v10.Secret) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSecret", secret)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSecret indicates an expected call of DeleteSecret
+func (mr *MockClientMockRecorder) DeleteSecret(secret interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSecret", reflect.TypeOf((*MockClient)(nil).DeleteSecret), secret)
 }
 
 // DeleteServiceAccount mocks base method

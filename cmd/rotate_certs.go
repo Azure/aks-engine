@@ -4,513 +4,868 @@
 package cmd
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"strconv"
+	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/leonelquinteros/gotext"
+	"github.com/Azure/aks-engine/cmd/rotatecerts"
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/helpers/ssh"
+	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh"
-	v1 "k8s.io/api/core/v1"
-
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/engine"
-	"github.com/Azure/aks-engine/pkg/engine/transform"
-	"github.com/Azure/aks-engine/pkg/helpers"
-	"github.com/Azure/aks-engine/pkg/i18n"
-	"github.com/Azure/aks-engine/pkg/kubernetes"
+	sshx "golang.org/x/crypto/ssh"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	rotateCertsName             = "rotate-certs"
 	rotateCertsShortDescription = "(experimental) Rotate certificates on an existing AKS Engine-created Kubernetes cluster"
 	rotateCertsLongDescription  = "(experimental) Rotate CA, etcd, kubelet, kubeconfig and apiserver certificates in a cluster built with AKS Engine. Rotating certificates can break component connectivity and leave the cluster in an unrecoverable state. Before performing any of these instructions on a live cluster, it is preferrable to backup your cluster state and migrate critical workloads to another cluster."
-	kubeSystemNamespace         = "kube-system"
+)
+
+const (
+	rootUserGroup     = "root:root"
+	etcdUserGroup     = "etcd:etcd"
+	keyPermissions    = "600"
+	crtPermissions    = "644"
+	configPermissions = "600"
+
+	kubeAPIServer         = "kube-apiserver"
+	kubeAddonManager      = "kube-addon-manager"
+	kubeControllerManager = "kube-controller-manager"
+	kubeScheduler         = "kube-scheduler"
+
+	kubeProxyLabels     = "component=kube-proxy,k8s-app=kube-proxy,tier=node"
+	kubeSchedulerLabels = "component=kube-scheduler,tier=control-plane"
+
+	rotateCertsDefaultInterval = 10 * time.Second
+	rotateCertsDefaultTimeout  = 10 * time.Minute
 )
 
 type rotateCertsCmd struct {
-	authProvider
-
 	// user input
-	resourceGroupName string
-	sshFilepath       string
-	masterFQDN        string
-	location          string
-	apiModelPath      string
-	outputDirectory   string
-
-	// derived
-	containerService   *api.ContainerService
-	apiVersion         string
-	locale             *gotext.Locale
-	client             armhelpers.AKSEngineClient
-	masterNodes        []v1.Node
-	agentNodes         []v1.Node
-	sshConfig          *ssh.ClientConfig
-	sshCommandExecuter func(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error)
+	location               string
+	apiModelPath           string
+	newCertsPath           string
+	sshHostURI             string
+	linuxSSHPrivateKeyPath string
+	outputDirectory        string
+	continueAfterError     bool
+	generateCerts          bool
+	abort                  bool
+	// computed
+	backupDirectory   string
+	apiVersion        string
+	cs                *api.ContainerService
+	loader            *api.Apiloader
+	newCertsProfile   *api.CertificateProfile
+	kubeClient        rotatecerts.Client
+	namespaces        []string
+	nodes             []*ssh.RemoteHost
+	linuxAuthConfig   *ssh.AuthConfig
+	windowsAuthConfig *ssh.AuthConfig
+	jumpbox           *ssh.JumpBox
 }
 
 func newRotateCertsCmd() *cobra.Command {
-	rcc := rotateCertsCmd{
-		authProvider:       &authArgs{},
-		sshCommandExecuter: executeCmd,
-	}
-
+	rcc := rotateCertsCmd{}
 	command := &cobra.Command{
 		Use:   rotateCertsName,
 		Short: rotateCertsShortDescription,
 		Long:  rotateCertsLongDescription,
-		RunE:  rcc.run,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := rcc.validateArgs(); err != nil {
+				return errors.Wrap(err, "validating rotate-certs args")
+			}
+			if err := rcc.loadAPIModel(); err != nil {
+				return errors.Wrap(err, "loading API model")
+			}
+			if err := rcc.init(); err != nil {
+				return errors.Wrap(err, "loading API model")
+			}
+			cmd.SilenceUsage = true
+			return rcc.run()
+		},
 	}
+	command.Flags().StringVarP(&rcc.location, "location", "l", "", "Azure location where the cluster is deployed")
+	command.Flags().StringVarP(&rcc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
+	command.Flags().StringVar(&rcc.sshHostURI, "ssh-host", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster")
+	command.Flags().StringVar(&rcc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes")
+	_ = command.MarkFlagRequired("location")
+	_ = command.MarkFlagRequired("api-model")
+	_ = command.MarkFlagRequired("ssh-host")
+	_ = command.MarkFlagRequired("linux-ssh-private-key")
 
-	f := command.Flags()
-	f.StringVarP(&rcc.location, "location", "l", "", "location the cluster is deployed in (required)")
-	f.StringVarP(&rcc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed (required)")
-	f.StringVarP(&rcc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
-	f.StringVarP(&rcc.sshFilepath, "ssh", "", "", "the filepath of a valid private ssh key to access the cluster's nodes (required)")
-	f.StringVar(&rcc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer")
-	f.StringVar(&rcc.masterFQDN, "apiserver", "", "apiserver endpoint (required)")
-	f.StringVarP(&rcc.outputDirectory, "output-directory", "o", "", "output directory where generated TLS artifacts will be saved (derived from DNS prefix if absent)")
-
-	_ = f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
-
-	addAuthFlags(rcc.getAuthArgs(), f)
-
+	command.Flags().StringVarP(&rcc.newCertsPath, "certificate-profile", "", "", "path to a JSON file containing the new set of certificates")
+	command.Flags().BoolVarP(&rcc.generateCerts, "generate-new-certificates", "", false, "generate a new set of certificates, required if a --certificate-profile is not provided")
+	command.Flags().BoolVarP(&rcc.continueAfterError, "continue", "", false, "resume a previous execution that did not complete successfully")
+	command.Flags().BoolVarP(&rcc.abort, "abort", "", false, "only clean temporary artifacts from the cluster nodes")
 	return command
 }
 
-func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
-
-	log.Debugf("Start rotating certs")
-
-	var err error
-
-	if err = rcc.getAuthArgs().validateAuthArgs(); err != nil {
-		return errors.Wrap(err, "failed to get validate auth args")
-	}
-
-	if rcc.client, err = rcc.authProvider.getClient(); err != nil {
-		return errors.Wrap(err, "failed to get client")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
-	defer cancel()
-	_, err = rcc.client.EnsureResourceGroup(ctx, rcc.resourceGroupName, rcc.location, nil)
-	if err != nil {
-		return errors.Wrap(err, "ensuring resource group")
-	}
-
-	// load the cluster configuration.
-	if _, err = os.Stat(rcc.apiModelPath); os.IsNotExist(err) {
-		return errors.Errorf("specified api model does not exist (%s)", rcc.apiModelPath)
-	}
-
-	rcc.locale, err = i18n.LoadTranslations()
+func (rcc *rotateCertsCmd) validateArgs() (err error) {
+	locale, err := i18n.LoadTranslations()
 	if err != nil {
 		return errors.Wrap(err, "loading translation files")
 	}
-
-	log.Debugf("Loading container service")
-
-	apiloader := &api.Apiloader{
+	rcc.loader = &api.Apiloader{
 		Translator: &i18n.Translator{
-			Locale: rcc.locale,
+			Locale: locale,
 		},
 	}
-	rcc.containerService, rcc.apiVersion, err = apiloader.LoadContainerServiceFromFile(rcc.apiModelPath, true, true, nil)
-	if err != nil {
-		return errors.Wrap(err, "parsing the api model")
+	rcc.location = helpers.NormalizeAzureRegion(rcc.location)
+	if rcc.location == "" {
+		return errors.New("--location must be specified")
+	}
+	if rcc.sshHostURI == "" {
+		return errors.New("--ssh-host must be specified")
+	}
+	if rcc.linuxSSHPrivateKeyPath == "" {
+		return errors.New("--linux-ssh-private-key must be specified")
+	} else if _, err = os.Stat(rcc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
+		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", rcc.linuxSSHPrivateKeyPath)
+	}
+	if rcc.apiModelPath == "" {
+		return errors.New("--api-model must be specified")
+	} else if _, err = os.Stat(rcc.apiModelPath); os.IsNotExist(err) {
+		return errors.Errorf("specified --api-model does not exist (%s)", rcc.apiModelPath)
 	}
 
-	if rcc.outputDirectory == "" {
-		if rcc.containerService.Properties.MasterProfile != nil {
-			rcc.outputDirectory = path.Join("_output", rcc.containerService.Properties.MasterProfile.DNSPrefix)
-		} else {
-			return errors.New("can't determine output directory from nil MasterProfile")
+	if rcc.newCertsPath != "" {
+		if _, err = os.Stat(rcc.newCertsPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --certificate-profile does not exist (%s)", rcc.newCertsPath)
 		}
 	}
+	if rcc.newCertsPath == "" && !rcc.generateCerts {
+		return errors.New("either --generate-new-certificates or --certificate-profile should be specified")
+	}
+	if rcc.newCertsPath != "" && rcc.generateCerts {
+		rcc.generateCerts = false
+		log.Infof("ignoring --generate-new-certificates as --certificate-profile is specified")
+	}
+	if rcc.outputDirectory == "" {
+		rcc.outputDirectory = path.Join(filepath.Dir(rcc.apiModelPath), "_rotate_certs_output")
+		if err = os.MkdirAll(rcc.outputDirectory, 0755); err != nil {
+			return errors.Errorf("error creating output directory (%s)", rcc.outputDirectory)
+		}
+	}
+	fs, err := ioutil.ReadDir(rcc.outputDirectory)
+	if err != nil {
+		return errors.Wrapf(err, "reading output directory %s", rcc.outputDirectory)
+	}
+	if len(fs) > 0 && !rcc.continueAfterError {
+		return errors.Errorf("output directory %s is not empty, this indicates that a previous rotate-certs execution did not complete successfully, set --continue to resume the process", rcc.outputDirectory)
+	}
+	if len(fs) == 0 && rcc.continueAfterError {
+		return errors.Errorf("output directory %s is empty, --continue should be unset", rcc.outputDirectory)
+	}
+	return nil
+}
 
-	log.Debugf("Getting cluster nodes")
+func (rcc *rotateCertsCmd) loadAPIModel() (err error) {
+	if rcc.cs, rcc.apiVersion, err = rcc.loader.LoadContainerServiceFromFile(rcc.apiModelPath, false, false, nil); err != nil {
+		return errors.Wrap(err, "error parsing api-model")
+	}
+	if rcc.newCertsPath != "" {
+		// TODO validate certificates metadata
+		if rcc.newCertsProfile, err = rcc.loader.LoadCertificateProfileFromFile(rcc.newCertsPath); err != nil {
+			return errors.Wrap(err, "error parsing certificate-profile")
+		}
+	}
+	if rcc.cs.Location == "" {
+		rcc.cs.Location = rcc.location
+	} else if rcc.cs.Location != rcc.location {
+		return errors.New("--location flag does not match api-model location")
+	}
+	if rcc.cs.Properties.WindowsProfile != nil && !rcc.cs.Properties.WindowsProfile.GetSSHEnabled() {
+		return errors.New("SSH not enabled on Windows nodes. SSH is required in order to rotate agent nodes certificates")
+	}
 
-	err = rcc.getClusterNodes()
+	return
+}
+
+func (rcc *rotateCertsCmd) init() (err error) {
+	rcc.namespaces = rcc.getNamespacesWithSATokensToRotate()
+	rcc.backupDirectory = path.Join(filepath.Dir(rcc.apiModelPath), "_rotate_certs_backup")
+
+	rcc.linuxAuthConfig = &ssh.AuthConfig{
+		User:           rcc.cs.Properties.LinuxProfile.AdminUsername,
+		PrivateKeyPath: rcc.linuxSSHPrivateKeyPath,
+	}
+	if rcc.cs.Properties.WindowsProfile != nil {
+		rcc.windowsAuthConfig = &ssh.AuthConfig{
+			User:     rcc.cs.Properties.WindowsProfile.AdminUsername,
+			Password: rcc.cs.Properties.WindowsProfile.AdminPassword,
+		}
+	}
+	rcc.jumpbox = &ssh.JumpBox{URI: rcc.sshHostURI, Port: 22, OperatingSystem: api.Linux, AuthConfig: rcc.linuxAuthConfig}
+	return
+}
+
+func (rcc *rotateCertsCmd) run() (err error) {
+	err = rcc.backupCerts()
+	if err != nil {
+		return errors.Wrap(err, "backing up current state")
+	}
+	err = rcc.updateCertificateProfile()
+	if err != nil {
+		return errors.Wrap(err, "backing up current state")
+	}
+	rcc.kubeClient, err = rcc.getKubeClient()
+	if err != nil {
+		return errors.Wrap(err, "creating Kubernetes client")
+	}
+	rcc.nodes, err = rcc.getClusterNodes(rcc.kubeClient)
 	if err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
 
-	log.Infoln("Generating new certificates")
-
-	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
-	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
-	certsGenerated, _, err := rcc.containerService.SetDefaultCerts(api.DefaultCertParams{
-		PkiKeySize: helpers.DefaultPkiKeySize,
-	})
-	if !certsGenerated || err != nil {
-		return errors.Wrap(err, "generating new certificates")
+	if rcc.abort {
+		err = rcc.cleanupRemote()
+		if err != nil {
+			return errors.Wrapf(err, "aborting previous %s execution", rotateCertsName)
+		}
+		log.Infoln("Abort completed")
+		return nil
 	}
 
-	if _, err = os.Stat(rcc.sshFilepath); os.IsNotExist(err) {
-		return errors.Errorf("specified ssh filepath does not exist (%s)", rcc.sshFilepath)
-	}
-	rcc.setSSHConfig()
-
-	log.Infoln("Rotating apiserver certificate")
-
-	err = rcc.rotateApiserver()
+	// TODO avoid re-uploads
+	err = rcc.distributeCerts()
 	if err != nil {
-		return errors.Wrap(err, "rotating apiserver")
+		return errors.Wrap(err, "distributing certificates")
 	}
-
-	log.Infoln("Rotating kubelet certificate")
-
-	err = rcc.rotateKubelet()
+	err = rcc.distributeScripts()
 	if err != nil {
-		return errors.Wrap(err, "rotating kubelet")
+		return errors.Wrap(err, "distributing scripts")
 	}
 
-	log.Infoln("Rotating etcd certificates")
+	// ctx := context.Background()
+	// defer ctx.Done()
+	// go logDowntime(ctx, rcc)
 
-	err = rcc.rotateEtcd(ctx)
+	err = rcc.rotateCerts()
 	if err != nil {
-		return errors.Wrap(err, "rotating etcd cluster")
+		return errors.Wrap(err, "rotating certificates")
 	}
-
-	log.Infoln("Updating kubeconfig")
-	err = rcc.updateKubeconfig()
+	err = rcc.updateAPIModel()
 	if err != nil {
-		return errors.Wrap(err, "updating kubeconfig")
+		return errors.Wrap(err, "rotating certificates")
 	}
 
-	log.Debugf("Deleting Service Accoutns")
-	err = rcc.deleteServiceAccounts()
-	if err != nil {
-		return errors.Wrap(err, "deleting service accounts")
-	}
+	log.Infoln("Certificate rotation completed")
+	return nil
+}
 
-	log.Debugf("Deleting all pods")
-	err = rcc.deleteAllPods()
-	if err != nil {
-		return errors.Wrap(err, "deleting all the pods")
-	}
-
-	err = rcc.writeArtifacts()
+func (rcc *rotateCertsCmd) backupCerts() error {
+	log.Infof("Backing up artifacts to directory %s", rcc.backupDirectory)
+	err := writeArtifacts(rcc.backupDirectory, rcc.cs, rcc.apiVersion, rcc.loader.Translator)
 	if err != nil {
 		return errors.Wrap(err, "writing artifacts")
 	}
-
-	log.Infoln("Successfully rotated etcd and cluster certificates.")
-
 	return nil
 }
 
-func (rcc *rotateCertsCmd) writeArtifacts() error {
-	ctx := engine.Context{
-		Translator: &i18n.Translator{
-			Locale: rcc.locale,
-		},
+func (rcc *rotateCertsCmd) updateCertificateProfile() error {
+	if rcc.continueAfterError {
+		err := rcc.loadCertificateProfile(rcc.outputDirectory)
+		if err != nil {
+			return errors.Wrap(err, "loading artifacts")
+		}
+	} else {
+		if rcc.generateCerts {
+			err := rcc.generateTLSArtifacts()
+			if err != nil {
+				return errors.Wrap(err, "generating artifacts")
+			}
+		} else if rcc.newCertsPath != "" {
+			rcc.cs.Properties.CertificateProfile = rcc.newCertsProfile
+		}
+		log.Infof("Writing artifacts to output directory %s", rcc.outputDirectory)
+		err := writeArtifacts(rcc.outputDirectory, rcc.cs, rcc.apiVersion, rcc.loader.Translator)
+		if err != nil {
+			return errors.Wrap(err, "writing artifacts")
+		}
 	}
-	templateGenerator, err := engine.InitializeTemplateGenerator(ctx)
-	if err != nil {
-		return errors.Wrap(err, "initializing template generator")
-	}
-	template, parameters, err := templateGenerator.GenerateTemplateV2(rcc.containerService, engine.DefaultGeneratorCode, BuildTag)
-	if err != nil {
-		return errors.Wrapf(err, "generating template %s", rcc.apiModelPath)
-	}
-
-	if template, err = transform.PrettyPrintArmTemplate(template); err != nil {
-		return errors.Wrap(err, "pretty-printing template")
-	}
-	if parameters, err = transform.BuildAzureParametersFile(parameters); err != nil {
-		return errors.Wrap(err, "pretty-printing template parameters")
-	}
-
-	writer := &engine.ArtifactWriter{
-		Translator: &i18n.Translator{
-			Locale: rcc.locale,
-		},
-	}
-	return writer.WriteTLSArtifacts(rcc.containerService, rcc.apiVersion, template, parameters, rcc.outputDirectory, true, false)
+	return nil
 }
 
-func (rcc *rotateCertsCmd) getClusterNodes() error {
-	kubeClient, err := rcc.getKubeClient()
+func (rcc *rotateCertsCmd) loadCertificateProfile(dir string) error {
+	log.Infof("Loading certificates from output directory: %s", dir)
+	path := path.Join(dir, "apimodel.json")
+	cs, _, err := rcc.loader.LoadContainerServiceFromFile(path, false, false, nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to get Kubernetes Client")
+		return errors.Wrap(err, "error parsing api-model")
 	}
+	rcc.cs.Properties.CertificateProfile = cs.Properties.CertificateProfile
+	return nil
+}
+
+func (rcc *rotateCertsCmd) generateTLSArtifacts() error {
+	log.Infoln("Generating new certificates")
+	rcc.cs.Properties.CertificateProfile = &api.CertificateProfile{}
+	if ok, _, err := rcc.cs.SetDefaultCerts(api.DefaultCertParams{PkiKeySize: helpers.DefaultPkiKeySize}); !ok || err != nil {
+		return errors.Wrap(err, "generating new certificates")
+	}
+	return nil
+}
+
+// getClusterNodes returns all cluster nodes or an error if a node status is not Ready
+func (rcc *rotateCertsCmd) getClusterNodes(kubeClient kubernetes.NodeLister) (nodes []*ssh.RemoteHost, err error) {
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
-		return errors.Wrap(err, "failed to get cluster nodes")
+		return nil, err
 	}
 	for _, node := range nodeList.Items {
-		if strings.Contains(node.Name, "master") {
-			rcc.masterNodes = append(rcc.masterNodes, node)
+		switch api.OSType(strings.Title(node.Status.NodeInfo.OperatingSystem)) {
+		case api.Linux:
+			nodes = append(nodes, &ssh.RemoteHost{
+				URI: node.Name, Port: 22, OperatingSystem: api.Linux, AuthConfig: rcc.linuxAuthConfig, Jumpbox: rcc.jumpbox})
+		case api.Windows:
+			nodes = append(nodes, &ssh.RemoteHost{
+				URI: node.Name, Port: 22, OperatingSystem: api.Windows, AuthConfig: rcc.windowsAuthConfig, Jumpbox: rcc.jumpbox})
+		default:
+			return nil, errors.Errorf("Skipping node %s, could not determine operating system", node.Name)
+		}
+	}
+	nodeCount := rcc.cs.Properties.MasterProfile.Count
+	for _, pool := range rcc.cs.Properties.AgentPoolProfiles {
+		nodeCount += pool.Count
+	}
+	if len(nodes) != nodeCount {
+		return nil, errors.Errorf("Unexpected node count. Got %d, expected %d (from api-model)", nodeCount, len(nodes))
+	}
+	return nodes, nil
+}
+
+// distributeCerts copies the new set of certificates to the cluster nodes.
+func (rcc *rotateCertsCmd) distributeCerts() (err error) {
+	log.Info("Distributing certificates")
+	masterCerts, linuxCerts, windowsCerts := getFilesToDistribute(rcc.cs)
+	for _, node := range rcc.nodes {
+		log.Debugf("Uploading certificates to node %s", node.URI)
+		if isMaster(node) {
+			for _, file := range masterCerts {
+				co, err := ssh.CopyToRemote(node, file)
+				if err != nil {
+					log.Debugf("Remote command output: %s", co)
+					return errors.Wrap(err, "uploading certificate")
+				}
+			}
+		} else if isLinuxAgent(node) {
+			for name := range linuxCerts {
+				co, err := ssh.CopyToRemote(node, linuxCerts[name])
+				if err != nil {
+					log.Debugf("Remote command output: %s", co)
+					return errors.Wrap(err, "uploading certificate")
+				}
+			}
+		} else if isWindows(node) {
+			for _, file := range windowsCerts {
+				co, err := ssh.CopyToRemote(node, file)
+				if err != nil {
+					log.Debugf("Remote command output: %s", co)
+					return errors.Wrap(err, "uploading certificate")
+				}
+			}
+		}
+	}
+	return
+}
+
+// distributeScripts copies the corresponding certificate rotation script to the cluster nodes.
+func (rcc *rotateCertsCmd) distributeScripts() (err error) {
+	lf, err := engine.Asset("k8s/cloud-init/artifacts/rotate-certs.sh")
+	if err != nil {
+		return err
+	}
+	linuxFile := ssh.NewRemoteFile("/tmp/akse/rotate-certs.sh", "744", rootUserGroup, lf)
+	wf, err := engine.Asset("k8s/cloud-init/artifacts/rotate-certs.ps1")
+	if err != nil {
+		return err
+	}
+	windowsFile := ssh.NewRemoteFile("$env:temp\\rotate-certs.ps1", "", "", wf)
+
+	for _, n := range rcc.nodes {
+		if isLinux(n) {
+			out, err := ssh.CopyToRemote(n, linuxFile)
+			if err != nil {
+				log.Debugf("Remote command output: %s", out)
+				return errors.Wrap(err, "uploading Linux certiciate rotation script")
+			}
 		} else {
-			rcc.agentNodes = append(rcc.agentNodes, node)
-		}
-	}
-	return nil
-}
-
-func (rcc *rotateCertsCmd) rebootAllNodes(ctx context.Context) error {
-	vmListPage, err := rcc.client.ListVirtualMachines(ctx, rcc.resourceGroupName)
-	if err != nil {
-		return errors.Wrap(err, "failed to list Virtual Machines in resource group "+rcc.resourceGroupName)
-	}
-	vmssListPage, err := rcc.client.ListVirtualMachineScaleSets(ctx, rcc.resourceGroupName)
-	if err != nil {
-		return errors.Wrap(err, "failed to list Virtual Machine Scale Sets in resource group "+rcc.resourceGroupName)
-	}
-	for _, vm := range vmListPage.Values() {
-		err = rcc.client.RestartVirtualMachine(ctx, rcc.resourceGroupName, *vm.Name)
-		if err != nil {
-			return errors.Wrap(err, "failed to restart Virtual Machine "+*vm.Name)
-		}
-	}
-	for _, vmss := range vmssListPage.Values() {
-		err = rcc.client.RestartVirtualMachineScaleSets(ctx, rcc.resourceGroupName, *vmss.Name, nil)
-		if err != nil {
-			return errors.Wrap(err, "failed to restart Virtual Machine Scale Sets "+*vmss.Name)
-		}
-	}
-	return nil
-}
-
-func (rcc *rotateCertsCmd) deleteAllPods() error {
-	kubeClient, err := rcc.getKubeClient()
-	if err != nil {
-		return errors.Wrap(err, "failed to get Kubernetes Client")
-	}
-	pods, err := kubeClient.ListAllPods()
-	if err != nil {
-		return errors.Wrap(err, "failed to get pods")
-	}
-	for _, pod := range pods.Items {
-		log.Debugf("Deleting pod %s", pod.Name)
-		err = kubeClient.DeletePod(&pod)
-		if err != nil {
-			return errors.Wrap(err, "failed to delete pod "+pod.Name)
-		}
-	}
-	return nil
-}
-
-func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
-	kubeClient, err := rcc.getKubeClient()
-	if err != nil {
-		return errors.Wrap(err, "failed to get Kubernetes Client")
-	}
-	saList, err := kubeClient.ListServiceAccounts(kubeSystemNamespace)
-	if err != nil {
-		return errors.Wrap(err, "failed to get cluster service accounts in namespace "+kubeSystemNamespace)
-	}
-	for _, sa := range saList.Items {
-		switch sa.Name {
-		case common.KubeDNSAddonName, "kubernetes-dashboard", common.MetricsServerAddonName:
-			log.Debugf("Deleting service account %s", sa.Name)
-			err = kubeClient.DeleteServiceAccount(&sa)
+			out, err := ssh.CopyToRemote(n, windowsFile)
 			if err != nil {
-				return errors.Wrap(err, "failed to delete service account "+sa.Name)
+				log.Debugf("Remote command output: %s", out)
+				return errors.Wrap(err, "uploading Windows certificate rotation script")
 			}
 		}
 	}
+	return
+}
+
+func (rcc *rotateCertsCmd) rotateCerts() error {
+	log.Info("Rotating certificates")
+	if err := rotatecerts.WaitForNodesReady(rcc.kubeClient, rcc.nodes, 5, rotateCertsDefaultInterval, rotateCertsDefaultTimeout); err != nil {
+		return errors.Wrap(err, "waiting for cluster nodes readiness")
+	}
+	if err := rcc.waitForControlPlaneReadiness(); err != nil {
+		return err
+	}
+	if err := rcc.backupRemote(); err != nil {
+		return err
+	}
+	if err := rcc.rotateEtcd(); err != nil {
+		return err
+	}
+	if err := rcc.rotateSATokens(); err != nil {
+		return err
+	}
+	if err := rcc.rotateKubelet(); err != nil {
+		return err
+	}
+	if err := rcc.cleanupRemote(); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (rcc *rotateCertsCmd) updateKubeconfig() error {
-	kubeconfig, err := engine.GenerateKubeConfig(rcc.containerService.Properties, rcc.location)
-	if err != nil {
-		return errors.Wrap(err, "generating kubeconfig")
-	}
-
-	for _, host := range rcc.masterNodes {
-		cmd := "sudo bash -c \"cat > ~/.kube/config << EOL \n" + strings.Replace(kubeconfig, "\"", "\\\"", -1) + "EOL\""
-		out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
-		if err != nil {
-			log.Printf("Command %s output: %s\n", cmd, out)
-			return errors.Wrap(err, "failed replacing kubeconfig file")
+func (rcc *rotateCertsCmd) backupRemote() (err error) {
+	log.Info("Backing up node certificates")
+	for _, node := range rcc.nodes {
+		step := "backup"
+		skipped, err := execStepsSequence(isLinux, node, execRemoteFunc(remoteBashScript(step)))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
 		}
 	}
 	return nil
 }
 
-func (rcc *rotateCertsCmd) getKubeClient() (kubernetes.Client, error) {
-	kubeconfig, err := engine.GenerateKubeConfig(rcc.containerService.Properties, rcc.location)
-	if err != nil {
-		return nil, errors.Wrap(err, "generating kubeconfig")
+func (rcc *rotateCertsCmd) rotateEtcd() error {
+	log.Infoln("Rotating etcd PKI")
+	var err error
+	var skipped bool
+
+	log.Debugln("Replacing etcd ca with a ca bundle")
+	waitForRestart, restartAfter := false, time.Now()
+	for _, node := range rcc.nodes {
+		step := "etcd_cabundle"
+		skipped, err = execStepsSequence(isMaster, node, execRemoteFunc(remoteBashScript(step)))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+		waitForRestart = waitForRestart || (!skipped && err == nil)
 	}
-	var kubeClient kubernetes.Client
-	if rcc.client != nil {
-		kubeClient, err = rcc.client.GetKubernetesClient("", kubeconfig, time.Second*1, time.Duration(60)*time.Minute)
+	// No need to wait if all nodes were skipped
+	if waitForRestart {
+		err = rcc.waitForControlPlaneRestart(restartAfter, kubeAPIServer)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get a Kubernetes client")
+			return err
 		}
-		return kubeClient, nil
-	}
-	return nil, errors.Wrap(err, "AKSEngineClient was nil")
-}
-
-// Rotate etcd CA and certificates in all of the master nodes.
-func (rcc *rotateCertsCmd) rotateEtcd(ctx context.Context) error {
-	caPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaPrivateKey + "EOL\""
-	caCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaCertificate + "EOL\""
-	etcdServerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdserver.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdServerPrivateKey + "EOL\""
-	etcdServerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdserver.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdServerCertificate + "EOL\""
-	etcdClientPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdclient.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdClientPrivateKey + "EOL\""
-	etcdClientCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdclient.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdClientCertificate + "EOL\""
-
-	for i, host := range rcc.masterNodes {
-		log.Debugf("Ranging over node: %s\n", host.Name)
-		etcdPeerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".key << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdPeerPrivateKeys[i] + "EOL\""
-		etcdPeerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/etcdpeer" + strconv.Itoa(i) + ".crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.EtcdPeerCertificates[i] + "EOL\""
-
-		for _, cmd := range []string{caPrivateKeyCmd, caCertificateCmd} {
-			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
-			if err != nil {
-				log.Printf("Command %s output: %s\n", cmd, out)
-				return errors.Wrap(err, "failed replacing certificate file")
-			}
-		}
-
-		for _, cmd := range []string{etcdServerPrivateKeyCmd, etcdServerCertificateCmd, etcdClientPrivateKeyCmd, etcdClientCertificateCmd, etcdPeerPrivateKeyCmd, etcdPeerCertificateCmd} {
-			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
-			if err != nil {
-				log.Printf("Command %s output: %s\n", cmd, out)
-				return errors.Wrap(err, "failed replacing certificate file")
-			}
-		}
-	}
-
-	log.Infoln("Rebooting all nodes... This might take a few minutes")
-	err := rcc.rebootAllNodes(ctx)
-	if err != nil {
-		return errors.Wrap(err, "rebooting the nodes")
-	}
-
-	for _, host := range rcc.masterNodes {
-		log.Debugf("Restarting etcd on node %s", host.Name)
-		out, err := rcc.sshCommandExecuter("sudo systemctl restart etcd", rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
+		err = rcc.waitForControlPlaneReadiness()
 		if err != nil {
-			log.Printf("Command `sudo systemctl restart etcd` output: %s\n", out)
-			return errors.Wrap(err, "failed to restart etcd")
+			return err
 		}
 	}
 
+	log.Debugln("Rotating etcd non-ca certs")
+	for _, node := range rcc.nodes {
+		step := "etcd_certs"
+		skipped, err = execStepsSequence(isMaster, node, execRemoteFunc(remoteBashScript(step)))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+	}
+
+	log.Debugln("Rotating etcd ca certs")
+	waitForRestart, restartAfter = false, time.Now()
+	for _, node := range rcc.nodes {
+		step := "etcd_ca"
+		skipped, err = execStepsSequence(isMaster, node, execRemoteFunc(remoteBashScript(step)), deletePodFunc(rcc.kubeClient, kubeSchedulerLabels))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+		waitForRestart = waitForRestart || (!skipped && err == nil)
+	}
+	// No need to wait if all nodes were skipped
+	if waitForRestart {
+		err = rcc.waitForControlPlaneRestart(restartAfter, kubeAPIServer)
+		if err != nil {
+			return err
+		}
+		err = rcc.waitForControlPlaneReadiness()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-// From the first master node, rotate apiserver certificates in the nodes.
-func (rcc *rotateCertsCmd) rotateApiserver() error {
-	caCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/ca.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.CaCertificate + "EOL\""
-	apiServerPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/apiserver.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.APIServerPrivateKey + "EOL\""
-	apiServerCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/apiserver.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.APIServerCertificate + "EOL\""
+func (rcc *rotateCertsCmd) rotateSATokens() error {
+	log.Infoln("Rotating service account tokens")
+	var err error
+	var skipped bool
 
-	for _, host := range rcc.masterNodes {
-		log.Debugf("Ranging over node: %s\n", host.Name)
-		for _, cmd := range []string{apiServerPrivateKeyCmd, apiServerCertificateCmd} {
-			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
-			if err != nil {
-				log.Printf("Command %s output: %s\n", cmd, out)
-				return errors.Wrap(err, "failed replacing certificate file")
-			}
+	log.Debugln("Rotating service account signer")
+	waitForRestart, restartAfter := false, time.Now()
+	for _, node := range rcc.nodes {
+		step := "sa_token_signer"
+		skipped, err = execStepsSequence(isMaster, node, execRemoteFunc(remoteBashScript("sa_token_signer")))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+		waitForRestart = waitForRestart || (!skipped && err == nil)
+	}
+	// No need to wait if all nodes were skipped
+	if waitForRestart {
+		err = rcc.waitForControlPlaneRestart(restartAfter, kubeAPIServer, kubeControllerManager)
+		if err != nil {
+			return err
+		}
+		err = rcc.waitForControlPlaneReadiness()
+		if err != nil {
+			return err
 		}
 	}
 
-	for _, host := range rcc.agentNodes {
-		log.Debugf("Ranging over node: %s\n", host.Name)
-		for _, cmd := range []string{caCertificateCmd} {
-			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
-			if err != nil {
-				log.Printf("Command %s output: %s\n", cmd, out)
-				return errors.Wrap(err, "failed replacing certificate file")
-			}
-		}
+	log.Debugln("Recreating service account tokens")
+	err = rotatecerts.RotateServiceAccountTokens(rcc.kubeClient, rcc.namespaces)
+	if err != nil {
+		return err
+	}
+	err = rcc.waitForKubeSystemReadiness()
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
 func (rcc *rotateCertsCmd) rotateKubelet() error {
-	clientCertificateCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/client.crt << EOL \n" + rcc.containerService.Properties.CertificateProfile.ClientCertificate + "EOL\""
-	clientPrivateKeyCmd := "sudo bash -c \"cat > /etc/kubernetes/certs/client.key << EOL \n" + rcc.containerService.Properties.CertificateProfile.ClientPrivateKey + "EOL\""
+	log.Info("Rotating apiserver-kubelet PKI")
+	var err error
+	var skipped bool
+	step := "apiserver_kubelet"
 
-	for _, host := range append(rcc.masterNodes, rcc.agentNodes...) {
-		log.Debugf("Ranging over node: %s\n", host.Name)
-		for _, cmd := range []string{clientCertificateCmd, clientPrivateKeyCmd} {
-			out, err := rcc.sshCommandExecuter(cmd, rcc.masterFQDN, host.Name, "22", rcc.sshConfig)
-			if err != nil {
-				log.Printf("Command %s output: %s\n", cmd, out)
-				return errors.Wrap(err, "failed replacing certificate file")
-			}
+	log.Debugln("Rotating control plane apiserver-kubelet PKI")
+	waitForRestart, restartAfter := false, time.Now()
+	for _, node := range rcc.nodes {
+		skipped, err = execStepsSequence(isMaster, node, execRemoteFunc(remoteBashScript(step)))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+		waitForRestart = waitForRestart || (!skipped && err == nil)
+	}
+
+	// No need to wait if all nodes were skipped
+	if waitForRestart {
+		err = rcc.waitForControlPlaneRestart(restartAfter, kubeAPIServer, kubeControllerManager)
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Debugln("Restarting kube-proxy on control plane nodes")
+	for _, node := range rcc.nodes {
+		skipped, err = execStepsSequence(isMaster, node, deletePodFunc(rcc.kubeClient, kubeProxyLabels))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+	}
+
+	log.Debugln("Rotating agents apiserver-kubelet PKI and restarting kube-proxy")
+	for _, node := range rcc.nodes {
+		skipped, err = execStepsSequence(isLinuxAgent, node, execRemoteFunc(remoteBashScript(step)), deletePodFunc(rcc.kubeClient, kubeProxyLabels))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+		skipped, err = execStepsSequence(isWindows, node, execRemoteFunc(remotePowershellScript()))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
 		}
 	}
 	return nil
 }
 
-func (rcc *rotateCertsCmd) setSSHConfig() {
-	rcc.sshConfig = &ssh.ClientConfig{
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		User:            "azureuser",
-		Auth: []ssh.AuthMethod{
-			publicKeyFile(rcc.sshFilepath),
-		},
+func (rcc *rotateCertsCmd) cleanupRemote() (err error) {
+	log.Infoln("Deleting temporary artifacts from cluster nodes")
+	step := "cleanup"
+	for _, node := range rcc.nodes {
+		skipped, err := execStepsSequence(isLinux, node, execRemoteFunc(remoteBashScript(step)))
+		if !skipped && err != nil {
+			return errors.Wrapf(err, "executing %s function on remote host %s", step, node.URI)
+		}
+	}
+	return nil
+}
+
+func (rcc *rotateCertsCmd) updateAPIModel() error {
+	log.Infof("Generating new artifacts")
+	err := writeArtifacts(filepath.Dir(rcc.apiModelPath), rcc.cs, rcc.apiVersion, rcc.loader.Translator)
+	if err != nil {
+		return errors.Wrap(err, "writing artifacts")
+	}
+	err = os.RemoveAll(rcc.outputDirectory)
+	if err != nil {
+		return errors.Wrap(err, "deleting output directory")
+	}
+	return nil
+}
+
+func execStepsSequence(nodeCondition func(*ssh.RemoteHost) bool, node *ssh.RemoteHost, steps ...func(node *ssh.RemoteHost) error) (skipped bool, err error) {
+	if nodeCondition(node) {
+		for _, step := range steps {
+			if err := step(node); err != nil {
+				if ignorable(err) {
+					log.Debugf("Node %s skipped", node.URI)
+					return true, err
+				}
+				// remote command failure, should be handled
+				return false, err
+			}
+		}
+		// remote command success
+		return false, nil
+	}
+	// node condition not met
+	return true, nil
+}
+
+func execRemoteFunc(script string) func(node *ssh.RemoteHost) error {
+	return func(node *ssh.RemoteHost) error {
+		out, err := ssh.ExecuteRemote(node, script)
+		if err != nil && !ignorable(err) {
+			log.Debugf("Remote command output: %s", out)
+		}
+		return err
 	}
 }
 
-func publicKeyFile(file string) ssh.AuthMethod {
-	buffer, err := ioutil.ReadFile(file)
-	if err != nil {
+func deletePodFunc(client rotatecerts.Client, labels string) func(node *ssh.RemoteHost) error {
+	return func(node *ssh.RemoteHost) error {
+		err := client.DeletePods(metav1.NamespaceSystem, metav1.ListOptions{
+			FieldSelector: fmt.Sprintf("spec.nodeName=%s", node.URI),
+			LabelSelector: labels,
+		})
+		if err != nil {
+			return errors.Wrapf(err, "deleting pod with labels %s from node %s", labels, node.URI)
+		}
 		return nil
 	}
-	key, err := ssh.ParsePrivateKey(buffer)
-	if err != nil {
-		return nil
-	}
-	return ssh.PublicKeys(key)
 }
 
-func executeCmd(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error) {
-	// Dial connection to the master via public load balancer
-	lbClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", masterFQDN, port), config)
-	if err != nil {
-		return "", errors.Wrap(err, "Dialing LB")
+// waitForControlPlaneReadiness checks that the control plane components are in a healthy state before we move to the next step.
+func (rcc *rotateCertsCmd) waitForControlPlaneReadiness() error {
+	log.Info("Checking health of control plane components")
+	pods := make([]string, 0)
+	components := []string{kubeAddonManager, kubeAPIServer, kubeControllerManager, kubeScheduler}
+	for _, n := range rcc.nodes {
+		if isMaster(n) {
+			for _, c := range components {
+				pods = append(pods, fmt.Sprintf("%s-%s", c, n.URI))
+			}
+		}
 	}
-
-	// Dial a connection to the agent host, from the master
-	conn, err := lbClient.Dial("tcp", fmt.Sprintf("%s:%s", hostname, port))
-	if err != nil {
-		return "", errors.Wrap(err, "Dialing host")
+	if err := rotatecerts.WaitForReady(rcc.kubeClient, metav1.NamespaceSystem, pods, 5, rotateCertsDefaultInterval, rotateCertsDefaultTimeout); err != nil {
+		return errors.Wrap(err, "waiting for kube-system containers to reach the Ready state within the timeout period")
 	}
-
-	ncc, chans, reqs, err := ssh.NewClientConn(conn, hostname, config)
-	if err != nil {
-		return "", errors.Wrap(err, "starting new client connection to host")
-	}
-
-	sClient := ssh.NewClient(ncc, chans, reqs)
-
-	session, err := sClient.NewSession()
-
-	if err != nil {
-		return "", errors.Wrap(err, "opening SSH session")
-	}
-	defer session.Close()
-
-	var stdoutBuf bytes.Buffer
-	session.Stdout = &stdoutBuf
-
-	err = session.Run(command)
-	if err != nil {
-		return fmt.Sprintf("%s -> %s", hostname, stdoutBuf.String()), errors.Wrap(err, "running command")
-	}
-
-	return fmt.Sprintf("%s -> %s", hostname, stdoutBuf.String()), nil
+	return nil
 }
+
+// waitForKubeSystemReadiness checks that all kube-system pods are in a healthy state before we move to the next step.
+func (rcc *rotateCertsCmd) waitForKubeSystemReadiness() error {
+	log.Info("Checking health of all kube-system pods")
+	if err := rotatecerts.WaitForAllInNamespaceReady(rcc.kubeClient, metav1.NamespaceSystem, 5, rotateCertsDefaultInterval, rotateCertsDefaultTimeout); err != nil {
+		return errors.Wrap(err, "waiting for kube-system containers to reach the Ready state within the timeout period")
+	}
+	return nil
+}
+
+// waitForControlPlaneRestart checks that each of the passed pods (1) restarted after restart time (2) and is healthy after the restart.
+//
+// Updating the yaml manifest of the control plane components triggers a pod restart (sometimes after a few seconds).
+// This method makes sure that the restart actually happened before further interaction with these pods.
+func (rcc *rotateCertsCmd) waitForControlPlaneRestart(restartAfter time.Time, components ...string) error {
+	log.Infof("Waiting for control plane components restart: %s", components)
+	pods := []string{}
+	for _, n := range rcc.nodes {
+		if isMaster(n) {
+			for _, c := range components {
+				pods = append(pods, fmt.Sprintf("%s-%s", c, n.URI))
+			}
+		}
+	}
+	if err := rotatecerts.WaitForRestart(rcc.kubeClient, metav1.NamespaceSystem, pods, restartAfter, rotateCertsDefaultInterval, rotateCertsDefaultTimeout); err != nil {
+		return errors.Wrap(err, "waiting for control plane components restart")
+	}
+	return nil
+}
+
+func (rcc *rotateCertsCmd) getKubeClient() (rotatecerts.Client, error) {
+	config := path.Join("kubeconfig", fmt.Sprintf("kubeconfig.%s.json", rcc.location))
+
+	oldConfig := path.Join(rcc.backupDirectory, config)
+	content, err := ioutil.ReadFile(oldConfig)
+	if err != nil {
+		return nil, errors.Wrapf(err, "reading %s", oldConfig)
+	}
+	oldCAClient, err := kubernetes.NewClient("", string(content), rotateCertsDefaultInterval, rotateCertsDefaultTimeout)
+	if err != nil {
+		return nil, err
+	}
+
+	newConfig := path.Join(rcc.outputDirectory, config)
+	content, err = ioutil.ReadFile(newConfig)
+	if err != nil {
+		return nil, errors.Wrapf(err, "reading %s", newConfig)
+	}
+	newCAClient, err := kubernetes.NewClient("", string(content), rotateCertsDefaultInterval, rotateCertsDefaultTimeout)
+	if err != nil {
+		return nil, err
+	}
+
+	return kubernetes.NewCompositeClient(oldCAClient, newCAClient, rotateCertsDefaultInterval, rotateCertsDefaultTimeout), nil
+}
+
+func getFilesToDistribute(cs *api.ContainerService) (masterFiles map[string]*ssh.RemoteFile, linuxFiles map[string]*ssh.RemoteFile, windowsFiles map[string]*ssh.RemoteFile) {
+	p := cs.Properties.CertificateProfile
+
+	linuxAdmin := fmt.Sprintf("%s:%s", cs.Properties.LinuxProfile.AdminUsername, cs.Properties.LinuxProfile.AdminUsername)
+	kubeconfig, err := engine.GenerateKubeConfig(cs.Properties, cs.Location)
+	if err != nil {
+		return nil, nil, nil
+	}
+
+	dir := "/tmp/akse/certs"
+	masterFiles = map[string]*ssh.RemoteFile{
+		"apiserver.crt":     ssh.NewRemoteFile(path.Join(dir, "apiserver.crt"), crtPermissions, rootUserGroup, []byte(p.APIServerCertificate)),
+		"apiserver.key":     ssh.NewRemoteFile(path.Join(dir, "apiserver.key"), keyPermissions, rootUserGroup, []byte(p.APIServerPrivateKey)),
+		"ca.crt":            ssh.NewRemoteFile(path.Join(dir, "ca.crt"), crtPermissions, rootUserGroup, []byte(p.CaCertificate)),
+		"ca.key":            ssh.NewRemoteFile(path.Join(dir, "ca.key"), keyPermissions, rootUserGroup, []byte(p.CaPrivateKey)),
+		"client.crt":        ssh.NewRemoteFile(path.Join(dir, "client.crt"), crtPermissions, rootUserGroup, []byte(p.ClientCertificate)),
+		"client.key":        ssh.NewRemoteFile(path.Join(dir, "client.key"), keyPermissions, rootUserGroup, []byte(p.ClientPrivateKey)),
+		"etcdclient.crt":    ssh.NewRemoteFile(path.Join(dir, "etcdclient.crt"), crtPermissions, rootUserGroup, []byte(p.EtcdClientCertificate)),
+		"etcdclient.key":    ssh.NewRemoteFile(path.Join(dir, "etcdclient.key"), keyPermissions, rootUserGroup, []byte(p.EtcdClientPrivateKey)),
+		"etcdserver.crt":    ssh.NewRemoteFile(path.Join(dir, "etcdserver.crt"), crtPermissions, rootUserGroup, []byte(p.EtcdServerCertificate)),
+		"etcdserver.key":    ssh.NewRemoteFile(path.Join(dir, "etcdserver.key"), keyPermissions, etcdUserGroup, []byte(p.EtcdServerPrivateKey)),
+		"kubectlClient.crt": ssh.NewRemoteFile(path.Join(dir, "kubectlClient.crt"), crtPermissions, rootUserGroup, []byte(p.KubeConfigCertificate)),
+		"kubectlClient.key": ssh.NewRemoteFile(path.Join(dir, "kubectlClient.key"), keyPermissions, rootUserGroup, []byte(p.KubeConfigPrivateKey)),
+		"kubeconfig":        ssh.NewRemoteFile(path.Join(dir, "kubeconfig"), configPermissions, linuxAdmin, []byte(kubeconfig)),
+	}
+	for i := 0; i < cs.Properties.MasterProfile.Count; i++ {
+		crt := fmt.Sprintf("etcdpeer%d.crt", i)
+		masterFiles[crt] = ssh.NewRemoteFile(path.Join(dir, crt), crtPermissions, etcdUserGroup, []byte(p.EtcdPeerCertificates[i]))
+		key := fmt.Sprintf("etcdpeer%d.key", i)
+		masterFiles[key] = ssh.NewRemoteFile(path.Join(dir, key), keyPermissions, etcdUserGroup, []byte(p.EtcdPeerPrivateKeys[i]))
+	}
+	linuxFiles = map[string]*ssh.RemoteFile{
+		"ca.crt":     masterFiles["ca.crt"],
+		"client.crt": masterFiles["client.crt"],
+		"client.key": masterFiles["client.key"],
+	}
+	windowsFiles = map[string]*ssh.RemoteFile{
+		"ca.crt":     ssh.NewRemoteFile(fmt.Sprintf("$env:temp\\%s", "ca.crt"), "", "", []byte(p.CaCertificate)),
+		"client.crt": ssh.NewRemoteFile(fmt.Sprintf("$env:temp\\%s", "client.crt"), "", "", []byte(p.ClientCertificate)),
+		"client.key": ssh.NewRemoteFile(fmt.Sprintf("$env:temp\\%s", "client.key"), "", "", []byte(p.ClientPrivateKey)),
+	}
+	return
+}
+
+func remoteBashScript(step string) string {
+	return fmt.Sprintf("bash -euxo pipefail -c \"sudo /tmp/akse/rotate-certs.sh %s |& sudo tee -a /var/log/azure/rotate-certs.log\"", step)
+}
+
+func remotePowershellScript() string {
+	filePath := "$env:temp\\rotate-certs.ps1"
+	return fmt.Sprintf("powershell -noprofile -command \"cd c:\\k\\; iex %s | Out-File -Append -Encoding utf8 rotate-certs.log \"", filePath)
+}
+
+func isMaster(node *ssh.RemoteHost) bool {
+	return strings.HasPrefix(node.URI, common.LegacyControlPlaneVMPrefix)
+}
+func isLinux(node *ssh.RemoteHost) bool      { return node.OperatingSystem == api.Linux }
+func isLinuxAgent(node *ssh.RemoteHost) bool { return isLinux(node) && !isMaster(node) }
+func isWindows(node *ssh.RemoteHost) bool    { return node.OperatingSystem == api.Windows }
+
+// ignoreable returns true if the remote script execution was skipped.
+func ignorable(err error) bool {
+	// remote scripts return SKIP_EXIT_CODE if the steps was completed by a previous rotate-certs execution
+	skipExitCode := 25
+	e := errors.Cause(err)
+	switch v := e.(type) {
+	case *sshx.ExitError:
+		return v.Waitmsg.ExitStatus() == skipExitCode
+	default:
+		return false
+	}
+}
+
+func (rcc *rotateCertsCmd) getNamespacesWithSATokensToRotate() []string {
+	// TODO parametize addons namespace so hard-coding their names is not required.
+	// TODO maybe add an extra cli param so user can add extra namespaces
+	namespaces := []string{metav1.NamespaceSystem}
+	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.DashboardAddonName) {
+		namespaces = append(namespaces, "kubernetes-dashboard")
+	}
+	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzureArcOnboardingAddonName) {
+		namespaces = append(namespaces, "azure-arc-onboarding")
+	}
+	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzurePolicyAddonName) {
+		namespaces = append(namespaces, "gatekeeper-system")
+	}
+	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ScheduledMaintenanceAddonName) {
+		namespaces = append(namespaces, "drainsafe-system")
+	}
+	return namespaces
+}
+
+// // logDowntime is quick and dirty way of checking if the cert rotation process causes downtime.
+// func logDowntime(ctx context.Context, rcc *rotateCertsCmd) {
+// 	log.Debug("Checking downtime in the background")
+// 	config := path.Join("kubeconfig", fmt.Sprintf("kubeconfig.%s.json", rcc.location))
+
+// 	c, err := ioutil.ReadFile(path.Join(filepath.Dir(rcc.apiModelPath), config))
+// 	if err != nil {
+// 		log.Debug("Error checking downtime: reading old --kubeconfig")
+// 		return
+// 	}
+// 	oldClient, err := kubernetes.NewClient("", string(c), rotateCertsDefaultInterval, rotateCertsDefaultTimeout)
+// 	if err != nil {
+// 		log.Debug("Error checking downtime: creating old --kubeconfig")
+// 		return
+// 	}
+
+// 	c, err = ioutil.ReadFile(path.Join(rcc.outputDirectory, config))
+// 	if err != nil {
+// 		log.Debug("Error checking downtime: reading new --kubeconfig")
+// 		return
+// 	}
+// 	newClient, err := kubernetes.NewClient("", string(c), rotateCertsDefaultInterval, rotateCertsDefaultTimeout)
+// 	if err != nil {
+// 		log.Debug("Error checking downtime: creating new --kubeconfig")
+// 		return
+// 	}
+
+// 	tick := time.Tick(5 * time.Second)
+// 	for {
+// 		select {
+// 		case t := <-tick:
+// 			_, oldClientError := oldClient.ListNodes()
+// 			_, newClientError := newClient.ListNodes()
+// 			if oldClientError != nil && newClientError != nil {
+// 				log.Debugf("Downtime: %s", t)
+// 			}
+// 		case <-ctx.Done():
+// 			return
+// 		}
+// 	}
+// }
