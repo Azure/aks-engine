@@ -535,7 +535,7 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 			return cs.Properties.IsAzureStackCloud()
 		},
 		"IsKubernetesVersionGe": func(version string) bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
+			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 	}
 	if component.Name == common.APIServerComponentName {
@@ -884,13 +884,9 @@ func getKubernetesPodStartIndex(properties *api.Properties) int {
 func getMasterLinkedTemplateText(orchestratorType string, extensionProfile *api.ExtensionProfile, singleOrAll string) (string, error) {
 	extTargetVMNamePrefix := "variables('masterVMNamePrefix')"
 
-	loopCount := "[variables('masterCount')]"
-	loopOffset := ""
-	if orchestratorType == api.Kubernetes {
-		// Due to upgrade k8s sometimes needs to install just some of the nodes.
-		loopCount = "[sub(variables('masterCount'), variables('masterOffset'))]"
-		loopOffset = "variables('masterOffset')"
-	}
+	// Due to upgrade k8s sometimes needs to install just some of the nodes.
+	loopCount := "[sub(variables('masterCount'), variables('masterOffset'))]"
+	loopOffset := "variables('masterOffset')"
 
 	if strings.EqualFold(singleOrAll, "single") {
 		loopCount = "1"

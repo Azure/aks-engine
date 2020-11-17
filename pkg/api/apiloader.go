@@ -102,6 +102,9 @@ func (a *Apiloader) LoadContainerService(
 		if e := json.Unmarshal(contents, &containerService); e != nil {
 			return nil, e
 		}
+		if containerService.Properties.OrchestratorProfile == nil {
+			containerService.Properties.OrchestratorProfile = &vlabs.OrchestratorProfile{}
+		}
 		if e := checkJSONKeys(contents, reflect.TypeOf(*containerService), reflect.TypeOf(TypeMeta{})); e != nil {
 			return nil, e
 		}

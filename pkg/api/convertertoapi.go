@@ -65,12 +65,6 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 	for _, p := range vlabs.AgentPoolProfiles {
 		apiProfile := &AgentPoolProfile{}
 		convertVLabsAgentPoolProfile(p, apiProfile)
-		// by default vlabs will use managed disks for all orchestrators but kubernetes as it has encryption at rest.
-		if !api.OrchestratorProfile.IsKubernetes() {
-			if len(p.StorageProfile) == 0 {
-				apiProfile.StorageProfile = ManagedDisks
-			}
-		}
 		api.AgentPoolProfiles = append(api.AgentPoolProfiles, apiProfile)
 	}
 	if vlabs.LinuxProfile != nil {
@@ -225,30 +219,28 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 
 func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) error {
 	vlabscs := vp.OrchestratorProfile
-	api.OrchestratorType = vlabscs.OrchestratorType
-	switch api.OrchestratorType {
-	case Kubernetes:
-		if vlabscs.KubernetesConfig != nil {
-			api.KubernetesConfig = &KubernetesConfig{}
-			convertVLabsKubernetesConfig(vlabscs.KubernetesConfig, api.KubernetesConfig)
-		}
-		setVlabsKubernetesDefaults(vp, api)
-
-		// TODO (hack): this validation should be done as part of the main validation, but deploy does it only after loading the container.
-		if !isUpdate {
-			if err := vp.ValidateOrchestratorProfile(isUpdate); err != nil {
-				return err
-			}
-		}
-
-		api.OrchestratorVersion = common.RationalizeReleaseAndVersion(
-			vlabscs.OrchestratorType,
-			vlabscs.OrchestratorRelease,
-			vlabscs.OrchestratorVersion,
-			isUpdate,
-			vp.HasWindows(),
-			vp.IsAzureStackCloud())
+	// OrchestratorType is a legacy property when non-Kubernetes orchestrators were supported
+	api.OrchestratorType = Kubernetes
+	if vlabscs.KubernetesConfig != nil {
+		api.KubernetesConfig = &KubernetesConfig{}
+		convertVLabsKubernetesConfig(vlabscs.KubernetesConfig, api.KubernetesConfig)
 	}
+	setVlabsKubernetesDefaults(vp, api)
+
+	// TODO (hack): this validation should be done as part of the main validation, but deploy does it only after loading the container.
+	if !isUpdate {
+		if err := vp.ValidateOrchestratorProfile(isUpdate); err != nil {
+			return err
+		}
+	}
+
+	api.OrchestratorVersion = common.RationalizeReleaseAndVersion(
+		vlabscs.OrchestratorType,
+		vlabscs.OrchestratorRelease,
+		vlabscs.OrchestratorVersion,
+		isUpdate,
+		vp.HasWindows(),
+		vp.IsAzureStackCloud())
 
 	return nil
 }

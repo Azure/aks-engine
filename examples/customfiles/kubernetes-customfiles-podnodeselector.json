@@ -2,7 +2,6 @@
     "apiVersion": "vlabs",
     "properties": {
       "orchestratorProfile": {
-        "orchestratorType": "Kubernetes",
         "orchestratorVersion": "1.16.14",
         "kubernetesConfig": {
           "enableRbac" : true,

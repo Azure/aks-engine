@@ -7,7 +7,6 @@ This is sample API definition with Container-monitoring addon.
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
           {

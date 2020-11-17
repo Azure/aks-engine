@@ -249,10 +249,10 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.IsIPMasqAgentEnabled()
 		},
 		"IsKubernetesVersionGe": func(version string) bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
+			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 		"IsKubernetesVersionLt": func(version string) bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
+			return !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 		"GetMasterKubernetesLabels": func(rg string) string {
 			return common.GetMasterKubernetesLabels(rg, false)
@@ -301,9 +301,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"HasPrivateRegistry": func() bool {
 			return false
-		},
-		"IsKubernetes": func() bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes()
 		},
 		"IsPublic": func(ports []int) bool {
 			return common.SliceIntIsNonEmpty(ports)

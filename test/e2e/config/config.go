@@ -122,13 +122,8 @@ func ParseCustomCloudConfig() (*CustomCloudConfig, error) {
 
 // GetKubeConfig returns the absolute path to the kubeconfig for c.Location
 func (c *Config) GetKubeConfig() string {
-	var kubeconfigPath string
-
-	if c.IsKubernetes() {
-		file := fmt.Sprintf("kubeconfig.%s.json", c.Location)
-		kubeconfigPath = filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
-	}
-	return kubeconfigPath
+	file := fmt.Sprintf("kubeconfig.%s.json", c.Location)
+	return filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
 }
 
 // IsCustomCloudProfile returns true if the cloud is a custom cloud
@@ -329,11 +324,6 @@ func (c *Config) SetSSHKeyPermissions() error {
 		return err
 	}
 	return nil
-}
-
-// IsKubernetes will return true if the ORCHESTRATOR env var is set to kubernetes or not set at all
-func (c *Config) IsKubernetes() bool {
-	return c.Orchestrator == kubernetesOrchestrator
 }
 
 // SetRandomRegion sets Location to a random region

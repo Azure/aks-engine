@@ -3,7 +3,6 @@
     "location": "",
     "properties": {
         "orchestratorProfile": {
-            "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.17",
             "orchestratorVersion": "1.17.11",
             "kubernetesConfig": {

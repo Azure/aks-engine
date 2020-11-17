@@ -272,6 +272,7 @@ const (
 
 // OrchestratorProfile contains Orchestrator properties
 type OrchestratorProfile struct {
+	// OrchestratorType is a legacy property, this should always be set to "Kubernetes"
 	OrchestratorType    string            `json:"orchestratorType"`
 	OrchestratorVersion string            `json:"orchestratorVersion"`
 	KubernetesConfig    *KubernetesConfig `json:"kubernetesConfig,omitempty"`
@@ -934,13 +935,10 @@ func (p *Properties) HasVMSSAgentPool() bool {
 
 // K8sOrchestratorName returns the 3 character orchestrator code for kubernetes-based clusters.
 func (p *Properties) K8sOrchestratorName() string {
-	if p.OrchestratorProfile.IsKubernetes() {
-		if p.HostedMasterProfile != nil {
-			return DefaultHostedProfileMasterName
-		}
-		return DefaultOrchestratorName
+	if p.HostedMasterProfile != nil {
+		return DefaultHostedProfileMasterName
 	}
-	return ""
+	return DefaultOrchestratorName
 }
 
 // GetAgentPoolByName returns the pool in the AgentPoolProfiles array that matches a name, nil if no match
@@ -1893,11 +1891,6 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 	return false
 }
 
-// IsKubernetes returns true if this template is for Kubernetes orchestrator
-func (o *OrchestratorProfile) IsKubernetes() bool {
-	return o.OrchestratorType == Kubernetes
-}
-
 // IsAzureCNI returns true if Azure CNI network plugin is enabled
 func (o *OrchestratorProfile) IsAzureCNI() bool {
 	if o.KubernetesConfig != nil {
@@ -1908,17 +1901,11 @@ func (o *OrchestratorProfile) IsAzureCNI() bool {
 
 // IsPrivateCluster returns true if this deployment is a private cluster
 func (o *OrchestratorProfile) IsPrivateCluster() bool {
-	if !o.IsKubernetes() {
-		return false
-	}
 	return o.KubernetesConfig != nil && o.KubernetesConfig.PrivateCluster != nil && to.Bool(o.KubernetesConfig.PrivateCluster.Enabled)
 }
 
 // IsHostsConfigAgentEnabled returns true if hosts config agent is enabled
 func (o *OrchestratorProfile) IsHostsConfigAgentEnabled() bool {
-	if !o.IsKubernetes() {
-		return false
-	}
 	return o.KubernetesConfig != nil && o.KubernetesConfig.PrivateCluster != nil && to.Bool(o.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent)
 }
 

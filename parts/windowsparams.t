@@ -1,4 +1,3 @@
- {{if IsKubernetes}}
     "kubeBinariesSASURL": {
       "metadata": {
         "description": "The download url for kubernetes windows binaries package"
@@ -41,7 +40,6 @@
       },
       "type": "string"
     },
- {{end}}
     "windowsAdminUsername": {
       "type": "string",
       "metadata": {

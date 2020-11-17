@@ -61,7 +61,6 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetKubeletConfigKeyValsPsh",
 		"GetK8sRuntimeConfigKeyVals",
 		"HasPrivateRegistry",
-		"IsKubernetes",
 		"IsPublic",
 		"IsAzureCNI",
 		"HasCosmosEtcd",

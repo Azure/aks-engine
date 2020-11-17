@@ -2,7 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "gcHighThreshold":70,
         "gcLowThreshold": 60

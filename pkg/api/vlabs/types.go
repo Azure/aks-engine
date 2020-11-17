@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/pkg/errors"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/pkg/errors"
 )
 
 // ResourcePurchasePlan defines resource plan as required by ARM
@@ -33,13 +33,13 @@ type ContainerService struct {
 	Tags     map[string]string     `json:"tags,omitempty"`
 	Type     string                `json:"type,omitempty"`
 
-	Properties *Properties `json:"properties"`
+	Properties *Properties `json:"properties"  validate:"required"`
 }
 
 // Properties represents the AKS cluster definition
 type Properties struct {
 	ProvisioningState       ProvisioningState        `json:"provisioningState,omitempty"`
-	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty" validate:"required"`
+	OrchestratorProfile     *OrchestratorProfile     `json:"orchestratorProfile,omitempty"`
 	MasterProfile           *MasterProfile           `json:"masterProfile,omitempty" validate:"required"`
 	AgentPoolProfiles       []*AgentPoolProfile      `json:"agentPoolProfiles,omitempty" validate:"dive,required"`
 	LinuxProfile            *LinuxProfile            `json:"linuxProfile,omitempty" validate:"required"`
@@ -222,7 +222,8 @@ const (
 
 // OrchestratorProfile contains Orchestrator properties
 type OrchestratorProfile struct {
-	OrchestratorType    string            `json:"orchestratorType" validate:"required"`
+	// OrchestratorType is a legacy property, this should always be set to "Kubernetes"
+	OrchestratorType    string            `json:"orchestratorType"`
 	OrchestratorRelease string            `json:"orchestratorRelease,omitempty"`
 	OrchestratorVersion string            `json:"orchestratorVersion,omitempty"`
 	KubernetesConfig    *KubernetesConfig `json:"kubernetesConfig,omitempty"`
@@ -241,7 +242,7 @@ func (o *OrchestratorProfile) UnmarshalJSON(b []byte) error {
 	// Unmarshal OrchestratorType, format it as well
 	orchestratorType := o.OrchestratorType
 	switch {
-	case strings.EqualFold(orchestratorType, Kubernetes):
+	case strings.EqualFold(orchestratorType, Kubernetes), orchestratorType == "":
 		o.OrchestratorType = Kubernetes
 	default:
 		return errors.Errorf("OrchestratorType has unknown orchestrator: %s", orchestratorType)

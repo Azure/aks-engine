@@ -253,7 +253,7 @@ func (cli *CLIProvisioner) provision() error {
 		}
 	}
 
-	if cli.Config.IsKubernetes() && !cli.Config.SkipTest {
+	if !cli.Config.SkipTest {
 		// Store the hosts for future introspection
 		hosts, err := cli.Account.GetHosts(cli.Config.Name)
 		if err != nil {
@@ -304,9 +304,8 @@ func (cli *CLIProvisioner) generateAndDeploy() error {
 	}
 	cli.Engine.ExpandedDefinition = csGenerated
 
-	// Kubernetes deployments should have a kubeconfig available
-	// at this point.
-	if cli.Config.IsKubernetes() && !cli.IsPrivate() {
+	// kubeconfig should be available at this point
+	if !cli.IsPrivate() {
 		cli.Config.SetKubeConfig()
 	}
 
@@ -329,54 +328,52 @@ func (cli *CLIProvisioner) generateName() string {
 }
 
 func (cli *CLIProvisioner) waitForNodes() error {
-	if cli.Config.IsKubernetes() {
-		if !cli.IsPrivate() {
-			log.Println("Waiting on nodes to go into ready state...")
-			var expectedReadyNodes int
-			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !cli.Config.RebootControlPlaneNodes {
-				expectedReadyNodes = cli.Engine.NodeCount()
-				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
-			} else {
-				expectedReadyNodes = -1
-			}
-			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cli.Config.Timeout)
-			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
-			out, _ := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			if !ready {
-				return errors.New("Error: Not all nodes in a healthy state")
-			}
-			nodes, err := node.GetWithRetry(1*time.Second, cli.Config.Timeout)
-			if err != nil {
-				return errors.Wrap(err, "Unable to get the list of nodes")
-			}
-			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
-				for _, n := range nodes {
-					exp, err := regexp.Compile(common.LegacyControlPlaneVMPrefix)
+	if !cli.IsPrivate() {
+		log.Println("Waiting on nodes to go into ready state...")
+		var expectedReadyNodes int
+		if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !cli.Config.RebootControlPlaneNodes {
+			expectedReadyNodes = cli.Engine.NodeCount()
+			log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+		} else {
+			expectedReadyNodes = -1
+		}
+		ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cli.Config.Timeout)
+		cmd := exec.Command("k", "get", "nodes", "-o", "wide")
+		out, _ := cmd.CombinedOutput()
+		log.Printf("%s\n", out)
+		if !ready {
+			return errors.New("Error: Not all nodes in a healthy state")
+		}
+		nodes, err := node.GetWithRetry(1*time.Second, cli.Config.Timeout)
+		if err != nil {
+			return errors.Wrap(err, "Unable to get the list of nodes")
+		}
+		if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			for _, n := range nodes {
+				exp, err := regexp.Compile(common.LegacyControlPlaneVMPrefix)
+				if err != nil {
+					return err
+				}
+				if !exp.MatchString(n.Metadata.Name) {
+					err = n.AddLabelWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
 					if err != nil {
-						return err
+						return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
 					}
-					if !exp.MatchString(n.Metadata.Name) {
-						err = n.AddLabelWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
-						if err != nil {
-							return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
-						}
-						err = n.AddAnnotationWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
-						if err != nil {
-							return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
-						}
+					err = n.AddAnnotationWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
+					if err != nil {
+						return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
 					}
 				}
 			}
-		} else {
-			log.Println("This cluster is private")
-			if cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile == nil {
-				// TODO: add "bring your own jumpbox to e2e"
-				return errors.New("Error: cannot test a private cluster without provisioning a jumpbox")
-			}
-			log.Printf("Testing a %s private cluster...", cli.Config.Orchestrator)
-			// TODO: create SSH connection and get nodes and k8s version
 		}
+	} else {
+		log.Println("This cluster is private")
+		if cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile == nil {
+			// TODO: add "bring your own jumpbox to e2e"
+			return errors.New("Error: cannot test a private cluster without provisioning a jumpbox")
+		}
+		log.Printf("Testing a %s private cluster...", cli.Config.Orchestrator)
+		// TODO: create SSH connection and get nodes and k8s version
 	}
 
 	return nil
@@ -435,8 +432,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 
 // IsPrivate will return true if the cluster has no public IPs
 func (cli *CLIProvisioner) IsPrivate() bool {
-	return cli.Config.IsKubernetes() &&
-		cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
+	return cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
 		to.Bool(cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
 }
 

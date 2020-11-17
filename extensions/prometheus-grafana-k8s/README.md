@@ -7,9 +7,6 @@ This is the prometheus-grafana extension.  Add this extension to the API model y
 {
   "apiVersion": "vlabs",
   "properties": {
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",

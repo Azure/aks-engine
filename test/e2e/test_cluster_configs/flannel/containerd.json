@@ -5,7 +5,6 @@
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"containerRuntime": "containerd",
 					"addons": [

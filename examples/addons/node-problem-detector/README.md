@@ -11,7 +11,6 @@ The following is a sample API definition with the node-problem-detector addon en
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
           {

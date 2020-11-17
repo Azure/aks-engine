@@ -5,7 +5,6 @@
             "enableIPv6DualStack": true
         },
         "orchestratorProfile": {
-            "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.16",
             "kubernetesConfig": {
                 "clusterSubnet": "10.244.0.0/16,fc00::/8",

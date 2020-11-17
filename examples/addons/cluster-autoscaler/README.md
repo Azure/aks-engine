@@ -20,7 +20,6 @@ Here's a simple example of a cluster configuration (API model) that includes the
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
           {

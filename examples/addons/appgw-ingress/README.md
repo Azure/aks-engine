@@ -27,7 +27,6 @@ Once, the infrastructure is deployed, please follow the instructions to deploy t
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPlugin": "azure",
         "addons": [

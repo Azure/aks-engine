@@ -98,9 +98,6 @@ In this case, we are going to use the following template (this creates a cluster
 {
   "apiVersion": "vlabs",
   "properties": {
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",

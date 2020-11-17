@@ -255,7 +255,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInGene
 	}
 
 	err = generateCmd.validateAPIModelAsVLabs()
-	expectedErr := errors.New("ServicePrincipalProfile must be specified with Orchestrator Kubernetes")
+	expectedErr := errors.New("ServicePrincipalProfile must be specified")
 
 	if err != nil && err.Error() != expectedErr.Error() {
 		t.Fatalf("expected validate generate command to return error %s, but instead got %s", expectedErr.Error(), err.Error())

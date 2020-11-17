@@ -512,6 +512,9 @@ func GetValidPatchVersion(orchType, orchVer string, isUpdate, hasWindows bool, i
 
 // RationalizeReleaseAndVersion return a version when it can be rationalized from the input, otherwise ""
 func RationalizeReleaseAndVersion(orchType, orchRel, orchVer string, isUpdate, hasWindows bool, isAzureStackCloud bool) (version string) {
+	if orchType == "" {
+		orchType = Kubernetes
+	}
 	// ignore "v" prefix in orchestrator version and release: "v1.8.0" is equivalent to "1.8.0", "v1.9" is equivalent to "1.9"
 	orchVer = strings.TrimPrefix(orchVer, "v")
 	orchRel = strings.TrimPrefix(orchRel, "v")

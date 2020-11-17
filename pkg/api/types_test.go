@@ -3444,28 +3444,6 @@ func TestIsHostsConfigAgentEnabled(t *testing.T) {
 	}
 }
 
-func TestOrchestrator(t *testing.T) {
-	cases := []struct {
-		p                    Properties
-		expectedIsKubernetes bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-			},
-			expectedIsKubernetes: true,
-		},
-	}
-
-	for _, c := range cases {
-		if c.expectedIsKubernetes != c.p.OrchestratorProfile.IsKubernetes() {
-			t.Fatalf("Expected IsKubernetes() to be %t with OrchestratorType=%s", c.expectedIsKubernetes, c.p.OrchestratorProfile.OrchestratorType)
-		}
-	}
-}
-
 func TestWindowsProfile(t *testing.T) {
 	trueVar := true
 	w := WindowsProfile{}
