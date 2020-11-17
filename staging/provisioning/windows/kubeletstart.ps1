@@ -30,7 +30,7 @@ ipmo $global:HNSModule
 
 # Calculate some local paths
 $global:VolumePluginDir = [Io.path]::Combine($global:KubeDir, "volumeplugins")
-mkdir $global:VolumePluginDir
+mkdir $global:VolumePluginDir -Force
 
 $KubeletArgList = $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs # This is the initial list passed in from aks-engine
 $KubeletArgList += "--node-labels=$global:KubeletNodeLabels"
@@ -212,9 +212,7 @@ if ($global:NetworkPlugin -eq "kubenet") {
 
         # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
         if (-not $podCidrDiscovered) {
-            $argList = $KubeletArgListStr
-
-            $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $argList
+            $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $KubeletArgList
 
             # run kubelet until podCidr is discovered
             Write-Host "waiting to discover pod CIDR"
