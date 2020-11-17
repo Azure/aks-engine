@@ -49,9 +49,7 @@ type UpgradeAgentNode struct {
 // the node
 // The 'drain' flag is used to invoke 'cordon and drain' flow.
 func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
-	var kubeAPIServerURL string
-
-	kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
+	kubeAPIServerURL := kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 
 	if vmName == nil || *vmName == "" {
 		return errors.Errorf("Error deleting VM: VM name was empty")

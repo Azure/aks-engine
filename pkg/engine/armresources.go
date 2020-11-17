@@ -43,8 +43,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 			armResources = append(armResources, userAssignedID)
 		}
 
-		var msiRoleAssignment RoleAssignmentARM
-		msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
+		msiRoleAssignment := createMSIRoleAssignment(IdentityContributorRole)
 
 		armResources = append(armResources, msiRoleAssignment)
 	}
