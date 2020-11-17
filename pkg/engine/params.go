@@ -4,12 +4,9 @@
 package engine
 
 import (
-	"encoding/base64"
 	"fmt"
-	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
@@ -46,7 +43,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			addValue(parametersMap, "dnsServer", linuxProfile.CustomNodesDNS.DNSServer)
 		}
 	}
-	// masterEndpointDNSNamePrefix is the basis for storage account creation across dcos, swarm, and k8s
+	// masterEndpointDNSNamePrefix is the basis for storage account creation for k8s
 	if properties.MasterProfile != nil {
 		// MasterProfile exists, uses master DNS prefix
 		addValue(parametersMap, "masterEndpointDNSNamePrefix", properties.MasterProfile.DNSPrefix)
@@ -60,7 +57,7 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			if properties.MasterProfile.IsVirtualMachineScaleSets() {
 				addValue(parametersMap, "agentVnetSubnetID", properties.MasterProfile.AgentVnetSubnetID)
 			}
-			if properties.OrchestratorProfile.IsKubernetes() && properties.MasterProfile.VnetCidr != "" {
+			if properties.MasterProfile.VnetCidr != "" {
 				addValue(parametersMap, "vnetCidr", properties.MasterProfile.VnetCidr)
 			}
 		} else {
@@ -98,95 +95,8 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		}
 	}
 
-	//Swarm and SwarmMode Parameters
-	if properties.OrchestratorProfile.OrchestratorType == api.Swarm || properties.OrchestratorProfile.OrchestratorType == api.SwarmMode {
-		var dockerEngineRepo, dockerComposeDownloadURL string
-		if cloudSpecConfig.DockerSpecConfig.DockerEngineRepo == "" {
-			dockerEngineRepo = DefaultDockerEngineRepo
-		} else {
-			dockerEngineRepo = cloudSpecConfig.DockerSpecConfig.DockerEngineRepo
-		}
-		if cloudSpecConfig.DockerSpecConfig.DockerComposeDownloadURL == "" {
-			dockerComposeDownloadURL = DefaultDockerComposeURL
-		} else {
-			dockerComposeDownloadURL = cloudSpecConfig.DockerSpecConfig.DockerComposeDownloadURL
-		}
-		addValue(parametersMap, "dockerEngineDownloadRepo", dockerEngineRepo)
-		addValue(parametersMap, "dockerComposeDownloadURL", dockerComposeDownloadURL)
-	}
-
 	// Kubernetes Parameters
-	if properties.OrchestratorProfile.IsKubernetes() {
-		assignKubernetesParameters(properties, parametersMap, cloudSpecConfig, generatorCode)
-	}
-
-	if strings.HasPrefix(properties.OrchestratorProfile.OrchestratorType, api.DCOS) {
-		dcosBootstrapURL := cloudSpecConfig.DCOSSpecConfig.DCOS188BootstrapDownloadURL
-		dcosWindowsBootstrapURL := cloudSpecConfig.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL
-		dcosRepositoryURL := cloudSpecConfig.DCOSSpecConfig.DcosRepositoryURL
-		dcosClusterPackageListID := cloudSpecConfig.DCOSSpecConfig.DcosClusterPackageListID
-		dcosProviderPackageID := cloudSpecConfig.DCOSSpecConfig.DcosProviderPackageID
-
-		if properties.OrchestratorProfile.OrchestratorType == api.DCOS {
-			switch properties.OrchestratorProfile.OrchestratorVersion {
-			case common.DCOSVersion1Dot8Dot8:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS188BootstrapDownloadURL
-			case common.DCOSVersion1Dot9Dot0:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS190BootstrapDownloadURL
-			case common.DCOSVersion1Dot9Dot8:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS198BootstrapDownloadURL
-			case common.DCOSVersion1Dot10Dot0:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS110BootstrapDownloadURL
-			default:
-				dcosBootstrapURL = getDCOSDefaultBootstrapInstallerURL(properties.OrchestratorProfile)
-				dcosWindowsBootstrapURL = getDCOSDefaultWindowsBootstrapInstallerURL(properties.OrchestratorProfile)
-			}
-		}
-
-		if properties.OrchestratorProfile.DcosConfig != nil {
-			if properties.OrchestratorProfile.DcosConfig.DcosWindowsBootstrapURL != "" {
-				dcosWindowsBootstrapURL = properties.OrchestratorProfile.DcosConfig.DcosWindowsBootstrapURL
-			}
-			if properties.OrchestratorProfile.DcosConfig.DcosBootstrapURL != "" {
-				dcosBootstrapURL = properties.OrchestratorProfile.DcosConfig.DcosBootstrapURL
-			}
-			if len(properties.OrchestratorProfile.DcosConfig.Registry) > 0 {
-				addValue(parametersMap, "registry", properties.OrchestratorProfile.DcosConfig.Registry)
-				addValue(parametersMap, "registryKey", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", properties.OrchestratorProfile.DcosConfig.RegistryUser, properties.OrchestratorProfile.DcosConfig.RegistryPass))))
-			}
-			if properties.OrchestratorProfile.DcosConfig.DcosRepositoryURL != "" {
-				dcosRepositoryURL = properties.OrchestratorProfile.DcosConfig.DcosRepositoryURL
-			} else {
-				dcosRepositoryURL = getDCOSDefaultRepositoryURL(
-					properties.OrchestratorProfile.OrchestratorType,
-					properties.OrchestratorProfile.OrchestratorVersion)
-			}
-
-			if properties.OrchestratorProfile.DcosConfig.DcosClusterPackageListID != "" {
-				dcosClusterPackageListID = properties.OrchestratorProfile.DcosConfig.DcosClusterPackageListID
-			}
-
-			if properties.OrchestratorProfile.DcosConfig.DcosProviderPackageID != "" {
-				dcosProviderPackageID = properties.OrchestratorProfile.DcosConfig.DcosProviderPackageID
-			} else {
-				dcosProviderPackageID = getDCOSDefaultProviderPackageGUID(
-					properties.OrchestratorProfile.OrchestratorType,
-					properties.OrchestratorProfile.OrchestratorVersion,
-					properties.MasterProfile.Count)
-			}
-		}
-
-		addValue(parametersMap, "dcosBootstrapURL", dcosBootstrapURL)
-		addValue(parametersMap, "dcosWindowsBootstrapURL", dcosWindowsBootstrapURL)
-		addValue(parametersMap, "dcosRepositoryURL", dcosRepositoryURL)
-		addValue(parametersMap, "dcosClusterPackageListID", dcosClusterPackageListID)
-		addValue(parametersMap, "dcosProviderPackageID", dcosProviderPackageID)
-
-		if properties.OrchestratorProfile.DcosConfig != nil && properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-			addValue(parametersMap, "bootstrapStaticIP", properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP)
-			addValue(parametersMap, "bootstrapVMSize", properties.OrchestratorProfile.DcosConfig.BootstrapProfile.VMSize)
-		}
-	}
+	assignKubernetesParameters(properties, parametersMap, cloudSpecConfig, generatorCode)
 
 	// Agent parameters
 	for _, agentProfile := range properties.AgentPoolProfiles {

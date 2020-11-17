@@ -1,14 +1,12 @@
 {
 	"env": {
+		"UPGRADE_CLUSTER": true,
 		"SCALE_CLUSTER": true,
 		"STABILITY_ITERATIONS": "0"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
-			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
-			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",

@@ -55,7 +55,6 @@ The Dashboard addon is not enabled by default for an AKS Engine cluster. You mus
 
 ```json
 "orchestratorProfile": {
-  "orchestratorType": "Kubernetes",
   "kubernetesConfig": {
     "addons": [
       {

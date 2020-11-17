@@ -3247,14 +3247,6 @@ func TestRequireRouteTable(t *testing.T) {
 		{
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						NetworkPolicy: "",
@@ -3310,14 +3302,6 @@ func TestIsPrivateCluster(t *testing.T) {
 		p        Properties
 		expected bool
 	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expected: false,
-		},
 		{
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -3409,14 +3393,6 @@ func TestIsHostsConfigAgentEnabled(t *testing.T) {
 		{
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
 				},
 			},
@@ -3464,112 +3440,6 @@ func TestIsHostsConfigAgentEnabled(t *testing.T) {
 	for _, c := range cases {
 		if c.p.OrchestratorProfile.IsHostsConfigAgentEnabled() != c.expected {
 			t.Fatalf("expected IsHostsConfigAgentEnabled() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.IsHostsConfigAgentEnabled())
-		}
-	}
-}
-
-func TestOrchestrator(t *testing.T) {
-	cases := []struct {
-		p                    Properties
-		expectedIsDCOS       bool
-		expectedIsKubernetes bool
-		expectedIsSwarmMode  bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expectedIsDCOS:       true,
-			expectedIsKubernetes: false,
-			expectedIsSwarmMode:  false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-			},
-			expectedIsDCOS:       false,
-			expectedIsKubernetes: true,
-			expectedIsSwarmMode:  false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: SwarmMode,
-				},
-			},
-			expectedIsDCOS:       false,
-			expectedIsKubernetes: false,
-			expectedIsSwarmMode:  true,
-		},
-	}
-
-	for _, c := range cases {
-		if c.expectedIsDCOS != c.p.OrchestratorProfile.IsDCOS() {
-			t.Fatalf("Expected IsDCOS() to be %t with OrchestratorType=%s", c.expectedIsDCOS, c.p.OrchestratorProfile.OrchestratorType)
-		}
-		if c.expectedIsKubernetes != c.p.OrchestratorProfile.IsKubernetes() {
-			t.Fatalf("Expected IsKubernetes() to be %t with OrchestratorType=%s", c.expectedIsKubernetes, c.p.OrchestratorProfile.OrchestratorType)
-		}
-		if c.expectedIsSwarmMode != c.p.OrchestratorProfile.IsSwarmMode() {
-			t.Fatalf("Expected IsSwarmMode() to be %t with OrchestratorType=%s", c.expectedIsSwarmMode, c.p.OrchestratorProfile.OrchestratorType)
-		}
-	}
-}
-
-func TestIsDCOS19(t *testing.T) {
-	cases := []struct {
-		p                Properties
-		expectedIsDCOS19 bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    DCOS,
-					OrchestratorVersion: common.DCOSVersion1Dot9Dot8,
-				},
-			},
-			expectedIsDCOS19: true,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    DCOS,
-					OrchestratorVersion: "1.9.7",
-				},
-			},
-			expectedIsDCOS19: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expectedIsDCOS19: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{},
-			},
-			expectedIsDCOS19: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-			},
-			expectedIsDCOS19: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.expectedIsDCOS19 != c.p.OrchestratorProfile.IsDCOS19() {
-			t.Fatalf("Expected IsDCOS19() to be %t got %t", c.expectedIsDCOS19, c.p.OrchestratorProfile.IsDCOS19())
 		}
 	}
 }
@@ -7079,85 +6949,6 @@ func TestAADAdminGroupIDMethods(t *testing.T) {
 				t.Errorf("expected HasAADAdminGroupID %s, but got %s", test.expectedGetAADAdminGroupID, getAADAdminGroupID)
 			}
 		})
-	}
-}
-
-func TestDcosConfigHasPrivateRegistry(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig: &DcosConfig{
-						Registry: "my-custom-registry",
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig: &DcosConfig{
-						Registry: "",
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig:       &DcosConfig{},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry() != c.expected {
-			t.Fatalf("expected HasPrivateRegistry() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry())
-		}
-	}
-}
-
-func TestDcosConfigHasBootstrap(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig:       &DcosConfig{},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig: &DcosConfig{
-						BootstrapProfile: &BootstrapProfile{},
-					},
-				},
-			},
-			expected: true,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.OrchestratorProfile.DcosConfig.HasBootstrap() != c.expected {
-			t.Fatalf("expected HasBootstrap() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasBootstrap())
-		}
 	}
 }
 

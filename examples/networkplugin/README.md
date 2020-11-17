@@ -18,12 +18,11 @@ If the container host VM has multiple network interfaces, the primary network in
 
 More detailed documentation can be found in [the Azure Container Networking Repository](https://github.com/Azure/azure-container-networking/tree/master/docs)
 
-Example of templates enabling CNI:
+Example of templates enabling Azure CNI:
 
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPlugin": "azure"
       }
@@ -32,12 +31,14 @@ Example of templates enabling CNI:
   }
 ```
 
-Or by not specifying any network policy, leaving the default :
+Or by not specifying any network plugin, you'll get Azure CNI by default:
 
 ```json
-    "properties": {
+  "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
+      "kubernetesConfig": {
+        <other kubernetesConfig properties>
+      }
     }
     ...
   }
@@ -50,7 +51,6 @@ Also available is the Kubernetes-native kubenet implementation, which is declare
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPlugin": "kubenet"
       }

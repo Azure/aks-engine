@@ -19,7 +19,7 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
 					PrivateCluster: &api.PrivateCluster{
-						Enabled: to.BoolPtr(true),
+						Enabled: to.BoolPtr(false),
 					},
 				},
 			},
@@ -149,6 +149,25 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 	rules = append(rules, rdpRule, vnetRule, blockOutBoundRule)
 
 	expected.SecurityRules = &rules
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
+	}
+
+	// Test private cluster
+
+	cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled = to.BoolPtr(true)
+
+	actual = CreateNetworkSecurityGroup(cs)
+
+	for _, rule := range rules {
+		if to.String(rule.Name) == "allow_kube_tls" {
+			source := "VirtualNetwork"
+			rule.SourceAddressPrefix = &source
+		}
+	}
 
 	diff = cmp.Diff(actual, expected)
 

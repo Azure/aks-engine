@@ -268,7 +268,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	indexToVM := make(map[int]string)
 
 	// Get nodes list from the k8s API before scaling for the desired pool
-	if sc.apiserverURL != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
+	if sc.apiserverURL != "" {
 		nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, -1)
 		if err == nil && nodes != nil {
 			sc.nodes = nodes
@@ -361,11 +361,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			for _, node := range vmsToDelete {
 				sc.logger.Infof("Node %s will be cordoned and drained\n", node)
 			}
-			if orchestratorInfo.OrchestratorType == api.Kubernetes {
-				err := sc.drainNodes(vmsToDelete)
-				if err != nil {
-					return errors.Wrap(err, "Got error while draining the nodes to be deleted")
-				}
+			err := sc.drainNodes(vmsToDelete)
+			if err != nil {
+				return errors.Wrap(err, "Got error while draining the nodes to be deleted")
 			}
 
 			for _, node := range vmsToDelete {
@@ -505,23 +503,21 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"Index"] = winPoolIndex
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"VMNamePrefix"] = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)
 	}
-	if orchestratorInfo.OrchestratorType == api.Kubernetes {
-		if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
-			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(sc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", sc.apiModelPath)
-			}
-		}
-		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
+	if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		err = transformer.NormalizeForK8sSLBScalingOrUpgrade(sc.logger, templateJSON)
 		if err != nil {
-			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
+			return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", sc.apiModelPath)
 		}
+	}
+	err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
+	if err != nil {
+		return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
+	}
 
-		transformer.RemoveImmutableResourceProperties(sc.logger, templateJSON)
+	transformer.RemoveImmutableResourceProperties(sc.logger, templateJSON)
 
-		if sc.agentPool.IsAvailabilitySets() {
-			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
-		}
+	if sc.agentPool.IsAvailabilitySets() {
+		addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
 	}
 
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))

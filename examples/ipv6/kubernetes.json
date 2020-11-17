@@ -5,7 +5,6 @@
             "enableIPv6Only": true
         },
         "orchestratorProfile": {
-            "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.18",
             "kubernetesConfig": {
                 "loadBalancerSku": "Standard",

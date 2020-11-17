@@ -18,7 +18,6 @@ The following is a sample API definition with azure-policy addon.
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
           {

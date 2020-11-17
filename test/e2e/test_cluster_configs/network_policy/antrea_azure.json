@@ -7,7 +7,6 @@
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPolicy": "antrea",
 					"networkPlugin": "azure"

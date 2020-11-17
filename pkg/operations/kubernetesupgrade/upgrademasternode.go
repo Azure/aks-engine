@@ -55,9 +55,6 @@ func (kmn *UpgradeMasterNode) CreateNode(ctx context.Context, poolName string, m
 	masterOffset := templateVariables["masterCount"]
 	kmn.logger.Infof("Master pool set count to: %v temporarily during upgrade...", masterOffset)
 
-	// Debug function - keep commented out
-	// WriteTemplate(kmn.Translator, kmn.UpgradeContainerService, kmn.TemplateMap, kmn.ParametersMap)
-
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	deploymentSuffix := random.Int31()
 	deploymentName := fmt.Sprintf("master-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)

@@ -18,7 +18,7 @@ Here are the cluster definitions for apiVersion "vlabs":
 
 | Name                | Required | Description                                        |
 | ------------------- | -------- | -------------------------------------------------- |
-| orchestratorType    | yes      | Specifies the orchestrator type for the cluster    |
+| orchestratorType    | no       | Defaults to "Kubernetes"; a legacy property to accommodate previously supported orchestrators (e.g., DC/OS) |
 | orchestratorRelease | no       | Specifies the orchestrator release for the cluster |
 | orchestratorVersion | no       | Specifies the orchestrator version for the cluster |
 
@@ -578,7 +578,6 @@ Or perhaps you want to customize/override the set of admission-control flags pas
 
 ```json
 "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "orchestratorRelease": "1.8",
       "kubernetesConfig": {
         "apiServerConfig": {

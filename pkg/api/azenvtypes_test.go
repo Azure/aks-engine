@@ -13,9 +13,6 @@ func TestURLForAzureChinaCloud(t *testing.T) {
 	var azureChinaCloudMirror = "azk8s.cn"
 	g := NewGomegaWithT(t)
 
-	g.Expect(AzureChinaCloudSpec.DockerSpecConfig.DockerEngineRepo).To(ContainSubstring(azureChinaCloudMirror))
-	g.Expect(AzureChinaCloudSpec.DockerSpecConfig.DockerComposeDownloadURL).To(ContainSubstring(azureChinaCloudMirror))
-
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.KubernetesImageBase).To(ContainSubstring(azureChinaCloudMirror))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase).To(ContainSubstring(azureChinaCloudMirror))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.NVIDIAImageBase).To(ContainSubstring(azureChinaCloudMirror))

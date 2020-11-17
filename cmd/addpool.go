@@ -267,27 +267,25 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 		templateJSON["variables"].(map[string]interface{})[apc.nodePool.Name+"Index"] = winPoolIndex
 		templateJSON["variables"].(map[string]interface{})[apc.nodePool.Name+"VMNamePrefix"] = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, winPoolIndex)
 	}
-	if orchestratorInfo.OrchestratorType == api.Kubernetes {
-		transformer := transform.Transformer{Translator: translator.Translator}
+	transformer := transform.Transformer{Translator: translator.Translator}
 
-		if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
-			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(apc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", apc.apiModelPath)
-			}
+	if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		err = transformer.NormalizeForK8sSLBScalingOrUpgrade(apc.logger, templateJSON)
+		if err != nil {
+			return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", apc.apiModelPath)
 		}
+	}
 
-		if apc.nodePool.IsVirtualMachineScaleSets() {
-			err = transformer.NormalizeForK8sVMASScalingUp(apc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrapf(err, "error transforming the template for scaling template %s", apc.apiModelPath)
-			}
-			addValue(parametersJSON, apc.nodePool.Name+"Count", 0)
-		} else {
-			err = transformer.NormalizeForK8sAddVMASPool(apc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrap(err, "error transforming the template to add a VMAS node pool")
-			}
+	if apc.nodePool.IsVirtualMachineScaleSets() {
+		err = transformer.NormalizeForK8sVMASScalingUp(apc.logger, templateJSON)
+		if err != nil {
+			return errors.Wrapf(err, "error transforming the template for scaling template %s", apc.apiModelPath)
+		}
+		addValue(parametersJSON, apc.nodePool.Name+"Count", 0)
+	} else {
+		err = transformer.NormalizeForK8sAddVMASPool(apc.logger, templateJSON)
+		if err != nil {
+			return errors.Wrap(err, "error transforming the template to add a VMAS node pool")
 		}
 	}
 

@@ -3,9 +3,6 @@
   "plan": {},
   "properties": {
     "provisioningState": "",
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "masterdns1",

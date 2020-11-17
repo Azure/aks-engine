@@ -216,11 +216,8 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 			//azureStackCloudSpec is the default configurations for azure stack with public Azure.
 			azureStackCloudSpec := AzureEnvironmentSpecConfig{
 				CloudName: AzureStackCloud,
-				//DockerSpecConfig specify the docker engine download repo
-				DockerSpecConfig: DefaultDockerSpecConfig,
 				//KubernetesSpecConfig is the default kubernetes container image url.
 				KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-				DCOSSpecConfig:       DefaultDCOSSpecConfig,
 				EndpointConfig: AzureEndpointConfig{
 					ResourceManagerVMDNSSuffix: "",
 				},

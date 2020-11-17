@@ -177,12 +177,6 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
 			azureCustomCloudSpec.CloudName = helpers.EnsureString(ascc.CloudName, azureCustomCloudSpec.CloudName)
 
-			// DockerSpecConfig
-			asccDockerSpecConfig := ascc.DockerSpecConfig
-			azsDockerSpecConfig := azureCustomCloudSpec.DockerSpecConfig
-			azureCustomCloudSpec.DockerSpecConfig.DockerComposeDownloadURL = helpers.EnsureString(asccDockerSpecConfig.DockerComposeDownloadURL, azsDockerSpecConfig.DockerComposeDownloadURL)
-			azureCustomCloudSpec.DockerSpecConfig.DockerEngineRepo = helpers.EnsureString(asccDockerSpecConfig.DockerEngineRepo, azsDockerSpecConfig.DockerComposeDownloadURL)
-
 			//KubernetesSpecConfig
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureCustomCloudSpec.KubernetesSpecConfig

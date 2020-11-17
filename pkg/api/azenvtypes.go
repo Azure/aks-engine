@@ -3,35 +3,12 @@
 
 package api
 
-import "fmt"
-
 //AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
 type AzureEnvironmentSpecConfig struct {
 	CloudName            string                        `json:"cloudName,omitempty"`
-	DockerSpecConfig     DockerSpecConfig              `json:"dockerSpecConfig,omitempty"`
 	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
-	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
 	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
-}
-
-//DockerSpecConfig is the configurations of docker
-type DockerSpecConfig struct {
-	DockerEngineRepo         string `json:"dockerEngineRepo,omitempty"`
-	DockerComposeDownloadURL string `json:"dockerComposeDownloadURL,omitempty"`
-}
-
-//DCOSSpecConfig is the configurations of DCOS
-type DCOSSpecConfig struct {
-	DCOS188BootstrapDownloadURL     string
-	DCOS190BootstrapDownloadURL     string
-	DCOS198BootstrapDownloadURL     string
-	DCOS110BootstrapDownloadURL     string
-	DCOS111BootstrapDownloadURL     string
-	DCOSWindowsBootstrapDownloadURL string
-	DcosRepositoryURL               string // For custom install, for example CI, need these three addributes
-	DcosClusterPackageListID        string // the id of the package list file
-	DcosProviderPackageID           string // the id of the dcos-provider-xxx package
 }
 
 //KubernetesSpecConfig is the kubernetes container images used.
@@ -109,24 +86,6 @@ var (
 		AlwaysPullWindowsPauseImage:          DefaultAlwaysPullWindowsPauseImage,
 	}
 
-	//DefaultDCOSSpecConfig is the default DC/OS binary download URL.
-	DefaultDCOSSpecConfig = DCOSSpecConfig{
-		DCOS188BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable", "5df43052907c021eeb5de145419a3da1898c58a5"),
-		DCOS190BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable", "58fd0833ce81b6244fc73bf65b5deb43217b0bd7"),
-		DCOS198BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable/1.9.8", "f4ae0d20665fc68ee25282d6f78681b2773c6e10"),
-		DCOS110BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable/1.10.0", "4d92536e7381176206e71ee15b5ffe454439920c"),
-		DCOS111BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable/1.11.0", "a0654657903fb68dff60f6e522a7f241c1bfbf0f"),
-		DCOSWindowsBootstrapDownloadURL: "http://dcos-win.westus.cloudapp.azure.com/dcos-windows/stable/",
-		DcosRepositoryURL:               "https://dcosio.azureedge.net/dcos/stable/1.11.0",
-		DcosClusterPackageListID:        "248a66388bba1adbcb14a52fd3b7b424ab06fa76",
-	}
-
-	//DefaultDockerSpecConfig is the default Docker engine repo.
-	DefaultDockerSpecConfig = DockerSpecConfig{
-		DockerEngineRepo:         "https://aptdocker.azureedge.net/repo",
-		DockerComposeDownloadURL: "https://github.com/docker/compose/releases/download",
-	}
-
 	//Ubuntu1604OSImageConfig is the default Linux distribution.
 	Ubuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "UbuntuServer",
@@ -188,7 +147,7 @@ var (
 		ImageOffer:     "aks-windows",
 		ImageSku:       "2019-datacenter-core-smalldisk-2011",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.1554.201109",
+		ImageVersion:   "17763.1577.201112",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -196,7 +155,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.1397.2008070242",
+		ImageVersion:   "17763.1577.2011031610",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -210,11 +169,8 @@ var (
 	//AzureCloudSpec is the default configurations for global azure.
 	AzureCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzurePublicCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DefaultDockerSpecConfig,
 		//KubernetesSpecConfig is the default kubernetes container image url.
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "cloudapp.azure.com",
@@ -237,9 +193,7 @@ var (
 	//AzureGermanCloudSpec is the German cloud config.
 	AzureGermanCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName:            AzureGermanCloud,
-		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
@@ -259,9 +213,7 @@ var (
 	//AzureUSGovernmentCloudSpec is the US government config.
 	AzureUSGovernmentCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName:            AzureUSGovernmentCloud,
-		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
@@ -281,11 +233,6 @@ var (
 	//AzureChinaCloudSpec is the configurations for Azure China (Mooncake)
 	AzureChinaCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzureChinaCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DockerSpecConfig{
-			DockerEngineRepo:         "https://mirror.azk8s.cn/docker-engine/apt/repo/",
-			DockerComposeDownloadURL: "https://mirror.azk8s.cn/docker-toolbox/linux/compose",
-		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:    "gcr.azk8s.cn/google_containers/",
@@ -307,12 +254,6 @@ var (
 			WindowsProvisioningScriptsPackageURL: "https://mirror.azk8s.cn/aks-engine/windows/provisioning/signedscripts-" + DefaultWindowsProvisioningScriptsPackageVersion + ".zip",
 			WindowsPauseImageURL:                 "mcr.microsoft.com/oss/kubernetes/pause:" + WindowsPauseImageVersion,
 			AlwaysPullWindowsPauseImage:          DefaultAlwaysPullWindowsPauseImage,
-		},
-		DCOSSpecConfig: DCOSSpecConfig{
-			DCOS188BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "5df43052907c021eeb5de145419a3da1898c58a5"),
-			DCOSWindowsBootstrapDownloadURL: "https://dcosdevstorage.blob.core.windows.net/dcos-windows",
-			DCOS190BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "58fd0833ce81b6244fc73bf65b5deb43217b0bd7"),
-			DCOS198BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "f4ae0d20665fc68ee25282d6f78681b2773c6e10"),
 		},
 
 		EndpointConfig: AzureEndpointConfig{

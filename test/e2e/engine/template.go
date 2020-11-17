@@ -143,7 +143,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		isAzureStackCloud = true
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig == nil {
+	if prop.OrchestratorProfile == nil {
+		prop.OrchestratorProfile = &vlabs.OrchestratorProfile{
+			KubernetesConfig: &vlabs.KubernetesConfig{},
+		}
+	} else if prop.OrchestratorProfile.KubernetesConfig == nil {
 		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 	}
 
@@ -167,12 +171,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.MasterDNSPrefix != "" {
 		prop.MasterProfile.DNSPrefix = config.MasterDNSPrefix
-	}
-
-	if !cfg.IsKubernetes() && config.AgentDNSPrefix != "" {
-		for idx, pool := range prop.AgentPoolProfiles {
-			pool.DNSPrefix = fmt.Sprintf("%v-%v", config.AgentDNSPrefix, idx)
-		}
 	}
 
 	if prop.LinuxProfile != nil {

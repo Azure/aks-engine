@@ -102,9 +102,6 @@ func (kan *UpgradeAgentNode) CreateNode(ctx context.Context, poolName string, ag
 	templateVariables := kan.TemplateMap["variables"].(map[string]interface{})
 	templateVariables[poolOffsetVarName] = agentNo
 
-	// Debug function - keep commented out
-	// WriteTemplate(kan.Translator, kan.UpgradeContainerService, kan.TemplateMap, kan.ParametersMap)
-
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	deploymentSuffix := random.Int31()
 	deploymentName := fmt.Sprintf("agent-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)

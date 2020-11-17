@@ -17,7 +17,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 
-	"github.com/blang/semver"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -53,7 +52,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(params.IsUpgrade)
+		properties.setMasterProfileDefaults()
 	}
 
 	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
@@ -90,7 +89,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	if a.OrchestratorProfile == nil {
-		return
+		a.OrchestratorProfile = &OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		}
 	}
 	o := a.OrchestratorProfile
 	o.OrchestratorVersion = common.GetValidPatchVersion(
@@ -562,13 +563,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					if !cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
 						profile.Subnet = cs.Properties.MasterProfile.Subnet
 					}
-					if cs.Properties.OrchestratorProfile.OrchestratorType == Kubernetes {
-						if !cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
-							profile.Subnet = cs.Properties.MasterProfile.Subnet
-						}
-					} else {
-						profile.Subnet = fmt.Sprintf(DefaultAgentSubnetTemplate, subnetCounter)
-					}
 					subnetCounter++
 				}
 			}
@@ -584,7 +578,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 						// Ensure deprecated distros are overridden
 						// Previous versions of aks-engine required the docker-engine distro for N series vms,
 						// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
-					} else if cs.Properties.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
+					} else if isUpgrade || isScale {
 						if profile.Distro == AKSDockerEngine || profile.Distro == AKS1604Deprecated {
 							profile.Distro = AKSUbuntu1604
 						} else if profile.Distro == AKS1804Deprecated {
@@ -652,28 +646,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		cs.setComponentsConfig(isUpgrade)
 		// Configure Linux kernel runtime values via sysctl.d
 		cs.setSysctlDConfig()
-
-	case DCOS:
-		if o.DcosConfig == nil {
-			o.DcosConfig = &DcosConfig{}
-		}
-		dcosSemVer, _ := semver.Make(o.OrchestratorVersion)
-		dcosBootstrapSemVer, _ := semver.Make(common.DCOSVersion1Dot11Dot0)
-		if !dcosSemVer.LT(dcosBootstrapSemVer) {
-			if o.DcosConfig.BootstrapProfile == nil {
-				o.DcosConfig.BootstrapProfile = &BootstrapProfile{}
-			}
-			if len(o.DcosConfig.BootstrapProfile.VMSize) == 0 {
-				o.DcosConfig.BootstrapProfile.VMSize = "Standard_D2s_v3"
-			}
-		}
-		if !cs.Properties.MasterProfile.IsCustomVNET() {
-			if cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-				if !isUpgrade || len(cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP) == 0 {
-					cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP = DefaultDCOSBootstrapStaticIP
-				}
-			}
-		}
 	}
 }
 
@@ -688,7 +660,7 @@ func (p *Properties) setExtensionDefaults() {
 	}
 }
 
-func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
+func (p *Properties) setMasterProfileDefaults() {
 	// set default to VMAS for now
 	if p.MasterProfile.AvailabilityProfile == "" {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet
@@ -704,34 +676,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	}
 
 	if p.MasterProfile.IsCustomVNET() && p.MasterProfile.IsVirtualMachineScaleSets() {
-		if p.OrchestratorProfile.OrchestratorType == Kubernetes {
-			p.MasterProfile.FirstConsecutiveStaticIP = p.MasterProfile.GetFirstConsecutiveStaticIPAddress(p.MasterProfile.VnetCidr)
-		}
-	}
-
-	if !p.OrchestratorProfile.IsKubernetes() {
-		p.MasterProfile.Distro = Ubuntu
-		if !p.MasterProfile.IsCustomVNET() {
-			if p.OrchestratorProfile.OrchestratorType == DCOS {
-				p.MasterProfile.Subnet = DefaultDCOSMasterSubnet
-				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-					p.MasterProfile.FirstConsecutiveStaticIP = DefaultDCOSFirstConsecutiveStaticIP
-				}
-			} else if p.HasWindows() {
-				p.MasterProfile.Subnet = DefaultSwarmWindowsMasterSubnet
-				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-					p.MasterProfile.FirstConsecutiveStaticIP = DefaultSwarmWindowsFirstConsecutiveStaticIP
-				}
-			} else {
-				p.MasterProfile.Subnet = DefaultMasterSubnet
-				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
-				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
-					p.MasterProfile.FirstConsecutiveStaticIP = DefaultFirstConsecutiveStaticIP
-				}
-			}
-		}
+		p.MasterProfile.FirstConsecutiveStaticIP = p.MasterProfile.GetFirstConsecutiveStaticIPAddress(p.MasterProfile.VnetCidr)
 	}
 
 	if p.MasterProfile.HTTPSourceAddressPrefix == "" {
@@ -818,10 +763,6 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 
 		if profile.EnableVMSSNodePublicIP == nil {
 			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
-		}
-
-		if !p.OrchestratorProfile.IsKubernetes() {
-			profile.Distro = Ubuntu
 		}
 
 		if profile.OSDiskCachingType == "" {
@@ -935,19 +876,11 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 // setStorageDefaults for agents
 func (p *Properties) setStorageDefaults() {
 	if p.MasterProfile != nil && len(p.MasterProfile.StorageProfile) == 0 {
-		if p.OrchestratorProfile.OrchestratorType == Kubernetes {
-			p.MasterProfile.StorageProfile = ManagedDisks
-		} else {
-			p.MasterProfile.StorageProfile = StorageAccount
-		}
+		p.MasterProfile.StorageProfile = ManagedDisks
 	}
 	for _, profile := range p.AgentPoolProfiles {
 		if len(profile.StorageProfile) == 0 {
-			if p.OrchestratorProfile.OrchestratorType == Kubernetes {
-				profile.StorageProfile = ManagedDisks
-			} else {
-				profile.StorageProfile = StorageAccount
-			}
+			profile.StorageProfile = ManagedDisks
 		}
 	}
 }
@@ -974,7 +907,7 @@ type DefaultCertParams struct {
 // SetDefaultCerts generates and sets defaults for the container certificateProfile, returns true if certs are generated
 func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []net.IP, error) {
 	p := cs.Properties
-	if p.MasterProfile == nil || p.OrchestratorProfile.OrchestratorType != Kubernetes {
+	if p.MasterProfile == nil {
 		return false, nil, nil
 	}
 

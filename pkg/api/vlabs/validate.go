@@ -187,235 +187,196 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	o := a.OrchestratorProfile
 	// On updates we only need to make sure there is a supported patch version for the minor version
 	if !isUpdate {
-		switch o.OrchestratorType {
-		case DCOS:
-			version := common.RationalizeReleaseAndVersion(
-				o.OrchestratorType,
-				o.OrchestratorRelease,
-				o.OrchestratorVersion,
-				isUpdate,
-				false,
-				false)
-			if version == "" {
-				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
+		version := common.RationalizeReleaseAndVersion(
+			o.OrchestratorType,
+			o.OrchestratorRelease,
+			o.OrchestratorVersion,
+			isUpdate,
+			a.HasWindows(),
+			a.IsAzureStackCloud())
+		if a.IsAzureStackCloud() {
+			if version == "" && a.HasWindows() {
+				return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, true))
+			} else if version == "" {
+				return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, true))
 			}
-			if o.DcosConfig != nil && o.DcosConfig.BootstrapProfile != nil {
-				if len(o.DcosConfig.BootstrapProfile.StaticIP) > 0 {
-					if net.ParseIP(o.DcosConfig.BootstrapProfile.StaticIP) == nil {
-						return errors.Errorf("DcosConfig.BootstrapProfile.StaticIP '%s' is an invalid IP address",
-							o.DcosConfig.BootstrapProfile.StaticIP)
-					}
-				}
+		} else {
+			if version == "" && a.HasWindows() {
+				return errors.Errorf("the following OrchestratorProfile configuration is not supported with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, false))
+			} else if version == "" {
+				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, false))
 			}
-		case Swarm:
-		case SwarmMode:
-		case Kubernetes:
-			version := common.RationalizeReleaseAndVersion(
-				o.OrchestratorType,
-				o.OrchestratorRelease,
-				o.OrchestratorVersion,
-				isUpdate,
-				a.HasWindows(),
-				a.IsAzureStackCloud())
-			if a.IsAzureStackCloud() {
-				if version == "" && a.HasWindows() {
-					return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, true))
-				} else if version == "" {
-					return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, true))
-				}
-			} else {
-				if version == "" && a.HasWindows() {
-					return errors.Errorf("the following OrchestratorProfile configuration is not supported with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, false))
-				} else if version == "" {
-					return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, false))
-				}
-			}
+		}
 
-			sv, err := semver.Make(version)
+		sv, err := semver.Make(version)
+		if err != nil {
+			return errors.Errorf("could not validate version %s", version)
+		}
+
+		if a.HasAvailabilityZones() {
+			minVersion, err := semver.Make("1.12.0")
 			if err != nil {
-				return errors.Errorf("could not validate version %s", version)
+				return errors.New("could not validate version")
 			}
 
-			if a.HasAvailabilityZones() {
-				minVersion, err := semver.Make("1.12.0")
-				if err != nil {
-					return errors.New("could not validate version")
-				}
+			if sv.LT(minVersion) {
+				return errors.New("availabilityZone is only available in Kubernetes version 1.12 or greater")
+			}
+		}
 
+		if o.KubernetesConfig != nil {
+			err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled(), a.FeatureFlags.IsIPv6OnlyEnabled())
+			if err != nil {
+				return err
+			}
+			minVersion, err := semver.Make("1.7.0")
+			if err != nil {
+				return errors.New("could not validate version")
+			}
+
+			if o.KubernetesConfig.EnableAggregatedAPIs {
+				if !o.KubernetesConfig.IsRBACEnabled() {
+					return errors.New("enableAggregatedAPIs requires the enableRbac feature as a prerequisite")
+				}
+			}
+
+			if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) {
 				if sv.LT(minVersion) {
-					return errors.New("availabilityZone is only available in Kubernetes version 1.12 or greater")
+					return errors.Errorf("enableDataEncryptionAtRest is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
+						minVersion.String(), o.OrchestratorVersion)
+				}
+				if o.KubernetesConfig.EtcdEncryptionKey != "" {
+					_, err = base64.StdEncoding.DecodeString(o.KubernetesConfig.EtcdEncryptionKey)
+					if err != nil {
+						return errors.New("etcdEncryptionKey must be base64 encoded. Please provide a valid base64 encoded value or leave the etcdEncryptionKey empty to auto-generate the value")
+					}
 				}
 			}
 
-			if o.KubernetesConfig != nil {
-				err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled(), a.FeatureFlags.IsIPv6OnlyEnabled())
+			if to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
+				minVersion, err := semver.Make("1.10.0")
 				if err != nil {
-					return err
+					return errors.Errorf("could not validate version")
 				}
-				minVersion, err := semver.Make("1.7.0")
+				if sv.LT(minVersion) {
+					return errors.Errorf("enableEncryptionWithExternalKms is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
+						minVersion.String(), o.OrchestratorVersion)
+				}
+			}
+
+			if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
+				minVersionNotAllowed, err := semver.Make("1.15.0")
 				if err != nil {
-					return errors.New("could not validate version")
+					return errors.Errorf("could not validate version")
 				}
-
-				if o.KubernetesConfig.EnableAggregatedAPIs {
-					if !o.KubernetesConfig.IsRBACEnabled() {
-						return errors.New("enableAggregatedAPIs requires the enableRbac feature as a prerequisite")
-					}
+				if !sv.LT(minVersionNotAllowed) {
+					return errors.Errorf("RBAC support is required for Kubernetes version %s or greater; unable to build Kubernetes v%s cluster with enableRbac=false",
+						minVersionNotAllowed.String(), o.OrchestratorVersion)
 				}
+			}
 
-				if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) {
-					if sv.LT(minVersion) {
-						return errors.Errorf("enableDataEncryptionAtRest is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-							minVersion.String(), o.OrchestratorVersion)
-					}
-					if o.KubernetesConfig.EtcdEncryptionKey != "" {
-						_, err = base64.StdEncoding.DecodeString(o.KubernetesConfig.EtcdEncryptionKey)
-						if err != nil {
-							return errors.New("etcdEncryptionKey must be base64 encoded. Please provide a valid base64 encoded value or leave the etcdEncryptionKey empty to auto-generate the value")
-						}
-					}
+			if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
+				log.Warnf("EnablePodSecurityPolicy is deprecated in favor of the addon pod-security-policy.")
+				if !o.KubernetesConfig.IsRBACEnabled() {
+					return errors.Errorf("enablePodSecurityPolicy requires the enableRbac feature as a prerequisite")
 				}
-
-				if to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
-					minVersion, err := semver.Make("1.10.0")
-					if err != nil {
-						return errors.Errorf("could not validate version")
-					}
-					if sv.LT(minVersion) {
-						return errors.Errorf("enableEncryptionWithExternalKms is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-							minVersion.String(), o.OrchestratorVersion)
-					}
+				if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 {
+					log.Warnf("Raw manifest for PodSecurityPolicy using PodSecurityPolicyConfig is deprecated in favor of the addon pod-security-policy. This will be ignored.")
 				}
+			}
 
-				if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
-					minVersionNotAllowed, err := semver.Make("1.15.0")
-					if err != nil {
-						return errors.Errorf("could not validate version")
-					}
-					if !sv.LT(minVersionNotAllowed) {
-						return errors.Errorf("RBAC support is required for Kubernetes version %s or greater; unable to build Kubernetes v%s cluster with enableRbac=false",
-							minVersionNotAllowed.String(), o.OrchestratorVersion)
-					}
+			if o.KubernetesConfig.LoadBalancerSku != "" {
+				if !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) && !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, BasicLoadBalancerSku) {
+					return errors.Errorf("Invalid value for loadBalancerSku, only %s and %s are supported", StandardLoadBalancerSku, BasicLoadBalancerSku)
 				}
+			}
 
-				if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
-					log.Warnf("EnablePodSecurityPolicy is deprecated in favor of the addon pod-security-policy.")
-					if !o.KubernetesConfig.IsRBACEnabled() {
-						return errors.Errorf("enablePodSecurityPolicy requires the enableRbac feature as a prerequisite")
-					}
-					if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 {
-						log.Warnf("Raw manifest for PodSecurityPolicy using PodSecurityPolicyConfig is deprecated in favor of the addon pod-security-policy. This will be ignored.")
-					}
+			if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
+				minVersion, err := semver.Make("1.11.0")
+				if err != nil {
+					return errors.Errorf("could not validate version")
 				}
-
-				if o.KubernetesConfig.LoadBalancerSku != "" {
-					if !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) && !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, BasicLoadBalancerSku) {
-						return errors.Errorf("Invalid value for loadBalancerSku, only %s and %s are supported", StandardLoadBalancerSku, BasicLoadBalancerSku)
-					}
+				if sv.LT(minVersion) {
+					return errors.Errorf("loadBalancerSku is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
+						minVersion.String(), o.OrchestratorVersion)
 				}
-
-				if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
-					minVersion, err := semver.Make("1.11.0")
-					if err != nil {
-						return errors.Errorf("could not validate version")
-					}
-					if sv.LT(minVersion) {
-						return errors.Errorf("loadBalancerSku is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-							minVersion.String(), o.OrchestratorVersion)
-					}
-					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB) {
-						return errors.Errorf("standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"")
-					}
+				if !to.Bool(a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB) {
+					return errors.Errorf("standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"")
 				}
+			}
 
-				if o.KubernetesConfig.LoadBalancerSku == BasicLoadBalancerSku {
-					if o.KubernetesConfig.LoadBalancerOutboundIPs != nil {
-						return errors.Errorf("kubernetesConfig.loadBalancerOutboundIPs configuration only supported for Standard loadBalancerSku=Standard")
-					}
-				}
-
-				if o.KubernetesConfig.DockerEngineVersion != "" {
-					log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
-				}
-
-				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
-					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
-				}
-
+			if o.KubernetesConfig.LoadBalancerSku == BasicLoadBalancerSku {
 				if o.KubernetesConfig.LoadBalancerOutboundIPs != nil {
-					if to.Int(o.KubernetesConfig.LoadBalancerOutboundIPs) > common.MaxLoadBalancerOutboundIPs {
-						return errors.Errorf("kubernetesConfig.loadBalancerOutboundIPs was set to %d, the maximum allowed is %d", to.Int(o.KubernetesConfig.LoadBalancerOutboundIPs), common.MaxLoadBalancerOutboundIPs)
-					}
+					return errors.Errorf("kubernetesConfig.loadBalancerOutboundIPs configuration only supported for Standard loadBalancerSku=Standard")
+				}
+			}
+
+			if o.KubernetesConfig.DockerEngineVersion != "" {
+				log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
+			}
+
+			if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
+				return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
+			}
+
+			if o.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+				if to.Int(o.KubernetesConfig.LoadBalancerOutboundIPs) > common.MaxLoadBalancerOutboundIPs {
+					return errors.Errorf("kubernetesConfig.loadBalancerOutboundIPs was set to %d, the maximum allowed is %d", to.Int(o.KubernetesConfig.LoadBalancerOutboundIPs), common.MaxLoadBalancerOutboundIPs)
+				}
+			}
+
+			// https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview
+			if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != 0 && (o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes < 4 || o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes > 120) {
+				return errors.New("outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120")
+			}
+
+			if a.IsAzureStackCloud() {
+				if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {
+					return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
 				}
 
-				// https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview
-				if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != 0 && (o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes < 4 || o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes > 120) {
-					return errors.New("outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120")
-				}
-
-				if a.IsAzureStackCloud() {
-					if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {
-						return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
+				if o.KubernetesConfig.EtcdDiskSizeGB != "" {
+					etcdDiskSizeGB, err := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
+					if err != nil {
+						return errors.Errorf("could not convert EtcdDiskSizeGB to int")
 					}
-
-					if o.KubernetesConfig.EtcdDiskSizeGB != "" {
-						etcdDiskSizeGB, err := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
-						if err != nil {
-							return errors.Errorf("could not convert EtcdDiskSizeGB to int")
-						}
-						if etcdDiskSizeGB > MaxAzureStackManagedDiskSize {
-							return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
-						}
-					}
-				}
-
-				if o.KubernetesConfig.EtcdStorageLimitGB != 0 {
-					if o.KubernetesConfig.EtcdStorageLimitGB > 8 {
-						log.Warnf("EtcdStorageLimitGB of %d is larger than the recommended maximum of 8", o.KubernetesConfig.EtcdStorageLimitGB)
-					}
-					if o.KubernetesConfig.EtcdStorageLimitGB < 2 {
-						return errors.Errorf("EtcdStorageLimitGB value of %d is too small, the minimum allowed is 2", o.KubernetesConfig.EtcdStorageLimitGB)
+					if etcdDiskSizeGB > MaxAzureStackManagedDiskSize {
+						return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
 					}
 				}
 			}
-		default:
-			return errors.Errorf("OrchestratorProfile has unknown orchestrator: %s", o.OrchestratorType)
+
+			if o.KubernetesConfig.EtcdStorageLimitGB != 0 {
+				if o.KubernetesConfig.EtcdStorageLimitGB > 8 {
+					log.Warnf("EtcdStorageLimitGB of %d is larger than the recommended maximum of 8", o.KubernetesConfig.EtcdStorageLimitGB)
+				}
+				if o.KubernetesConfig.EtcdStorageLimitGB < 2 {
+					return errors.Errorf("EtcdStorageLimitGB value of %d is too small, the minimum allowed is 2", o.KubernetesConfig.EtcdStorageLimitGB)
+				}
+			}
 		}
 	} else {
-		switch o.OrchestratorType {
-		case DCOS, Kubernetes:
-
-			version := common.RationalizeReleaseAndVersion(
-				o.OrchestratorType,
-				o.OrchestratorRelease,
-				o.OrchestratorVersion,
-				false,
-				a.HasWindows(),
-				a.IsAzureStackCloud())
-			if version == "" {
-				patchVersion := common.GetValidPatchVersion(o.OrchestratorType, o.OrchestratorVersion, isUpdate, a.HasWindows(), a.IsAzureStackCloud())
-				// if there isn't a supported patch version for this version fail
-				if patchVersion == "" {
-					if a.HasWindows() {
-						return errors.Errorf("the following OrchestratorProfile configuration is not supported with Windows agentpools: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
-					}
-					return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
+		version := common.RationalizeReleaseAndVersion(
+			o.OrchestratorType,
+			o.OrchestratorRelease,
+			o.OrchestratorVersion,
+			false,
+			a.HasWindows(),
+			a.IsAzureStackCloud())
+		if version == "" {
+			patchVersion := common.GetValidPatchVersion(o.OrchestratorType, o.OrchestratorVersion, isUpdate, a.HasWindows(), a.IsAzureStackCloud())
+			// if there isn't a supported patch version for this version fail
+			if patchVersion == "" {
+				if a.HasWindows() {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported with Windows agentpools: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
 				}
+				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
 			}
-
 		}
 	}
 
 	if a.HasFlatcar() && o.KubernetesConfig.NetworkPlugin == "azure" && o.KubernetesConfig.NetworkMode == NetworkModeBridge {
 		return errors.Errorf("Flatcar node pools require 'transparent' networkMode with Azure CNI")
-	}
-
-	if o.OrchestratorType != Kubernetes && o.KubernetesConfig != nil {
-		return errors.Errorf("KubernetesConfig can be specified only when OrchestratorType is Kubernetes")
-	}
-
-	if o.OrchestratorType != DCOS && o.DcosConfig != nil && (*o.DcosConfig != DcosConfig{}) {
-		return errors.Errorf("DcosConfig can be specified only when OrchestratorType is DCOS")
 	}
 
 	return a.validateContainerRuntime(isUpdate)
@@ -427,10 +388,8 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	if m.Count == 1 {
 		log.Warnf("Running only 1 control plane VM not recommended for production clusters, use 3 or 5 for control plane redundancy")
 	}
-	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
-			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
-		}
+	if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
+		return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
 	}
 
 	if m.ImageRef != nil {
@@ -439,7 +398,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		}
 	}
 
-	if m.IsVirtualMachineScaleSets() && a.OrchestratorProfile.OrchestratorType == Kubernetes {
+	if m.IsVirtualMachineScaleSets() {
 		log.Warnf("Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!")
 		e := validateVMSS(a.OrchestratorProfile, false, m.StorageProfile, a.HasWindows(), a.IsAzureStackCloud())
 		if e != nil {
@@ -554,7 +513,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			}
 		}
 
-		if e := agentPoolProfile.validateOrchestratorSpecificProperties(a.OrchestratorProfile.OrchestratorType); e != nil {
+		if e := agentPoolProfile.validateOrchestratorSpecificProperties(); e != nil {
 			return e
 		}
 
@@ -566,15 +525,11 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
-		if e := agentPoolProfile.validateRoles(a.OrchestratorProfile.OrchestratorType); e != nil {
+		if e := agentPoolProfile.validateRoles(); e != nil {
 			return e
 		}
 
-		if e := agentPoolProfile.validateStorageProfile(a.OrchestratorProfile.OrchestratorType); e != nil {
-			return e
-		}
-
-		if e := agentPoolProfile.validateCustomNodeLabels(a.OrchestratorProfile.OrchestratorType); e != nil {
+		if e := agentPoolProfile.validateCustomNodeLabels(); e != nil {
 			return e
 		}
 
@@ -585,28 +540,26 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			}
 		}
 
-		if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-			if a.AgentPoolProfiles[i].AvailabilityProfile != a.AgentPoolProfiles[0].AvailabilityProfile {
-				return errors.New("mixed mode availability profiles are not allowed. Please set either VirtualMachineScaleSets or AvailabilitySet in availabilityProfile for all agent pools")
-			}
+		if a.AgentPoolProfiles[i].AvailabilityProfile != a.AgentPoolProfiles[0].AvailabilityProfile {
+			return errors.New("mixed mode availability profiles are not allowed. Please set either VirtualMachineScaleSets or AvailabilitySet in availabilityProfile for all agent pools")
+		}
 
-			if a.AgentPoolProfiles[i].SinglePlacementGroup != nil && a.AgentPoolProfiles[i].AvailabilityProfile == AvailabilitySet {
-				return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
-			}
+		if a.AgentPoolProfiles[i].SinglePlacementGroup != nil && a.AgentPoolProfiles[i].AvailabilityProfile == AvailabilitySet {
+			return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
+		}
 
-			distroValues := DistroValues
-			if isUpdate {
-				distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
-			}
-			if !validateDistro(agentPoolProfile.Distro, distroValues) {
-				switch agentPoolProfile.Distro {
-				case AKSDockerEngine, AKS1604Deprecated:
-					return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1604)
-				case AKS1804Deprecated:
-					return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1804)
-				default:
-					return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
-				}
+		distroValues := DistroValues
+		if isUpdate {
+			distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
+		}
+		if !validateDistro(agentPoolProfile.Distro, distroValues) {
+			switch agentPoolProfile.Distro {
+			case AKSDockerEngine, AKS1604Deprecated:
+				return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1604)
+			case AKS1804Deprecated:
+				return errors.Errorf("The %s distro is deprecated, please use %s instead", agentPoolProfile.Distro, AKSUbuntu1804)
+			default:
+				return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
 			}
 		}
 
@@ -647,48 +600,46 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 }
 
 func (a *Properties) validateZones() error {
-	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		if a.HasAvailabilityZones() {
-			var poolsWithZones, poolsWithoutZones []string
-			for _, pool := range a.AgentPoolProfiles {
-				if pool.HasAvailabilityZones() {
-					poolsWithZones = append(poolsWithZones, pool.Name)
-				} else {
-					poolsWithoutZones = append(poolsWithoutZones, pool.Name)
-				}
+	if a.HasAvailabilityZones() {
+		var poolsWithZones, poolsWithoutZones []string
+		for _, pool := range a.AgentPoolProfiles {
+			if pool.HasAvailabilityZones() {
+				poolsWithZones = append(poolsWithZones, pool.Name)
+			} else {
+				poolsWithoutZones = append(poolsWithoutZones, pool.Name)
 			}
-			if !a.MastersAndAgentsUseAvailabilityZones() {
-				poolsWithZonesPrefix := "pool"
-				poolsWithoutZonesPrefix := "pool"
-				if len(poolsWithZones) > 1 {
-					poolsWithZonesPrefix = "pools"
-				}
-				if len(poolsWithoutZones) > 1 {
-					poolsWithoutZonesPrefix = "pools"
-				}
-				poolsWithZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithZones)
-				poolsWithoutZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithoutZones)
-				if !a.MasterProfile.HasAvailabilityZones() {
-					if len(poolsWithZones) == len(a.AgentPoolProfiles) {
-						log.Warnf("This cluster is using Availability Zones for %s %s, but not for master VMs", poolsWithZonesPrefix, poolsWithZonesString)
-					} else {
-						log.Warnf("This cluster is using Availability Zones for %s %s, but not for %s %s, nor for master VMs", poolsWithZonesPrefix, poolsWithZonesString, poolsWithoutZonesPrefix, poolsWithoutZonesString)
-					}
+		}
+		if !a.MastersAndAgentsUseAvailabilityZones() {
+			poolsWithZonesPrefix := "pool"
+			poolsWithoutZonesPrefix := "pool"
+			if len(poolsWithZones) > 1 {
+				poolsWithZonesPrefix = "pools"
+			}
+			if len(poolsWithoutZones) > 1 {
+				poolsWithoutZonesPrefix = "pools"
+			}
+			poolsWithZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithZones)
+			poolsWithoutZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithoutZones)
+			if !a.MasterProfile.HasAvailabilityZones() {
+				if len(poolsWithZones) == len(a.AgentPoolProfiles) {
+					log.Warnf("This cluster is using Availability Zones for %s %s, but not for master VMs", poolsWithZonesPrefix, poolsWithZonesString)
 				} else {
-					if len(poolsWithoutZones) > 0 {
-						log.Warnf("This cluster is using Availability Zones for master VMs, but not for %s %s", poolsWithoutZonesPrefix, poolsWithoutZonesString)
-					}
+					log.Warnf("This cluster is using Availability Zones for %s %s, but not for %s %s, nor for master VMs", poolsWithZonesPrefix, poolsWithZonesString, poolsWithoutZonesPrefix, poolsWithoutZonesString)
 				}
 			} else {
-				// agent pool profiles
-				for _, agentPoolProfile := range a.AgentPoolProfiles {
-					if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
-						return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
-					}
+				if len(poolsWithoutZones) > 0 {
+					log.Warnf("This cluster is using Availability Zones for master VMs, but not for %s %s", poolsWithoutZonesPrefix, poolsWithoutZonesString)
 				}
-				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && !strings.EqualFold(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
-					return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
+			}
+		} else {
+			// agent pool profiles
+			for _, agentPoolProfile := range a.AgentPoolProfiles {
+				if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
+					return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
 				}
+			}
+			if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && !strings.EqualFold(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
+				return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
 			}
 		}
 	}
@@ -965,36 +916,34 @@ func (a *Properties) validateVNET() error {
 }
 
 func (a *Properties) validateServicePrincipalProfile() error {
-	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		useManagedIdentityDisabled := a.OrchestratorProfile.KubernetesConfig != nil &&
-			a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil && !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
+	useManagedIdentityDisabled := a.OrchestratorProfile.KubernetesConfig != nil &&
+		a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity != nil && !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 
-		if useManagedIdentityDisabled {
-			if a.ServicePrincipalProfile == nil {
-				return errors.Errorf("ServicePrincipalProfile must be specified with Orchestrator %s", a.OrchestratorProfile.OrchestratorType)
-			}
-			if e := validate.Var(a.ServicePrincipalProfile.ClientID, "required"); e != nil {
-				return errors.Errorf("the service principal client ID must be specified with Orchestrator %s", a.OrchestratorProfile.OrchestratorType)
-			}
-			if (len(a.ServicePrincipalProfile.Secret) == 0 && a.ServicePrincipalProfile.KeyvaultSecretRef == nil) ||
-				(len(a.ServicePrincipalProfile.Secret) != 0 && a.ServicePrincipalProfile.KeyvaultSecretRef != nil) {
-				return errors.Errorf("either the service principal client secret or keyvault secret reference must be specified with Orchestrator %s", a.OrchestratorProfile.OrchestratorType)
-			}
+	if useManagedIdentityDisabled {
+		if a.ServicePrincipalProfile == nil {
+			return errors.Errorf("ServicePrincipalProfile must be specified")
+		}
+		if e := validate.Var(a.ServicePrincipalProfile.ClientID, "required"); e != nil {
+			return errors.Errorf("the service principal client ID must be specified")
+		}
+		if (len(a.ServicePrincipalProfile.Secret) == 0 && a.ServicePrincipalProfile.KeyvaultSecretRef == nil) ||
+			(len(a.ServicePrincipalProfile.Secret) != 0 && a.ServicePrincipalProfile.KeyvaultSecretRef != nil) {
+			return errors.Errorf("either the service principal client secret or keyvault secret reference must be specified")
+		}
 
-			if a.OrchestratorProfile.KubernetesConfig != nil && to.Bool(a.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) && len(a.ServicePrincipalProfile.ObjectID) == 0 {
-				return errors.Errorf("the service principal object ID must be specified with Orchestrator %s when enableEncryptionWithExternalKms is true", a.OrchestratorProfile.OrchestratorType)
-			}
+		if a.OrchestratorProfile.KubernetesConfig != nil && to.Bool(a.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) && len(a.ServicePrincipalProfile.ObjectID) == 0 {
+			return errors.Errorf("the service principal object ID must be specified when enableEncryptionWithExternalKms is true")
+		}
 
-			if a.ServicePrincipalProfile.KeyvaultSecretRef != nil {
-				if e := validate.Var(a.ServicePrincipalProfile.KeyvaultSecretRef.VaultID, "required"); e != nil {
-					return errors.Errorf("the Keyvault ID must be specified for the Service Principle with Orchestrator %s", a.OrchestratorProfile.OrchestratorType)
-				}
-				if e := validate.Var(a.ServicePrincipalProfile.KeyvaultSecretRef.SecretName, "required"); e != nil {
-					return errors.Errorf("the Keyvault Secret must be specified for the Service Principle with Orchestrator %s", a.OrchestratorProfile.OrchestratorType)
-				}
-				if !keyvaultIDRegex.MatchString(a.ServicePrincipalProfile.KeyvaultSecretRef.VaultID) {
-					return errors.Errorf("service principal client keyvault secret reference is of incorrect format")
-				}
+		if a.ServicePrincipalProfile.KeyvaultSecretRef != nil {
+			if e := validate.Var(a.ServicePrincipalProfile.KeyvaultSecretRef.VaultID, "required"); e != nil {
+				return errors.Errorf("the Keyvault ID must be specified for the Service Principle")
+			}
+			if e := validate.Var(a.ServicePrincipalProfile.KeyvaultSecretRef.SecretName, "required"); e != nil {
+				return errors.Errorf("the Keyvault Secret must be specified for the Service Principle")
+			}
+			if !keyvaultIDRegex.MatchString(a.ServicePrincipalProfile.KeyvaultSecretRef.VaultID) {
+				return errors.Errorf("service principal client keyvault secret reference is of incorrect format")
 			}
 		}
 	}
@@ -1003,9 +952,6 @@ func (a *Properties) validateServicePrincipalProfile() error {
 
 func (a *Properties) validateAADProfile() error {
 	if profile := a.AADProfile; profile != nil {
-		if a.OrchestratorProfile.OrchestratorType != Kubernetes {
-			return errors.Errorf("'aadProfile' is only supported by orchestrator '%v'", Kubernetes)
-		}
 		if _, err := uuid.Parse(profile.ClientAppID); err != nil {
 			return errors.Errorf("clientAppID '%v' is invalid", profile.ClientAppID)
 		}
@@ -1040,7 +986,7 @@ func (a *AgentPoolProfile) validateAvailabilityProfile() error {
 	return nil
 }
 
-func (a *AgentPoolProfile) validateRoles(orchestratorType string) error {
+func (a *AgentPoolProfile) validateRoles() error {
 	validRoles := []AgentPoolProfileRole{AgentPoolProfileRoleEmpty}
 	var found bool
 	for _, validRole := range validRoles {
@@ -1050,96 +996,60 @@ func (a *AgentPoolProfile) validateRoles(orchestratorType string) error {
 		}
 	}
 	if !found {
-		return errors.Errorf("Role %q is not supported for Orchestrator %s", a.Role, orchestratorType)
+		return errors.Errorf("Role %q is not supported", a.Role)
 	}
 	return nil
 }
 
-func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error {
-	/* this switch statement is left to protect newly added orchestrators until they support Managed Disks*/
-	if a.StorageProfile == ManagedDisks {
-		switch orchestratorType {
-		case DCOS:
-		case Swarm:
-		case Kubernetes:
-		case SwarmMode:
-		default:
-			return errors.Errorf("HA volumes are currently unsupported for Orchestrator %s", orchestratorType)
-		}
-	}
-
-	if a.StorageProfile == Ephemeral {
-		switch orchestratorType {
-		case Kubernetes:
-			break
-		case DCOS:
-		case Swarm:
-		case SwarmMode:
-		default:
-			return errors.Errorf("Ephemeral volumes are currently unsupported for Orchestrator %s", orchestratorType)
-		}
-	}
-
-	return nil
-}
-
-func (a *AgentPoolProfile) validateCustomNodeLabels(orchestratorType string) error {
+func (a *AgentPoolProfile) validateCustomNodeLabels() error {
 	if len(a.CustomNodeLabels) > 0 {
-		switch orchestratorType {
-		case DCOS:
-		case Kubernetes:
-			for k, v := range a.CustomNodeLabels {
-				if e := validateKubernetesLabelKey(k); e != nil {
-					return e
-				}
-				if e := validateKubernetesLabelValue(v); e != nil {
-					return e
-				}
+		for k, v := range a.CustomNodeLabels {
+			if e := validateKubernetesLabelKey(k); e != nil {
+				return e
 			}
-		default:
-			return errors.New("Agent CustomNodeLabels are only supported for DCOS and Kubernetes")
+			if e := validateKubernetesLabelValue(v); e != nil {
+				return e
+			}
 		}
 	}
 	return nil
 }
 
 func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string, hasWindows bool, isAzureStackCloud bool) error {
-	if o.OrchestratorType == Kubernetes {
-		version := common.RationalizeReleaseAndVersion(
-			o.OrchestratorType,
-			o.OrchestratorRelease,
-			o.OrchestratorVersion,
-			isUpdate,
-			hasWindows,
-			isAzureStackCloud)
-		if version == "" {
-			return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
-		}
+	version := common.RationalizeReleaseAndVersion(
+		o.OrchestratorType,
+		o.OrchestratorRelease,
+		o.OrchestratorVersion,
+		isUpdate,
+		hasWindows,
+		isAzureStackCloud)
+	if version == "" {
+		return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
+	}
 
-		sv, err := semver.Make(version)
-		if err != nil {
-			return errors.Errorf("could not validate version %s", version)
+	sv, err := semver.Make(version)
+	if err != nil {
+		return errors.Errorf("could not validate version %s", version)
+	}
+	minVersion, err := semver.Make("1.10.0")
+	if err != nil {
+		return errors.New("could not validate version")
+	}
+	if sv.LT(minVersion) {
+		return errors.Errorf("VirtualMachineScaleSets are only available in Kubernetes version %s or greater. Please set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
+	}
+	// validation for instanceMetadata using VMSS with Kubernetes
+	minVersion, err = semver.Make("1.10.2")
+	if err != nil {
+		return errors.New("could not validate version")
+	}
+	if o.KubernetesConfig != nil && o.KubernetesConfig.UseInstanceMetadata != nil {
+		if *o.KubernetesConfig.UseInstanceMetadata && sv.LT(minVersion) {
+			return errors.Errorf("VirtualMachineScaleSets with instance metadata is supported for Kubernetes version %s or greater. Please set \"useInstanceMetadata\": false in \"kubernetesConfig\" or set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
 		}
-		minVersion, err := semver.Make("1.10.0")
-		if err != nil {
-			return errors.New("could not validate version")
-		}
-		if sv.LT(minVersion) {
-			return errors.Errorf("VirtualMachineScaleSets are only available in Kubernetes version %s or greater. Please set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
-		}
-		// validation for instanceMetadata using VMSS with Kubernetes
-		minVersion, err = semver.Make("1.10.2")
-		if err != nil {
-			return errors.New("could not validate version")
-		}
-		if o.KubernetesConfig != nil && o.KubernetesConfig.UseInstanceMetadata != nil {
-			if *o.KubernetesConfig.UseInstanceMetadata && sv.LT(minVersion) {
-				return errors.Errorf("VirtualMachineScaleSets with instance metadata is supported for Kubernetes version %s or greater. Please set \"useInstanceMetadata\": false in \"kubernetesConfig\" or set \"orchestratorVersion\" to %s or above", minVersion.String(), minVersion.String())
-			}
-		}
-		if storageProfile == StorageAccount {
-			return errors.Errorf("VirtualMachineScaleSets does not support %s disks.  Please specify \"storageProfile\": \"%s\" (recommended) or \"availabilityProfile\": \"%s\"", StorageAccount, ManagedDisks, AvailabilitySet)
-		}
+	}
+	if storageProfile == StorageAccount {
+		return errors.Errorf("VirtualMachineScaleSets does not support %s disks.  Please specify \"storageProfile\": \"%s\" (recommended) or \"availabilityProfile\": \"%s\"", StorageAccount, ManagedDisks, AvailabilitySet)
 	}
 	return nil
 }
@@ -1158,28 +1068,16 @@ func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 	}
 
 	o := a.OrchestratorProfile
-	version := ""
-	// This logic is broken because golang cases do not fallthrough by default.
-	// I am leaving this in because I cannot get a clear answer on if we need to continue supporting Swarm + Windows and
-	// RationalizeReleaseAndVersion does not properly handle Swarm.
-	switch o.OrchestratorType {
-	case DCOS:
-	case Swarm:
-	case SwarmMode:
-	case Kubernetes:
-		version = common.RationalizeReleaseAndVersion(
-			o.OrchestratorType,
-			o.OrchestratorRelease,
-			o.OrchestratorVersion,
-			isUpdate,
-			hasWindowsAgentPools,
-			a.IsAzureStackCloud())
+	version := common.RationalizeReleaseAndVersion(
+		o.OrchestratorType,
+		o.OrchestratorRelease,
+		o.OrchestratorVersion,
+		isUpdate,
+		hasWindowsAgentPools,
+		a.IsAzureStackCloud())
 
-		if version == "" {
-			return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
-		}
-	default:
-		return errors.Errorf("Orchestrator %v does not support Windows", o.OrchestratorType)
+	if version == "" {
+		return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
 	}
 
 	w := a.WindowsProfile
@@ -1242,19 +1140,16 @@ func validateWindowsRuntimes(r *WindowsRuntimes) error {
 	return nil
 }
 
-func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorType string) error {
+func (a *AgentPoolProfile) validateOrchestratorSpecificProperties() error {
 
-	// for Kubernetes, we don't support AgentPoolProfile.DNSPrefix
-	if orchestratorType == Kubernetes {
-		if e := validate.Var(a.DNSPrefix, "len=0"); e != nil {
-			return errors.New("AgentPoolProfile.DNSPrefix must be empty for Kubernetes")
-		}
-		if e := validate.Var(a.Ports, "len=0"); e != nil {
-			return errors.New("AgentPoolProfile.Ports must be empty for Kubernetes")
-		}
-		if validate.Var(a.ScaleSetPriority, "eq=Regular") == nil && validate.Var(a.ScaleSetEvictionPolicy, "len=0") != nil {
-			return errors.New("property 'AgentPoolProfile.ScaleSetEvictionPolicy' must be empty for AgentPoolProfile.Priority of Regular")
-		}
+	if e := validate.Var(a.DNSPrefix, "len=0"); e != nil {
+		return errors.New("AgentPoolProfile.DNSPrefix must be empty for Kubernetes")
+	}
+	if e := validate.Var(a.Ports, "len=0"); e != nil {
+		return errors.New("AgentPoolProfile.Ports must be empty for Kubernetes")
+	}
+	if validate.Var(a.ScaleSetPriority, "eq=Regular") == nil && validate.Var(a.ScaleSetEvictionPolicy, "len=0") != nil {
+		return errors.New("property 'AgentPoolProfile.ScaleSetEvictionPolicy' must be empty for AgentPoolProfile.Priority of Regular")
 	}
 
 	if a.DNSPrefix != "" {
@@ -1269,7 +1164,7 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 			a.Ports = []int{80, 443, 8080}
 		}
 	} else if e := validate.Var(a.Ports, "len=0"); e != nil {
-		return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty for Orchestrator: %s", orchestratorType)
+		return errors.Errorf("AgentPoolProfile.Ports must be empty when AgentPoolProfile.DNSPrefix is empty")
 	}
 
 	if len(a.DiskSizesGB) > 0 {
@@ -1759,13 +1654,8 @@ func (k *KubernetesConfig) isUsingCustomKubeComponent() bool {
 func (a *Properties) validateContainerRuntime(isUpdate bool) error {
 	var containerRuntime string
 
-	switch a.OrchestratorProfile.OrchestratorType {
-	case Kubernetes:
-		if a.OrchestratorProfile.KubernetesConfig != nil {
-			containerRuntime = a.OrchestratorProfile.KubernetesConfig.ContainerRuntime
-		}
-	default:
-		return nil
+	if a.OrchestratorProfile.KubernetesConfig != nil {
+		containerRuntime = a.OrchestratorProfile.KubernetesConfig.ContainerRuntime
 	}
 
 	// Check for deprecated, non-back-compat
@@ -2011,7 +1901,7 @@ func validateDependenciesLocation(dependenciesLocation DependenciesLocation, dep
 
 // validateAzureStackSupport logs a warning if apimodel contains preview features and returns an error if a property is not supported on Azure Stack clouds
 func (a *Properties) validateAzureStackSupport() error {
-	if a.OrchestratorProfile.OrchestratorType == Kubernetes && a.IsAzureStackCloud() {
+	if a.IsAzureStackCloud() {
 		networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
 		if networkPlugin == "azure" || networkPlugin == "" {
 			log.Warnf("NetworkPlugin 'azure' is a private preview feature on Azure Stack clouds")
