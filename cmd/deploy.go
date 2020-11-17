@@ -193,6 +193,10 @@ func (dc *deployCmd) loadAPIModel() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	if dc.containerService.Properties.MasterProfile == nil {
+		return errors.New("MasterProfile can't be nil")
+	}
+
 	// consume dc.caCertificatePath and dc.caPrivateKeyPath
 	if (dc.caCertificatePath != "" && dc.caPrivateKeyPath == "") || (dc.caCertificatePath == "" && dc.caPrivateKeyPath != "") {
 		return errors.New("--ca-certificate-path and --ca-private-key-path must be specified together")
@@ -255,7 +259,6 @@ func (dc *deployCmd) loadAPIModel() error {
 }
 
 func autofillApimodel(dc *deployCmd) error {
-
 	if dc.containerService.Properties.LinuxProfile != nil {
 		if dc.containerService.Properties.LinuxProfile.AdminUsername == "" {
 			log.Warnf("apimodel: no linuxProfile.adminUsername was specified. Will use 'azureuser'.")
@@ -280,11 +283,7 @@ func autofillApimodel(dc *deployCmd) error {
 	}
 
 	if dc.outputDirectory == "" {
-		if dc.containerService.Properties.MasterProfile != nil {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
-		} else {
-			return errors.New("can't determine output directory from nil MasterProfile")
-		}
+		dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
 	if _, err := os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {

@@ -173,6 +173,27 @@ func TestGenerateCmdMLoadAPIModel(t *testing.T) {
 	}
 }
 
+func TestGenerateCmdMLoadAPIModelWithoutMasterProfile(t *testing.T) {
+	g := &generateCmd{}
+	r := &cobra.Command{}
+
+	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+	g.set = []string{"masterProfile=nil"}
+
+	err := g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json"})
+	if err != nil {
+		t.Fatalf("unexpected error validating api model: %s", err.Error())
+	}
+	err = g.mergeAPIModel()
+	if err != nil {
+		t.Fatalf("unexpected error merging api model: %s", err.Error())
+	}
+	err = g.loadAPIModel()
+	if err == nil {
+		t.Fatalf("expected error loading api model without MasterProfile: %s", err.Error())
+	}
+}
+
 func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd(t *testing.T) {
 	t.Parallel()
 
