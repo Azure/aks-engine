@@ -205,10 +205,6 @@ fi
 time_metric "EnsureContainerd" ensureContainerd
 {{end}}
 
-{{- if and IsHostedMaster EnableHostsConfigAgent}}
-time_metric "ConfigPrivateClusterHosts" configPrivateClusterHosts
-{{end}}
-
 {{/* configure and enable dhcpv6 for ipv6 features */}}
 {{- if IsIPv6Enabled}}
 time_metric "EnsureDHCPv6" ensureDHCPv6
@@ -266,34 +262,6 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
 fi
 {{end}}
 
-VALIDATION_ERR=0
-
-{{- if IsHostedMaster }}
-API_SERVER_DNS_RETRIES=20
-if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
-  API_SERVER_DNS_RETRIES=200
-fi
-RES=$(retrycmd ${API_SERVER_DNS_RETRIES} 1 3 nslookup ${API_SERVER_NAME})
-STS=$?
-if [[ $STS != 0 ]]; then
-    if [[ $RES == *"168.63.129.16"*  ]]; then
-        VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL"}}
-    else
-        VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL"}}
-    fi
-else
-    API_SERVER_CONN_RETRIES=50
-    if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
-        API_SERVER_CONN_RETRIES=100
-    fi
-    retrycmd ${API_SERVER_CONN_RETRIES} 1 3 nc -vz ${API_SERVER_NAME} 443 &&
-    retrycmd ${API_SERVER_CONN_RETRIES} 1 3 nc -vz ${API_SERVER_NAME} 9000 &&
-    retrycmd ${API_SERVER_CONN_RETRIES} 1 3 nc -uvz ${API_SERVER_NAME} 1194 ||
-    VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
-fi
-
-{{end}}
-
 if [ -f /var/run/reboot-required ]; then
   trace_info "RebootRequired" "reboot=true"
   /bin/bash -c "shutdown -r 1 &"
@@ -312,6 +280,6 @@ echo $(date),$(hostname), endcustomscript >>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww >/opt/azure/provision-ps.log &
 
-exit $VALIDATION_ERR
+exit 0
 
 #EOF

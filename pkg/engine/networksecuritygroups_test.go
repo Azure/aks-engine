@@ -213,27 +213,3 @@ func TestCreateJumpboxNSG(t *testing.T) {
 		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
 	}
 }
-
-func TestCreateHostedMasterNSG(t *testing.T) {
-	expected := NetworkSecurityGroupARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionNetwork')]",
-		},
-		SecurityGroup: network.SecurityGroup{
-			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('nsgName')]"),
-			Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
-			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
-				SecurityRules: &[]network.SecurityRule{},
-			},
-		},
-	}
-
-	actual := createHostedMasterNSG()
-
-	diff := cmp.Diff(actual, expected)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
-	}
-}

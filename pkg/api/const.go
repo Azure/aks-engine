@@ -59,8 +59,6 @@ const (
 	AvailabilitySet = "AvailabilitySet"
 	// DefaultOrchestratorName specifies the 3 character orchestrator code of the cluster template and affects resource naming.
 	DefaultOrchestratorName = "k8s"
-	// DefaultHostedProfileMasterName specifies the 3 character orchestrator code of the clusters with hosted master profiles.
-	DefaultHostedProfileMasterName = "aks"
 	// DefaultFirstConsecutiveKubernetesStaticIP specifies the static IP address on Kubernetes master 0
 	DefaultFirstConsecutiveKubernetesStaticIP = "10.240.255.5"
 	// DefaultFirstConsecutiveKubernetesStaticIPVMSS specifies the static IP address on Kubernetes master 0 of VMSS

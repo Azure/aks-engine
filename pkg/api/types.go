@@ -15,8 +15,6 @@ import (
 	"strconv"
 	"strings"
 
-	v20170831 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
-	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -82,7 +80,6 @@ type Properties struct {
 	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
 	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
 	CustomProfile           *CustomProfile           `json:"customProfile,omitempty"`
-	HostedMasterProfile     *HostedMasterProfile     `json:"hostedMasterProfile,omitempty"`
 	AddonProfiles           map[string]AddonProfile  `json:"addonProfiles,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
@@ -737,22 +734,6 @@ type OSType string
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
 
-// HostedMasterProfile defines properties for a hosted master
-type HostedMasterProfile struct {
-	// Master public endpoint/FQDN with port
-	// The format will be FQDN:2376
-	// Not used during PUT, returned as part of GETFQDN
-	FQDN      string `json:"fqdn,omitempty"`
-	DNSPrefix string `json:"dnsPrefix"`
-	// Subnet holds the CIDR which defines the Azure Subnet in which
-	// Agents will be provisioned. This is stored on the HostedMasterProfile
-	// and will become `masterSubnet` in the compiled template.
-	Subnet string `json:"subnet"`
-	// ApiServerWhiteListRange is a comma delimited CIDR which is whitelisted to AKS
-	APIServerWhiteListRange *string `json:"apiServerWhiteListRange"`
-	IPMasqAgent             bool    `json:"ipMasqAgent"`
-}
-
 // AuthenticatorType represents the authenticator type the cluster was
 // set up with.
 type AuthenticatorType string
@@ -796,22 +777,6 @@ type CustomProfile struct {
 type VlabsARMContainerService struct {
 	TypeMeta
 	*vlabs.ContainerService
-}
-
-// V20170831ARMManagedContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and aks-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20170831ARMManagedContainerService struct {
-	TypeMeta
-	*v20170831.ManagedCluster
-}
-
-// V20180331ARMManagedContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and aks-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20180331ARMManagedContainerService struct {
-	TypeMeta
-	*v20180331.ManagedCluster
 }
 
 // AzureStackMetadataEndpoints is the type for Azure Stack metadata endpoints
@@ -935,9 +900,6 @@ func (p *Properties) HasVMSSAgentPool() bool {
 
 // K8sOrchestratorName returns the 3 character orchestrator code for kubernetes-based clusters.
 func (p *Properties) K8sOrchestratorName() string {
-	if p.HostedMasterProfile != nil {
-		return DefaultHostedProfileMasterName
-	}
 	return DefaultOrchestratorName
 }
 
@@ -1024,9 +986,6 @@ func (p *Properties) GetMasterVMPrefix() string {
 
 // GetResourcePrefix returns the prefix to use for naming cluster resources
 func (p *Properties) GetResourcePrefix() string {
-	if p.IsHostedMasterProfile() {
-		return p.K8sOrchestratorName() + "-agentpool-" + p.GetClusterID() + "-"
-	}
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
 
 }
@@ -1061,24 +1020,13 @@ func (p *Properties) GetPrimaryScaleSetName() string {
 	return ""
 }
 
-// IsHostedMasterProfile returns true if the cluster has a hosted master
-func (p *Properties) IsHostedMasterProfile() bool {
-	return p.HostedMasterProfile != nil
-}
-
-// IsIPMasqAgentEnabled returns true if the cluster has a hosted master and IpMasqAgent is disabled
+// IsIPMasqAgentEnabled returns true if ip-masq-agent is enabled
 func (p *Properties) IsIPMasqAgentEnabled() bool {
-	if p.HostedMasterProfile != nil {
-		return p.HostedMasterProfile.IPMasqAgent
-	}
 	return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled()
 }
 
 // IsIPMasqAgentDisabled returns true if the ip-masq-agent functionality is disabled
 func (p *Properties) IsIPMasqAgentDisabled() bool {
-	if p.HostedMasterProfile != nil {
-		return !p.HostedMasterProfile.IPMasqAgent
-	}
 	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil {
 		return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentDisabled()
 	}
@@ -1088,9 +1036,7 @@ func (p *Properties) IsIPMasqAgentDisabled() bool {
 // GetVNetResourceGroupName returns the virtual network resource group name of the cluster
 func (p *Properties) GetVNetResourceGroupName() string {
 	var vnetResourceGroupName string
-	if p.IsHostedMasterProfile() && p.AreAgentProfilesCustomVNET() {
-		vnetResourceGroupName = strings.Split(p.AgentPoolProfiles[0].VnetSubnetID, "/")[DefaultVnetResourceGroupSegmentIndex]
-	} else if !p.IsHostedMasterProfile() && p.MasterProfile.IsCustomVNET() {
+	if p.MasterProfile != nil && p.MasterProfile.IsCustomVNET() {
 		vnetResourceGroupName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultVnetResourceGroupSegmentIndex]
 	}
 	return vnetResourceGroupName
@@ -1099,9 +1045,7 @@ func (p *Properties) GetVNetResourceGroupName() string {
 // GetVirtualNetworkName returns the virtual network name of the cluster
 func (p *Properties) GetVirtualNetworkName() string {
 	var vnetName string
-	if p.IsHostedMasterProfile() && p.AreAgentProfilesCustomVNET() {
-		vnetName = strings.Split(p.AgentPoolProfiles[0].VnetSubnetID, "/")[DefaultVnetNameResourceSegmentIndex]
-	} else if !p.IsHostedMasterProfile() && p.MasterProfile.IsCustomVNET() {
+	if p.MasterProfile != nil && p.MasterProfile.IsCustomVNET() {
 		vnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultVnetNameResourceSegmentIndex]
 	} else {
 		vnetName = p.K8sOrchestratorName() + "-vnet-" + p.GetClusterID()
@@ -1112,21 +1056,12 @@ func (p *Properties) GetVirtualNetworkName() string {
 // GetSubnetName returns the subnet name of the cluster based on its current configuration.
 func (p *Properties) GetSubnetName() string {
 	var subnetName string
-
-	if !p.IsHostedMasterProfile() {
-		if p.MasterProfile.IsCustomVNET() {
-			subnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
-		} else if p.MasterProfile.IsVirtualMachineScaleSets() {
-			subnetName = "subnetmaster"
-		} else {
-			subnetName = p.K8sOrchestratorName() + "-subnet"
-		}
+	if p.MasterProfile.IsCustomVNET() {
+		subnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
+	} else if p.MasterProfile.IsVirtualMachineScaleSets() {
+		subnetName = "subnetmaster"
 	} else {
-		if p.AreAgentProfilesCustomVNET() {
-			subnetName = strings.Split(p.AgentPoolProfiles[0].VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
-		} else {
-			subnetName = p.K8sOrchestratorName() + "-subnet"
-		}
+		subnetName = p.K8sOrchestratorName() + "-subnet"
 	}
 	return subnetName
 }
@@ -1136,8 +1071,6 @@ func (p *Properties) GetDNSPrefix() string {
 	if p.MasterProfile != nil {
 		// MasterProfile exists, uses master DNS prefix
 		return strings.ToLower(p.MasterProfile.DNSPrefix)
-	} else if p.HostedMasterProfile != nil {
-		return strings.ToLower(p.HostedMasterProfile.DNSPrefix)
 	}
 	return ""
 }
@@ -1164,8 +1097,6 @@ func (p *Properties) GetClusterID() string {
 		h := fnv.New64a()
 		if p.MasterProfile != nil {
 			_, _ = h.Write([]byte(p.MasterProfile.DNSPrefix))
-		} else if p.HostedMasterProfile != nil {
-			_, _ = h.Write([]byte(p.HostedMasterProfile.DNSPrefix))
 		} else if len(p.AgentPoolProfiles) > 0 {
 			_, _ = h.Write([]byte(p.AgentPoolProfiles[0].Name))
 		}
@@ -1323,21 +1254,19 @@ func (p *Properties) HasNonRegularPriorityScaleset() bool {
 // GetNonMasqueradeCIDR returns the non-masquerade CIDR for the ip-masq-agent.
 func (p *Properties) GetNonMasqueradeCIDR() string {
 	var nonMasqCidr string
-	if !p.IsHostedMasterProfile() {
-		if p.OrchestratorProfile.IsAzureCNI() {
-			if p.MasterProfile != nil && p.MasterProfile.IsCustomVNET() {
-				nonMasqCidr = p.MasterProfile.VnetCidr
-			} else {
-				nonMasqCidr = DefaultVNETCIDR
-			}
+	if p.OrchestratorProfile.IsAzureCNI() {
+		if p.MasterProfile != nil && p.MasterProfile.IsCustomVNET() {
+			nonMasqCidr = p.MasterProfile.VnetCidr
 		} else {
-			if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-				cidr := strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
-				_, ipnet, _ := net.ParseCIDR(cidr)
-				nonMasqCidr = ipnet.String()
-			} else {
-				nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
-			}
+			nonMasqCidr = DefaultVNETCIDR
+		}
+	} else {
+		if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			cidr := strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[0]
+			_, ipnet, _ := net.ParseCIDR(cidr)
+			nonMasqCidr = ipnet.String()
+		} else {
+			nonMasqCidr = p.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 		}
 	}
 	return nonMasqCidr
@@ -1346,12 +1275,10 @@ func (p *Properties) GetNonMasqueradeCIDR() string {
 // GetSecondaryNonMasqueradeCIDR returns second cidr in case of dualstack clusters
 func (p *Properties) GetSecondaryNonMasqueradeCIDR() string {
 	var nonMasqCidr string
-	if !p.IsHostedMasterProfile() {
-		if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-			cidr := strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[1]
-			_, ipnet, _ := net.ParseCIDR(cidr)
-			nonMasqCidr = ipnet.String()
-		}
+	if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		cidr := strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[1]
+		_, ipnet, _ := net.ParseCIDR(cidr)
+		nonMasqCidr = ipnet.String()
 	}
 	return nonMasqCidr
 }
@@ -1367,10 +1294,6 @@ func (p *Properties) GetAzureCNICidr() string {
 
 // GetMasterFQDN returns the master FQDN.
 func (p *Properties) GetMasterFQDN() string {
-	if p.IsHostedMasterProfile() {
-		return p.HostedMasterProfile.FQDN
-	}
-
 	return p.MasterProfile.FQDN
 }
 
@@ -2472,7 +2395,6 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"CONTAINER_RUNTIME":                    kubernetesConfig.ContainerRuntime,
 		"CONTAINERD_DOWNLOAD_URL_BASE":         cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase,
 		"KMS_PROVIDER_VAULT_NAME":              input.ClusterKeyVaultName,
-		"IS_HOSTED_MASTER":                     strconv.FormatBool(cs.Properties.IsHostedMasterProfile()),
 		"IPV6_DUALSTACK_ENABLED":               strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"IS_IPV6_ENABLED":                      strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"AUTHENTICATION_METHOD":                cs.Properties.GetCustomCloudAuthenticationMethod(),
@@ -2482,10 +2404,6 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
 		"CUSTOM_HYPERKUBE_IMAGE":               kubernetesConfig.CustomHyperkubeImage,
 		"MS_APT_REPO":                          kubernetesConfig.MicrosoftAptRepositoryURL,
-	}
-
-	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {
-		parameters["API_SERVER_NAME"] = cs.Properties.HostedMasterProfile.FQDN
 	}
 
 	keys := make([]string, 0)

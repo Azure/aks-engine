@@ -283,7 +283,7 @@ func autofillApimodel(dc *deployCmd) error {
 		if dc.containerService.Properties.MasterProfile != nil {
 			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
 		} else {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
+			return errors.New("can't determine output directory from nil MasterProfile")
 		}
 	}
 

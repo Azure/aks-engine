@@ -158,7 +158,7 @@ func (gc *generateCmd) loadAPIModel() error {
 		if gc.containerService.Properties.MasterProfile != nil {
 			gc.outputDirectory = path.Join("_output", gc.containerService.Properties.MasterProfile.DNSPrefix)
 		} else {
-			gc.outputDirectory = path.Join("_output", gc.containerService.Properties.HostedMasterProfile.DNSPrefix)
+			return errors.New("can't determine output directory from nil MasterProfile")
 		}
 	}
 

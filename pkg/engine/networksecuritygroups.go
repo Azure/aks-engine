@@ -156,22 +156,3 @@ func createJumpboxNSG() NetworkSecurityGroupARM {
 		SecurityGroup: nsg,
 	}
 }
-
-func createHostedMasterNSG() NetworkSecurityGroupARM {
-	armResource := ARMResource{
-		APIVersion: "[variables('apiVersionNetwork')]",
-	}
-	nsg := network.SecurityGroup{
-		Location: to.StringPtr("[variables('location')]"),
-		Name:     to.StringPtr("[variables('nsgName')]"),
-		Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
-		SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
-			SecurityRules: &[]network.SecurityRule{},
-		},
-	}
-
-	return NetworkSecurityGroupARM{
-		ARMResource:   armResource,
-		SecurityGroup: nsg,
-	}
-}

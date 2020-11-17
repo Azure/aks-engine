@@ -86,10 +86,8 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			userAssignedIDReference = "[variables('userAssignedID')]"
 		}
 	}
-	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isMasterVMSS := masterProfile != nil && masterProfile.IsVirtualMachineScaleSets()
 	hasStorageAccountDisks := cs.Properties.HasStorageAccountDisks()
-	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	hasAgentPool := len(profiles) > 0
 	hasCosmosEtcd := masterProfile != nil && masterProfile.HasCosmosEtcd()
 	scriptParamsInput := api.ProvisionScriptParametersInput{
@@ -221,12 +219,10 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			clusterAutoscalerEnabled = strconv.FormatBool(kubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName))
 		}
 	}
-	if !isHostedMaster {
-		if isMasterVMSS {
-			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=%s ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled, clusterAutoscalerEnabled)
-		} else {
-			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=%s ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled, clusterAutoscalerEnabled)
-		}
+	if isMasterVMSS {
+		masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=%s ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled, clusterAutoscalerEnabled)
+	} else {
+		masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=%s ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled, clusterAutoscalerEnabled)
 	}
 
 	if userAssignedID {
@@ -241,62 +237,60 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["userAssignedClientID"] = ""
 	}
 
-	if !isHostedMaster {
-		masterCount := masterProfile.Count
+	masterCount := masterProfile.Count
 
-		if masterCount == 1 {
-			masterVars["etcdPeerPrivateKeys"] = []string{"[parameters('etcdPeerPrivateKey0')]"}
-			masterVars["etcdPeerCertificates"] = []string{"[parameters('etcdPeerCertificate0')]"}
-		} else if masterCount == 3 {
-			masterVars["etcdPeerPrivateKeys"] = []string{
-				"[parameters('etcdPeerPrivateKey0')]",
-				"[parameters('etcdPeerPrivateKey1')]",
-				"[parameters('etcdPeerPrivateKey2')]",
-			}
-			masterVars["etcdPeerCertificates"] = []string{
-				"[parameters('etcdPeerCertificate0')]",
-				"[parameters('etcdPeerCertificate1')]",
-				"[parameters('etcdPeerCertificate2')]",
-			}
-		} else if masterCount == 5 {
-			masterVars["etcdPeerPrivateKeys"] = []string{
-				"[parameters('etcdPeerPrivateKey0')]",
-				"[parameters('etcdPeerPrivateKey1')]",
-				"[parameters('etcdPeerPrivateKey2')]",
-				"[parameters('etcdPeerPrivateKey3')]",
-				"[parameters('etcdPeerPrivateKey4')]",
-			}
-			masterVars["etcdPeerCertificates"] = []string{
-				"[parameters('etcdPeerCertificate0')]",
-				"[parameters('etcdPeerCertificate1')]",
-				"[parameters('etcdPeerCertificate2')]",
-				"[parameters('etcdPeerCertificate3')]",
-				"[parameters('etcdPeerCertificate4')]",
-			}
+	if masterCount == 1 {
+		masterVars["etcdPeerPrivateKeys"] = []string{"[parameters('etcdPeerPrivateKey0')]"}
+		masterVars["etcdPeerCertificates"] = []string{"[parameters('etcdPeerCertificate0')]"}
+	} else if masterCount == 3 {
+		masterVars["etcdPeerPrivateKeys"] = []string{
+			"[parameters('etcdPeerPrivateKey0')]",
+			"[parameters('etcdPeerPrivateKey1')]",
+			"[parameters('etcdPeerPrivateKey2')]",
 		}
-		masterVars["etcdPeerCertFilepath"] = []string{
-			"/etc/kubernetes/certs/etcdpeer0.crt",
-			"/etc/kubernetes/certs/etcdpeer1.crt",
-			"/etc/kubernetes/certs/etcdpeer2.crt",
-			"/etc/kubernetes/certs/etcdpeer3.crt",
-			"/etc/kubernetes/certs/etcdpeer4.crt",
+		masterVars["etcdPeerCertificates"] = []string{
+			"[parameters('etcdPeerCertificate0')]",
+			"[parameters('etcdPeerCertificate1')]",
+			"[parameters('etcdPeerCertificate2')]",
 		}
-
-		masterVars["etcdPeerKeyFilepath"] = []string{
-			"/etc/kubernetes/certs/etcdpeer0.key",
-			"/etc/kubernetes/certs/etcdpeer1.key",
-			"/etc/kubernetes/certs/etcdpeer2.key",
-			"/etc/kubernetes/certs/etcdpeer3.key",
-			"/etc/kubernetes/certs/etcdpeer4.key",
+	} else if masterCount == 5 {
+		masterVars["etcdPeerPrivateKeys"] = []string{
+			"[parameters('etcdPeerPrivateKey0')]",
+			"[parameters('etcdPeerPrivateKey1')]",
+			"[parameters('etcdPeerPrivateKey2')]",
+			"[parameters('etcdPeerPrivateKey3')]",
+			"[parameters('etcdPeerPrivateKey4')]",
 		}
-
-		masterVars["etcdCaFilepath"] = "/etc/kubernetes/certs/ca.crt"
-		masterVars["etcdClientCertFilepath"] = "/etc/kubernetes/certs/etcdclient.crt"
-		masterVars["etcdClientKeyFilepath"] = "/etc/kubernetes/certs/etcdclient.key"
-		masterVars["etcdServerCertFilepath"] = "/etc/kubernetes/certs/etcdserver.crt"
-		masterVars["etcdServerKeyFilepath"] = "/etc/kubernetes/certs/etcdserver.key"
+		masterVars["etcdPeerCertificates"] = []string{
+			"[parameters('etcdPeerCertificate0')]",
+			"[parameters('etcdPeerCertificate1')]",
+			"[parameters('etcdPeerCertificate2')]",
+			"[parameters('etcdPeerCertificate3')]",
+			"[parameters('etcdPeerCertificate4')]",
+		}
 	}
-	if useManagedIdentity && !isHostedMaster {
+	masterVars["etcdPeerCertFilepath"] = []string{
+		"/etc/kubernetes/certs/etcdpeer0.crt",
+		"/etc/kubernetes/certs/etcdpeer1.crt",
+		"/etc/kubernetes/certs/etcdpeer2.crt",
+		"/etc/kubernetes/certs/etcdpeer3.crt",
+		"/etc/kubernetes/certs/etcdpeer4.crt",
+	}
+
+	masterVars["etcdPeerKeyFilepath"] = []string{
+		"/etc/kubernetes/certs/etcdpeer0.key",
+		"/etc/kubernetes/certs/etcdpeer1.key",
+		"/etc/kubernetes/certs/etcdpeer2.key",
+		"/etc/kubernetes/certs/etcdpeer3.key",
+		"/etc/kubernetes/certs/etcdpeer4.key",
+	}
+
+	masterVars["etcdCaFilepath"] = "/etc/kubernetes/certs/ca.crt"
+	masterVars["etcdClientCertFilepath"] = "/etc/kubernetes/certs/etcdclient.crt"
+	masterVars["etcdClientKeyFilepath"] = "/etc/kubernetes/certs/etcdclient.key"
+	masterVars["etcdServerCertFilepath"] = "/etc/kubernetes/certs/etcdserver.crt"
+	masterVars["etcdServerKeyFilepath"] = "/etc/kubernetes/certs/etcdserver.key"
+	if useManagedIdentity {
 		masterVars["servicePrincipalClientId"] = "msi"
 		masterVars["servicePrincipalClientSecret"] = "msi"
 	} else {
@@ -304,59 +298,40 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["servicePrincipalClientSecret"] = "[parameters('servicePrincipalClientSecret')]"
 	}
 
-	if !isHostedMaster {
-		masterVars["masterCount"] = masterProfile.Count
-		if isMasterVMSS {
-			masterVars["masterOffset"] = ""
-			masterVars["masterIpAddressCount"] = masterProfile.IPAddressCount
-		} else {
-			masterVars["masterOffset"] = "[parameters('masterOffset')]"
-		}
-
-		if masterProfile.IsCustomVNET() {
-			if masterProfile.IsVirtualMachineScaleSets() {
-				masterVars["vnetSubnetID"] = "[parameters('agentVnetSubnetID')]"
-				masterVars["vnetSubnetIDMaster"] = "[parameters('masterVnetSubnetID')]"
-			} else {
-				masterVars["vnetSubnetID"] = "[parameters('masterVnetSubnetID')]"
-			}
-			masterVars["virtualNetworkName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
-			masterVars["virtualNetworkResourceGroupName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
-		} else {
-			if masterProfile.IsVirtualMachineScaleSets() {
-				masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/subnetagent')]"
-				masterVars["vnetSubnetIDMaster"] = "[concat(variables('vnetID'),'/subnets/subnetmaster')]"
-			} else {
-				masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
-
-			}
-			masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
-			masterVars["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
-			masterVars["virtualNetworkResourceGroupName"] = "''"
-		}
-		masterVars["routeTableName"] = "[concat(variables('masterVMNamePrefix'),'routetable')]"
-		if masterProfile.IsStorageAccount() {
-			masterVars["masterStorageAccountName"] = "[concat(variables('storageAccountBaseName'), 'mstr0')]"
-		}
-		masterVars["nsgName"] = "[concat(variables('masterVMNamePrefix'), 'nsg')]"
-
+	masterVars["masterCount"] = masterProfile.Count
+	if isMasterVMSS {
+		masterVars["masterOffset"] = ""
+		masterVars["masterIpAddressCount"] = masterProfile.IPAddressCount
 	} else {
-		if isCustomVnet {
-			if hasAgentPool {
-				masterVars["vnetSubnetID"] = fmt.Sprintf("[parameters('%sVnetSubnetID')]", profiles[0].Name)
-			}
-			masterVars["virtualNetworkName"] = "[split(variables('vnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
-			masterVars["virtualNetworkResourceGroupName"] = "[split(variables('vnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
-		} else {
-			masterVars["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
-			masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
-			masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
-			masterVars["virtualNetworkResourceGroupName"] = ""
-		}
-		masterVars["nsgName"] = "[concat(variables('agentNamePrefix'), 'nsg')]"
-
-		masterVars["routeTableName"] = "[concat(variables('agentNamePrefix'), 'routetable')]"
+		masterVars["masterOffset"] = "[parameters('masterOffset')]"
 	}
+
+	if masterProfile.IsCustomVNET() {
+		if masterProfile.IsVirtualMachineScaleSets() {
+			masterVars["vnetSubnetID"] = "[parameters('agentVnetSubnetID')]"
+			masterVars["vnetSubnetIDMaster"] = "[parameters('masterVnetSubnetID')]"
+		} else {
+			masterVars["vnetSubnetID"] = "[parameters('masterVnetSubnetID')]"
+		}
+		masterVars["virtualNetworkName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
+		masterVars["virtualNetworkResourceGroupName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
+	} else {
+		if masterProfile.IsVirtualMachineScaleSets() {
+			masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/subnetagent')]"
+			masterVars["vnetSubnetIDMaster"] = "[concat(variables('vnetID'),'/subnets/subnetmaster')]"
+		} else {
+			masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
+
+		}
+		masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
+		masterVars["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
+		masterVars["virtualNetworkResourceGroupName"] = "''"
+	}
+	masterVars["routeTableName"] = "[concat(variables('masterVMNamePrefix'),'routetable')]"
+	if masterProfile.IsStorageAccount() {
+		masterVars["masterStorageAccountName"] = "[concat(variables('storageAccountBaseName'), 'mstr0')]"
+	}
+	masterVars["nsgName"] = "[concat(variables('masterVMNamePrefix'), 'nsg')]"
 
 	masterVars["nsgID"] = "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]"
 	masterVars["subnetName"] = cs.Properties.GetSubnetName()
@@ -389,149 +364,144 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
 	masterVars["enableHostsConfigAgent"] = cs.Properties.OrchestratorProfile.IsHostsConfigAgentEnabled()
 
-	if isHostedMaster {
-		masterVars["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"
-		masterVars["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku && hasAgentPool {
+		masterVars["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
+		masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+		masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+		numIps := 1
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+			numIps = *cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+		}
+		ipAddressNameVarPrefix := "agentPublicIPAddressName"
+		outboundIPNamePrefix := "agent-ip-outbound"
+		outboundConfigNamePrefix := "agent-outbound"
+		agentLbIPConfigIDVarPrefix := "agentLbIPConfigID"
+		agentLbIPConfigNameVarPrefix := "agentLbIPConfigName"
+		for i := 1; i <= numIps; i++ {
+			ipAddressNameVar := ipAddressNameVarPrefix
+			outboundIPName := outboundIPNamePrefix
+			agentLbIPConfigIDVar := agentLbIPConfigIDVarPrefix
+			agentLbIPConfigNameVar := agentLbIPConfigNameVarPrefix
+			outboundConfigName := outboundConfigNamePrefix
+			if i > 1 {
+				ipAddressNameVar += strconv.Itoa(i)
+				outboundIPName += strconv.Itoa(i)
+				outboundConfigName += strconv.Itoa(i)
+				agentLbIPConfigIDVar += strconv.Itoa(i)
+				agentLbIPConfigNameVar += strconv.Itoa(i)
+			}
+			masterVars[ipAddressNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundIPName)
+			masterVars[agentLbIPConfigIDVar] = fmt.Sprintf("[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('%s'))]", agentLbIPConfigNameVar)
+			masterVars[agentLbIPConfigNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundConfigName)
+		}
+	}
+	// private cluster + basic LB configurations do not need these vars (which serve the master LB and public IP resources), because:
+	// - private cluster + basic LB + 1 master uses NIC outbound rules for master outbound access
+	// - private cluster + basic LB + multiple masters uses internal master LB for outbound access (doesn't need a public IP)
+	if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.BasicLoadBalancerSku) {
+		masterVars["masterPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]"
+		masterVars["masterLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]"
+		masterVars["masterLbIPConfigID"] = "[concat(variables('masterLbID'),'/frontendIPConfigurations/', variables('masterLbIPConfigName'))]"
+		masterVars["masterLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-master-lbFrontEnd-', parameters('nameSuffix'))]"
+		masterVars["masterLbName"] = "[concat(parameters('orchestratorName'), '-master-lb-', parameters('nameSuffix'))]"
+	}
+	if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		masterVars["kubeconfigServer"] = "[concat('https://', variables('kubernetesAPIServerIP'), ':443')]"
+		if provisionJumpbox {
+			masterVars["jumpboxOSDiskName"] = "[concat(parameters('jumpboxVMName'), '-osdisk')]"
+			masterVars["jumpboxPublicIpAddressName"] = "[concat(parameters('jumpboxVMName'), '-ip')]"
+			masterVars["jumpboxNetworkInterfaceName"] = "[concat(parameters('jumpboxVMName'), '-nic')]"
+			masterVars["jumpboxNetworkSecurityGroupName"] = "[concat(parameters('jumpboxVMName'), '-nsg')]"
+
+			kubeConfig, err := GenerateKubeConfig(cs.Properties, cs.Location)
+			if err != nil {
+				panic(err)
+			}
+			masterVars["kubeconfig"] = kubeConfig
+
+			isJumpboxManagedDisks := kubernetesConfig.PrivateJumpboxProvision() &&
+				kubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
+
+			if !isJumpboxManagedDisks {
+				masterVars["jumpboxStorageAccountName"] = "[concat(variables('storageAccountBaseName'), 'jb')]"
+			}
+
+			if !cs.Properties.HasStorageAccountDisks() {
+				masterVars["vmSizesMap"] = getSizeMap()["vmSizesMap"]
+			}
+
+		}
 	} else {
-		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku && hasAgentPool {
-			masterVars["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
-			masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
-			masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
-			numIps := 1
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
-				numIps = *cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
-			}
-			ipAddressNameVarPrefix := "agentPublicIPAddressName"
-			outboundIPNamePrefix := "agent-ip-outbound"
-			outboundConfigNamePrefix := "agent-outbound"
-			agentLbIPConfigIDVarPrefix := "agentLbIPConfigID"
-			agentLbIPConfigNameVarPrefix := "agentLbIPConfigName"
-			for i := 1; i <= numIps; i++ {
-				ipAddressNameVar := ipAddressNameVarPrefix
-				outboundIPName := outboundIPNamePrefix
-				agentLbIPConfigIDVar := agentLbIPConfigIDVarPrefix
-				agentLbIPConfigNameVar := agentLbIPConfigNameVarPrefix
-				outboundConfigName := outboundConfigNamePrefix
-				if i > 1 {
-					ipAddressNameVar += strconv.Itoa(i)
-					outboundIPName += strconv.Itoa(i)
-					outboundConfigName += strconv.Itoa(i)
-					agentLbIPConfigIDVar += strconv.Itoa(i)
-					agentLbIPConfigNameVar += strconv.Itoa(i)
-				}
-				masterVars[ipAddressNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundIPName)
-				masterVars[agentLbIPConfigIDVar] = fmt.Sprintf("[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('%s'))]", agentLbIPConfigNameVar)
-				masterVars[agentLbIPConfigNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundConfigName)
-			}
-		}
-		// private cluster + basic LB configurations do not need these vars (which serve the master LB and public IP resources), because:
-		// - private cluster + basic LB + 1 master uses NIC outbound rules for master outbound access
-		// - private cluster + basic LB + multiple masters uses internal master LB for outbound access (doesn't need a public IP)
-		if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.BasicLoadBalancerSku) {
-			masterVars["masterPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]"
-			masterVars["masterLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]"
-			masterVars["masterLbIPConfigID"] = "[concat(variables('masterLbID'),'/frontendIPConfigurations/', variables('masterLbIPConfigName'))]"
-			masterVars["masterLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-master-lbFrontEnd-', parameters('nameSuffix'))]"
-			masterVars["masterLbName"] = "[concat(parameters('orchestratorName'), '-master-lb-', parameters('nameSuffix'))]"
-		}
-		if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-			masterVars["kubeconfigServer"] = "[concat('https://', variables('kubernetesAPIServerIP'), ':443')]"
-			if provisionJumpbox {
-				masterVars["jumpboxOSDiskName"] = "[concat(parameters('jumpboxVMName'), '-osdisk')]"
-				masterVars["jumpboxPublicIpAddressName"] = "[concat(parameters('jumpboxVMName'), '-ip')]"
-				masterVars["jumpboxNetworkInterfaceName"] = "[concat(parameters('jumpboxVMName'), '-nic')]"
-				masterVars["jumpboxNetworkSecurityGroupName"] = "[concat(parameters('jumpboxVMName'), '-nsg')]"
+		masterVars["kubeconfigServer"] = "[concat('https://', variables('masterFqdnPrefix'), '.', variables('location'), '.', parameters('fqdnEndpointSuffix'))]"
+	}
 
-				kubeConfig, err := GenerateKubeConfig(cs.Properties, cs.Location)
-				if err != nil {
-					panic(err)
-				}
-				masterVars["kubeconfig"] = kubeConfig
-
-				isJumpboxManagedDisks := kubernetesConfig.PrivateJumpboxProvision() &&
-					kubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
-
-				if !isJumpboxManagedDisks {
-					masterVars["jumpboxStorageAccountName"] = "[concat(variables('storageAccountBaseName'), 'jb')]"
-				}
-
-				if !cs.Properties.HasStorageAccountDisks() {
-					masterVars["vmSizesMap"] = getSizeMap()["vmSizesMap"]
-				}
-
-			}
-		} else {
-			masterVars["kubeconfigServer"] = "[concat('https://', variables('masterFqdnPrefix'), '.', variables('location'), '.', parameters('fqdnEndpointSuffix'))]"
-		}
-
-		if masterProfile.HasMultipleNodes() {
-			masterVars["masterInternalLbName"] = "[concat(parameters('orchestratorName'), '-master-internal-lb-', parameters('nameSuffix'))]"
-			masterVars["masterInternalLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('masterInternalLbName'))]"
-			masterVars["masterInternalLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-master-internal-lbFrontEnd-', parameters('nameSuffix'))]"
-			masterVars["masterInternalLbIPConfigID"] = "[concat(variables('masterInternalLbID'),'/frontendIPConfigurations/', variables('masterInternalLbIPConfigName'))]"
-			masterVars["masterInternalLbIPOffset"] = DefaultInternalLbStaticIPOffset
-			if isMasterVMSS {
-				masterVars["kubernetesAPIServerIP"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.255.', variables('masterInternalLbIPOffset'))]"
-			} else {
-				masterVars["kubernetesAPIServerIP"] = "[concat(variables('masterFirstAddrPrefix'), add(variables('masterInternalLbIPOffset'), int(variables('masterFirstAddrOctet4'))))]"
-
-			}
-		} else {
-			masterVars["kubernetesAPIServerIP"] = "[parameters('firstConsecutiveStaticIP')]"
-		}
-
-		masterVars["masterLbBackendPoolName"] = "[concat(parameters('orchestratorName'), '-master-pool-', parameters('nameSuffix'))]"
-		masterVars["masterFirstAddrComment"] = "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space"
-		masterVars["masterFirstAddrOctets"] = "[split(parameters('firstConsecutiveStaticIP'),'.')]"
-		masterVars["masterFirstAddrOctet4"] = "[variables('masterFirstAddrOctets')[3]]"
-		masterVars["masterFirstAddrPrefix"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.')]"
-		masterVars["masterEtcdServerPort"] = DefaultMasterEtcdServerPort
-		masterVars["masterEtcdClientPort"] = DefaultMasterEtcdClientPort
-
+	if masterProfile.HasMultipleNodes() {
+		masterVars["masterInternalLbName"] = "[concat(parameters('orchestratorName'), '-master-internal-lb-', parameters('nameSuffix'))]"
+		masterVars["masterInternalLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('masterInternalLbName'))]"
+		masterVars["masterInternalLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-master-internal-lbFrontEnd-', parameters('nameSuffix'))]"
+		masterVars["masterInternalLbIPConfigID"] = "[concat(variables('masterInternalLbID'),'/frontendIPConfigurations/', variables('masterInternalLbIPConfigName'))]"
+		masterVars["masterInternalLbIPOffset"] = DefaultInternalLbStaticIPOffset
 		if isMasterVMSS {
-			masterVars["masterVMNamePrefix"] = "[concat(parameters('orchestratorName'), '-master-', parameters('nameSuffix'), '-')]"
+			masterVars["kubernetesAPIServerIP"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.255.', variables('masterInternalLbIPOffset'))]"
 		} else {
-			masterVars["masterVMNamePrefix"] = cs.Properties.GetMasterVMPrefix()
-			masterVars["masterVMNames"] = []string{
-				"[concat(variables('masterVMNamePrefix'), '0')]",
-				"[concat(variables('masterVMNamePrefix'), '1')]",
-				"[concat(variables('masterVMNamePrefix'), '2')]",
-				"[concat(variables('masterVMNamePrefix'), '3')]",
-				"[concat(variables('masterVMNamePrefix'), '4')]",
-			}
-			masterVars["masterPrivateIpAddrs"] = []string{
-				"[concat(variables('masterFirstAddrPrefix'), add(0, int(variables('masterFirstAddrOctet4'))))]",
-				"[concat(variables('masterFirstAddrPrefix'), add(1, int(variables('masterFirstAddrOctet4'))))]",
-				"[concat(variables('masterFirstAddrPrefix'), add(2, int(variables('masterFirstAddrOctet4'))))]",
-				"[concat(variables('masterFirstAddrPrefix'), add(3, int(variables('masterFirstAddrOctet4'))))]",
-				"[concat(variables('masterFirstAddrPrefix'), add(4, int(variables('masterFirstAddrOctet4'))))]",
-			}
-			masterVars["masterEtcdPeerURLs"] = []string{
-				"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]",
-			}
-			masterVars["masterEtcdClientURLs"] = []string{
-				"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdClientPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdClientPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdClientPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdClientPort'))]",
-				"[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdClientPort'))]",
-			}
-			masterVars["masterEtcdClusterStates"] = []string{
-				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]",
-				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]",
-				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]",
-			}
-			masterVars["masterEtcdMetricURLs"] = []string{
-				"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]",
-				"[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]",
-				"[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]",
-				"[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]",
-				"[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]",
-			}
+			masterVars["kubernetesAPIServerIP"] = "[concat(variables('masterFirstAddrPrefix'), add(variables('masterInternalLbIPOffset'), int(variables('masterFirstAddrOctet4'))))]"
+
+		}
+	} else {
+		masterVars["kubernetesAPIServerIP"] = "[parameters('firstConsecutiveStaticIP')]"
+	}
+
+	masterVars["masterLbBackendPoolName"] = "[concat(parameters('orchestratorName'), '-master-pool-', parameters('nameSuffix'))]"
+	masterVars["masterFirstAddrComment"] = "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space"
+	masterVars["masterFirstAddrOctets"] = "[split(parameters('firstConsecutiveStaticIP'),'.')]"
+	masterVars["masterFirstAddrOctet4"] = "[variables('masterFirstAddrOctets')[3]]"
+	masterVars["masterFirstAddrPrefix"] = "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.')]"
+	masterVars["masterEtcdServerPort"] = DefaultMasterEtcdServerPort
+	masterVars["masterEtcdClientPort"] = DefaultMasterEtcdClientPort
+
+	if isMasterVMSS {
+		masterVars["masterVMNamePrefix"] = "[concat(parameters('orchestratorName'), '-master-', parameters('nameSuffix'), '-')]"
+	} else {
+		masterVars["masterVMNamePrefix"] = cs.Properties.GetMasterVMPrefix()
+		masterVars["masterVMNames"] = []string{
+			"[concat(variables('masterVMNamePrefix'), '0')]",
+			"[concat(variables('masterVMNamePrefix'), '1')]",
+			"[concat(variables('masterVMNamePrefix'), '2')]",
+			"[concat(variables('masterVMNamePrefix'), '3')]",
+			"[concat(variables('masterVMNamePrefix'), '4')]",
+		}
+		masterVars["masterPrivateIpAddrs"] = []string{
+			"[concat(variables('masterFirstAddrPrefix'), add(0, int(variables('masterFirstAddrOctet4'))))]",
+			"[concat(variables('masterFirstAddrPrefix'), add(1, int(variables('masterFirstAddrOctet4'))))]",
+			"[concat(variables('masterFirstAddrPrefix'), add(2, int(variables('masterFirstAddrOctet4'))))]",
+			"[concat(variables('masterFirstAddrPrefix'), add(3, int(variables('masterFirstAddrOctet4'))))]",
+			"[concat(variables('masterFirstAddrPrefix'), add(4, int(variables('masterFirstAddrOctet4'))))]",
+		}
+		masterVars["masterEtcdPeerURLs"] = []string{
+			"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]",
+		}
+		masterVars["masterEtcdClientURLs"] = []string{
+			"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdClientPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdClientPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdClientPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdClientPort'))]",
+			"[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdClientPort'))]",
+		}
+		masterVars["masterEtcdClusterStates"] = []string{
+			"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]",
+			"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]",
+			"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]",
+		}
+		masterVars["masterEtcdMetricURLs"] = []string{
+			"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]",
+			"[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]",
+			"[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]",
+			"[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]",
+			"[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]",
 		}
 	}
 

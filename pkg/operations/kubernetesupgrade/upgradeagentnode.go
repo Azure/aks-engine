@@ -51,12 +51,7 @@ type UpgradeAgentNode struct {
 func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 	var kubeAPIServerURL string
 
-	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		apiServerListeningPort := 443
-		kubeAPIServerURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
-	} else {
-		kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
-	}
+	kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 
 	if vmName == nil || *vmName == "" {
 		return errors.Errorf("Error deleting VM: VM name was empty")
@@ -118,13 +113,7 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 	nodeName := strings.ToLower(*vmName)
 
 	kan.logger.Infof("Validating %s", nodeName)
-	var apiserverURL string
-	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		apiServerListeningPort := 443
-		apiserverURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
-	} else {
-		apiserverURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
-	}
+	apiserverURL := kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 
 	client, err := kan.Client.GetKubernetesClient(apiserverURL, kan.kubeConfig, interval, kan.timeout)
 	if err != nil {

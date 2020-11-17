@@ -37,7 +37,6 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		createNewUserAssignedIdentity = kubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 	}
 
-	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	if userAssignedIDEnabled {
 		if createNewUserAssignedIdentity {
 			userAssignedID := createUserAssignedIdentities()
@@ -45,11 +44,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 
 		var msiRoleAssignment RoleAssignmentARM
-		if isHostedMaster {
-			msiRoleAssignment = createMSIRoleAssignment(IdentityReaderRole)
-		} else {
-			msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
-		}
+		msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
 
 		armResources = append(armResources, msiRoleAssignment)
 	}
@@ -60,7 +55,6 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	//    - i.e., user-provided LoadBalancerBackendAddressPoolIDs is not compatible w/ this Standard LB spec,
 	//      which assumes *all vms in all node pools* as backend pool members
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
-		!isHostedMaster &&
 		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() {
 		var publicIPAddresses []PublicIPAddressARM
 		numIps := 1
@@ -104,33 +98,15 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 	}
 
-	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
-	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
-	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
-
-	if isHostedMaster {
-		if !isCustomVnet {
-			hostedMasterVnet := createHostedMasterVirtualNetwork(cs)
-			armResources = append(armResources, hostedMasterVnet)
-		}
-
-		if !isAzureCNI || isAzureCNIDualStack {
-			armResources = append(armResources, createRouteTable())
-		}
-
-		hostedMasterNsg := createHostedMasterNSG()
-		armResources = append(armResources, hostedMasterNsg)
+	isMasterVMSS := cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
+	var masterResources []interface{}
+	if isMasterVMSS {
+		masterResources = createKubernetesMasterResourcesVMSS(cs)
 	} else {
-		isMasterVMSS := cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
-		var masterResources []interface{}
-		if isMasterVMSS {
-			masterResources = createKubernetesMasterResourcesVMSS(cs)
-		} else {
-			masterResources = createKubernetesMasterResourcesVMAS(cs)
-		}
-
-		armResources = append(armResources, masterResources...)
+		masterResources = createKubernetesMasterResourcesVMAS(cs)
 	}
+
+	armResources = append(armResources, masterResources...)
 
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 		armResources = append(armResources, createAppGwPublicIPAddress())

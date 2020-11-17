@@ -24,7 +24,6 @@
       "type": "securestring"
       },
     {{end}}
-{{if not IsHostedMaster }}
   {{if .MasterProfile.IsCustomVNET}}
     "masterVnetSubnetID": {
       "metadata": {
@@ -78,23 +77,6 @@
     "type": "array"
   },
   {{end}}
-{{end}}
-{{if IsHostedMaster}}
-    "masterSubnet": {
-      "defaultValue": "{{.HostedMasterProfile.Subnet}}",
-      "metadata": {
-        "description": "Sets the subnet for the VMs in the cluster."
-      },
-      "type": "string"
-    },
-    "kubernetesEndpoint": {
-      "defaultValue": "{{.HostedMasterProfile.FQDN}}",
-      "metadata": {
-        "description": "Sets the static IP of the first master"
-      },
-      "type": "string"
-    },
-{{else}}
     "firstConsecutiveStaticIP": {
       "defaultValue": "{{.MasterProfile.FirstConsecutiveStaticIP}}",
       "metadata": {
@@ -109,7 +91,6 @@
       },
       "type": "string"
     },
-{{end}}
     "sshRSAPublicKey": {
       "metadata": {
         "description": "SSH public key used for auth to all Linux machines.  Not Required.  If not set, you must provide a password key."

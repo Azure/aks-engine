@@ -51,7 +51,6 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"IsAzureStackCloud",
 		"IsMultiMasterCluster",
 		"IsMasterVirtualMachineScaleSets",
-		"IsHostedMaster",
 		"IsIPMasqAgentEnabled",
 		"IsKubernetesVersionGe",
 		"IsKubernetesVersionLt",

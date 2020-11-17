@@ -4579,25 +4579,6 @@ func TestEnableRBAC(t *testing.T) {
 			isUpgrade: true,
 			expected:  true,
 		},
-		{
-			name: "1.15 upgrade no false--> true override in AKS scenario",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false, false)),
-						KubernetesConfig: &KubernetesConfig{
-							EnableRbac: to.BoolPtr(false),
-						},
-					},
-					HostedMasterProfile: &HostedMasterProfile{
-						FQDN: "foo",
-					},
-				},
-			},
-			isUpgrade: true,
-			expected:  false,
-		},
 	}
 
 	for _, c := range cases {
