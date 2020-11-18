@@ -656,6 +656,7 @@ type AgentPoolProfile struct {
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
+	VMSSName                            string               `json:"vmssName,omitempty"`
 	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
 	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
@@ -927,6 +928,9 @@ func (p *Properties) GetAgentPoolIndexByName(name string) int {
 
 // GetAgentVMPrefix returns the VM prefix for an agentpool.
 func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
+	if a.IsVirtualMachineScaleSets() && a.VMSSName != "" {
+		return a.VMSSName
+	}
 	nameSuffix := p.GetClusterID()
 	vmPrefix := ""
 	if index != -1 {

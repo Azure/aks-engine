@@ -11,11 +11,11 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
@@ -406,22 +406,12 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
-				vmssName := *vmss.Name
-				if sc.agentPool.OSType == api.Windows {
-					possibleIndex, err := strconv.Atoi(vmssName[len(vmssName)-2:])
-					if err != nil {
-						continue
-					}
-					if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, possibleIndex) == vmssName) {
-						continue
-					}
-					winPoolIndex = possibleIndex
+				vmssName := to.String(vmss.Name)
+				if sc.agentPool.VMSSName == vmssName {
+					log.Infof("found VMSS %s in resource group %s that correlates with node pool %s", vmssName, sc.resourceGroupName, sc.agentPoolToScale)
 				} else {
-					if !sc.vmInAgentPool(vmssName, vmss.Tags) {
-						continue
-					}
+					continue
 				}
-				log.Infof("found VMSS %s in resource group %s that correlates with node pool %s", vmssName, sc.resourceGroupName, sc.agentPoolToScale)
 
 				if vmss.Sku != nil {
 					currentNodeCount = int(*vmss.Sku.Capacity)

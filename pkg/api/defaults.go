@@ -695,7 +695,7 @@ func (p *Properties) setMasterProfileDefaults() {
 }
 
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
-	for _, profile := range p.AgentPoolProfiles {
+	for i, profile := range p.AgentPoolProfiles {
 		if profile.AvailabilityProfile == "" {
 			profile.AvailabilityProfile = VirtualMachineScaleSets
 		}
@@ -712,6 +712,8 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			if profile.VMSSOverProvisioningEnabled == nil {
 				profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
 			}
+
+			profile.VMSSName = p.GetAgentVMPrefix(profile, i)
 		}
 		// set default OSType to Linux
 		if profile.OSType == "" {
