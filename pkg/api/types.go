@@ -656,7 +656,6 @@ type AgentPoolProfile struct {
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
-	VMSSName                            string               `json:"vmssName,omitempty"`
 	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
 	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
@@ -669,6 +668,7 @@ type AgentPoolProfile struct {
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
 	OSDiskCachingType                   string               `json:"osDiskCachingType,omitempty"`
 	DataDiskCachingType                 string               `json:"dataDiskCachingType,omitempty"`
+	VMSSName                            string               `json:"vmssName,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

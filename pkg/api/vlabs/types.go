@@ -543,6 +543,7 @@ type AgentPoolProfile struct {
 	ProximityPlacementGroupID         string            `json:"proximityPlacementGroupID,omitempty"`
 	OSDiskCachingType                 string            `json:"osDiskCachingType,omitempty"`
 	DataDiskCachingType               string            `json:"dataDiskCachingType,omitempty"`
+	VMSSName                          string            `json:"vmssName,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
