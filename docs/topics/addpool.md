@@ -299,11 +299,11 @@ Again, refer to the [cluster-api documentation](https://github.com/kubernetes/au
 If you're running cluster-autoscaler via the AKS Engine addon, and *if* you have explicitly configured the AKS Engine `cluster-autoscaler` addon to a mode of `Reconcile`, then you won't we able to simply edit the deployment spec on the cluster; instead you'll have to hop onto each control plane VM and manually edit the spec under `/etc/kubernetes/addons/cluster-autoscaler.yaml`. This is not a common situation, and one that would only occur because of an explicit configuration in the API model, such as:
 
 ```
-        "addons": [
-          {
-            "name": "cluster-autoscaler",
-            "enabled": true,
-            "mode": "Reconcile"
-		  }
-		]
+"addons": [
+  {
+    "name": "cluster-autoscaler",
+    "enabled": true,
+    "mode": "Reconcile"
+  }
+]
 ```
