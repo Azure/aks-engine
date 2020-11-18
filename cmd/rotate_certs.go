@@ -136,7 +136,7 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 		if rcc.containerService.Properties.MasterProfile != nil {
 			rcc.outputDirectory = path.Join("_output", rcc.containerService.Properties.MasterProfile.DNSPrefix)
 		} else {
-			rcc.outputDirectory = path.Join("_output", rcc.containerService.Properties.HostedMasterProfile.DNSPrefix)
+			return errors.New("can't determine output directory from nil MasterProfile")
 		}
 	}
 

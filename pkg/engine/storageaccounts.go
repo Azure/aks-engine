@@ -89,7 +89,7 @@ func createAgentVMASStorageAccount(cs *api.ContainerService, profile *api.AgentP
 		},
 	}
 
-	if !cs.Properties.IsHostedMasterProfile() && !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 		armResource.DependsOn = []string{
 			"[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]",
 		}

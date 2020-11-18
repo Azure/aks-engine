@@ -61,11 +61,6 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 	cs.setOrchestratorDefaults(params.IsUpgrade, params.IsScale)
 	properties.setExtensionDefaults()
 
-	// Set hosted master profile defaults if this cluster configuration has a hosted control plane
-	if cs.Properties.HostedMasterProfile != nil {
-		properties.setHostedMasterProfileDefaults()
-	}
-
 	if cs.Properties.WindowsProfile != nil {
 		cs.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
 		cs.setCSIProxyDefaults()
@@ -183,7 +178,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if !isUpgrade && !isScale &&
-			!cs.Properties.IsHostedMasterProfile() &&
 			!cs.Properties.IsCustomCloudProfile() &&
 			!cs.Properties.MasterProfile.IsVirtualMachineScaleSets() &&
 			o.KubernetesConfig.UseManagedIdentity == nil {
@@ -424,7 +418,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		// Upgrade scenario:
 		// We need to force set EnableRbac to true for upgrades to 1.15.0 and greater if it was previously set to false (AKS Engine only)
-		if !a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && isUpgrade && !cs.Properties.IsHostedMasterProfile() {
+		if !a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && isUpgrade {
 			log.Warnf("RBAC will be enabled during upgrade to version %s\n", o.OrchestratorVersion)
 			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
 		}
@@ -883,10 +877,6 @@ func (p *Properties) setStorageDefaults() {
 			profile.StorageProfile = ManagedDisks
 		}
 	}
-}
-
-func (p *Properties) setHostedMasterProfileDefaults() {
-	p.HostedMasterProfile.Subnet = DefaultKubernetesMasterSubnet
 }
 
 func (p *Properties) setTelemetryProfileDefaults() {

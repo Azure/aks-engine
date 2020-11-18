@@ -126,9 +126,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
 		// for enabling metrics-server v0.3.0+
 		defaultKubeletConfig["--authentication-token-webhook"] = "true"
-		if !cs.Properties.IsHostedMasterProfile() { // Skip for AKS until it supports metrics-server v0.3
-			defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
-		}
+		defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
 	}
 
 	if o.KubernetesConfig.NeedsContainerd() {

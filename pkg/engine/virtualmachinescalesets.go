@@ -282,19 +282,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	var extensions []compute.VirtualMachineScaleSetExtension
 
-	outBoundCmd := ""
-	registry := ""
-	ncBinary := "nc"
-	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
-	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() && cs.Properties.IsHostedMasterProfile() {
-		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
-			registry = `gcr.azk8s.cn 443`
-		} else {
-			registry = `mcr.microsoft.com 443`
-		}
-		outBoundCmd = `retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
-	}
-
 	vmssCSE := compute.VirtualMachineScaleSetExtension{
 		Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmssCSE')]"),
 		VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
@@ -304,7 +291,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			AutoUpgradeMinorVersion: to.BoolPtr(true),
 			Settings:                map[string]interface{}{},
 			ProtectedSettings: map[string]interface{}{
-				"commandToExecute": fmt.Sprintf("[concat('echo $(date),$(hostname); "+outBoundCmd+" for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' IS_VHD=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> %s 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, linuxCSELogPath),
+				"commandToExecute": fmt.Sprintf("[concat('echo $(date),$(hostname); for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' IS_VHD=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> %s 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, linuxCSELogPath),
 			},
 		},
 	}
@@ -351,7 +338,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 }
 
 func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) VirtualMachineScaleSetARM {
-	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionCompute')]",
 	}
@@ -364,8 +350,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	if profile.LoadBalancerBackendAddressPoolIDs == nil &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
-		!isHostedMaster {
+		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		dependencies = append(dependencies, "[variables('agentLbID')]")
 	}
 
@@ -528,8 +513,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 					)
 				}
 			} else {
-				if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
-					!isHostedMaster {
+				if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 					agentLbBackendAddressPools := compute.SubResource{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 					}
@@ -737,22 +721,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	var vmssExtensions []compute.VirtualMachineScaleSetExtension
 
-	outBoundCmd := ""
-	registry := ""
-	ncBinary := "nc"
-	if profile.IsFlatcar() {
-		ncBinary = "ncat"
-	}
 	featureFlags := cs.Properties.FeatureFlags
-
-	if !featureFlags.IsFeatureEnabled("BlockOutboundInternet") && cs.Properties.IsHostedMasterProfile() {
-		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
-			registry = `gcr.azk8s.cn 443`
-		} else {
-			registry = `mcr.microsoft.com 443`
-		}
-		outBoundCmd = `retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 ` + ncBinary + ` -vz ` + registry + ` || exit $ERR_OUTBOUND_CONN_FAIL;`
-	}
 
 	var vmssCSE compute.VirtualMachineScaleSetExtension
 
@@ -781,7 +750,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 		isVHD := strconv.FormatBool(profile.IsVHDDistro())
 
-		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> %s 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIdentityEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, linuxCSELogPath, runInBackground)
+		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> %s 2>&1%s\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIdentityEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, linuxCSELogPath, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
@@ -811,20 +780,10 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			},
 		}
 
-		if cs.Properties.IsHostedMasterProfile() {
-			if profile.IsWindows() {
-				aksBillingExtension.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), '-AKSWindowsBilling')]", profile.Name))
-				aksBillingExtension.VirtualMachineScaleSetExtensionProperties.Type = to.StringPtr("Compute.AKS.Windows.Billing")
-			} else {
-				aksBillingExtension.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), '-AKSLinuxBilling')]", profile.Name))
-				aksBillingExtension.VirtualMachineScaleSetExtensionProperties.Type = to.StringPtr("Compute.AKS.Linux.Billing")
-			}
+		if profile.IsWindows() {
+			aksBillingExtension.VirtualMachineScaleSetExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
 		} else {
-			if profile.IsWindows() {
-				aksBillingExtension.VirtualMachineScaleSetExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
-			} else {
-				aksBillingExtension.VirtualMachineScaleSetExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Linux.Billing")
-			}
+			aksBillingExtension.VirtualMachineScaleSetExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Linux.Billing")
 		}
 
 		vmssExtensions = append(vmssExtensions, aksBillingExtension)

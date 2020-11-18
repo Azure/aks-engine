@@ -669,6 +669,31 @@ func TestDeployCmdRun(t *testing.T) {
 	}
 }
 
+func TestDeployCmdWithoutMasterProfile(t *testing.T) {
+	t.Parallel()
+
+	outdir, del := makeTmpDir(t)
+	defer del()
+
+	d := &deployCmd{
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs:      &authArgs{},
+			getClientMock: &armhelpers.MockAKSEngineClient{},
+		},
+		apimodelPath:    "../pkg/engine/testdata/simple/kubernetes.json",
+		outputDirectory: outdir,
+		forceOverwrite:  true,
+		location:        "westus",
+	}
+	d.set = []string{"masterProfile=nil"}
+
+	err := d.loadAPIModel()
+	if err == nil {
+		t.Fatalf("expected error loading api model without MasterProfile: %s", err.Error())
+	}
+}
+
 func TestLoadApiModelOnCustomCloud(t *testing.T) {
 	t.Parallel()
 

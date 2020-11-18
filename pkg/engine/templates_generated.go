@@ -11698,9 +11698,6 @@ configureEtcd() {
 ensureNTP() {
   systemctlEnableAndStart ntp || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
-configPrivateClusterHosts() {
-  systemctlEnableAndStart reconcile-private-hosts || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
-}
 
 ensureRPC() {
   systemctlEnableAndStart rpcbind || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
@@ -12251,11 +12248,9 @@ cleanUpContainerImages() {
   docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube') &
   docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager') &
   docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd') &
-  if [ "$IS_HOSTED_MASTER" = "false" ]; then
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
-  fi
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
 
   docker rmi registry:2.7.1 &
 }
@@ -13266,10 +13261,6 @@ fi
 time_metric "EnsureContainerd" ensureContainerd
 {{end}}
 
-{{- if and IsHostedMaster EnableHostsConfigAgent}}
-time_metric "ConfigPrivateClusterHosts" configPrivateClusterHosts
-{{end}}
-
 {{/* configure and enable dhcpv6 for ipv6 features */}}
 {{- if IsIPv6Enabled}}
 time_metric "EnsureDHCPv6" ensureDHCPv6
@@ -13327,34 +13318,6 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
 fi
 {{end}}
 
-VALIDATION_ERR=0
-
-{{- if IsHostedMaster }}
-API_SERVER_DNS_RETRIES=20
-if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
-  API_SERVER_DNS_RETRIES=200
-fi
-RES=$(retrycmd ${API_SERVER_DNS_RETRIES} 1 3 nslookup ${API_SERVER_NAME})
-STS=$?
-if [[ $STS != 0 ]]; then
-    if [[ $RES == *"168.63.129.16"*  ]]; then
-        VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL"}}
-    else
-        VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL"}}
-    fi
-else
-    API_SERVER_CONN_RETRIES=50
-    if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
-        API_SERVER_CONN_RETRIES=100
-    fi
-    retrycmd ${API_SERVER_CONN_RETRIES} 1 3 nc -vz ${API_SERVER_NAME} 443 &&
-    retrycmd ${API_SERVER_CONN_RETRIES} 1 3 nc -vz ${API_SERVER_NAME} 9000 &&
-    retrycmd ${API_SERVER_CONN_RETRIES} 1 3 nc -uvz ${API_SERVER_NAME} 1194 ||
-    VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
-fi
-
-{{end}}
-
 if [ -f /var/run/reboot-required ]; then
   trace_info "RebootRequired" "reboot=true"
   /bin/bash -c "shutdown -r 1 &"
@@ -13373,7 +13336,7 @@ echo $(date),$(hostname), endcustomscript >>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww >/opt/azure/provision-ps.log &
 
-exit $VALIDATION_ERR
+exit 0
 
 #EOF
 `)
@@ -15609,71 +15572,6 @@ write_files:
     {{CloudInitData "customSearchDomainsScript"}}
 {{end}}
 
-{{if and IsHostedMaster EnableHostsConfigAgent}}
-- path: /opt/azure/containers/reconcilePrivateHosts.sh
-  permissions: "0744"
-  owner: root
-  content: |
-    #!/usr/bin/env bash
-    set -o nounset
-    set -o pipefail
-
-    SLEEP_SECONDS=15
-    clusterFQDN={{WrapAsVariable "kubernetesAPIServerIP"}}
-    if [[ $clusterFQDN != *.privatelink.* ]]; then
-      echo "skip reconcile hosts for $clusterFQDN since it's not AKS private cluster"
-      exit 0
-    fi
-    echo "clusterFQDN: $clusterFQDN"
-
-    function get-apiserver-ip-from-tags() {
-      tags=$(curl -sSL -H "Metadata: true" "http://169.254.169.254/metadata/instance/compute/tags?api-version=2019-03-11&format=text")
-      if [ "$?" == "0" ]; then
-        IFS=";" read -ra tagList <<< "$tags"
-        for i in "${tagList[@]}"; do
-          tagKey=$(cut -d":" -f1 <<<$i)
-          tagValue=$(cut -d":" -f2 <<<$i)
-          if [ "$tagKey" == "aksAPIServerIPAddress" ]; then
-            echo -n "$tagValue"
-            return
-          fi
-        done
-      fi
-
-      echo -n ""
-    }
-
-    while true; do
-      clusterIP=$(get-apiserver-ip-from-tags)
-      if [ -z $clusterIP ]; then
-        sleep "${SLEEP_SECONDS}"
-        continue
-      fi
-
-      if grep "$clusterIP $clusterFQDN" /etc/hosts; then
-        echo "$clusterFQDN has already been set to $clusterIP"
-      else
-        sudo sed -i "/$clusterFQDN/d" /etc/hosts
-        sudo sed -i "\$a$clusterIP $clusterFQDN" /etc/hosts
-        echo "Updated $clusterFQDN to $clusterIP"
-      fi
-      sleep "${SLEEP_SECONDS}"
-    done
-
-- path: /etc/systemd/system/reconcile-private-hosts.service
-  permissions: "0644"
-  owner: root
-  content: |
-    [Unit]
-    Description=Reconcile /etc/hosts file for private cluster
-    [Service]
-    Type=simple
-    Restart=on-failure
-    ExecStart=/bin/bash /opt/azure/containers/reconcilePrivateHosts.sh
-    [Install]
-    WantedBy=multi-user.target
-{{end}}
-
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
   owner: root
@@ -15939,15 +15837,7 @@ func k8sKubeconfigJson() (*asset, error) {
 	return a, nil
 }
 
-var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
-    "kubernetesEndpoint": {
-      "metadata": {
-        "description": "The Kubernetes API endpoint https://<kubernetesEndpoint>:443"
-      },
-      "type": "string"
-    },
-{{else}}
-    "etcdServerCertificate": {
+var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
       "metadata": {
         "description": "The base 64 server certificate used on the master"
       },
@@ -16035,7 +15925,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
         },
       {{end}}
     {{end}}
-{{end}}
     "apiServerCertificate": {
       "metadata": {
         "description": "The base 64 server certificate used on the master"
@@ -16304,19 +16193,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       "type": "int"
     },
 {{ if not UseManagedIdentity }}
-    "servicePrincipalClientId": {
-      "metadata": {
-        "description": "Client ID (used by cloudprovider)"
-      },
-      "type": "securestring"
-    },
-    "servicePrincipalClientSecret": {
-      "metadata": {
-        "description": "The Service Principal Client Secret."
-      },
-      "type": "securestring"
-    },
-{{ else if and UseManagedIdentity IsHostedMaster}}
     "servicePrincipalClientId": {
       "metadata": {
         "description": "Client ID (used by cloudprovider)"
@@ -19126,7 +19002,6 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       "type": "securestring"
       },
     {{end}}
-{{if not IsHostedMaster }}
   {{if .MasterProfile.IsCustomVNET}}
     "masterVnetSubnetID": {
       "metadata": {
@@ -19180,23 +19055,6 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
     "type": "array"
   },
   {{end}}
-{{end}}
-{{if IsHostedMaster}}
-    "masterSubnet": {
-      "defaultValue": "{{.HostedMasterProfile.Subnet}}",
-      "metadata": {
-        "description": "Sets the subnet for the VMs in the cluster."
-      },
-      "type": "string"
-    },
-    "kubernetesEndpoint": {
-      "defaultValue": "{{.HostedMasterProfile.FQDN}}",
-      "metadata": {
-        "description": "Sets the static IP of the first master"
-      },
-      "type": "string"
-    },
-{{else}}
     "firstConsecutiveStaticIP": {
       "defaultValue": "{{.MasterProfile.FirstConsecutiveStaticIP}}",
       "metadata": {
@@ -19211,7 +19069,6 @@ var _masterparamsT = []byte(`    "linuxAdminUsername": {
       },
       "type": "string"
     },
-{{end}}
     "sshRSAPublicKey": {
       "metadata": {
         "description": "SSH public key used for auth to all Linux machines.  Not Required.  If not set, you must provide a password key."

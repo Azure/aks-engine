@@ -105,8 +105,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 	}
 
 	if kubernetesConfig == nil ||
-		!to.Bool(kubernetesConfig.UseManagedIdentity) ||
-		properties.IsHostedMasterProfile() {
+		!to.Bool(kubernetesConfig.UseManagedIdentity) {
 		servicePrincipalProfile := properties.ServicePrincipalProfile
 
 		if servicePrincipalProfile != nil {
@@ -194,10 +193,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addSecret(parametersMap, "etcdPeerPrivateKey"+strconv.Itoa(i), pk, true)
 			}
 		}
-	}
-
-	if properties.HostedMasterProfile != nil && properties.HostedMasterProfile.FQDN != "" {
-		addValue(parametersMap, "kubernetesEndpoint", properties.HostedMasterProfile.FQDN)
 	}
 
 	if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {

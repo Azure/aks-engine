@@ -154,12 +154,12 @@ func (gc *generateCmd) loadAPIModel() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	if gc.containerService.Properties.MasterProfile == nil {
+		return errors.New("MasterProfile can't be nil")
+	}
+
 	if gc.outputDirectory == "" {
-		if gc.containerService.Properties.MasterProfile != nil {
-			gc.outputDirectory = path.Join("_output", gc.containerService.Properties.MasterProfile.DNSPrefix)
-		} else {
-			gc.outputDirectory = path.Join("_output", gc.containerService.Properties.HostedMasterProfile.DNSPrefix)
-		}
+		gc.outputDirectory = path.Join("_output", gc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
 	// consume gc.caCertificatePath and gc.caPrivateKeyPath

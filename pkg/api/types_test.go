@@ -37,20 +37,6 @@ const exampleAPIModel = `{
 }
 `
 
-const exampleAKSAPIModel = `{
-		"apiVersion": "2018-03-31",
-	"properties": {
-		"dnsPrefix": "agents006",
-		"fqdn": "agents006.azmk8s.io",
-		"kubernetesVersion": "1.16.14",
-		"agentPoolProfiles": [ { "name": "agentpool1", "count": 2, "vmSize": "Standard_D2_v2" } ],
-		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
-	},
-	"servicePrincipalProfile": { "clientId": "", "secret": "" }
-	}
-}
-`
-
 const exampleAPIModelWithPrivateAzureRegistry = `{
 	"apiVersion": "vlabs",
 "properties": {
@@ -1286,59 +1272,6 @@ func TestTotalNodes(t *testing.T) {
 			t.Parallel()
 			if c.p.TotalNodes() != c.expected {
 				t.Fatalf("expected TotalNodes() to return %d but instead returned %d", c.expected, c.p.TotalNodes())
-			}
-		})
-	}
-}
-
-func TestPropertiesIsHostedMasterProfile(t *testing.T) {
-	cases := []struct {
-		name     string
-		p        Properties
-		expected bool
-	}{
-		{
-			name: "valid master 1 node",
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count: 1,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "valid master 3 nodes",
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count: 3,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "valid master 5 nodes",
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count: 5,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "zero value hosted master",
-			p: Properties{
-				HostedMasterProfile: &HostedMasterProfile{},
-			},
-			expected: true,
-		},
-	}
-
-	for _, c := range cases {
-		c := c
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			if c.p.IsHostedMasterProfile() != c.expected {
-				t.Fatalf("expected IsHostedMasterProfile() to return %t but instead returned %t", c.expected, c.p.IsHostedMasterProfile())
 			}
 		})
 	}
@@ -4194,81 +4127,6 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 			expectedPropertiesIsIPMasqAgentEnabled:       false,
 			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
 		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						Addons: []KubernetesAddon{
-							{
-								Name:    common.IPMASQAgentAddonName,
-								Enabled: to.BoolPtr(false),
-								Containers: []KubernetesContainerSpec{
-									{
-										Name: common.IPMASQAgentAddonName,
-									},
-								},
-							},
-						},
-					},
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: true,
-				},
-			},
-			expectedPropertiesIsIPMasqAgentEnabled:       true,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: false, // unsure of the validity of this case, but because it's possible we unit test it
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						Addons: []KubernetesAddon{
-							{
-								Name:    common.IPMASQAgentAddonName,
-								Enabled: to.BoolPtr(true),
-								Containers: []KubernetesContainerSpec{
-									{
-										Name: common.IPMASQAgentAddonName,
-									},
-								},
-							},
-						},
-					},
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: true,
-				},
-			},
-			expectedPropertiesIsIPMasqAgentEnabled:       true,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: true,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						Addons: []KubernetesAddon{
-							{
-								Name:    common.IPMASQAgentAddonName,
-								Enabled: to.BoolPtr(true),
-								Containers: []KubernetesContainerSpec{
-									{
-										Name: common.IPMASQAgentAddonName,
-									},
-								},
-							},
-						},
-					},
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: false,
-				},
-			},
-			expectedPropertiesIsIPMasqAgentEnabled:       false,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: true, // unsure of the validity of this case, but because it's possible we unit test it
-		},
 	}
 
 	for _, c := range cases {
@@ -4747,75 +4605,6 @@ func TestCloudProviderDefaults(t *testing.T) {
 		}
 	}
 
-	// Test cloudprovider defaults for VMSS scenario + AKS
-	v = "1.18.2"
-	p = Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType:    "Kubernetes",
-			OrchestratorVersion: v,
-			KubernetesConfig:    &KubernetesConfig{},
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				AvailabilityProfile: VirtualMachineScaleSets,
-			},
-		},
-		HostedMasterProfile: &HostedMasterProfile{
-			FQDN: "my-cluster",
-		},
-	}
-	o = p.OrchestratorProfile
-	p.SetCloudProviderBackoffDefaults()
-	p.SetCloudProviderRateLimitDefaults()
-
-	intCasesMixed = []struct {
-		expectedVal int
-		computedVal int
-	}{
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
-		},
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
-		},
-		{
-			expectedVal: common.MaxAgentCount,
-			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
-		},
-	}
-
-	for _, c := range intCasesMixed {
-		if c.computedVal != c.expectedVal {
-			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
-		}
-	}
-
-	floatCasesMixed = []struct {
-		expectedVal float64
-		computedVal float64
-	}{
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
-		},
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
-		},
-		{
-			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
-			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
-		},
-	}
-
-	for _, c := range floatCasesMixed {
-		if c.computedVal != c.expectedVal {
-			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
-		}
-	}
-
 	// Test cloudprovider defaults for VMAS scenario
 	v = "1.18.2"
 	p = Properties{
@@ -5139,20 +4928,6 @@ func TestGenerateClusterID(t *testing.T) {
 			expectedClusterID: "24569115",
 		},
 		{
-			name: "From Hosted Master Profile",
-			properties: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					DNSPrefix: "foo_hosted_master",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name: "foo_agent1",
-					},
-				},
-			},
-			expectedClusterID: "42761241",
-		},
-		{
 			name: "No Master Profile",
 			properties: &Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -5288,39 +5063,6 @@ func TestGetRouteTableName(t *testing.T) {
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType: Kubernetes,
 		},
-		HostedMasterProfile: &HostedMasterProfile{
-			FQDN:      "fqdn",
-			DNSPrefix: "foo",
-			Subnet:    "mastersubnet",
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:                "agentpool",
-				VMSize:              "Standard_D2_v2",
-				Count:               1,
-				AvailabilityProfile: VirtualMachineScaleSets,
-			},
-		},
-	}
-
-	actualRTName := p.GetRouteTableName()
-	expectedRTName := "aks-agentpool-28513887-routetable"
-
-	actualNSGName := p.GetNSGName()
-	expectedNSGName := "aks-agentpool-28513887-nsg"
-
-	if actualRTName != expectedRTName {
-		t.Errorf("expected route table name %s, but got %s", expectedRTName, actualRTName)
-	}
-
-	if actualNSGName != expectedNSGName {
-		t.Errorf("expected route table name %s, but got %s", expectedNSGName, actualNSGName)
-	}
-
-	p = &Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType: Kubernetes,
-		},
 		MasterProfile: &MasterProfile{
 			Count:     1,
 			DNSPrefix: "foo",
@@ -5336,11 +5078,11 @@ func TestGetRouteTableName(t *testing.T) {
 		},
 	}
 
-	actualRTName = p.GetRouteTableName()
-	expectedRTName = fmt.Sprintf("%s-28513887-routetable", common.LegacyControlPlaneVMPrefix)
+	actualRTName := p.GetRouteTableName()
+	expectedRTName := fmt.Sprintf("%s-28513887-routetable", common.LegacyControlPlaneVMPrefix)
 
-	actualNSGName = p.GetNSGName()
-	expectedNSGName = fmt.Sprintf("%s-28513887-nsg", common.LegacyControlPlaneVMPrefix)
+	actualNSGName := p.GetNSGName()
+	expectedNSGName := fmt.Sprintf("%s-28513887-nsg", common.LegacyControlPlaneVMPrefix)
 
 	if actualRTName != expectedRTName {
 		t.Errorf("expected route table name %s, but got %s", actualRTName, expectedRTName)
@@ -5357,51 +5099,6 @@ func TestGetSubnetName(t *testing.T) {
 		properties         *Properties
 		expectedSubnetName string
 	}{
-		{
-			name: "Cluster with HosterMasterProfile",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-					},
-				},
-			},
-			expectedSubnetName: "aks-subnet",
-		},
-		{
-			name: "Cluster with HosterMasterProfile and custom VNET",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-						VnetSubnetID:        "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-					},
-				},
-			},
-			expectedSubnetName: "BazAgentSubnet",
-		},
 		{
 			name: "Cluster with MasterProfile",
 			properties: &Properties{
@@ -5482,95 +5179,6 @@ func TestGetSubnetName(t *testing.T) {
 				t.Errorf("expected subnet name %s, but got %s", test.expectedSubnetName, actual)
 			}
 		})
-	}
-}
-
-func TestProperties_GetVirtualNetworkName(t *testing.T) {
-	tests := []struct {
-		name                       string
-		properties                 *Properties
-		expectedVirtualNetworkName string
-	}{
-		{
-			name: "Cluster with HostedMasterProfile and Custom VNET AgentProfiles",
-			properties: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-						VnetSubnetID:        "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-					},
-				},
-			},
-			expectedVirtualNetworkName: "ExampleCustomVNET",
-		},
-		{
-			name: "Cluster with HostedMasterProfile and AgentProfiles",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-					},
-				},
-			},
-			expectedVirtualNetworkName: "aks-vnet-28513887",
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			actual := test.properties.GetVirtualNetworkName()
-
-			if actual != test.expectedVirtualNetworkName {
-				t.Errorf("expected virtual network name %s, but got %s", test.expectedVirtualNetworkName, actual)
-			}
-		})
-	}
-}
-
-func TestProperties_GetVNetResourceGroupName(t *testing.T) {
-	p := &Properties{
-		HostedMasterProfile: &HostedMasterProfile{
-			FQDN:      "fqdn",
-			DNSPrefix: "foo",
-			Subnet:    "mastersubnet",
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:                "agentpool",
-				VMSize:              "Standard_D2_v2",
-				Count:               1,
-				AvailabilityProfile: VirtualMachineScaleSets,
-				VnetSubnetID:        "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-			},
-		},
-	}
-	expectedVNETResourceGroupName := "RESOURCE_GROUP_NAME"
-
-	actual := p.GetVNetResourceGroupName()
-
-	if expectedVNETResourceGroupName != actual {
-		t.Errorf("expected vnet resource group name name %s, but got %s", expectedVNETResourceGroupName, actual)
 	}
 }
 
@@ -6831,22 +6439,6 @@ func TestGetMasterFQDN(t *testing.T) {
 			expectedFQDN:      "FQDNFromMasterProfile",
 			expectedDNSPrefix: "foo_master",
 		},
-		{
-			name: "From Hosted Master Profile",
-			properties: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					DNSPrefix: "foo_hosted_master",
-					FQDN:      "FQDNFromHostedMasterProfile",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name: "foo_agent1",
-					},
-				},
-			},
-			expectedFQDN:      "FQDNFromHostedMasterProfile",
-			expectedDNSPrefix: "foo_hosted_master",
-		},
 	}
 
 	for _, test := range tests {
@@ -7708,24 +7300,6 @@ func TestPropertiesIsIPMasqAgentDisabled(t *testing.T) {
 			expectedDisabled: false,
 		},
 		{
-			name: "hostedMasterProfile disabled",
-			p: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: false,
-				},
-			},
-			expectedDisabled: true,
-		},
-		{
-			name: "hostedMasterProfile enabled",
-			p: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: true,
-				},
-			},
-			expectedDisabled: false,
-		},
-		{
 			name: "nil KubernetesConfig",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{},
@@ -7897,7 +7471,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 				KubeletPrivateKey:    "fakekubeletkey",
 				ClusterKeyVaultName:  "",
 			},
-			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=fakecert AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker CUSTOM_HYPERKUBE_IMAGE= ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IPV6_DUALSTACK_ENABLED=false IS_HOSTED_MASTER=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME= KUBELET_PRIVATE_KEY=fakekubeletkey KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=westus MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " MS_APT_REPO=" + DefaultMicrosoftAptRepositoryURL + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=" + common.LegacyControlPlaneVMPrefix + "-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=fakerg ROUTE_TABLE=" + common.LegacyControlPlaneVMPrefix + "-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret SUBNET=k8s-subnet SUBSCRIPTION_ID=fakesubID TENANT_ID=faketenantID USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=fakecert AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker CUSTOM_HYPERKUBE_IMAGE= ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IPV6_DUALSTACK_ENABLED=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME= KUBELET_PRIVATE_KEY=fakekubeletkey KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=westus MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " MS_APT_REPO=" + DefaultMicrosoftAptRepositoryURL + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=" + common.LegacyControlPlaneVMPrefix + "-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=fakerg ROUTE_TABLE=" + common.LegacyControlPlaneVMPrefix + "-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret SUBNET=k8s-subnet SUBSCRIPTION_ID=fakesubID TENANT_ID=faketenantID USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
 		},
 		{
 			name: "With ARM variables",
@@ -7913,7 +7487,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 				KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
 				ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyvaultName"),
 			},
-			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker CUSTOM_HYPERKUBE_IMAGE= ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IPV6_DUALSTACK_ENABLED=false IS_HOSTED_MASTER=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyvaultName'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=',variables('location'),' MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " MS_APT_REPO=" + DefaultMicrosoftAptRepositoryURL + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=" + common.LegacyControlPlaneVMPrefix + "-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=',variables('resourceGroup'),' ROUTE_TABLE=" + common.LegacyControlPlaneVMPrefix + "-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' SUBNET=k8s-subnet SUBSCRIPTION_ID=',variables('subscriptionId'),' TENANT_ID=',variables('tenantID'),' USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker CUSTOM_HYPERKUBE_IMAGE= ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IPV6_DUALSTACK_ENABLED=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyvaultName'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=',variables('location'),' MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " MS_APT_REPO=" + DefaultMicrosoftAptRepositoryURL + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=" + common.LegacyControlPlaneVMPrefix + "-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=',variables('resourceGroup'),' ROUTE_TABLE=" + common.LegacyControlPlaneVMPrefix + "-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' SUBNET=k8s-subnet SUBSCRIPTION_ID=',variables('subscriptionId'),' TENANT_ID=',variables('tenantID'),' USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
 		},
 	}
 

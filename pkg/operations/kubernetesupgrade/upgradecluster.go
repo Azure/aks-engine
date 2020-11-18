@@ -281,10 +281,8 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient kubernetes.Client, res
 				}
 				// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 				if currentVersion != goalVersion {
-					if !uc.DataModel.Properties.IsHostedMasterProfile() {
-						if err := uc.upgradable(currentVersion); err != nil {
-							return err
-						}
+					if err := uc.upgradable(currentVersion); err != nil {
+						return err
 					}
 					uc.addVMToUpgradeSets(vm, currentVersion)
 				} else if currentVersion == goalVersion {

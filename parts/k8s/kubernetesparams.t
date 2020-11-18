@@ -1,11 +1,3 @@
-{{if IsHostedMaster}}
-    "kubernetesEndpoint": {
-      "metadata": {
-        "description": "The Kubernetes API endpoint https://<kubernetesEndpoint>:443"
-      },
-      "type": "string"
-    },
-{{else}}
     "etcdServerCertificate": {
       "metadata": {
         "description": "The base 64 server certificate used on the master"
@@ -94,7 +86,6 @@
         },
       {{end}}
     {{end}}
-{{end}}
     "apiServerCertificate": {
       "metadata": {
         "description": "The base 64 server certificate used on the master"
@@ -363,19 +354,6 @@
       "type": "int"
     },
 {{ if not UseManagedIdentity }}
-    "servicePrincipalClientId": {
-      "metadata": {
-        "description": "Client ID (used by cloudprovider)"
-      },
-      "type": "securestring"
-    },
-    "servicePrincipalClientSecret": {
-      "metadata": {
-        "description": "The Service Principal Client Secret."
-      },
-      "type": "securestring"
-    },
-{{ else if and UseManagedIdentity IsHostedMaster}}
     "servicePrincipalClientId": {
       "metadata": {
         "description": "Client ID (used by cloudprovider)"

@@ -896,10 +896,6 @@ func (ku *Upgrader) copyCustomNodeProperties(client kubernetes.Client, oldNodeNa
 
 func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (kubernetes.Client, error) {
 	apiserverURL := ku.DataModel.Properties.GetMasterFQDN()
-	if ku.DataModel.Properties.HostedMasterProfile != nil {
-		apiServerListeningPort := 443
-		apiserverURL = fmt.Sprintf("https://%s:%d", apiserverURL, apiServerListeningPort)
-	}
 
 	return ku.Client.GetKubernetesClient(
 		apiserverURL,

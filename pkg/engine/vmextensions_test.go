@@ -85,7 +85,7 @@ func TestCreateAKSBillingExtension(t *testing.T) {
 }
 
 func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
-	// Test with HostedMasterProfile Windows.
+	// Test with Windows.
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
@@ -93,7 +93,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 					UseManagedIdentity: to.BoolPtr(true),
 				},
 			},
-			HostedMasterProfile: &api.HostedMasterProfile{
+			MasterProfile: &api.MasterProfile{
 				DNSPrefix: "foodns",
 			},
 		},
@@ -126,7 +126,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 				TypeHandlerVersion:      to.StringPtr("1.0"),
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
-				Type:                    to.StringPtr("Compute.AKS.Windows.Billing"),
+				Type:                    to.StringPtr("Compute.AKS-Engine.Windows.Billing"),
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
 		},
@@ -138,29 +138,7 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 		t.Errorf("unexpected diff while comparing: %s", diff)
 	}
 
-	// Test with MasterProfile with windows.
-	cs = &api.ContainerService{
-		Properties: &api.Properties{
-			OrchestratorProfile: &api.OrchestratorProfile{
-				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: to.BoolPtr(true),
-				},
-			},
-			MasterProfile: &api.MasterProfile{
-				DNSPrefix: "foodns",
-			},
-		},
-	}
-
-	vmExtension = CreateAgentVMASAKSBillingExtension(cs, profile)
-	expected.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Windows.Billing")
-	diff = cmp.Diff(vmExtension, expected)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while comparing: %s", diff)
-	}
-
-	// Test with MasterProfile with linux.
+	// Test with Linux.
 	cs = &api.ContainerService{
 		Properties: &api.Properties{
 			OrchestratorProfile: &api.OrchestratorProfile{
@@ -181,33 +159,6 @@ func TestCreateAgentVMASAKSBillingExtension(t *testing.T) {
 
 	vmExtension = CreateAgentVMASAKSBillingExtension(cs, profile)
 	expected.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS-Engine.Linux.Billing")
-	diff = cmp.Diff(vmExtension, expected)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while comparing: %s", diff)
-	}
-
-	// Test with HostedMasterProfile with linux.
-	cs = &api.ContainerService{
-		Properties: &api.Properties{
-			OrchestratorProfile: &api.OrchestratorProfile{
-				KubernetesConfig: &api.KubernetesConfig{
-					UseManagedIdentity: to.BoolPtr(true),
-				},
-			},
-			HostedMasterProfile: &api.HostedMasterProfile{
-				DNSPrefix: "foodns",
-			},
-		},
-	}
-
-	profile = &api.AgentPoolProfile{
-		Name:   "sample",
-		OSType: "Linux",
-	}
-
-	vmExtension = CreateAgentVMASAKSBillingExtension(cs, profile)
-	expected.VirtualMachineExtensionProperties.Type = to.StringPtr("Compute.AKS.Linux.Billing")
 	diff = cmp.Diff(vmExtension, expected)
 
 	if diff != "" {
@@ -250,7 +201,7 @@ func TestCreateCustomScriptExtension(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
 				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1"')]`,
+					"commandToExecute": `[concat('echo $(date),$(hostname); for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1"')]`,
 				},
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
@@ -259,73 +210,6 @@ func TestCreateCustomScriptExtension(t *testing.T) {
 	}
 
 	diff := cmp.Diff(cse, expectedCSE)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-}
-
-func TestCreateCustomScriptExtensionWithHostedMaster(t *testing.T) {
-	cs := &api.ContainerService{
-		Location: "westus2",
-		Properties: &api.Properties{
-			FeatureFlags: &api.FeatureFlags{
-				BlockOutboundInternet:    false,
-				EnableCSERunInBackground: false,
-			},
-			HostedMasterProfile: &api.HostedMasterProfile{
-				DNSPrefix: "foodns",
-			},
-		},
-	}
-
-	cse := CreateCustomScriptExtension(cs)
-
-	// userAssignedID is not enabled in above ContainerService definition
-	var userAssignedIDEnabled = false
-
-	expectedCSE := VirtualMachineExtensionARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionCompute')]",
-			Copy: map[string]string{
-				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-				"name":  "vmLoopNode",
-			},
-			DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"},
-		},
-		VirtualMachineExtension: compute.VirtualMachineExtension{
-			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'/cse', '-master-', copyIndex(variables('masterOffset')))]"),
-			VirtualMachineExtensionProperties: &compute.VirtualMachineExtensionProperties{
-				Publisher:               to.StringPtr("Microsoft.Azure.Extensions"),
-				Type:                    to.StringPtr("CustomScript"),
-				TypeHandlerVersion:      to.StringPtr("2.0"),
-				AutoUpgradeMinorVersion: to.BoolPtr(true),
-				Settings:                &map[string]interface{}{},
-				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz mcr.microsoft.com 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1"')]`,
-				},
-			},
-			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
-			Tags: map[string]*string{},
-		},
-	}
-
-	diff := cmp.Diff(cse, expectedCSE)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-
-	// Test with AzureChinaCloud location
-	cs.Location = "chinaeast"
-	cse = CreateCustomScriptExtension(cs)
-
-	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1"')]`,
-	}
-
-	diff = cmp.Diff(cse, expectedCSE)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
@@ -339,9 +223,6 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 			FeatureFlags: &api.FeatureFlags{
 				BlockOutboundInternet:    false,
 				EnableCSERunInBackground: false,
-			},
-			HostedMasterProfile: &api.HostedMasterProfile{
-				FQDN: "test.com:2333",
 			},
 		},
 	}
@@ -357,8 +238,6 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	// userAssignedID is not enabled in above ContainerService definition
 	var userAssignedIDEnabled = false
 
-	// Test CSE with an outboundCmd
-	expectedOutboundCmd := "retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz mcr.microsoft.com 443 || exit $ERR_OUTBOUND_CONN_FAIL;"
 	expectedCSE := VirtualMachineExtensionARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionCompute')]",
@@ -378,7 +257,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
 				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('echo $(date),$(hostname); ` + expectedOutboundCmd + ` for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1"')]`,
+					"commandToExecute": `[concat('echo $(date),$(hostname); for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1"')]`,
 				},
 			},
 			Type: to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
@@ -392,21 +271,9 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	// remove HostedMasterProfile so it doesn't generate outboundCmd
-	cs.Properties.HostedMasterProfile = nil
-
 	// Test with BlockOutboundInternet=true
-	cseValNoOutboundInternetCheck := `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=false GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1"')]`
 	cs.Properties.FeatureFlags.BlockOutboundInternet = true
-	profile = &api.AgentPoolProfile{
-		Name:   "sample",
-		OSType: "Linux",
-	}
 	cse = createAgentVMASCustomScriptExtension(cs, profile)
-
-	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": cseValNoOutboundInternetCheck,
-	}
 
 	diff = cmp.Diff(cse, expectedCSE)
 
@@ -417,15 +284,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	// Test with Azure Stack on Linux
 	cs.Properties.FeatureFlags.BlockOutboundInternet = false
 	cs.Properties.CustomCloudProfile = &api.CustomCloudProfile{}
-	profile = &api.AgentPoolProfile{
-		Name:   "sample",
-		OSType: "Linux",
-	}
 	cse = createAgentVMASCustomScriptExtension(cs, profile)
-
-	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": cseValNoOutboundInternetCheck,
-	}
 
 	diff = cmp.Diff(cse, expectedCSE)
 
@@ -446,7 +305,7 @@ func TestCreateAgentVMASCustomScriptExtension(t *testing.T) {
 	cse = createAgentVMASCustomScriptExtension(cs, profile)
 
 	expectedCSE.ProtectedSettings = &map[string]interface{}{
-		"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=false GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1 &"')]`,
+		"commandToExecute": `[concat('echo $(date),$(hostname); for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=false GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> ` + linuxCSELogPath + ` 2>&1 &"')]`,
 	}
 
 	diff = cmp.Diff(cse, expectedCSE)
