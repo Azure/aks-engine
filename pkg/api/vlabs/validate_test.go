@@ -734,6 +734,22 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			t.Error("should error when dual stack and single stack IPv6 enabled simultaneously")
 		}
 	}
+
+	// Tests that apply to 1.20 and later releases
+	for _, k8sVersion := range common.GetVersionsLt(common.GetAllSupportedKubernetesVersions(false, false, false), "1.20.0", false, false) {
+		c := KubernetesConfig{
+			EnableMultipleStandardLoadBalancers: to.BoolPtr(true),
+		}
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+			t.Errorf("should error when enable multiple standard load balancer before v1.20.0")
+		}
+		c = KubernetesConfig{
+			Tags: "a=b",
+		}
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+			t.Errorf("should error when setting tags before v1.20.0")
+		}
+	}
 }
 
 func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {

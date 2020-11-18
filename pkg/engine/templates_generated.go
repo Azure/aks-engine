@@ -11858,7 +11858,9 @@ configureK8s() {
     "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
     "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},
     "providerKeyName": "k8s",
-    "providerKeyVersion": ""
+    "providerKeyVersion": "",
+    "enableMultipleStandardLoadBalancers": ${ENABLE_MULTIPLE_STANDARD_LOAD_BALANCERS},
+    "tags": "${TAGS}"
 }
 EOF
   set -x
