@@ -144,7 +144,8 @@ func (apc *addPoolCmd) load() error {
 		return errors.Wrap(err, "error parsing the agent pool")
 	}
 
-	if apc.nodePool.IsWindows() {
+	// Back-compat logic to populate the VMSSName property for clusters built prior to VMSSName being a part of the API model spec
+	if apc.nodePool.IsVirtualMachineScaleSets() && apc.nodePool.VMSSName == "" {
 		existingPools := len(apc.containerService.Properties.AgentPoolProfiles)
 		newIndex := existingPools + 1
 		apc.nodePool.VMSSName = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, newIndex)

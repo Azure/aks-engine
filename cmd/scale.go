@@ -226,6 +226,11 @@ func (sc *scaleCmd) load() error {
 		}
 	}
 
+	// Back-compat logic to populate the VMSSName property for clusters built prior to VMSSName being a part of the API model spec
+	if sc.agentPool.IsVirtualMachineScaleSets() && sc.agentPool.VMSSName == "" {
+		sc.agentPool.VMSSName = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, sc.agentPoolIndex)
+	}
+
 	//allows to identify VMs in the resource group that belong to this cluster.
 	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
 	log.Debugf("Cluster ID used in all agent pools: %s", sc.nameSuffix)
