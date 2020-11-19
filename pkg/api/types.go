@@ -668,7 +668,8 @@ type AgentPoolProfile struct {
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
 	OSDiskCachingType                   string               `json:"osDiskCachingType,omitempty"`
 	DataDiskCachingType                 string               `json:"dataDiskCachingType,omitempty"`
-	VMSSName                            string               `json:"vmssName,omitempty"`
+	// VMSSName is a read-only field; its value will be computed during template generation
+	VMSSName string `json:"vmssName,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
