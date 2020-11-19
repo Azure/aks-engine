@@ -2395,7 +2395,6 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"CONTAINER_RUNTIME":                    kubernetesConfig.ContainerRuntime,
 		"CONTAINERD_DOWNLOAD_URL_BASE":         cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase,
 		"KMS_PROVIDER_VAULT_NAME":              input.ClusterKeyVaultName,
-		"IPV6_DUALSTACK_ENABLED":               strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"IS_IPV6_ENABLED":                      strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"AUTHENTICATION_METHOD":                cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"IDENTITY_SYSTEM":                      cs.Properties.GetCustomCloudIdentitySystem(),

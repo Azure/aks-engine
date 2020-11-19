@@ -11863,10 +11863,10 @@ configureAzureCNI() {
   if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
     mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
     chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-    if [[ "${IPV6_DUALSTACK_ENABLED}" == "true" ]]; then
-      jq '.plugins[0].ipv6Mode="ipv6nat"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
-      mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
-    fi
+{{- if IsIPv6DualStackFeatureEnabled}}
+    jq '.plugins[0].ipv6Mode="ipv6nat"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
+    mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
+{{- end}}
     if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
       serviceCidrs={{GetServiceCidr}}
       jq --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
