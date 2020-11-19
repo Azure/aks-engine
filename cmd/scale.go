@@ -436,6 +436,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 				currentNodeCount = int(*vmss.Sku.Capacity)
 				highestUsedIndex = 0
+				break
 			}
 		}
 	}
