@@ -87,8 +87,9 @@ fi
 {{end}}
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
-  if apt list --installed | grep 'ntp'; then
-    time_metric "EnsureNTP" ensureNTP
+  if apt list --installed | grep 'chrony'; then
+    time_metric "ConfigureChrony" configureChrony
+    time_metric "EnsureChrony" ensureChrony
   fi
 fi
 

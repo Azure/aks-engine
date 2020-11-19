@@ -11695,8 +11695,12 @@ configureEtcd() {
   done
   retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${etcd_peer_url} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
 }
-ensureNTP() {
-  systemctlEnableAndStart ntp || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+configureChrony() {
+  sed -i "s/makestep.*/makestep 1.0 -1/g" /etc/chrony/chrony.conf
+  echo "refclock PHC /dev/ptp0 poll 3 dpoll -2 offset 0" >> /etc/chrony/chrony.conf
+}
+ensureChrony() {
+  systemctlEnableAndStart chrony || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 
 ensureRPC() {
@@ -12835,7 +12839,7 @@ installDeps() {
     packages+=" cgroup-lite ceph-common glusterfs-client"
     if [[ $UBUNTU_RELEASE == "18.04" ]]; then
       disableTimeSyncd
-      packages+=" ntp ntpstat"
+      packages+=" ntp ntpstat chrony"
     fi
   elif [[ $OS == $DEBIAN_OS_NAME ]]; then
     packages+=" gpg cgroup-bin"
@@ -13143,8 +13147,9 @@ fi
 {{end}}
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
-  if apt list --installed | grep 'ntp'; then
-    time_metric "EnsureNTP" ensureNTP
+  if apt list --installed | grep 'chrony'; then
+    time_metric "ConfigureChrony" configureChrony
+    time_metric "EnsureChrony" ensureChrony
   fi
 fi
 
