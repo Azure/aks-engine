@@ -14,14 +14,14 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
+					"name": "poollinux1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Linux",
 					"availabilityProfile": "AvailabilitySet"
 				},
 				{
-					"name": "poolwin",
+					"name": "poolwin1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
@@ -48,13 +48,13 @@
 	},
 	"addNodePool": [
 		{
-			"name": "pooladdedlinux",
+			"name": "poollinux2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
 			"availabilityProfile": "AvailabilitySet"
 		},
 		{
-			"name": "pooladdedwin",
+			"name": "poolwin2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
 			"osType": "Windows",

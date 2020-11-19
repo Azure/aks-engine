@@ -22,7 +22,7 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "poollinux",
+					"name": "poollinux1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3"
 				},
@@ -53,7 +53,7 @@
 	},
 	"addNodePool": [
 		{
-			"name": "pooladdedlinux",
+			"name": "poollinux2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
 			"availabilityProfile": "VirtualMachineScaleSets",
@@ -66,7 +66,7 @@
 			}
 		},
 		{
-			"name": "pooladdedwin",
+			"name": "poolwin2",
 			"count": 1,
 			"vmSize": "Standard_D2_v3",
 			"osType": "Windows"
