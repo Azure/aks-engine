@@ -62,11 +62,6 @@ const (
 )
 
 const (
-	//DefaultConfigurationScriptRootURL  Root URL for configuration script (used for script extension on RHEL)
-	DefaultConfigurationScriptRootURL = "https://raw.githubusercontent.com/Azure/aks-engine/master/parts/"
-)
-
-const (
 	kubeConfigJSON = "k8s/kubeconfig.json"
 	// Windows custom scripts. These should all be listed in template_generator.go:func GetKubernetesWindowsAgentFunctions
 	kubernetesWindowsAgentCustomDataPS1           = "k8s/kuberneteswindowssetup.ps1"

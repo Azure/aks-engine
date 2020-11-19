@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -94,23 +93,6 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 	kubeconfig = strings.Replace(kubeconfig, "{{authInfo}}", authInfo, -1)
 
 	return kubeconfig, nil
-}
-
-// validateDistro checks if the requested orchestrator type is supported on the requested Linux distro.
-func validateDistro(cs *api.ContainerService) bool {
-	// Check Master distro
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Distro == api.RHEL {
-		log.Printf("Orchestrator type %s not suported on RHEL Master", cs.Properties.OrchestratorProfile.OrchestratorType)
-		return false
-	}
-	// Check Agent distros
-	for _, agentProfile := range cs.Properties.AgentPoolProfiles {
-		if agentProfile.Distro == api.RHEL {
-			log.Printf("Orchestrator type %s not suported on RHEL Agent", cs.Properties.OrchestratorProfile.OrchestratorType)
-			return false
-		}
-	}
-	return true
 }
 
 // generateConsecutiveIPsList takes a starting IP address and returns a string slice of length "count" of subsequent, consecutive IP addresses

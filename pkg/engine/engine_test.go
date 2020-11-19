@@ -605,40 +605,6 @@ func TestGenerateKubeConfig(t *testing.T) {
 	}
 }
 
-func TestValidateDistro(t *testing.T) {
-	// Test with Invalid Master Profile
-	cs := &api.ContainerService{
-		Properties: &api.Properties{
-			MasterProfile: &api.MasterProfile{
-				Distro: "rhel",
-			},
-			OrchestratorProfile: &api.OrchestratorProfile{
-				OrchestratorType: "Kubernetes",
-			},
-		},
-	}
-
-	result := validateDistro(cs)
-
-	if result {
-		t.Errorf("expected validateDistro to return false for Kubernetes type")
-	}
-
-	// Test with invalid Agent Pool Profile
-	cs.Properties.MasterProfile.Distro = "flatcar"
-	cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
-		{
-			Distro: "rhel",
-		},
-	}
-
-	result = validateDistro(cs)
-
-	if result {
-		t.Errorf("expected validateDistro to return false for Kubernetes type")
-	}
-}
-
 func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{

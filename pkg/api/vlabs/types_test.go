@@ -199,8 +199,8 @@ func TestAgentPoolProfile(t *testing.T) {
 	if !to.Bool(ap.EncryptionAtHost) {
 		t.Fatalf("AgentPoolProfile.EncryptionAtHost should be true after unmarshal")
 	}
-	// With osType Linux and RHEL distro
-	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "rhel", "count": 1, "vmSize": "Standard_D2_v2",
+	// With osType Linux and aks-ubuntu-18.04 distro
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "aks-ubuntu-18.04", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
@@ -213,10 +213,6 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if !ap.IsLinux() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.OSType != Linux after unmarshal")
-	}
-
-	if !ap.IsRHEL() {
-		t.Fatalf("unexpectedly detected AgentPoolProfile.Distro != RHEL after unmarshal")
 	}
 
 	if !ap.IsManagedDisks() {
@@ -613,15 +609,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: RHEL,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
 					Distro: "foo",
 				},
 			},
@@ -713,17 +700,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 					{
 						Count:  1,
 						Distro: Flatcar,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: RHEL,
 					},
 				},
 			},

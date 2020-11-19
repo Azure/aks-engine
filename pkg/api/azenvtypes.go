@@ -110,14 +110,6 @@ var (
 		ImageVersion:   "latest",
 	}
 
-	//RHELOSImageConfig is the RHEL Linux distribution.
-	RHELOSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "RHEL",
-		ImageSku:       "7.3",
-		ImagePublisher: "RedHat",
-		ImageVersion:   "latest",
-	}
-
 	//FlatcarImageConfig is the Flatcar Linux distribution.
 	FlatcarImageConfig = AzureOSImageConfig{
 		ImageOffer:     "flatcar-container-linux-free",
@@ -180,7 +172,6 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
@@ -201,7 +192,6 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
 			AKS1604Deprecated: Ubuntu1604OSImageConfig, // for back-compat
@@ -221,7 +211,6 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
@@ -263,7 +252,6 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
