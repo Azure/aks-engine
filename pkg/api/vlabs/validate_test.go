@@ -3391,11 +3391,20 @@ func ExampleProperties_validateMasterProfile() {
 	})
 	cs := getK8sDefaultContainerService(false)
 	cs.Properties.MasterProfile.Count = 1
+	cs.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
+	cs.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 	if err := cs.Properties.validateMasterProfile(false); err != nil {
+		log.Errorf("shouldn't error with 1 control plane VM, got %s", err.Error())
+	}
+
+	cs = getK8sDefaultContainerService(false)
+	cs.Properties.MasterProfile.Count = 1
+	if err := cs.Properties.validateMasterProfile(true); err != nil {
 		log.Errorf("shouldn't error with 1 control plane VM, got %s", err.Error())
 	}
 	// Output:
 	// level=warning msg="Running only 1 control plane VM not recommended for production clusters, use 3 or 5 for control plane redundancy"
+	// level=warning msg="Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!"
 }
 
 func ExampleProperties_validateZones() {
