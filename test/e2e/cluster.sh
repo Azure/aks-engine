@@ -252,7 +252,7 @@ fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   for pool in $(echo ${ADD_NODE_POOL_INPUT} | jq -c '.[]'); do
-    echo $pool > addpool-input.json
+    echo $pool > ${TMP_DIR}/addpool-input.json
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -v /etc/ssl/certs:/etc/ssl/certs \
