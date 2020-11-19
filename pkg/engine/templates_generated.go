@@ -11869,12 +11869,8 @@ configureAzureCNI() {
       serviceCidrs={{GetServiceCidr}}
       echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
     fi
-    if [[ "${NETWORK_POLICY}" == "calico" ]]; then
-      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-    elif [[ "${NETWORK_POLICY}" == "antrea" ]]; then
-      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-    elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
-      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+    if [[ "${NETWORK_MODE}" == "bridge" ]]; then
+      sed -i 's#"mode":"transparent"#"mode":"bridge"#g' $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
   fi
