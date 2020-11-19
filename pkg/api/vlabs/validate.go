@@ -400,7 +400,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 
 	if m.IsVirtualMachineScaleSets() {
 		log.Warnf("Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!")
-		e := validateVMSS(a.OrchestratorProfile, false, m.StorageProfile)
+		e := validateVMSS(a.OrchestratorProfile, false, m.StorageProfile, a.HasWindows(), a.IsAzureStackCloud())
 		if e != nil {
 			return e
 		}
@@ -534,7 +534,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if agentPoolProfile.AvailabilityProfile != AvailabilitySet {
-			e := validateVMSS(a.OrchestratorProfile, isUpdate, agentPoolProfile.StorageProfile)
+			e := validateVMSS(a.OrchestratorProfile, isUpdate, agentPoolProfile.StorageProfile, a.HasWindows(), a.IsAzureStackCloud())
 			if e != nil {
 				return e
 			}
@@ -1015,14 +1015,14 @@ func (a *AgentPoolProfile) validateCustomNodeLabels() error {
 	return nil
 }
 
-func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) error {
+func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string, hasWindows bool, isAzureStackCloud bool) error {
 	version := common.RationalizeReleaseAndVersion(
 		o.OrchestratorType,
 		o.OrchestratorRelease,
 		o.OrchestratorVersion,
 		isUpdate,
-		false,
-		false)
+		hasWindows,
+		isAzureStackCloud)
 	if version == "" {
 		return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
 	}
@@ -1073,8 +1073,8 @@ func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 		o.OrchestratorRelease,
 		o.OrchestratorVersion,
 		isUpdate,
-		true,
-		false)
+		hasWindowsAgentPools,
+		a.IsAzureStackCloud())
 
 	if version == "" {
 		return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
