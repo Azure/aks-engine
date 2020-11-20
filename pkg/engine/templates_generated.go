@@ -11876,6 +11876,9 @@ configureAzureCNI() {
       jq '.plugins[0].mode="bridge"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
       jq '.plugins[0].bridge="azure0"' "$tmpDir/tmp" > $tmpDir/tmp2
       mv $tmpDir/tmp2 $CNI_CONFIG_DIR/10-azure.conflist
+    else
+      jq '.plugins[0].mode="transparent"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
+      mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
   fi
