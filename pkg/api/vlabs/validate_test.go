@@ -683,6 +683,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		//validate azure cni dual stack enabled scenario
 		c = KubernetesConfig{
 			NetworkPlugin: "azure",
+			NetworkMode:   "bridge",
 			ClusterSubnet: "10.240.0.0/16,ace:cab:deca::/8",
 			ProxyMode:     "ipvs",
 			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112",
@@ -691,6 +692,33 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 
 		if err := c.Validate(k8sVersion, false, true, false); err != nil {
 			t.Errorf("shouldn't have errored with azure cni ipv6 dual stack feature enabled: %v", err)
+		}
+
+		// Azure CNI + dualstack requires bridge NetworkMode
+		c = KubernetesConfig{
+			NetworkPlugin: "azure",
+			ClusterSubnet: "10.240.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
+		}
+
+		// Azure CNI + dualstack doesn't work with transparent NetworkMode
+		c = KubernetesConfig{
+			NetworkPlugin: "azure",
+			NetworkMode:   "transparent",
+			ClusterSubnet: "10.240.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
 		}
 	}
 
