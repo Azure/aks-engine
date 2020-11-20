@@ -1285,11 +1285,15 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 		// ipv6 dual stack feature is currently only supported with kubenet
 		if k.NetworkPlugin != "kubenet" && k.NetworkPlugin != "azure" {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with kubenet and azurecni.", k.NetworkPlugin)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with 'kubenet' and 'azure'.", k.NetworkPlugin)
 		}
 
 		if k.NetworkPlugin == "azure" && k.NetworkPolicy != "" {
 			return errors.Errorf("Network policy %s is not supported for azure cni dualstack", k.NetworkPolicy)
+		}
+
+		if k.NetworkPlugin == "azure" && k.NetworkMode != NetworkModeBridge {
+			return errors.Errorf("Azure CNI requires OrchestratorProfile.KubernetesConfig.NetworkMode=bridge in dual stack configuration")
 		}
 	}
 

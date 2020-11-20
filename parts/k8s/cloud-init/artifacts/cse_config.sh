@@ -271,21 +271,30 @@ configureCNI() {
 {{end}}
 }
 configureAzureCNI() {
+  local tmpDir=$(mktemp -d "$(pwd)/XXX")
   if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
     mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
     chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-    if [[ "${IPV6_DUALSTACK_ENABLED}" == "true" ]]; then
-      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
-    fi
+{{- if IsIPv6DualStackFeatureEnabled}}
+    jq '.plugins[0].ipv6Mode="ipv6nat"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
+    mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
+{{- end}}
     if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
       serviceCidrs={{GetServiceCidr}}
-      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
+      jq --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
+      mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
     fi
     if [[ "${NETWORK_MODE}" == "bridge" ]]; then
-      sed -i 's#"mode":"transparent"#"mode":"bridge"#g' $CNI_CONFIG_DIR/10-azure.conflist
+      jq '.plugins[0].mode="bridge"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
+      jq '.plugins[0].bridge="azure0"' "$tmpDir/tmp" > $tmpDir/tmp2
+      mv $tmpDir/tmp2 $CNI_CONFIG_DIR/10-azure.conflist
+    else
+      jq '.plugins[0].mode="transparent"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
+      mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
   fi
+  rm -Rf $tmpDir
 }
 enableCRISystemdMonitor() {
   wait_for_file 1200 1 /etc/systemd/system/docker-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}

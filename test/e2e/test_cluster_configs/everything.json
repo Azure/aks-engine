@@ -14,6 +14,8 @@
 		"properties": {
 			"orchestratorProfile": {
 				"kubernetesConfig": {
+					"networkPlugin": "azure",
+					"networkMode": "bridge",
 					"enableEncryptionWithExternalKms": true,
 					"useManagedIdentity": true,
 					"containerRuntimeConfig": {
@@ -54,7 +56,7 @@
 							"name": "coredns",
 							"enabled": true,
 							"config": {
-								"min-replicas": "3",
+								"min-replicas": "1",
 								"nodes-per-replica": "8"
 							}
 						},
