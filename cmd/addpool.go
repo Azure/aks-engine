@@ -20,6 +20,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -143,6 +144,13 @@ func (apc *addPoolCmd) load() error {
 		return errors.Wrap(err, "error parsing the agent pool")
 	}
 
+	// Back-compat logic to populate the VMSSName property for clusters built prior to VMSSName being a part of the API model spec
+	if apc.nodePool.IsVirtualMachineScaleSets() && apc.nodePool.VMSSName == "" {
+		existingPools := len(apc.containerService.Properties.AgentPoolProfiles)
+		newIndex := existingPools + 1
+		apc.nodePool.VMSSName = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, newIndex)
+	}
+
 	if apc.containerService.Properties.IsCustomCloudProfile() {
 		if err = writeCustomCloudProfile(apc.containerService); err != nil {
 			return errors.Wrap(err, "error writing custom cloud profile")
@@ -210,12 +218,8 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
-				segments := strings.Split(*vmss.Name, "-")
-				if len(segments) == 4 && segments[0] == "k8s" {
-					vmssName := segments[1]
-					if apc.nodePool.Name == vmssName {
-						return errors.New("An agent pool with the given name already exists in the cluster")
-					}
+				if apc.nodePool.VMSSName == to.String(vmss.Name) {
+					return errors.New("A VMSS node pool with the given name already exists in the cluster")
 				}
 			}
 		}

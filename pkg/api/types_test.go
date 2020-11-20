@@ -5511,6 +5511,38 @@ func TestGetAgentVMPrefix(t *testing.T) {
 			expectedVMPrefix: "k8s-agentpool-30819786-vmss",
 		},
 		{
+			name: "Linux VMSS agent pool profile with VMSSName",
+			profile: &AgentPoolProfile{
+				Name:                "agentpool",
+				VMSize:              "Standard_D2_v2",
+				Count:               1,
+				AvailabilityProfile: "VirtualMachineScaleSets",
+				OSType:              Linux,
+				VMSSName:            "foo",
+			},
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Count:     1,
+					DNSPrefix: "myprefix1",
+					VMSize:    "Standard_DS2_v2",
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+						VMSSName:            "foo",
+					},
+				},
+			},
+			expectedVMPrefix: "foo",
+		},
+		{
 			name: "Windows agent pool profile",
 			profile: &AgentPoolProfile{
 				Name:   "agentpool",

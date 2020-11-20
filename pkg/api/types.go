@@ -668,6 +668,8 @@ type AgentPoolProfile struct {
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
 	OSDiskCachingType                   string               `json:"osDiskCachingType,omitempty"`
 	DataDiskCachingType                 string               `json:"dataDiskCachingType,omitempty"`
+	// VMSSName is a read-only field; its value will be computed during template generation
+	VMSSName string `json:"vmssName,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -927,6 +929,9 @@ func (p *Properties) GetAgentPoolIndexByName(name string) int {
 
 // GetAgentVMPrefix returns the VM prefix for an agentpool.
 func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
+	if a.IsVirtualMachineScaleSets() && a.VMSSName != "" {
+		return a.VMSSName
+	}
 	nameSuffix := p.GetClusterID()
 	vmPrefix := ""
 	if index != -1 {

@@ -11,11 +11,11 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
@@ -226,6 +226,11 @@ func (sc *scaleCmd) load() error {
 		}
 	}
 
+	// Back-compat logic to populate the VMSSName property for clusters built prior to VMSSName being a part of the API model spec
+	if sc.agentPool.IsVirtualMachineScaleSets() && sc.agentPool.VMSSName == "" {
+		sc.agentPool.VMSSName = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, sc.agentPoolIndex)
+	}
+
 	//allows to identify VMs in the resource group that belong to this cluster.
 	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
 	log.Debugf("Cluster ID used in all agent pools: %s", sc.nameSuffix)
@@ -406,22 +411,12 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
-				vmssName := *vmss.Name
-				if sc.agentPool.OSType == api.Windows {
-					possibleIndex, err := strconv.Atoi(vmssName[len(vmssName)-2:])
-					if err != nil {
-						continue
-					}
-					if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, possibleIndex) == vmssName) {
-						continue
-					}
-					winPoolIndex = possibleIndex
+				vmssName := to.String(vmss.Name)
+				if sc.agentPool.VMSSName == vmssName {
+					log.Infof("found VMSS %s in resource group %s that correlates with node pool %s", vmssName, sc.resourceGroupName, sc.agentPoolToScale)
 				} else {
-					if !sc.vmInAgentPool(vmssName, vmss.Tags) {
-						continue
-					}
+					continue
 				}
-				log.Infof("found VMSS %s in resource group %s that correlates with node pool %s", vmssName, sc.resourceGroupName, sc.agentPoolToScale)
 
 				if vmss.Sku != nil {
 					currentNodeCount = int(*vmss.Sku.Capacity)
@@ -441,6 +436,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 
 				currentNodeCount = int(*vmss.Sku.Capacity)
 				highestUsedIndex = 0
+				break
 			}
 		}
 	}

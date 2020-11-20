@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -170,6 +170,11 @@ func (uc *updateCmd) load() error {
 		return errors.Errorf("aks-engine node pool update requires a VMSS node pool, %s is backed by a VM Availability Set", uc.agentPoolToUpdate)
 	}
 
+	// Back-compat logic to populate the VMSSName property for clusters built prior to VMSSName being a part of the API model spec
+	if uc.agentPool.IsVirtualMachineScaleSets() && uc.agentPool.VMSSName == "" {
+		uc.agentPool.VMSSName = uc.containerService.Properties.GetAgentVMPrefix(uc.agentPool, uc.agentPoolIndex)
+	}
+
 	//allows to identify VMs in the resource group that belong to this cluster.
 	uc.nameSuffix = uc.containerService.Properties.GetClusterID()
 	log.Debugf("Cluster ID used in all agent pools: %s", uc.nameSuffix)
@@ -227,24 +232,17 @@ func (uc *updateCmd) run(cmd *cobra.Command, args []string) error {
 			return errors.Wrap(err, "failed to get VMSS list in the resource group")
 		}
 		for _, vmss := range vmssListPage.Values() {
-			vmssName := *vmss.Name
-			if sc.agentPool.OSType == api.Windows {
-				possibleIndex, nameMungingErr := strconv.Atoi(vmssName[len(vmssName)-2:])
-				if nameMungingErr != nil {
-					continue
-				}
-				if !(sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, possibleIndex) == vmssName) {
-					continue
-				}
+			vmssName := to.String(vmss.Name)
+			if sc.agentPool.VMSSName == vmssName {
+				log.Infof("found VMSS %s in resource group %s that correlates with node pool %s", vmssName, sc.resourceGroupName, sc.agentPoolToScale)
 			} else {
-				if !sc.vmInAgentPool(vmssName, vmss.Tags) {
-					continue
-				}
+				continue
 			}
 
 			if vmss.Sku != nil {
 				sc.newDesiredAgentCount = int(*vmss.Sku.Capacity)
 				uc.agentPool.Count = sc.newDesiredAgentCount
+				break
 			} else {
 				return errors.Wrap(err, fmt.Sprintf("failed to find VMSS matching node pool %s in resource group %s", sc.agentPoolToScale, sc.resourceGroupName))
 			}

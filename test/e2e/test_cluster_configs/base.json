@@ -22,7 +22,7 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "poollinux",
+					"name": "poollinux1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3"
 				},
@@ -51,17 +51,26 @@
 			}
 		}
 	},
-	"addNodePool": {
-		"name": "pooladded",
-		"count": 1,
-		"vmSize": "Standard_D2_v3",
-		"availabilityProfile": "VirtualMachineScaleSets",
-		"kubernetesConfig": {
-			"kubeletConfig": {
-				"--cloud-provider": "",
-				"--cloud-config": "",
-				"--azure-container-registry-config": ""
+	"addNodePool": [
+		{
+			"name": "poollinux2",
+			"count": 1,
+			"vmSize": "Standard_D2_v3",
+			"availabilityProfile": "VirtualMachineScaleSets",
+			"kubernetesConfig": {
+				"kubeletConfig": {
+					"--cloud-provider": "",
+					"--cloud-config": "",
+					"--azure-container-registry-config": ""
+				}
 			}
+		},
+		{
+			"name": "poolwin2",
+			"count": 1,
+			"vmSize": "Standard_D2_v3",
+			"osType": "Windows",
+			"availabilityProfile": "VirtualMachineScaleSets"
 		}
-	}
+	]
 }

@@ -705,6 +705,26 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	}
 }
 
+func TestVMSSDefaultsVMSSName(t *testing.T) {
+	poolName := "foo"
+	mockCS := getMockBaseContainerService("1.18.10")
+	mockCS.Properties.AgentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+	mockCS.Properties.AgentPoolProfiles[0].Name = poolName
+	expectedVMSSName := mockCS.Properties.GetAgentVMPrefix(mockCS.Properties.AgentPoolProfiles[0], 0)
+	_, err := mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if err != nil {
+		t.Errorf("expected no error from SetPropertiesDefaults, instead got %s", err)
+	}
+
+	if mockCS.Properties.AgentPoolProfiles[0].VMSSName != expectedVMSSName {
+		t.Errorf("expected VMSSName to be %s, instead got %s", expectedVMSSName, mockCS.Properties.AgentPoolProfiles[0].VMSSName)
+	}
+}
+
 func TestAuditDEnabled(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.12.7")
 	isUpgrade := true

@@ -43,12 +43,6 @@ if [ "$STABILITY_TIMEOUT_SECONDS" == "" ]; then
   STABILITY_TIMEOUT_SECONDS=5
 fi
 
-if [ -n "$ADD_NODE_POOL_INPUT" ]; then
-  cat > ${TMP_DIR}/addpool-input.json <<END
-${ADD_NODE_POOL_INPUT}
-END
-fi
-
 if [ -n "$PRIVATE_SSH_KEY_FILE" ]; then
   PRIVATE_SSH_KEY_FILE=$(realpath --relative-to=$(pwd) ${PRIVATE_SSH_KEY_FILE})
 fi
@@ -257,23 +251,26 @@ else
 fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
-  docker run --rm \
-    -v $(pwd):${WORK_DIR} \
-    -v /etc/ssl/certs:/etc/ssl/certs \
-    -w ${WORK_DIR} \
-    -e RESOURCE_GROUP=$RESOURCE_GROUP \
-    -e REGION=$REGION \
-    ${DEV_IMAGE} \
-    ./bin/aks-engine addpool \
-    --azure-env ${AZURE_ENV} \
-    --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-    --api-model _output/$RESOURCE_GROUP/apimodel.json \
-    --node-pool ${TMP_BASENAME}/addpool-input.json \
-    --location $REGION \
-    --resource-group $RESOURCE_GROUP \
-    --auth-method client_secret \
-    --client-id ${AZURE_CLIENT_ID} \
-    --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+  for pool in $(echo ${ADD_NODE_POOL_INPUT} | jq -c '.[]'); do
+    echo $pool > ${TMP_DIR}/addpool-input.json
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -v /etc/ssl/certs:/etc/ssl/certs \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      -e REGION=$REGION \
+      ${DEV_IMAGE} \
+      ./bin/aks-engine addpool \
+      --azure-env ${AZURE_ENV} \
+      --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
+      --node-pool ${TMP_BASENAME}/addpool-input.json \
+      --location $REGION \
+      --resource-group $RESOURCE_GROUP \
+      --auth-method client_secret \
+      --client-id ${AZURE_CLIENT_ID} \
+      --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+  done
 
   CLEANUP_AFTER_ADD_NODE_POOL=${CLEANUP_ON_EXIT}
   if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
