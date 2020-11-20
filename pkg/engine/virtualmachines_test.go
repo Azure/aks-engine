@@ -5,7 +5,6 @@ package engine
 
 import (
 	"encoding/json"
-	"reflect"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -720,68 +719,5 @@ func TestCreateVMsWithCustomOS(t *testing.T) {
 
 	if cs.Properties.AgentPoolProfiles[0].HasImageRef() != true || cs.Properties.AgentPoolProfiles[0].HasImageGallery() != false {
 		t.Error("expected custom OS to have image ref")
-	}
-}
-
-func TestAssociateAddonIdentitiesToVM(t *testing.T) {
-	mockKubeletIdentityResourceID := "/subscriptions/c4528d9e-c99a-48bb-b12d-fde2176a43b8/resourcegroups/fooRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/kubeletIdentity"
-	mockOMSAgentIdentityResourceID := "/subscriptions/c4528d9e-c99a-48bb-b12d-fde2176a43b8/resourcegroups/fooRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/omsagentIdentity"
-	mockAzurePolicyIdentityResourceID := "/subscriptions/c4528d9e-c99a-48bb-b12d-fde2176a43b8/resourcegroups/fooRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/azurePolicyIdentity"
-	mockAddonProfiles := map[string]api.AddonProfile{
-		"omsagent": {
-			Enabled: true,
-			Config: map[string]string{
-				"foo": "bar",
-			},
-			Identity: &api.UserAssignedIdentity{
-				ResourceID: mockOMSAgentIdentityResourceID,
-			},
-		},
-		"azurepolicy": {
-			Enabled: true,
-			Config: map[string]string{
-				"foo": "bar",
-			},
-			Identity: &api.UserAssignedIdentity{
-				ResourceID: mockAzurePolicyIdentityResourceID,
-			},
-		},
-	}
-
-	mockVM := compute.VirtualMachine{
-		Identity: &compute.VirtualMachineIdentity{
-			Type: compute.ResourceIdentityTypeUserAssigned,
-			UserAssignedIdentities: map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue{
-				mockKubeletIdentityResourceID: {},
-			},
-		},
-	}
-
-	// Test with nil VM, there should be no panic
-	associateAddonIdentitiesToVM(mockAddonProfiles, nil)
-	// Test with nil addonProfiles, vmss.Identity should keep unchanged.
-	associateAddonIdentitiesToVM(nil, &mockVM)
-	expectedVMIdentity := compute.VirtualMachineIdentity{
-		Type: compute.ResourceIdentityTypeUserAssigned,
-		UserAssignedIdentities: map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue{
-			mockKubeletIdentityResourceID: {},
-		},
-	}
-	if !reflect.DeepEqual(*mockVM.Identity, expectedVMIdentity) {
-		t.Errorf("unexpected error while associate nil addonProfiles to VM. Expected vm.Identity: %+v, found: %+v", expectedVMIdentity, *mockVM.Identity)
-	}
-
-	// Test with normal case
-	associateAddonIdentitiesToVM(mockAddonProfiles, &mockVM)
-	expectedVMIdentity = compute.VirtualMachineIdentity{
-		Type: compute.ResourceIdentityTypeUserAssigned,
-		UserAssignedIdentities: map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue{
-			mockKubeletIdentityResourceID:     {},
-			mockOMSAgentIdentityResourceID:    {},
-			mockAzurePolicyIdentityResourceID: {},
-		},
-	}
-	if !reflect.DeepEqual(*mockVM.Identity, expectedVMIdentity) {
-		t.Errorf("unexpected error while associate addonProfiles to VMSS. Expected vmss.Identity: %+v, found: %+v", expectedVMIdentity, *mockVM.Identity)
 	}
 }

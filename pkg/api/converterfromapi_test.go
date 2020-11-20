@@ -4,7 +4,6 @@
 package api
 
 import (
-	"net/url"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -322,7 +321,6 @@ func TestConvertContainerServiceToVLabs(t *testing.T) {
 }
 
 func getDefaultContainerService() *ContainerService {
-	u, _ := url.Parse("http://foobar.com/search")
 	return &ContainerService{
 		ID:       "sampleID",
 		Location: "westus2",
@@ -341,12 +339,6 @@ func getDefaultContainerService() *ContainerService {
 			WindowsProfile: &WindowsProfile{
 				AdminUsername: "sampleAdminUsername",
 				AdminPassword: "sampleAdminPassword",
-			},
-			DiagnosticsProfile: &DiagnosticsProfile{
-				VMDiagnostics: &VMDiagnostics{
-					Enabled:    true,
-					StorageURL: u,
-				},
 			},
 			LinuxProfile: &LinuxProfile{
 				AdminUsername: "azureuser",
@@ -437,9 +429,6 @@ func getDefaultContainerService() *ContainerService {
 				TenantID:        "SampleTenantID",
 				AdminGroupID:    "SampleAdminGroupID",
 				Authenticator:   Webhook,
-			},
-			CustomProfile: &CustomProfile{
-				Orchestrator: "Kubernetes",
 			},
 			OrchestratorProfile: &OrchestratorProfile{
 				OrchestratorType:    "Kubernetes",

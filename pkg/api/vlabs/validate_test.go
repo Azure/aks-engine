@@ -4347,7 +4347,7 @@ func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
 			agentPoolProfiles[0].Distro = distro
 			agentPoolProfiles[0].AuditDEnabled = to.BoolPtr(true)
 			switch distro {
-			case RHEL, Flatcar:
+			case Flatcar:
 				expectedMsg := fmt.Sprintf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfiles[0].Name)
 				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
@@ -4370,7 +4370,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 			masterProfile.Distro = distro
 			masterProfile.AuditDEnabled = to.BoolPtr(true)
 			switch distro {
-			case RHEL, Flatcar:
+			case Flatcar:
 				expectedMsg := "You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro."
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())

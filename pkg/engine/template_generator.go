@@ -104,10 +104,6 @@ func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerServ
 		}
 	}()
 
-	if !validateDistro(containerService) {
-		return templateRaw, parametersRaw, errors.New("Invalid distro")
-	}
-
 	var b bytes.Buffer
 	if err = templ.ExecuteTemplate(&b, baseFile, properties); err != nil {
 		return templateRaw, parametersRaw, err
@@ -504,13 +500,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"WindowsSSHEnabled": func() bool {
 			return cs.Properties.WindowsProfile.GetSSHEnabled()
-		},
-		"GetConfigurationScriptRootURL": func() string {
-			linuxProfile := cs.Properties.LinuxProfile
-			if linuxProfile == nil || linuxProfile.ScriptRootURL == "" {
-				return DefaultConfigurationScriptRootURL
-			}
-			return linuxProfile.ScriptRootURL
 		},
 		"GetMasterOSImageOffer": func() string {
 			cloudSpecConfig := cs.GetCloudSpecConfig()

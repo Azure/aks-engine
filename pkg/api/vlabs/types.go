@@ -411,15 +411,6 @@ type CustomFile struct {
 	Dest   string `json:"dest,omitempty"`
 }
 
-// BootstrapProfile represents the definition of the DCOS bootstrap node used to deploy the cluster
-type BootstrapProfile struct {
-	VMSize       string `json:"vmSize,omitempty"`
-	OSDiskSizeGB int    `json:"osDiskSizeGB,omitempty"`
-	OAuthEnabled bool   `json:"oauthEnabled,omitempty"`
-	StaticIP     string `json:"staticIP,omitempty"`
-	Subnet       string `json:"subnet,omitempty"`
-}
-
 // MasterProfile represents the definition of the master cluster
 type MasterProfile struct {
 	Count                     int               `json:"count" validate:"required,eq=1|eq=3|eq=5"`
@@ -725,11 +716,6 @@ func (m *MasterProfile) IsStorageAccount() bool {
 	return m.StorageProfile == StorageAccount
 }
 
-// IsRHEL returns true if the master specified a RHEL distro
-func (m *MasterProfile) IsRHEL() bool {
-	return m.Distro == RHEL
-}
-
 // IsUbuntu1604 returns true if the master profile distro is based on Ubuntu 16.04
 func (m *MasterProfile) IsUbuntu1604() bool {
 	switch m.Distro {
@@ -841,11 +827,6 @@ func (a *AgentPoolProfile) IsWindows() bool {
 // IsLinux returns true if the agent pool is linux
 func (a *AgentPoolProfile) IsLinux() bool {
 	return a.OSType == Linux
-}
-
-// IsRHEL returns true if the agent pool specified a RHEL distro
-func (a *AgentPoolProfile) IsRHEL() bool {
-	return a.OSType == Linux && a.Distro == RHEL
 }
 
 // IsFlatcar returns true if the agent specified a Flatcar distro

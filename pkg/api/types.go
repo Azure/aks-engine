@@ -10,7 +10,6 @@ import (
 	"hash/fnv"
 	"math/rand"
 	"net"
-	neturl "net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -51,19 +50,6 @@ type ContainerService struct {
 	Properties *Properties `json:"properties,omitempty"`
 }
 
-// AgentPoolResource complies with the ARM model of
-// agentpool resource definition in a JSON template.
-type AgentPoolResource struct {
-	ID       string                `json:"id"`
-	Location string                `json:"location"`
-	Name     string                `json:"name"`
-	Plan     *ResourcePurchasePlan `json:"plan,omitempty"`
-	Tags     map[string]string     `json:"tags"`
-	Type     string                `json:"type"`
-
-	Properties *AgentPoolProfile `json:"properties,omitempty"`
-}
-
 // Properties represents the AKS cluster definition
 type Properties struct {
 	ClusterID               string
@@ -74,44 +60,13 @@ type Properties struct {
 	LinuxProfile            *LinuxProfile            `json:"linuxProfile,omitempty"`
 	WindowsProfile          *WindowsProfile          `json:"windowsProfile,omitempty"`
 	ExtensionProfiles       []*ExtensionProfile      `json:"extensionProfiles"`
-	DiagnosticsProfile      *DiagnosticsProfile      `json:"diagnosticsProfile,omitempty"`
 	JumpboxProfile          *JumpboxProfile          `json:"jumpboxProfile,omitempty"`
 	ServicePrincipalProfile *ServicePrincipalProfile `json:"servicePrincipalProfile,omitempty"`
 	CertificateProfile      *CertificateProfile      `json:"certificateProfile,omitempty"`
 	AADProfile              *AADProfile              `json:"aadProfile,omitempty"`
-	CustomProfile           *CustomProfile           `json:"customProfile,omitempty"`
-	AddonProfiles           map[string]AddonProfile  `json:"addonProfiles,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 	TelemetryProfile        *TelemetryProfile        `json:"telemetryProfile,omitempty"`
-}
-
-// ClusterMetadata represents the metadata of the AKS cluster.
-type ClusterMetadata struct {
-	SubnetName                 string `json:"subnetName,omitempty"`
-	VNetResourceGroupName      string `json:"vnetResourceGroupName,omitempty"`
-	VirtualNetworkName         string `json:"virtualNetworkName,omitempty"`
-	SecurityGroupName          string `json:"securityGroupName,omitempty"`
-	RouteTableName             string `json:"routeTableName,omitempty"`
-	PrimaryAvailabilitySetName string `json:"primaryAvailabilitySetName,omitempty"`
-	PrimaryScaleSetName        string `json:"primaryScaleSetName,omitempty"`
-	ResourcePrefix             string `json:"resourcePrefix,omitempty"`
-}
-
-// AddonProfile represents an addon for managed cluster
-type AddonProfile struct {
-	Enabled bool              `json:"enabled"`
-	Config  map[string]string `json:"config"`
-	// Identity contains information of the identity associated with this addon.
-	// This property will only appear in an MSI-enabled cluster.
-	Identity *UserAssignedIdentity `json:"identity,omitempty"`
-}
-
-// UserAssignedIdentity contains information that uniquely identifies an identity
-type UserAssignedIdentity struct {
-	ResourceID string `json:"resourceId,omitempty"`
-	ClientID   string `json:"clientId,omitempty"`
-	ObjectID   string `json:"objectId,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -416,17 +371,6 @@ type CloudProviderConfig struct {
 	CloudProviderDisableOutboundSNAT  *bool  `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 }
 
-// KubernetesConfigDeprecated are properties that are no longer operable and will be ignored
-// TODO use this when strict JSON checking accommodates struct embedding
-type KubernetesConfigDeprecated struct {
-	NonMasqueradeCidr                string `json:"nonMasqueradeCidr,omitempty"`
-	NodeStatusUpdateFrequency        string `json:"nodeStatusUpdateFrequency,omitempty"`
-	HardEvictionThreshold            string `json:"hardEvictionThreshold,omitempty"`
-	CtrlMgrNodeMonitorGracePeriod    string `json:"ctrlMgrNodeMonitorGracePeriod,omitempty"`
-	CtrlMgrPodEvictionTimeout        string `json:"ctrlMgrPodEvictionTimeout,omitempty"`
-	CtrlMgrRouteReconciliationPeriod string `json:"ctrlMgrRouteReconciliationPeriod,omitempty"`
-}
-
 // KubeProxyMode is for iptables and ipvs (and future others)
 type KubeProxyMode string
 
@@ -533,15 +477,6 @@ type KubernetesConfig struct {
 type CustomFile struct {
 	Source string `json:"source,omitempty"`
 	Dest   string `json:"dest,omitempty"`
-}
-
-// BootstrapProfile represents the definition of the DCOS bootstrap node used to deploy the cluster
-type BootstrapProfile struct {
-	VMSize       string `json:"vmSize,omitempty"`
-	OSDiskSizeGB int    `json:"osDiskSizeGB,omitempty"`
-	OAuthEnabled bool   `json:"oauthEnabled,omitempty"`
-	StaticIP     string `json:"staticIP,omitempty"`
-	Subnet       string `json:"subnet,omitempty"`
 }
 
 // MasterProfile represents the definition of the master cluster
@@ -675,26 +610,6 @@ type AgentPoolProfile struct {
 // AgentPoolProfileRole represents an agent role
 type AgentPoolProfileRole string
 
-// DiagnosticsProfile setting to enable/disable capturing
-// diagnostics for VMs hosting container cluster.
-type DiagnosticsProfile struct {
-	VMDiagnostics *VMDiagnostics `json:"vmDiagnostics"`
-}
-
-// VMDiagnostics contains settings to on/off boot diagnostics collection
-// in RD Host
-type VMDiagnostics struct {
-	Enabled bool `json:"enabled"`
-
-	// Specifies storage account Uri where Boot Diagnostics (CRP &
-	// VMSS BootDiagostics) and VM Diagnostics logs (using Linux
-	// Diagnostics Extension) will be stored. Uri will be of standard
-	// blob domain. i.e. https://storageaccount.blob.core.windows.net/
-	// This field is readonly as ACS RP will create a storage account
-	// for the customer.
-	StorageURL *neturl.URL `json:"storageUrl"`
-}
-
 // JumpboxProfile describes properties of the jumpbox setup
 // in the AKS container cluster.
 type JumpboxProfile struct {
@@ -765,12 +680,6 @@ type AADProfile struct {
 	AdminGroupID string `json:"adminGroupID,omitempty"`
 	// The authenticator to use, either "oidc" or "webhook".
 	Authenticator AuthenticatorType `json:"authenticator"`
-}
-
-// CustomProfile specifies custom properties that are used for
-// cluster instantiation.  Should not be used by most users.
-type CustomProfile struct {
-	Orchestrator string `json:"orchestrator,omitempty"`
 }
 
 // VlabsARMContainerService is the type we read and write from file
@@ -989,20 +898,14 @@ func (p *Properties) GetMasterVMPrefix() string {
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
 }
 
-// GetResourcePrefix returns the prefix to use for naming cluster resources
-func (p *Properties) GetResourcePrefix() string {
-	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
-
-}
-
 // GetRouteTableName returns the route table name of the cluster.
 func (p *Properties) GetRouteTableName() string {
-	return p.GetResourcePrefix() + "routetable"
+	return p.GetMasterVMPrefix() + "routetable"
 }
 
 // GetNSGName returns the name of the network security group of the cluster.
 func (p *Properties) GetNSGName() string {
-	return p.GetResourcePrefix() + "nsg"
+	return p.GetMasterVMPrefix() + "nsg"
 }
 
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster
@@ -1027,15 +930,16 @@ func (p *Properties) GetPrimaryScaleSetName() string {
 
 // IsIPMasqAgentEnabled returns true if ip-masq-agent is enabled
 func (p *Properties) IsIPMasqAgentEnabled() bool {
-	return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled()
+	return p.OrchestratorProfile != nil &&
+		p.OrchestratorProfile.KubernetesConfig != nil &&
+		p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.IPMASQAgentAddonName)
 }
 
 // IsIPMasqAgentDisabled returns true if the ip-masq-agent functionality is disabled
 func (p *Properties) IsIPMasqAgentDisabled() bool {
-	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil {
-		return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentDisabled()
-	}
-	return false
+	return p.OrchestratorProfile != nil &&
+		p.OrchestratorProfile.KubernetesConfig != nil &&
+		p.OrchestratorProfile.KubernetesConfig.IsAddonDisabled(common.IPMASQAgentAddonName)
 }
 
 // GetVNetResourceGroupName returns the virtual network resource group name of the cluster
@@ -1111,20 +1015,6 @@ func (p *Properties) GetClusterID() string {
 	return p.ClusterID
 }
 
-// GetClusterMetadata returns a instance of the struct type api.ClusterMetadata.
-func (p *Properties) GetClusterMetadata() *ClusterMetadata {
-	return &ClusterMetadata{
-		SubnetName:                 p.GetSubnetName(),
-		VNetResourceGroupName:      p.GetVNetResourceGroupName(),
-		VirtualNetworkName:         p.GetVirtualNetworkName(),
-		SecurityGroupName:          p.GetNSGName(),
-		RouteTableName:             p.GetRouteTableName(),
-		PrimaryAvailabilitySetName: p.GetPrimaryAvailabilitySetName(),
-		PrimaryScaleSetName:        p.GetPrimaryScaleSetName(),
-		ResourcePrefix:             p.GetResourcePrefix(),
-	}
-}
-
 // HasZonesForAllAgentPools returns true if all of the agent pools have zones
 func (p *Properties) HasZonesForAllAgentPools() bool {
 	if len(p.AgentPoolProfiles) > 0 {
@@ -1164,70 +1054,6 @@ func (p *Properties) HasVHDDistroNodes() bool {
 	}
 	if p.MasterProfile != nil {
 		return p.MasterProfile.IsVHDDistro()
-	}
-	return false
-}
-
-// IsUbuntuDistroForAllNodes returns true if all of the agent pools plus masters are running the base Ubuntu image
-func (p *Properties) IsUbuntuDistroForAllNodes() bool {
-	if len(p.AgentPoolProfiles) > 0 {
-		for _, ap := range p.AgentPoolProfiles {
-			if !ap.IsUbuntuNonVHD() {
-				return false
-			}
-		}
-	}
-	if p.MasterProfile != nil {
-		return p.MasterProfile.IsUbuntuNonVHD()
-	}
-	return true
-}
-
-// HasUbuntuDistroNodes returns true if any of the agent pools or masters are running the base Ubuntu image
-func (p *Properties) HasUbuntuDistroNodes() bool {
-	if len(p.AgentPoolProfiles) > 0 {
-		for _, ap := range p.AgentPoolProfiles {
-			if ap.IsUbuntuNonVHD() {
-				return true
-			}
-		}
-	}
-	if p.MasterProfile != nil {
-		return p.MasterProfile.IsUbuntuNonVHD()
-	}
-	return false
-}
-
-// HasUbuntu1604DistroNodes returns true if any of the agent pools or masters are running the base Ubuntu 16.04-LTS image
-func (p *Properties) HasUbuntu1604DistroNodes() bool {
-	if len(p.AgentPoolProfiles) > 0 {
-		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu {
-				return true
-			}
-		}
-	}
-	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu
-	}
-	return false
-}
-
-// HasUbuntu1804DistroNodes returns true if any of the agent pools or masters are running the base Ubuntu 18.04-LTS image
-func (p *Properties) HasUbuntu1804DistroNodes() bool {
-	if len(p.AgentPoolProfiles) > 0 {
-		for _, ap := range p.AgentPoolProfiles {
-			switch ap.Distro {
-			case Ubuntu1804, Ubuntu1804Gen2:
-				return true
-			}
-		}
-	}
-	if p.MasterProfile != nil {
-		switch p.MasterProfile.Distro {
-		case Ubuntu1804, Ubuntu1804Gen2:
-			return true
-		}
 	}
 	return false
 }
@@ -1392,11 +1218,6 @@ func (m *MasterProfile) IsStorageAccount() bool {
 	return m.StorageProfile == StorageAccount
 }
 
-// IsRHEL returns true if the master specified a RHEL distro
-func (m *MasterProfile) IsRHEL() bool {
-	return m.Distro == RHEL
-}
-
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (m *MasterProfile) IsVHDDistro() bool {
 	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
@@ -1524,11 +1345,6 @@ func (a *AgentPoolProfile) IsWindows() bool {
 // IsLinux returns true if the agent pool is linux
 func (a *AgentPoolProfile) IsLinux() bool {
 	return a.OSType == Linux
-}
-
-// IsRHEL returns true if the agent pool specified a RHEL distro
-func (a *AgentPoolProfile) IsRHEL() bool {
-	return a.OSType == Linux && a.Distro == RHEL
 }
 
 // IsFlatcar returns true if the agent specified a Flatcar distro
@@ -1912,16 +1728,6 @@ func (k *KubernetesConfig) IsAzurePolicyEnabled() bool {
 // IsAppGWIngressEnabled checks if the appgw ingress addon is enabled
 func (k *KubernetesConfig) IsAppGWIngressEnabled() bool {
 	return k.IsAddonEnabled(common.AppGwIngressAddonName)
-}
-
-// IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
-func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
-	return k.IsAddonEnabled(common.IPMASQAgentAddonName)
-}
-
-// IsIPMasqAgentDisabled checks if the ip-masq-agent addon is disabled
-func (k *KubernetesConfig) IsIPMasqAgentDisabled() bool {
-	return k.IsAddonDisabled(common.IPMASQAgentAddonName)
 }
 
 // GetComponentByName returns the KubernetesComponent object with name `componentName`

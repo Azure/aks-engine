@@ -115,19 +115,23 @@ func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
 func TestOSType(t *testing.T) {
 	p := Properties{
 		MasterProfile: &MasterProfile{
-			Distro: RHEL,
+			Distro: Ubuntu1804,
 		},
 		AgentPoolProfiles: []*AgentPoolProfile{
 			{
 				OSType: Linux,
+				Distro: Ubuntu,
 			},
 			{
 				OSType: Linux,
-				Distro: RHEL,
+				Distro: Ubuntu,
 			},
 		},
 	}
 
+	if !p.MasterProfile.IsUbuntu1804() {
+		t.Fatalf("expected IsUbuntu1804() to return true but instead returned false")
+	}
 	if p.HasWindows() {
 		t.Fatalf("expected HasWindows() to return false but instead returned true")
 	}
@@ -142,24 +146,12 @@ func TestOSType(t *testing.T) {
 		t.Fatalf("expected IsLinux() to return true but instead returned false")
 	}
 
-	if p.AgentPoolProfiles[0].IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return false but instead returned true")
-	}
-
 	if p.AgentPoolProfiles[0].IsFlatcar() {
 		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
 	}
 
-	if !p.AgentPoolProfiles[1].IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return true but instead returned false")
-	}
-
 	if p.AgentPoolProfiles[1].IsFlatcar() {
 		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
-	}
-
-	if !p.MasterProfile.IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return true but instead returned false")
 	}
 
 	p.AgentPoolProfiles[0].OSType = Windows
@@ -181,16 +173,8 @@ func TestOSType(t *testing.T) {
 		t.Fatalf("expected IsLinux() to return false but instead returned true")
 	}
 
-	if p.AgentPoolProfiles[0].IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return false but instead returned true")
-	}
-
 	if p.AgentPoolProfiles[0].IsFlatcar() {
 		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
-	}
-
-	if p.AgentPoolProfiles[1].IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return false but instead returned true")
 	}
 
 	if !p.AgentPoolProfiles[1].IsFlatcar() {
@@ -1973,15 +1957,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: RHEL,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
 					Distro: "foo",
 				},
 			},
@@ -2083,17 +2058,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: RHEL,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
 						Distro: "foo",
 					},
 				},
@@ -2105,171 +2069,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 	for _, c := range cases {
 		if c.p.AgentPoolProfiles[0].IsUbuntu() != c.expected {
 			t.Fatalf("expected IsUbuntu() to return %t but instead returned %t", c.expected, c.p.AgentPoolProfiles[0].IsUbuntu())
-		}
-	}
-}
-
-func TestIsUbuntuDistroForAllNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804Gen2,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.IsUbuntuDistroForAllNodes() != c.expected {
-			t.Fatalf("expected IsUbuntuDistroForAllNodes() to return %t but instead returned %t", c.expected, c.p.IsUbuntuDistroForAllNodes())
 		}
 	}
 }
@@ -2426,171 +2225,6 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 	for _, c := range cases {
 		if c.p.IsVHDDistroForAllNodes() != c.expected {
 			t.Fatalf("expected IsVHDDistroForAllNodes() to return %t but instead returned %t", c.expected, c.p.IsVHDDistroForAllNodes())
-		}
-	}
-}
-
-func TestHasUbuntuDistroNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: AKSUbuntu1604,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.HasUbuntuDistroNodes() != c.expected {
-			t.Fatalf("expected HasUbuntuDistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntuDistroNodes())
 		}
 	}
 }
@@ -2756,336 +2390,6 @@ func TestHasVHDDistroNodes(t *testing.T) {
 	for _, c := range cases {
 		if c.p.HasVHDDistroNodes() != c.expected {
 			t.Fatalf("expected HasVHDDistroNodes() to return %t but instead returned %t", c.expected, c.p.HasVHDDistroNodes())
-		}
-	}
-}
-
-func TestHasUbuntu1604DistroNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: AKSUbuntu1604,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.HasUbuntu1604DistroNodes() != c.expected {
-			t.Fatalf("expected HasUbuntu1604DistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntu1604DistroNodes())
-		}
-	}
-}
-
-func TestHasUbuntu1804DistroNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: AKSUbuntu1604,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.HasUbuntu1804DistroNodes() != c.expected {
-			t.Fatalf("expected HasUbuntu1804DistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntu1804DistroNodes())
 		}
 	}
 }
@@ -4133,9 +3437,6 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 		if c.p.IsIPMasqAgentEnabled() != c.expectedPropertiesIsIPMasqAgentEnabled {
 			t.Fatalf("expected Properties.IsIPMasqAgentEnabled() to return %t but instead returned %t", c.expectedPropertiesIsIPMasqAgentEnabled, c.p.IsIPMasqAgentEnabled())
 		}
-		if c.p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled() != c.expectedKubernetesConfigIsIPMasqAgentEnabled {
-			t.Fatalf("expected KubernetesConfig.IsIPMasqAgentEnabled() to return %t but instead returned %t", c.expectedKubernetesConfigIsIPMasqAgentEnabled, c.p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled())
-		}
 	}
 }
 
@@ -5182,54 +4483,6 @@ func TestGetSubnetName(t *testing.T) {
 	}
 }
 
-func TestProperties_GetClusterMetadata(t *testing.T) {
-	p := &Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType: Kubernetes,
-		},
-		MasterProfile: &MasterProfile{
-			Count:        1,
-			DNSPrefix:    "foo",
-			VMSize:       "Standard_DS2_v2",
-			VnetSubnetID: "/subscriptions/SUBSCRIPTION_ID/resourceGroups/SAMPLE_RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:                "agentpool",
-				VMSize:              "Standard_D2_v2",
-				Count:               1,
-				AvailabilityProfile: AvailabilitySet,
-			},
-		},
-	}
-
-	metadata := p.GetClusterMetadata()
-	expectedSubnetName := "BazAgentSubnet"
-	expectedVNetResourceGroupName := "SAMPLE_RESOURCE_GROUP_NAME"
-	expectedVirtualNetworkName := "ExampleCustomVNET"
-	expectedRouteTableName := fmt.Sprintf("%s-28513887-routetable", common.LegacyControlPlaneVMPrefix)
-	expectedSecurityGroupName := fmt.Sprintf("%s-28513887-nsg", common.LegacyControlPlaneVMPrefix)
-	expectedPrimaryAvailabilitySetName := "agentpool-availabilitySet-28513887"
-	expectedPrimaryScaleSetName := ""
-	if metadata == nil {
-		t.Error("did not expect cluster metadata to be nil")
-	} else if metadata.SubnetName != expectedSubnetName {
-		t.Errorf("expected subnet name %s, but got %s", expectedSubnetName, metadata.SubnetName)
-	} else if metadata.VNetResourceGroupName != expectedVNetResourceGroupName {
-		t.Errorf("expected vNetResourceGroupName name %s, but got %s", expectedVNetResourceGroupName, metadata.VNetResourceGroupName)
-	} else if metadata.VirtualNetworkName != expectedVirtualNetworkName {
-		t.Errorf("expected VirtualNetworkName name %s, but got %s", expectedVirtualNetworkName, metadata.VirtualNetworkName)
-	} else if metadata.RouteTableName != expectedRouteTableName {
-		t.Errorf("expected RouteTableName name %s, but got %s", expectedVirtualNetworkName, metadata.RouteTableName)
-	} else if metadata.SecurityGroupName != expectedSecurityGroupName {
-		t.Errorf("expected SecurityGroupName name %s, but got %s", expectedSecurityGroupName, metadata.SecurityGroupName)
-	} else if metadata.PrimaryAvailabilitySetName != expectedPrimaryAvailabilitySetName {
-		t.Errorf("expected PrimaryAvailabilitySetName name %s, but got %s", expectedPrimaryAvailabilitySetName, metadata.PrimaryAvailabilitySetName)
-	} else if metadata.PrimaryScaleSetName != expectedPrimaryScaleSetName {
-		t.Errorf("expected PrimaryScaleSetName name %s, but got %s", expectedPrimaryScaleSetName, metadata.PrimaryScaleSetName)
-	}
-}
-
 func TestGetAddonPoolIndexByName(t *testing.T) {
 	addonName := "testaddon"
 	addon := getMockAddon(addonName)
@@ -5934,24 +5187,6 @@ func TestContainerService_GetAzureProdFQDN(t *testing.T) {
 	if expected != actual {
 		t.Errorf("expected GetAzureProdFQDN to return %s, but got %s", expected, actual)
 	}
-}
-
-func TestAgentPoolResource(t *testing.T) {
-	expectedName := "TestAgentPool"
-	expectedVersion := "1.13.0"
-	expectedCount := 100
-
-	agentPoolResource := CreateMockAgentPoolProfile(expectedName, expectedVersion, Succeeded, expectedCount)
-
-	gotName := agentPoolResource.Properties.Name
-	gotVervsion := agentPoolResource.Properties.OrchestratorVersion
-	gotCount := agentPoolResource.Properties.Count
-
-	if gotName != expectedName || gotVervsion != expectedVersion || gotCount != expectedCount {
-		t.Fatalf("Expected values - name: %s, version: %s, count: %d. Got - name: %s, version: %s, count: %d", expectedName, expectedVersion, expectedCount,
-			gotName, gotVervsion, gotCount)
-	}
-
 }
 
 func TestKubernetesConfig_RequiresDocker(t *testing.T) {
@@ -7418,65 +6653,6 @@ func TestPropertiesIsIPMasqAgentDisabled(t *testing.T) {
 			t.Parallel()
 			if c.p.IsIPMasqAgentDisabled() != c.expectedDisabled {
 				t.Fatalf("expected Properties.IsIPMasqAgentDisabled() to return %t but instead returned %t", c.expectedDisabled, c.p.IsIPMasqAgentDisabled())
-			}
-		})
-	}
-}
-
-func TestKubernetesConfigIsIPMasqAgentDisabled(t *testing.T) {
-	cases := []struct {
-		name             string
-		k                *KubernetesConfig
-		expectedDisabled bool
-	}{
-		{
-			name:             "default",
-			k:                &KubernetesConfig{},
-			expectedDisabled: false,
-		},
-		{
-			name: "ip-masq-agent present but no configuration",
-			k: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					{
-						Name: common.IPMASQAgentAddonName,
-					},
-				},
-			},
-			expectedDisabled: false,
-		},
-		{
-			name: "ip-masq-agent explicitly disabled",
-			k: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					{
-						Name:    common.IPMASQAgentAddonName,
-						Enabled: to.BoolPtr(false),
-					},
-				},
-			},
-			expectedDisabled: true,
-		},
-		{
-			name: "ip-masq-agent explicitly enabled",
-			k: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					{
-						Name:    common.IPMASQAgentAddonName,
-						Enabled: to.BoolPtr(true),
-					},
-				},
-			},
-			expectedDisabled: false,
-		},
-	}
-
-	for _, c := range cases {
-		c := c
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			if c.k.IsIPMasqAgentDisabled() != c.expectedDisabled {
-				t.Fatalf("expected KubernetesConfig.IsIPMasqAgentDisabled() to return %t but instead returned %t", c.expectedDisabled, c.k.IsIPMasqAgentDisabled())
 			}
 		})
 	}
