@@ -195,6 +195,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.11":        false,
 	"1.17.12":        true,
 	"1.17.13":        true,
+	"1.17.14":        true, // disabled, see https://github.com/kubernetes/kubernetes/pull/96623
 	"1.18.0-alpha.1": false,
 	"1.18.0-alpha.2": false,
 	"1.18.0-alpha.3": false,
