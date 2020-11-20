@@ -11873,7 +11873,8 @@ configureAzureCNI() {
       mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
     fi
     if [[ "${NETWORK_MODE}" == "bridge" ]]; then
-      sed -i 's#"mode":"transparent"#"mode":"bridge"#g' $CNI_CONFIG_DIR/10-azure.conflist
+      jq '.plugins[0].mode="bridge"' "$CNI_CONFIG_DIR/10-azure.conflist" > $tmpDir/tmp
+      mv $tmpDir/tmp $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
   fi
