@@ -385,7 +385,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	m := a.MasterProfile
 
-	if m.Count == 1 {
+	if m.Count == 1 && !isUpdate {
 		log.Warnf("Running only 1 control plane VM not recommended for production clusters, use 3 or 5 for control plane redundancy")
 	}
 	if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
@@ -399,7 +399,9 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 	}
 
 	if m.IsVirtualMachineScaleSets() {
-		log.Warnf("Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!")
+		if !isUpdate {
+			log.Warnf("Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!")
+		}
 		e := validateVMSS(a.OrchestratorProfile, false, m.StorageProfile, a.HasWindows(), a.IsAzureStackCloud())
 		if e != nil {
 			return e
