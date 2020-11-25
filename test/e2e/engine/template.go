@@ -35,7 +35,7 @@ type Config struct {
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX" default:""`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX" default:""`
 	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
-	UseManagedIdentity             bool   `envconfig:"USE_MANAGED_IDENTITY" default:"false"`
+	UseManagedIdentity             bool   `envconfig:"USE_MANAGED_IDENTITY" default:""`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY" default:""`
 	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
