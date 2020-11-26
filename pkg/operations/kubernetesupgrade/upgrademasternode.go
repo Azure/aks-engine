@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -96,7 +97,7 @@ func (kmn *UpgradeMasterNode) Validate(vmName *string) error {
 			if err != nil {
 				kmn.logger.Infof("Master node: %s status error: %v", nodeName, err)
 				time.Sleep(time.Second * 5)
-			} else if isNodeReady(masterNode) {
+			} else if kubernetes.IsNodeReady(masterNode) {
 				kmn.logger.Infof("Master node: %s is ready", nodeName)
 				ch <- struct{}{}
 			} else {

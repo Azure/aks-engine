@@ -63,7 +63,12 @@ func (c *kubernetesClientSetClient) ListAllPods() (*v1.PodList, error) {
 
 // ListNodes returns a list of Nodes registered in the api server.
 func (c *kubernetesClientSetClient) ListNodes() (*v1.NodeList, error) {
-	return c.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	return c.ListNodesByOptions(metav1.ListOptions{})
+}
+
+// ListNodes returns a list of Nodes registered in the api server.
+func (c *kubernetesClientSetClient) ListNodesByOptions(opts metav1.ListOptions) (*v1.NodeList, error) {
+	return c.clientset.CoreV1().Nodes().List(opts)
 }
 
 // ListServiceAccounts returns a list of Service Accounts in the provided namespace.

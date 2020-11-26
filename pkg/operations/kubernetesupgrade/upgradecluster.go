@@ -19,6 +19,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // IsVMSSToBeUpgradedCb - Call back for checking whether the given vmss is to be upgraded or not.
@@ -101,8 +103,16 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 		kubeClient = k
 	}
 
-	if err := uc.getClusterNodeStatus(kubeClient, uc.ResourceGroup); err != nil {
+	if err := uc.getClusterVMStatus(kubeClient, uc.ResourceGroup); err != nil {
 		return uc.Translator.Errorf("Error while querying ARM for resources: %+v", err)
+	}
+
+	if kubeClient != nil {
+		mastersCount := uc.DataModel.Properties.MasterProfile.Count
+		if err := uc.getClusterNodeStatus(kubeClient.ListNodesByOptions, mastersCount); err != nil {
+			uc.Logger.Error("Aborting the upgrade process to avoid potential control plane downtime")
+			return errors.Wrap(err, "checking status of upgraded control plane nodes")
+		}
 	}
 
 	kc := uc.DataModel.Properties.OrchestratorProfile.KubernetesConfig
@@ -185,7 +195,7 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 	return u
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient kubernetes.Client, resourceGroup string) error {
+func (uc *UpgradeCluster) getClusterVMStatus(kubeClient kubernetes.Client, resourceGroup string) error {
 	goalVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -456,4 +466,39 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
 		}
 	}
+}
+
+// getClusterNodeStatus checks whether it is safe to proceed with the upgrade process
+// by looking at the status of previously upgraded control plane nodes.
+//
+// It returns an error if more than 1 of the already-upgraded nodes are in the NotReady state.
+// It returns nil if all control plane nodes are NotReady.
+// To recreate the node, users have to manually update the "orchestrator" tag on the VM.
+func (uc *UpgradeCluster) getClusterNodeStatus(nodeFetcher func(metav1.ListOptions) (*v1.NodeList, error), mastersCount int) error {
+	nodes, err := nodeFetcher(metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/master"})
+	if err != nil {
+		// do not return the error, the assumption is that all masters are NotReady at this point
+		uc.Logger.Debugln("Error retrieving control plane nodes status")
+		return nil
+	}
+	// find upgraded nodes that are not ready
+	nodeStatusMap := make(map[string]bool)
+	for _, n := range nodes.Items {
+		nodeStatusMap[n.Name] = kubernetes.IsNodeReady(&n)
+	}
+	upgradedNotReadyCount := 0
+	for _, vm := range *uc.UpgradedMasterVMs {
+		n := vm.Name
+		if ready, found := nodeStatusMap[*n]; found && !ready {
+			upgradedNotReadyCount++
+			uc.Logger.Debugf("Node %s did not reach the NodeReady status", *n)
+		}
+	}
+	// return error if more than 1 upgraded node is not ready
+	// do not bother if upgradedNotReadyCount == mastersCount, at that point upgrade cannot take down more nodes
+	if upgradedNotReadyCount > 1 && upgradedNotReadyCount < mastersCount {
+		uc.Logger.Error("At least 2 of the previusly upgraded control plane nodes did not reach the NodeReady status")
+		return errors.New("too many upgraded nodes are not ready")
+	}
+	return nil
 }

@@ -218,3 +218,16 @@ You *may not* change the following values, doing so may break your cluster!
 - DO NOT CHANGE the static IP address range of your control plane via `masterProfile.firstConsecutiveStaticIP`
 
 These types of configuration changes are advanced, only do this if you're a confident, expert Kubernetes cluster administrator!
+
+### How can I recreate upgraded nodes that did not reach the `Ready` state?
+
+If any of the upgraded nodes is not able to reach the `Ready` state, then `aks-engine upgrade` will exit showing a message similar to one below:
+
+```console
+Error validating upgraded master VM: k8s-master-12345678-0
+Error: upgrading cluster: Node was not ready within 20m0s
+```
+
+These errors are typically caused by bad or incompatible `properties.orchestratorProfile.kubernetesConfig` property values in your API model that prevent `kubelet` (or control plane components) from starting successfully.
+
+Once you identify the problem and update your API model, you can recreate the `NotReady` node by (1) changing the `orchestrator` tag of the virtual machine so it does not match the target upgrade version, and (2) retrying `aks-engine upgrade`. Failing to update the `orchestrator` tag will result in `aks-engine upgrade` treating the `NotReady` node as already upgraded and consequently ignoring it to move on to the next node.

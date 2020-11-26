@@ -28,6 +28,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -325,6 +326,11 @@ func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
 	nodeList.Items = append(nodeList.Items, *node)
 	nodeList.Items = append(nodeList.Items, *node2)
 	return nodeList, nil
+}
+
+// ListNodesByOptions returns a list of Nodes registered in the api server
+func (mkc *MockKubernetesClient) ListNodesByOptions(opts metav1.ListOptions) (*v1.NodeList, error) {
+	return &v1.NodeList{}, nil
 }
 
 // ListServiceAccounts returns a list of Service Accounts in the provided namespace

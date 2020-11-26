@@ -22,6 +22,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	logtest "github.com/sirupsen/logrus/hooks/test"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const TestAKSEngineVersion = "1.0.0"
@@ -1071,3 +1072,101 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		Expect(len(newNode.Spec.Taints)).To(Equal(2))
 	})
 })
+
+func TestGetClusterNodeStatus(t *testing.T) {
+	t.Parallel()
+	g := NewGomegaWithT(t)
+
+	statusByName := func(name string) v1.NodeCondition {
+		if strings.HasPrefix(name, "ok") {
+			return v1.NodeCondition{
+				Type:   v1.NodeReady,
+				Status: v1.ConditionTrue,
+			}
+		}
+		return v1.NodeCondition{
+			Type:   v1.NodeReady,
+			Status: v1.ConditionFalse,
+		}
+	}
+
+	nodeFetcher := func(names ...string) func(metav1.ListOptions) (*v1.NodeList, error) {
+		return func(_ metav1.ListOptions) (*v1.NodeList, error) {
+			nodes := make([]v1.Node, 0)
+			for _, name := range names {
+				node := v1.Node{}
+				node.Name = name
+				node.Status.Conditions = []v1.NodeCondition{statusByName(name)}
+				nodes = append(nodes, node)
+			}
+			return &v1.NodeList{Items: nodes}, nil
+		}
+	}
+
+	upgradedVMs := func(names ...string) *[]compute.VirtualMachine {
+		vms := make([]compute.VirtualMachine, 0)
+		for _, name := range names {
+			var n string = name
+			vm := compute.VirtualMachine{}
+			vm.Name = &n
+			vms = append(vms, vm)
+		}
+		return &vms
+	}
+
+	t.Run("cannot fetch node status", func(t *testing.T) {
+		names := []string{}
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs()
+		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("all nodes ready, no node upgraded", func(t *testing.T) {
+		names := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs()
+		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("upgraded nodes ready, not upgraded nodes not ready", func(t *testing.T) {
+		names := []string{"ok1", "ok2", "nok3", "nok4", "nok5"}
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs("ok1", "ok2")
+		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("1 upgraded node not ready", func(t *testing.T) {
+		names := []string{"nok1", "ok2", "ok3", "ok4", "ok5"}
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs("nok1")
+		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("more than 1 upgraded node not ready, return error", func(t *testing.T) {
+		names := []string{"nok1", "nok2", "ok3", "ok4", "ok5"}
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs("nok1", "nok2")
+		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("more than 1 alternated upgraded node not ready, return error", func(t *testing.T) {
+		names := []string{"nok1", "ok2", "nok3", "ok4", "ok5"}
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs("nok1", "ok2", "nok3")
+		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("all upgraded nodes not ready", func(t *testing.T) {
+		names := []string{"nok1", "nok2", "nok3", "nok4", "nok5"}
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs("nok1", "nok2", "nok3", "nok4", "nok5")
+		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+}
