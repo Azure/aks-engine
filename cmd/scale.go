@@ -264,8 +264,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := sc.validateOSBaseImage(); err != nil {
-		return errors.Wrapf(err, "validating OS base images required by %s", sc.apiModelPath)
+	if sc.containerService.Properties.IsAzureStackCloud() {
+		if err := sc.validateOSBaseImage(); err != nil {
+			return errors.Wrapf(err, "validating OS base images required by %s", sc.apiModelPath)
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -661,12 +663,10 @@ func (sc *scaleCmd) printScaleTargetEqualsExisting(currentNodeCount int) {
 
 // validateOSBaseImage checks if the OS image is available on the target cloud (ATM, Azure Stack only)
 func (sc *scaleCmd) validateOSBaseImage() error {
-	if sc.containerService.Properties.IsAzureStackCloud() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if err := armhelpers.ValidateRequiredImages(ctx, sc.location, sc.containerService.Properties, sc.client); err != nil {
-			return errors.Wrap(err, "OS base image not available in target cloud")
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := armhelpers.ValidateRequiredImages(ctx, sc.location, sc.containerService.Properties, sc.client); err != nil {
+		return errors.Wrap(err, "OS base image not available in target cloud")
 	}
 	return nil
 }

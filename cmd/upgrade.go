@@ -295,8 +295,10 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "loading existing cluster")
 	}
 
-	if err = uc.validateOSBaseImage(); err != nil {
-		return errors.Wrapf(err, "validating OS base images required by %s", uc.apiModelPath)
+	if uc.containerService.Properties.IsAzureStackCloud() {
+		if err = uc.validateOSBaseImage(); err != nil {
+			return errors.Wrapf(err, "validating OS base images required by %s", uc.apiModelPath)
+		}
 	}
 
 	upgradeCluster := kubernetesupgrade.UpgradeCluster{
@@ -393,12 +395,10 @@ func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
 
 // validateOSBaseImage checks if the OS image is available on the target cloud (ATM, Azure Stack only)
 func (uc *upgradeCmd) validateOSBaseImage() error {
-	if uc.containerService.Properties.IsAzureStackCloud() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if err := armhelpers.ValidateRequiredImages(ctx, uc.location, uc.containerService.Properties, uc.client); err != nil {
-			return errors.Wrap(err, "OS base image not available in target cloud")
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := armhelpers.ValidateRequiredImages(ctx, uc.location, uc.containerService.Properties, uc.client); err != nil {
+		return errors.Wrap(err, "OS base image not available in target cloud")
 	}
 	return nil
 }
