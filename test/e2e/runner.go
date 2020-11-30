@@ -12,11 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/test/e2e/azure"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/metrics"
 	"github.com/Azure/aks-engine/test/e2e/runner"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 var (
@@ -292,9 +294,13 @@ func teardown() {
 			acct.DeleteGroup(rg, false)
 		}
 		// Delete once we reuse the cluster group for the connectedCluster resource
-		if cfg.ArcOnboardingConfig != nil {
-			log.Printf("Deleting Arc Group: %s\n", fmt.Sprintf("%s-arc", cfg.Name))
-			acct.DeleteGroup(fmt.Sprintf("%s-arc", cfg.Name), false)
+		for _, addon := range eng.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.Addons {
+			if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) &&
+				addon.Config["resourceGroup"] != "" &&
+				addon.Config["location"] != "" {
+				log.Printf("Deleting Arc Group: %s\n", fmt.Sprintf("%s-arc", cfg.Name))
+				acct.DeleteGroup(fmt.Sprintf("%s-arc", cfg.Name), false)
+			}
 		}
 	}
 }
