@@ -19,6 +19,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	logtest "github.com/sirupsen/logrus/hooks/test"
 	v1 "k8s.io/api/core/v1"
@@ -1167,6 +1168,16 @@ func TestGetClusterNodeStatus(t *testing.T) {
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs("nok1", "nok2", "nok3", "nok4", "nok5")
 		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("cannot fetch node status", func(t *testing.T) {
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		err := uc.getClusterNodeStatus(func() func(metav1.ListOptions) (*v1.NodeList, error) {
+			return func(_ metav1.ListOptions) (*v1.NodeList, error) {
+				return &v1.NodeList{}, errors.New("error")
+			}
+		}(), len([]string{}))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 }
