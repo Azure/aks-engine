@@ -3,7 +3,6 @@
     "location": "",
     "properties": {
         "orchestratorProfile": {
-            "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.18",
             "kubernetesConfig": {
                 "networkPlugin": "kubenet",
