@@ -1669,7 +1669,6 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
@@ -1749,13 +1748,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
@@ -1818,13 +1815,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
@@ -1902,13 +1897,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
@@ -1986,13 +1979,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
@@ -2071,13 +2062,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
@@ -2156,13 +2145,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              api.Linux,
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},

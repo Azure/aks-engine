@@ -843,7 +843,7 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	}
 	nameSuffix := p.GetClusterID()
 	vmPrefix := ""
-	if a.IsLinux() {
+	if a.IsLinux() || a.OSType == "" {
 		vmPrefix = p.K8sOrchestratorName() + "-" + a.Name + "-" + nameSuffix + "-"
 		if a.IsVirtualMachineScaleSets() {
 			vmPrefix += "vmss"

@@ -4857,7 +4857,6 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              Linux,
 							Count:               1,
 							AvailabilityProfile: VirtualMachineScaleSets,
 						},
@@ -4922,13 +4921,11 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              Linux,
 							Count:               1,
 							AvailabilityProfile: VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              Linux,
 							Count:               1,
 							AvailabilityProfile: VirtualMachineScaleSets,
 						},
@@ -4977,13 +4974,11 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
 							Name:                "pool1",
-							OSType:              Linux,
 							Count:               1,
 							AvailabilityProfile: VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
-							OSType:              Linux,
 							Count:               1,
 							AvailabilityProfile: VirtualMachineScaleSets,
 						},
