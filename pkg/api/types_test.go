@@ -1571,33 +1571,6 @@ func TestPerAgentPoolVersionAndState(t *testing.T) {
 	}
 }
 
-func TestPerAgentPoolWindowsNameVersion(t *testing.T) {
-	cases := []struct {
-		ap                         AgentPoolProfile
-		expectedWindowsNameVersion string
-	}{
-		{
-			ap: AgentPoolProfile{
-				Name:               "agentpool1",
-				WindowsNameVersion: "v2",
-			},
-			expectedWindowsNameVersion: "v2",
-		},
-		{
-			ap: AgentPoolProfile{
-				Name: "agentpool2",
-			},
-			expectedWindowsNameVersion: "",
-		},
-	}
-
-	for _, c := range cases {
-		if c.expectedWindowsNameVersion != c.ap.WindowsNameVersion {
-			t.Fatalf("WindowsNameVersion flag mismatch. Expected: %v. Got: %v.", &c.expectedWindowsNameVersion, &c.ap.WindowsNameVersion)
-		}
-	}
-}
-
 func TestIsCustomVNET(t *testing.T) {
 	cases := []struct {
 		p              Properties
@@ -4315,6 +4288,7 @@ func TestGetPrimaryScaleSetName(t *testing.T) {
 		AgentPoolProfiles: []*AgentPoolProfile{
 			{
 				Name:                "agentpool",
+				OSType:              Linux,
 				VMSize:              "Standard_D2_v2",
 				Count:               1,
 				AvailabilityProfile: VirtualMachineScaleSets,
@@ -4796,7 +4770,7 @@ func TestGetAgentVMPrefix(t *testing.T) {
 			expectedVMPrefix: "foo",
 		},
 		{
-			name: "Windows agent pool profile",
+			name: "Windows VMAS agent pool profile",
 			profile: &AgentPoolProfile{
 				Name:   "agentpool",
 				VMSize: "Standard_D2_v2",
@@ -4821,7 +4795,36 @@ func TestGetAgentVMPrefix(t *testing.T) {
 					},
 				},
 			},
-			expectedVMPrefix: "2478k8s00",
+			expectedVMPrefix: "2478k8s00", // Windows VMAS and VMSS pools should generate the same prefix string
+		},
+		{
+			name: "Windows VMSS agent pool profile",
+			profile: &AgentPoolProfile{
+				Name:   "agentpool",
+				VMSize: "Standard_D2_v2",
+				Count:  1,
+				OSType: Windows,
+			},
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Count:     1,
+					DNSPrefix: "myprefix2",
+					VMSize:    "Standard_DS2_v2",
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						Count:               1,
+						OSType:              Windows,
+					},
+				},
+			},
+			expectedVMPrefix: "2478k8s00", // Windows VMAS and VMSS pools should generate the same prefix string
 		},
 		{
 			name: "agent profile doesn't exist",
