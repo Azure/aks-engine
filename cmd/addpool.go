@@ -149,6 +149,9 @@ func (apc *addPoolCmd) load() error {
 		numExistingPools := len(apc.containerService.Properties.AgentPoolProfiles)
 		// we can reuse the value of numExistingPools due to array index beginning at "0"
 		apc.nodePool.VMSSName = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, numExistingPools)
+		if apc.nodePool.VMSSName == "" {
+			return errors.Errorf("unable to compute a VMSSName property value from new pool definition")
+		}
 	}
 
 	if apc.containerService.Properties.IsCustomCloudProfile() {
