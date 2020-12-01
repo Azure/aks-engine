@@ -5,24 +5,28 @@
         "orchestratorProfile": {
             "orchestratorRelease": "1.18",
             "kubernetesConfig": {
-                "networkPlugin": "kubenet",
-                "useInstanceMetadata": false
+                "useInstanceMetadata": false,
+                "networkPlugin": "kubenet"
             }
         },
+        "customCloudProfile": {
+            "portalURL": "",
+            "identitySystem": ""
+        },
         "masterProfile": {
-            "count": 3,
             "dnsPrefix": "",
-            "vmSize": "Standard_D2_v2",
-            "distro": "ubuntu"
+            "distro": "ubuntu",
+            "count": 3,
+            "vmSize": "Standard_D2_v2"
         },
         "agentPoolProfiles": [
             {
                 "name": "linuxpool",
                 "count": 3,
                 "vmSize": "Standard_D2_v2",
-                "availabilityProfile": "AvailabilitySet",
                 "distro": "ubuntu",
-                "acceleratedNetworkingEnabled": false
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
             }
         ],
         "linuxProfile": {
@@ -38,10 +42,6 @@
         "servicePrincipalProfile": {
             "clientId": "",
             "secret": ""
-        },
-        "customCloudProfile": {
-            "portalURL": "",
-            "identitySystem": ""
         }
     }
 }
