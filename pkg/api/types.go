@@ -591,7 +591,7 @@ type AgentPoolProfile struct {
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
-	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"`
+	WindowsNameVersion                  string               `json:"windowsNameVersion,omitempty"` // Deprecated
 	EnableVMSSNodePublicIP              *bool                `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs   []string             `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
@@ -843,19 +843,13 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	}
 	nameSuffix := p.GetClusterID()
 	vmPrefix := ""
-	if index != -1 {
-		if a.IsWindows() {
-			if a.WindowsNameVersion == "v2" {
-				vmPrefix = p.K8sOrchestratorName() + a.Name
-			} else {
-				vmPrefix = nameSuffix[:4] + p.K8sOrchestratorName() + fmt.Sprintf("%02d", index)
-			}
-		} else {
-			vmPrefix = p.K8sOrchestratorName() + "-" + a.Name + "-" + nameSuffix + "-"
-			if a.IsVirtualMachineScaleSets() {
-				vmPrefix += "vmss"
-			}
+	if a.IsLinux() || a.OSType == "" {
+		vmPrefix = p.K8sOrchestratorName() + "-" + a.Name + "-" + nameSuffix + "-"
+		if a.IsVirtualMachineScaleSets() {
+			vmPrefix += "vmss"
 		}
+	} else if a.IsWindows() && index != -1 {
+		vmPrefix = nameSuffix[:4] + p.K8sOrchestratorName() + fmt.Sprintf("%02d", index)
 	}
 	return vmPrefix
 }

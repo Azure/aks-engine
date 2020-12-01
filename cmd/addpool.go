@@ -144,11 +144,14 @@ func (apc *addPoolCmd) load() error {
 		return errors.Wrap(err, "error parsing the agent pool")
 	}
 
-	// Back-compat logic to populate the VMSSName property for clusters built prior to VMSSName being a part of the API model spec
-	if apc.nodePool.IsVirtualMachineScaleSets() && apc.nodePool.VMSSName == "" {
-		existingPools := len(apc.containerService.Properties.AgentPoolProfiles)
-		newIndex := existingPools + 1
-		apc.nodePool.VMSSName = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, newIndex)
+	// Assign VMSSName property based on the new pool being added to the end of the existing AgentPoolProfiles array
+	if apc.nodePool.IsVirtualMachineScaleSets() {
+		numExistingPools := len(apc.containerService.Properties.AgentPoolProfiles)
+		// we can reuse the value of numExistingPools due to array index beginning at "0"
+		apc.nodePool.VMSSName = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, numExistingPools)
+		if apc.nodePool.VMSSName == "" {
+			return errors.Errorf("unable to compute a VMSSName property value from new pool definition")
+		}
 	}
 
 	if apc.containerService.Properties.IsCustomCloudProfile() {
