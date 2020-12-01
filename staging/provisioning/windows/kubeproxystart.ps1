@@ -31,5 +31,8 @@ Import-Module $global:HNSModule
 # and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
-$KubeproxyCmdline = "$global:KubeDir\kube-proxy.exe "+ ($global:KubeproxyArgList -join " ")
-Invoke-Expression $KubeproxyCmdline
+# Use run-process.cs to set process priority class as 'High'
+Add-Type -Path .\run-process.cs
+$exe = "$global:KubeDir\kube-proxy.exe"
+$args = ($global:KubeproxyArgList -join " ")
+[RunProcess.exec]::RunProcess($exe, $args)
