@@ -4,7 +4,7 @@ LOCALBIN		= $(shell pwd)/bin
 all: install
 
 .PHONY: install
-install: $(LOCALBIN)/go-bindata $(LOCALBIN)/gox $(LOCALBIN)/ginkgo $(LOCALBIN)/golangci-lint $(LOCALBIN)/pub $(LOCALBIN)/goveralls
+install: $(LOCALBIN)/go-bindata $(LOCALBIN)/gox $(LOCALBIN)/ginkgo $(LOCALBIN)/golangci-lint $(LOCALBIN)/pub $(LOCALBIN)/goveralls $(LOCALBIN)/mockgen
 	@echo > /dev/null
 
 $(LOCALBIN)/go-bindata:
@@ -23,7 +23,10 @@ $(LOCALBIN)/pub:
 	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...@v0.2.6
 
 $(LOCALBIN)/goveralls:
-    GOBIN=$(LOCALBIN) $(GO) get github.com/mattn/goveralls
+	GOBIN=$(LOCALBIN) $(GO) get github.com/mattn/goveralls
+
+$(LOCALBIN)/mockgen:
+	GOBIN=$(LOCALBIN) $(GO) get github.com/golang/mock/mockgen@v1.2.0
 
 .PHONY: reload
 reload: clean install
