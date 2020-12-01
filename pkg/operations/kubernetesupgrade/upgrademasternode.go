@@ -59,6 +59,8 @@ func (kmn *UpgradeMasterNode) CreateNode(ctx context.Context, poolName string, m
 	deploymentSuffix := random.Int31()
 	deploymentName := fmt.Sprintf("master-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
 
+	WriteTemplate(kmn.Translator, kmn.UpgradeContainerService, kmn.TemplateMap, kmn.ParametersMap, deploymentName)
+
 	_, err := kmn.Client.DeployTemplate(
 		ctx,
 		kmn.ResourceGroup,

@@ -5,8 +5,10 @@ package kubernetesupgrade
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"path"
 	"strings"
 	"time"
 
@@ -14,6 +16,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
@@ -455,5 +459,31 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 		if err := uc.addVMToAgentPool(vm, false); err != nil {
 			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
 		}
+	}
+}
+
+// WriteTemplate writes upgrade template to a folder
+func WriteTemplate(
+	translator *i18n.Translator,
+	upgradeContainerService *api.ContainerService,
+	templateMap map[string]interface{}, parametersMap map[string]interface{},
+	filename string) {
+	updatedTemplateJSON, _ := json.Marshal(templateMap)
+	parametersJSON, _ := json.Marshal(parametersMap)
+
+	templateapp, err := transform.PrettyPrintArmTemplate(string(updatedTemplateJSON))
+	if err != nil {
+		logrus.Fatalf("error pretty printing template: %s \n", err.Error())
+	}
+	parametersapp, e := transform.PrettyPrintJSON(string(parametersJSON))
+	if e != nil {
+		logrus.Fatalf("error pretty printing template parameters: %s \n", e.Error())
+	}
+	outputDirectory := path.Join("_output", upgradeContainerService.Properties.MasterProfile.DNSPrefix, filename)
+	writer := &engine.ArtifactWriter{
+		Translator: translator,
+	}
+	if err := writer.WriteTLSArtifacts(upgradeContainerService, "vlabs", templateapp, parametersapp, outputDirectory, false, false); err != nil {
+		logrus.Fatalf("error writing artifacts: %s\n", err.Error())
 	}
 }
