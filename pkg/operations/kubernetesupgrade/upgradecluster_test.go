@@ -1134,7 +1134,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
-		res, err := uc.getUpgradedNotReady(mock)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
 		g.Expect(res).To(BeNil())
 		g.Expect(err).To(HaveOccurred())
 	})
@@ -1162,7 +1162,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
-		res, err := uc.getUpgradedNotReady(mock)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
 		g.Expect(res).To(BeEmpty())
 		g.Expect(err).NotTo(HaveOccurred())
 
@@ -1180,7 +1180,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
-		res, err := uc.getUpgradedNotReady(mock)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
 		g.Expect(res).To(BeEmpty())
 		g.Expect(err).NotTo(HaveOccurred())
 
@@ -1198,7 +1198,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
-		res, err := uc.getUpgradedNotReady(mock)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
 		g.Expect(res).To(Equal([]string{"nok1"}))
 		g.Expect(err).NotTo(HaveOccurred())
 
@@ -1216,7 +1216,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
-		res, err := uc.getUpgradedNotReady(mock)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
 		g.Expect(res).To(Equal([]string{"nok1", "nok2"}))
 		g.Expect(err).NotTo(HaveOccurred())
 
@@ -1234,7 +1234,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
-		res, err := uc.getUpgradedNotReady(mock)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
 		g.Expect(res).To(Equal([]string{"nok1", "nok3"}))
 		g.Expect(err).NotTo(HaveOccurred())
 
@@ -1252,7 +1252,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
 		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
-		res, err := uc.getUpgradedNotReady(mock)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
 		g.Expect(res).To(Equal([]string{"nok1", "nok2", "nok3", "nok4", "nok5"}))
 		g.Expect(err).NotTo(HaveOccurred())
 

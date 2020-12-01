@@ -509,11 +509,15 @@ func (uc *UpgradeCluster) upgradedNotReadyStream(client kubernetes.Client, backo
 	alwaysRetry := func(_ error) bool {
 		return true
 	}
+	upgraded := []string{}
+	for _, vm := range *uc.UpgradedMasterVMs {
+		upgraded = append(upgraded, *vm.Name)
+	}
 	stream := make(chan []string)
 	go func() {
 		defer close(stream)
 		util.OnError(backoff, alwaysRetry, func() error { //nolint:errcheck
-			upgradedNotReady, err := uc.getUpgradedNotReady(client)
+			upgradedNotReady, err := uc.getUpgradedNotReady(client, upgraded)
 			if err != nil {
 				return err
 			}
@@ -527,7 +531,7 @@ func (uc *UpgradeCluster) upgradedNotReadyStream(client kubernetes.Client, backo
 	return stream
 }
 
-func (uc *UpgradeCluster) getUpgradedNotReady(client kubernetes.Client) ([]string, error) {
+func (uc *UpgradeCluster) getUpgradedNotReady(client kubernetes.Client, upgraded []string) ([]string, error) {
 	cpNodes, err := client.ListNodesByOptions(metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/master"})
 	if err != nil {
 		return nil, err
@@ -537,10 +541,9 @@ func (uc *UpgradeCluster) getUpgradedNotReady(client kubernetes.Client) ([]strin
 		nodeStatusMap[n.Name] = kubernetes.IsNodeReady(&n)
 	}
 	upgradedNotReady := []string{}
-	for _, vm := range *uc.UpgradedMasterVMs {
-		n := vm.Name
-		if ready, found := nodeStatusMap[*n]; found && !ready {
-			upgradedNotReady = append(upgradedNotReady, *n)
+	for _, vm := range upgraded {
+		if ready, found := nodeStatusMap[vm]; found && !ready {
+			upgradedNotReady = append(upgradedNotReady, vm)
 		}
 	}
 	return upgradedNotReady, nil
