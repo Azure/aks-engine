@@ -170,6 +170,16 @@ func (uc *upgradeCmd) loadCluster() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	// Ensure there aren't known-breaking API model configurations
+	if uc.containerService.Properties.MasterProfile.AvailabilityProfile == api.VirtualMachineScaleSets {
+		return errors.Errorf("Clusters with a VMSS control plane are not upgradable using `aks-engine upgrade`!")
+	}
+	if uc.containerService.Properties.OrchestratorProfile != nil &&
+		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig != nil &&
+		to.Bool(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
+		return errors.Errorf("Clusters with enableEncryptionWithExternalKms=true are not upgradable using `aks-engine upgrade`!")
+	}
+
 	// Set 60 minutes cordonDrainTimeout for Azure Stack Cloud to give it enough time to move around resources during Node Drain,
 	// especially disk detach/attach operations. We still honor the user's input.
 	if uc.cordonDrainTimeout == nil && uc.containerService.Properties.IsAzureStackCloud() {
