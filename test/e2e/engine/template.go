@@ -156,7 +156,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity == nil {
+	if prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity == nil && !prop.IsAzureStackCloud() {
 		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(config.UseManagedIdentity)
 	}
 
