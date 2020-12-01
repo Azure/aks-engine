@@ -250,11 +250,11 @@ if ($global:NetworkPlugin -eq "kubenet") {
     catch {
         Write-Error $_
     }
-
-    # Start the kubelet
-    # Use run-process.cs to set process priority class as 'High'
-    Add-Type -Path .\run-process.cs
-    $exe = "$global:KubeDir\kubelet.exe"
-    $args = ($KubeletArgList -join " ")
-    [RunProcess.exec]::RunProcess($exe, $args)
 }
+
+# Start the kubelet
+# Use run-process.cs to set process priority class as 'High'
+Add-Type -Path .\run-process.cs
+$exe = "$global:KubeDir\kubelet.exe"
+$args = ($KubeletArgList -join " ")
+[RunProcess.exec]::RunProcess($exe, $args)
