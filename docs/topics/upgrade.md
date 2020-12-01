@@ -228,6 +228,6 @@ Error validating upgraded master VM: k8s-master-12345678-0
 Error: upgrading cluster: Node was not ready within 20m0s
 ```
 
-These errors are typically caused by bad or incompatible `properties.orchestratorProfile.kubernetesConfig` property values in your API model that prevent `kubelet` (or control plane components) from starting successfully.
+There are a variety of reasons why cluster nodes might not be able to come back online after an upgrade. Looking at the kubelet logs (`sudo journalctl -u kubelet`) may be a good first investigative step.
 
 Once you identify the problem and update your API model, you can recreate the `NotReady` node by (1) changing the `orchestrator` tag of the virtual machine so it does not match the target upgrade version, and (2) retrying `aks-engine upgrade`. Failing to update the `orchestrator` tag will result in `aks-engine upgrade` treating the `NotReady` node as already upgraded and consequently ignoring it to move on to the next node.

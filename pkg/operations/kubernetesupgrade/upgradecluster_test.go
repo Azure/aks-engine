@@ -9,21 +9,24 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	mock "github.com/Azure/aks-engine/pkg/kubernetes/mock_kubernetes"
 	. "github.com/Azure/aks-engine/pkg/test"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	logtest "github.com/sirupsen/logrus/hooks/test"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const TestAKSEngineVersion = "1.0.0"
@@ -1074,7 +1077,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 })
 
-func TestGetClusterNodeStatus(t *testing.T) {
+func TestCheckControlPlaneNodesStatus(t *testing.T) {
 	t.Parallel()
 	g := NewGomegaWithT(t)
 
@@ -1090,20 +1093,16 @@ func TestGetClusterNodeStatus(t *testing.T) {
 			Status: v1.ConditionFalse,
 		}
 	}
-
-	nodeFetcher := func(names ...string) func(metav1.ListOptions) (*v1.NodeList, error) {
-		return func(_ metav1.ListOptions) (*v1.NodeList, error) {
-			nodes := make([]v1.Node, 0)
-			for _, name := range names {
-				node := v1.Node{}
-				node.Name = name
-				node.Status.Conditions = []v1.NodeCondition{statusByName(name)}
-				nodes = append(nodes, node)
-			}
-			return &v1.NodeList{Items: nodes}, nil
+	nodeList := func(names ...string) *v1.NodeList {
+		nodes := make([]v1.Node, 0)
+		for _, name := range names {
+			node := v1.Node{}
+			node.Name = name
+			node.Status.Conditions = []v1.NodeCondition{statusByName(name)}
+			nodes = append(nodes, node)
 		}
+		return &v1.NodeList{Items: nodes}
 	}
-
 	upgradedVMs := func(names ...string) *[]compute.VirtualMachine {
 		vms := make([]compute.VirtualMachine, 0)
 		for _, name := range names {
@@ -1114,70 +1113,200 @@ func TestGetClusterNodeStatus(t *testing.T) {
 		}
 		return &vms
 	}
+	upgradedNotReadyStream := func(nodes []string) <-chan []string {
+		stream := make(chan []string)
+		go func() {
+			defer close(stream)
+			time.Sleep(1 * time.Second)
+			stream <- nodes
+		}()
+		return stream
+	}
+	errAPIGeneric := errors.New("error")
 
 	t.Run("cannot fetch node status", func(t *testing.T) {
-		names := []string{}
+		allnodes := []string{}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), errAPIGeneric).Times(1)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		uc.UpgradedMasterVMs = upgradedVMs()
-		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock)
+		g.Expect(res).To(BeNil())
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("timeout, use last value", func(t *testing.T) {
+		allnodes := []string{"nok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1"}
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+		defer cancel()
+		err := uc.checkControlPlaneNodesStatus(ctx, upgradedNotReadyStream(upgradedNodes), len(allnodes))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
 	t.Run("all nodes ready, no node upgraded", func(t *testing.T) {
-		names := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		allnodes := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		uc.UpgradedMasterVMs = upgradedVMs()
-		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock)
+		g.Expect(res).To(BeEmpty())
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
 	t.Run("upgraded nodes ready, not upgraded nodes not ready", func(t *testing.T) {
-		names := []string{"ok1", "ok2", "nok3", "nok4", "nok5"}
+		allnodes := []string{"ok1", "ok2", "nok3", "nok4", "nok5"}
+		upgradedNodes := []string{"ok1", "ok2"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		uc.UpgradedMasterVMs = upgradedVMs("ok1", "ok2")
-		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock)
+		g.Expect(res).To(BeEmpty())
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
 	t.Run("1 upgraded node not ready", func(t *testing.T) {
-		names := []string{"nok1", "ok2", "ok3", "ok4", "ok5"}
+		allnodes := []string{"nok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		uc.UpgradedMasterVMs = upgradedVMs("nok1")
-		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock)
+		g.Expect(res).To(Equal([]string{"nok1"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
 	t.Run("more than 1 upgraded node not ready, return error", func(t *testing.T) {
-		names := []string{"nok1", "nok2", "ok3", "ok4", "ok5"}
+		allnodes := []string{"nok1", "nok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1", "nok2"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		uc.UpgradedMasterVMs = upgradedVMs("nok1", "nok2")
-		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock)
+		g.Expect(res).To(Equal([]string{"nok1", "nok2"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
 		g.Expect(err).To(HaveOccurred())
 	})
 
 	t.Run("more than 1 alternated upgraded node not ready, return error", func(t *testing.T) {
-		names := []string{"nok1", "ok2", "nok3", "ok4", "ok5"}
+		allnodes := []string{"nok1", "ok2", "nok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1", "ok2", "nok3"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		uc.UpgradedMasterVMs = upgradedVMs("nok1", "ok2", "nok3")
-		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock)
+		g.Expect(res).To(Equal([]string{"nok1", "nok3"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
 		g.Expect(err).To(HaveOccurred())
 	})
 
 	t.Run("all upgraded nodes not ready", func(t *testing.T) {
-		names := []string{"nok1", "nok2", "nok3", "nok4", "nok5"}
+		allnodes := []string{"nok1", "nok2", "nok3", "nok4", "nok5"}
+		upgradedNodes := []string{"nok1", "nok2", "nok3", "nok4", "nok5"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		uc.UpgradedMasterVMs = upgradedVMs("nok1", "nok2", "nok3", "nok4", "nok5")
-		err := uc.getClusterNodeStatus(nodeFetcher(names...), len(names))
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock)
+		g.Expect(res).To(Equal([]string{"nok1", "nok2", "nok3", "nok4", "nok5"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
-	t.Run("cannot fetch node status", func(t *testing.T) {
+	t.Run("retry client.ListNodes after API error", func(t *testing.T) {
+		allnodes := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		gomock.InOrder(
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList([]string{}...), errAPIGeneric),
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+		)
+
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
-		err := uc.getClusterNodeStatus(func() func(metav1.ListOptions) (*v1.NodeList, error) {
-			return func(_ metav1.ListOptions) (*v1.NodeList, error) {
-				return &v1.NodeList{}, errors.New("error")
-			}
-		}(), len([]string{}))
-		g.Expect(err).NotTo(HaveOccurred())
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		for range uc.upgradedNotReadyStream(mock, wait.Backoff{Steps: 2, Duration: 500 * time.Millisecond}) {
+		}
+	})
+
+	t.Run("retry client.ListNodes until backoff", func(t *testing.T) {
+		allnodes := []string{"nok1", "nok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1", "nok2"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		gomock.InOrder(
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+		)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		for range uc.upgradedNotReadyStream(mock, wait.Backoff{Steps: 2, Duration: 500 * time.Millisecond}) {
+		}
+	})
+
+	t.Run("do not retry if no NotReady", func(t *testing.T) {
+		allnodes := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		gomock.InOrder(
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+		)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		for range uc.upgradedNotReadyStream(mock, wait.Backoff{Steps: 1, Duration: 500 * time.Millisecond}) {
+		}
 	})
 }

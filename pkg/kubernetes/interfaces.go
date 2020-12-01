@@ -22,7 +22,7 @@ type Client interface {
 	ListAllPods() (*v1.PodList, error)
 	// ListNodes returns a list of Nodes registered in the api server.
 	ListNodes() (*v1.NodeList, error)
-	// ListNodes returns a list of Nodes registered in the api server.
+	// ListNodesByOptions returns a list of Nodes registered in the api server.
 	ListNodesByOptions(opts metav1.ListOptions) (*v1.NodeList, error)
 	// ListServiceAccounts returns a list of Service Accounts in a namespace
 	ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error)
