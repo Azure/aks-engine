@@ -25,7 +25,7 @@ func TestCreateVmasRoleAssignment(t *testing.T) {
 				"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
 			},
 			Copy: map[string]string{
-				"count": "[variables('masterCount')]",
+				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 				"name":  "vmLoopNode",
 			},
 		},
