@@ -4,7 +4,6 @@
 # - BUILD_POOL - Azure DevOps build pool to use
 # - CLIENT_ID - Service principal ID
 # - CLIENT_SECRET - Service principal secret
-# - CONTAINER_RUNTIME - Container runtime to in for VHD - Valid values are 'containerd' or 'docker'
 # - COPY_VHD - Set to 'True' if VHD should be copied to classic storage account in preparation for publishing
 # - DEIS_GO_DEV_IMAGE - Dev container image ID
 # - PACKER_VM_SIZE - VM Size to be used during packer build operation
@@ -16,121 +15,20 @@
 trigger: none
 pr: none
 
-jobs:
-- job: build_vhd_windows
-  timeoutInMinutes: 150
-  strategy:
-    maxParallel: 0
-  pool:
-    name: $(BUILD_POOL)
-  steps:
-  - script: |
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      -e CLIENT_ID=${CLIENT_ID} \
-      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-      -e TENANT_ID=${TENANT_ID} \
-      -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
-      -e AZURE_LOCATION=${AZURE_LOCATION} \
-      -e AZURE_VM_SIZE=${PACKER_VM_SIZE} \
-      -e GIT_BRANCH=$(Build.SourceBranchName) \
-      -e GIT_REPO=$(Build.Repository.Uri) \
-      -e GIT_VERSION=$(Build.SourceVersion) \
-      -e BUILD_ID=$(Build.BuildId) \
-      -e BUILD_NUMBER=$(Build.BuildNumber) \
-      -e CONTAINER_RUNTIME=$(CONTAINER_RUNTIME) \
-      -e WINDOWS_SERVER_VERSION=2019 \
-      ${DEIS_GO_DEV_IMAGE} make run-packer-windows
-    displayName: Building windows VHD
+stages:
+  - stage: build-2019-containerd
+    dependsOn: []
+    jobs:
+    - template: vhd-builder-windows-template.yaml
+      parameters:
+        containerRuntime: containerd
+        windowsServerVersion: 2019
 
-  - script: |
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      ${DEIS_GO_DEV_IMAGE} make all
-    displayName: build aks-engine-test - make all
-    condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
+  - stage: build-2019-docker
+    dependsOn: []
+    jobs:
+    - template: vhd-builder-windows-template.yaml
+      parameters:
+        containerRuntime: docker
+        windowsServerVersion: 2019
 
-  - script: |
-      OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
-      IMAGE_NAME="$(echo $OS_DISK_URI | cut -d "/" -f 3 | cut -d "." -f 1)" && \
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      -e CLEANUP_ON_EXIT="true" \
-      -e CLIENT_ID=${CLIENT_ID} \
-      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-      -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
-      -e LOCATION=${AZURE_LOCATION} \
-      -e ORCHESTRATOR_RELEASE="1.17" \
-      -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
-      -e TENANT_ID=${TENANT_ID} \
-      -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
-      -e USE_MANAGED_IDENTITY="false" \
-      ${DEIS_GO_DEV_IMAGE} make test-kubernetes
-    displayName: run e2e tests
-    condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      artifact: 'vhd-release-notes'
-      path: 'release-notes.txt'
-
-  - script: |
-      OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
-      VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      -e CLIENT_ID=${CLIENT_ID} \
-      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-      -e TENANT_ID=${TENANT_ID} \
-      -e CLASSIC_BLOB=${STORAGE_ACCT_BLOB_URL} \
-      -e CLASSIC_SAS_TOKEN="$(STORAGE_ACCT_SAS_TOKEN)" \
-      -e OS_DISK_SAS=${OS_DISK_SAS} \
-      -e VHD_NAME=${VHD_NAME} \
-      ${DEIS_GO_DEV_IMAGE} make az-copy
-    displayName: Copying resource to Classic Storage Account
-    condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
-
-  - script: |
-      OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
-      VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      -e CLIENT_ID=${CLIENT_ID} \
-      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-      -e TENANT_ID=${TENANT_ID} \
-      -e CLASSIC_SA_CONNECTION_STRING="$(CLASSIC_SA_CONNECTION_STRING)" \
-      -e STORAGE_ACCT_BLOB_URL=${STORAGE_ACCT_BLOB_URL} \
-      -e VHD_NAME=${VHD_NAME} \
-      ${DEIS_GO_DEV_IMAGE} make windows-vhd-publishing-info
-    displayName: Generating publishing info for Windows VHD
-    condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      artifact: 'publishing-info'
-      path: 'windows-vhd-publishing-info.json'
-    condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
-
-  - script: |
-      SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      -e CLIENT_ID=${CLIENT_ID} \
-      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-      -e TENANT_ID=${TENANT_ID} \
-      -e SA_NAME=${SA_NAME} \
-      -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
-      ${DEIS_GO_DEV_IMAGE} make delete-sa
-    displayName: cleanup - delete temp storage account
-    condition: always()
-
-  - script: |
-      sudo chown -R $USER:$USER .
-    displayName: cleanup - chown all files in work directory
-    condition: always()

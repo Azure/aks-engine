@@ -1,0 +1,44 @@
+parameters:
+  containerRuntime: ''
+  skuPrefix: ''
+  windowsServerVersion: ''
+
+jobs:
+- job: add_image_to_sku_${{ parameters.windowsServerVersion }}_${{ parameters.containerRuntime }}
+  pool:
+    name: $(BUILD_POOL)
+  steps:
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifact: 'publishing_info_${{ parameters.windowsServerVersion }}_${{ parameters.containerRuntime }}'
+      path: 'artifacts/vhd'
+  - script: |
+      tree artifacts
+    displayName: tree
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make bootstrap
+    displayName: Update tools
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e AZURE_TENANT_ID=${PUB_SP_TENANT_ID} \
+      -e AZURE_CLIENT_ID=${PUB_SP_CLIENT_ID} \
+      -e AZURE_CLIENT_SECRET="$(PUB_SP_CLIENT_SECRET)" \
+      -e SKU_PREFIX=${{ parameters.skuPrefix }} \
+      -e SKU_TEMPLATE_FILE=${SKU_TEMPLATE_FILE} \
+      -e PUBLISHER=${PUBLISHER} \
+      -e OFFER=${OFFER} \
+      -e CONTAINER_RUNTIME=${{ parameters.containerRuntime }} \
+      ${DEIS_GO_DEV_IMAGE} ./vhd/publishing/new-sku-and-add-image-version.sh
+    displayName: Publish vhd
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make tools-clean
+    displayName: cleanup - clean hack/tools/bin
+    condition: always()
