@@ -339,24 +339,40 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				if addon.Config == nil {
 					addon.Config = make(map[string]string)
 				}
-				if config.ArcTenantID != "" {
-					addon.Config["tenantID"] = config.ArcTenantID
-				} else if config.TenantID != "" && addon.Config["tenantID"] == "" {
-					addon.Config["tenantID"] = config.TenantID
+				if addon.Config["tenantID"] == "" {
+					if config.ArcTenantID != "" {
+						addon.Config["tenantID"] = config.ArcTenantID
+					} else {
+						addon.Config["tenantID"] = config.TenantID
+					}
 				}
-				if config.ArcSubscriptionID != "" {
-					addon.Config["subscriptionID"] = config.ArcSubscriptionID
+				if addon.Config["subscriptionID"] == "" {
+					if config.ArcSubscriptionID != "" {
+						addon.Config["subscriptionID"] = config.ArcSubscriptionID
+					} else {
+						addon.Config["subscriptionID"] = config.SubscriptionID
+					}
 				}
-				if config.ArcClientID != "" {
-					addon.Config["clientID"] = config.ArcClientID
+				if addon.Config["clientID"] == "" {
+					if config.ArcClientID != "" {
+						addon.Config["clientID"] = config.ArcClientID
+					} else {
+						addon.Config["clientID"] = config.ClientID
+					}
 				}
-				if config.ArcClientSecret != "" {
-					addon.Config["clientSecret"] = config.ArcClientSecret
+				if addon.Config["clientSecret"] == "" {
+					if config.ArcClientSecret != "" {
+						addon.Config["clientSecret"] = config.ArcClientSecret
+					} else {
+						addon.Config["clientSecret"] = config.ClientSecret
+					}
 				}
-				if config.ArcLocation != "" {
-					addon.Config["location"] = config.ArcLocation
-				} else if config.Location != "" && addon.Config["location"] == "" {
-					addon.Config["location"] = config.Location
+				if addon.Config["location"] == "" {
+					if config.ArcLocation != "" {
+						addon.Config["location"] = config.ArcLocation
+					} else {
+						addon.Config["location"] = "eastus"
+					}
 				}
 				addon.Config["clusterName"] = cfg.Name
 				addon.Config["resourceGroup"] = fmt.Sprintf("%s-arc", cfg.Name) // set to config.Name once Arc is supported in all regions
