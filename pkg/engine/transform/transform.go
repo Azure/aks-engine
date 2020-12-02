@@ -37,16 +37,17 @@ const (
 	proximityPlacementGroupFieldName  = "proximityPlacementGroup"
 
 	// ARM resource Types
-	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
-	rtResourceType   = "Microsoft.Network/routeTables"
-	vmResourceType   = "Microsoft.Compute/virtualMachines"
-	vmExtensionType  = "Microsoft.Compute/virtualMachines/extensions"
-	nicResourceType  = "Microsoft.Network/networkInterfaces"
-	vnetResourceType = "Microsoft.Network/virtualNetworks"
-	vmasResourceType = "Microsoft.Compute/availabilitySets"
-	vmssResourceType = "Microsoft.Compute/virtualMachineScaleSets"
-	lbResourceType   = "Microsoft.Network/loadBalancers"
-	roleResourceType = "Microsoft.Authorization/roleAssignments"
+	nsgResourceType      = "Microsoft.Network/networkSecurityGroups"
+	rtResourceType       = "Microsoft.Network/routeTables"
+	vmResourceType       = "Microsoft.Compute/virtualMachines"
+	vmExtensionType      = "Microsoft.Compute/virtualMachines/extensions"
+	nicResourceType      = "Microsoft.Network/networkInterfaces"
+	vnetResourceType     = "Microsoft.Network/virtualNetworks"
+	vmasResourceType     = "Microsoft.Compute/availabilitySets"
+	vmssResourceType     = "Microsoft.Compute/virtualMachineScaleSets"
+	lbResourceType       = "Microsoft.Network/loadBalancers"
+	roleResourceType     = "Microsoft.Authorization/roleAssignments"
+	keyVaultResourceType = "Microsoft.KeyVault/vaults"
 
 	// resource ids
 	nsgID     = "nsgID"
@@ -167,6 +168,28 @@ func (t *Transformer) RemoveJumpboxResourcesFromTemplate(logger *logrus.Entry, t
 	return nil
 }
 
+func (t *Transformer) RemoveKMSResourcesFromTemplate(logger *logrus.Entry, templateMap map[string]interface{}) error {
+	logger.Debugf("Running RemoveKMSResourcesFromTemplate...")
+	resources := templateMap[resourcesFieldName].([]interface{})
+	indexesToRemove := []int{}
+	for index, resource := range resources {
+		resourceMap, ok := resource.(map[string]interface{})
+		if !ok {
+			return errors.Errorf("Template improperly formatted for resource")
+		}
+
+		resourceName, ok := resourceMap[nameFieldName].(string)
+		if !ok {
+			logger.Warnf("Resource does not have a name property")
+			continue
+		} else if strings.Contains(resourceName, "variables('clusterKeyVaultName") {
+			indexesToRemove = append(indexesToRemove, index)
+		}
+	}
+	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+	return nil
+}
+
 // NormalizeForK8sSLBScalingOrUpgrade takes a template and removes elements that are unwanted in a K8s Standard LB cluster scale up/down case
 func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
 	logger.Debugf("Running NormalizeForK8sSLBScalingOrUpgrade...")
@@ -187,15 +210,24 @@ func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, t
 		if ok && resourceType == lbResourceType && strings.Contains(resourceName, "variables('agentLbName')") {
 			lbIndex = index
 		}
-		// remove agentLB from dependsOn if found
+
 		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
 		if !ok {
 			continue
 		}
 
+		// remove agentLB from dependsOn if found
 		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
 			dependency := dependencies[dIndex].(string)
 			if strings.Contains(dependency, lbResourceType) || strings.Contains(dependency, agentLbID) {
+				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
+			}
+		}
+
+		// remove KeyVault from dependsOn if found
+		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+			dependency := dependencies[dIndex].(string)
+			if strings.Contains(dependency, keyVaultResourceType) {
 				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
 			}
 		}
