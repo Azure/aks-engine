@@ -143,6 +143,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	}
 
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
+	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.20.0-rc.0", "ExecProbeTimeout=false")
 
 	// Override default cloud-provider?
 	if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
