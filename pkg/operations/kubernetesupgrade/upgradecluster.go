@@ -112,8 +112,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 		ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 		defer cancel()
 		notReadyStream := uc.upgradedNotReadyStream(kubeClient, wait.Backoff{Steps: 15, Duration: 10 * time.Second})
-		mastersCount := uc.DataModel.Properties.MasterProfile.Count
-		if err := uc.checkControlPlaneNodesStatus(ctx, notReadyStream, mastersCount); err != nil {
+		if err := uc.checkControlPlaneNodesStatus(ctx, notReadyStream); err != nil {
 			uc.Logger.Error("Aborting the upgrade process to avoid potential control plane downtime")
 			return errors.Wrap(err, "checking status of upgraded control plane nodes")
 		}
@@ -477,7 +476,7 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 //
 // It returns an error if more than 1 of the already-upgraded control plane nodes are in the NotReady state.
 // To recreate the node, users have to manually update the "orchestrator" tag on the VM.
-func (uc *UpgradeCluster) checkControlPlaneNodesStatus(ctx context.Context, upgradedNotReadyStream <-chan []string, mastersCount int) error {
+func (uc *UpgradeCluster) checkControlPlaneNodesStatus(ctx context.Context, upgradedNotReadyStream <-chan []string) error {
 	if len(*uc.UpgradedMasterVMs) == 0 {
 		return nil
 	}

@@ -1140,7 +1140,6 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 	})
 
 	t.Run("timeout, use last value", func(t *testing.T) {
-		allnodes := []string{"nok1", "ok2", "ok3", "ok4", "ok5"}
 		upgradedNodes := []string{"nok1"}
 
 		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
@@ -1148,7 +1147,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 		defer cancel()
-		err := uc.checkControlPlaneNodesStatus(ctx, upgradedNotReadyStream(upgradedNodes), len(allnodes))
+		err := uc.checkControlPlaneNodesStatus(ctx, upgradedNotReadyStream(upgradedNodes))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -1166,7 +1165,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 		g.Expect(res).To(BeEmpty())
 		g.Expect(err).NotTo(HaveOccurred())
 
-		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -1184,7 +1183,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 		g.Expect(res).To(BeEmpty())
 		g.Expect(err).NotTo(HaveOccurred())
 
-		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -1202,7 +1201,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 		g.Expect(res).To(Equal([]string{"nok1"}))
 		g.Expect(err).NotTo(HaveOccurred())
 
-		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
 		g.Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -1220,7 +1219,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 		g.Expect(res).To(Equal([]string{"nok1", "nok2"}))
 		g.Expect(err).NotTo(HaveOccurred())
 
-		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
 		g.Expect(err).To(HaveOccurred())
 	})
 
@@ -1238,7 +1237,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 		g.Expect(res).To(Equal([]string{"nok1", "nok3"}))
 		g.Expect(err).NotTo(HaveOccurred())
 
-		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
 		g.Expect(err).To(HaveOccurred())
 	})
 
@@ -1256,7 +1255,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 		g.Expect(res).To(Equal([]string{"nok1", "nok2", "nok3", "nok4", "nok5"}))
 		g.Expect(err).NotTo(HaveOccurred())
 
-		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
 		g.Expect(err).To(HaveOccurred())
 	})
 
