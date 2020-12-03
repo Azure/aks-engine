@@ -7,8 +7,7 @@
 		"LB_TEST_TIMEOUT": "10m",
 		"CLUSTER_INIT_POD_NAME": "aks-engine-pod-init",
 		"CLUSTER_INIT_JOB_NAME": "aks-engine-job-init",
-		"STABILITY_ITERATIONS": "0",
-		"ARC_LOCATION": "eastus"
+		"STABILITY_ITERATIONS": "0"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -67,7 +66,10 @@
 						},
 						{
 							"name": "azure-arc-onboarding",
-							"enabled": true
+							"enabled": true,
+							"config": {
+								"location": "eastus"
+							}
 						}
 					],
 					"components": [
