@@ -1257,7 +1257,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 		g.Expect(err).NotTo(HaveOccurred())
 
 		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res), len(allnodes))
-		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(err).To(HaveOccurred())
 	})
 
 	t.Run("retry client.ListNodes after API error", func(t *testing.T) {

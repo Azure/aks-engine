@@ -476,7 +476,6 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 // by looking at the status of previously upgraded control plane nodes.
 //
 // It returns an error if more than 1 of the already-upgraded control plane nodes are in the NotReady state.
-// It returns nil if all control plane nodes are NotReady.
 // To recreate the node, users have to manually update the "orchestrator" tag on the VM.
 func (uc *UpgradeCluster) checkControlPlaneNodesStatus(ctx context.Context, upgradedNotReadyStream <-chan []string, mastersCount int) error {
 	if len(*uc.UpgradedMasterVMs) == 0 {
@@ -497,8 +496,7 @@ loop:
 		}
 	}
 	// return error if more than 1 upgraded node is not ready
-	// do not bother if upgradedNotReadyCount == mastersCount, at that point upgrade cannot take down more nodes
-	if upgradedNotReadyCount > 1 && upgradedNotReadyCount < mastersCount {
+	if upgradedNotReadyCount > 1 {
 		uc.Logger.Error("At least 2 of the previusly upgraded control plane nodes did not reach the NodeReady status")
 		return errors.New("too many upgraded nodes are not ready")
 	}
