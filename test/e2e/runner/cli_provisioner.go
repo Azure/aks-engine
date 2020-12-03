@@ -456,7 +456,9 @@ func (cli *CLIProvisioner) FetchActivityLog(acct *azure.Account, logPath string)
 // https://docs.microsoft.com/en-us/azure/azure-arc/kubernetes/overview#supported-regions
 func (cli *CLIProvisioner) EnsureArcResourceGroup() error {
 	for _, addon := range cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.Addons {
-		if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) {
+		if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) &&
+			addon.Config["resourceGroup"] != "" &&
+			addon.Config["location"] != "" {
 			if err := cli.Account.CreateGroupWithRetry(addon.Config["resourceGroup"], addon.Config["location"], 30*time.Second, cli.Config.Timeout); err != nil {
 				return errors.Wrapf(err, "Error while trying to create Azure Arc resource group: %s", addon.Config["resourceGroup"])
 			}
