@@ -4428,8 +4428,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"metricsPort":      "8095",
-						"enableRotation":   "false",
-						"rotationInterval": "2m",
+						"enableSecretRotation":   "false",
+						"rotationPollInterval": "2m",
 					},
 				},
 			}, "1.15.4"),
@@ -5205,8 +5205,8 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 			Enabled: to.BoolPtr(true),
 			Config: map[string]string{
 				"metricsPort":      "8095",
-				"enableRotation":   "false",
-				"rotationInterval": "2m",
+				"enableSecretRotation":   "false",
+				"rotationPollInterval": "2m",
 			},
 			Containers: []KubernetesContainerSpec{
 				{
