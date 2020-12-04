@@ -337,6 +337,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azurefile-node-windows
@@ -484,6 +488,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azurefile-node

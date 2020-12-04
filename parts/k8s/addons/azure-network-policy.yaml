@@ -63,6 +63,8 @@ spec:
       k8s-app: azure-npm
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
       labels:

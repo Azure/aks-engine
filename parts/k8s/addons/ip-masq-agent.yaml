@@ -9,6 +9,10 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       k8s-app: azure-ip-masq-agent
