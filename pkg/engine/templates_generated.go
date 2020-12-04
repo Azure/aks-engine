@@ -10630,6 +10630,21 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - secrets-store.csi.x-k8s.io
   resources:
   - secretproviderclasses
@@ -10729,18 +10744,13 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: SecretProviderClass is the Schema for the secretproviderclasses
-          API
+        description: SecretProviderClass is the Schema for the secretproviderclasses API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -10757,13 +10767,11 @@ spec:
                 type: string
               secretObjects:
                 items:
-                  description: SecretObject defines the desired state of synced K8s
-                    secret objects
+                  description: SecretObject defines the desired state of synced K8s secret objects
                   properties:
                     data:
                       items:
-                        description: SecretObjectData defines the desired state of
-                          synced K8s secret object data
+                        description: SecretObjectData defines the desired state of synced K8s secret object data
                         properties:
                           key:
                             description: data field to populate
@@ -10792,8 +10800,7 @@ spec:
             properties:
               byPod:
                 items:
-                  description: ByPodStatus defines the state of SecretProviderClass
-                    as seen by an individual controller
+                  description: ByPodStatus defines the state of SecretProviderClass as seen by an individual controller
                   properties:
                     id:
                       description: id of the pod that wrote the status
@@ -10835,31 +10842,24 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: SecretProviderClassPodStatus is the Schema for the secretproviderclassespodstatus
-          API
+        description: SecretProviderClassPodStatus is the Schema for the secretproviderclassespodstatus API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
           status:
-            description: SecretProviderClassPodStatusStatus defines the observed state
-              of SecretProviderClassPodStatus
+            description: SecretProviderClassPodStatusStatus defines the observed state of SecretProviderClassPodStatus
             properties:
               mounted:
                 type: boolean
               objects:
                 items:
-                  description: SecretProviderClassObject defines the object fetched
-                    from external secrets store
+                  description: SecretProviderClassObject defines the object fetched from external secrets store
                   properties:
                     id:
                       type: string
@@ -10868,8 +10868,6 @@ spec:
                   type: object
                 type: array
               podName:
-                type: string
-              podUID:
                 type: string
               secretProviderClassName:
                 type: string
@@ -10926,15 +10924,6 @@ spec:
             - --v=5
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-secrets-store/csi.sock
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  [
-                    "/bin/sh",
-                    "-c",
-                    "rm -rf /registration/secrets-store.csi.k8s.io-reg.sock",
-                  ]
           env:
             - name: KUBE_NODE_NAME
               valueFrom:
@@ -10957,12 +10946,13 @@ spec:
         - name: secrets-store
           image: {{ContainerImage "secrets-store"}}
           args:
-            - "--debug=true"
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(KUBE_NODE_NAME)"
             - "--provider-volume=/etc/kubernetes/secrets-store-csi-providers"
             - "--grpc-supported-providers=azure"
             - "--metrics-addr=:{{ContainerConfig "metricsPort"}}"
+            - "--enable-secret-rotation={{ContainerConfig "enableSecretRotation"}}"
+            - "--rotation-poll-interval={{ContainerConfig "rotationPollInterval"}}"
           env:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
@@ -11096,9 +11086,7 @@ spec:
               name: providervol
             - name: mountpoint-dir
               mountPath: /var/lib/kubelet/pods
-              mountPropagation: Bidirectional
-          securityContext:
-            privileged: true
+              mountPropagation: HostToContainer
           resources:
             limits:
               cpu: {{ContainerCPULimits "provider-azure-installer"}}
