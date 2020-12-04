@@ -4427,8 +4427,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.SecretsStoreCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"metricsPort":      "8095",
-						"enableSecretRotation":   "false",
+						"metricsPort":          "8095",
+						"enableSecretRotation": "false",
 						"rotationPollInterval": "2m",
 					},
 				},
@@ -5204,8 +5204,8 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 			Name:    common.SecretsStoreCSIDriverAddonName,
 			Enabled: to.BoolPtr(true),
 			Config: map[string]string{
-				"metricsPort":      "8095",
-				"enableSecretRotation":   "false",
+				"metricsPort":          "8095",
+				"enableSecretRotation": "false",
 				"rotationPollInterval": "2m",
 			},
 			Containers: []KubernetesContainerSpec{

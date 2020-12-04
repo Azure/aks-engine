@@ -843,8 +843,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultSecretsStoreCSIDriverAddonsConfig := KubernetesAddon{
 		Name: common.SecretsStoreCSIDriverAddonName,
 		Config: map[string]string{
-			"metricsPort":      "8095",
-			"enableSecretRotation":   "false",
+			"metricsPort":          "8095",
+			"enableSecretRotation": "false",
 			"rotationPollInterval": "2m",
 		},
 		Enabled: to.BoolPtr(!o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) && DefaultSecretStoreCSIDriverAddonEnabled &&

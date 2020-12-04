@@ -90,7 +90,6 @@
 // ../../parts/k8s/manifests/kubernetesmaster-kube-apiserver.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-scheduler.yaml
-// ../../parts/k8s/rotate-certs.sh
 // ../../parts/k8s/windowsazurecnifunc.ps1
 // ../../parts/k8s/windowsazurecnifunc.tests.ps1
 // ../../parts/k8s/windowscnifunc.ps1
@@ -17541,161 +17540,6 @@ func k8sManifestsKubernetesmasterKubeSchedulerYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sRotateCertsSh = []byte(`#!/bin/bash -ex
-
-export WD=/tmp/akse
-export NEW_CERTS_DIR=${WD}/certs
-export STEPS_DIR=${WD}/steps
-export SKIP_EXIT_CODE=25
-
-mkdir -p ${STEPS_DIR}
-
-# copied from cse_helpers.sh, sourcing that file not always works
-systemctl_restart() {
-  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
-  for i in $(seq 1 $retries); do
-    timeout $timeout systemctl daemon-reload
-    timeout $timeout systemctl restart $svcname && break ||
-      if [ $i -eq $retries ]; then
-        return 1
-      else
-        sleep $wait_sleep
-      fi
-  done
-}
-
-backup() {
-  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
-
-  cp -rp /etc/kubernetes/certs/ /etc/kubernetes/certs.bak
-
-  if [[ -f /etc/default/etcd ]]; then
-    cp -p /etc/environment ${WD}
-    cp -p /etc/default/etcd ${WD}
-    cp -p /etc/kubernetes/manifests/kube-apiserver.yaml ${WD}
-    cp -p /etc/kubernetes/manifests/kube-controller-manager.yaml ${WD}
-    cat /etc/kubernetes/certs/ca.crt ${NEW_CERTS_DIR}/ca.crt > ${NEW_CERTS_DIR}/cabundle.crt
-    chmod 644 ${NEW_CERTS_DIR}/cabundle.crt
-  fi
-  
-  touch ${STEPS_DIR}/${FUNCNAME[0]}
-}
-
-etcd_cabundle() {
-  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
-
-  cp -p ${NEW_CERTS_DIR}/cabundle.crt /etc/kubernetes/certs/
-  sed -i 's|"--etcd-cafile=/etc/kubernetes/certs/ca.crt"|"--etcd-cafile=/etc/kubernetes/certs/cabundle.crt"|g' /etc/kubernetes/manifests/kube-apiserver.yaml
-  sed -i 's|/etc/kubernetes/certs/ca.crt|/etc/kubernetes/certs/cabundle.crt|g' /etc/default/etcd
-  systemctl_restart 10 5 10 etcd
-
-  touch ${STEPS_DIR}/${FUNCNAME[0]}
-}
-
-etcd_certs() {
-  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
-
-  cp -p ${NEW_CERTS_DIR}/etcdpeer* /etc/kubernetes/certs/
-  cp -p ${NEW_CERTS_DIR}/etcdclient* /etc/kubernetes/certs/
-  cp -p ${NEW_CERTS_DIR}/etcdserver* /etc/kubernetes/certs/
-  systemctl_restart 10 5 10 etcd
-
-  touch ${STEPS_DIR}/${FUNCNAME[0]}
-}
-
-etcd_ca() {
-  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
-
-  cp -p ${NEW_CERTS_DIR}/ca.crt /etc/kubernetes/certs/etcdca.crt
-
-  sed -i 's|"--etcd-cafile=/etc/kubernetes/certs/cabundle.crt"|"--etcd-cafile=/etc/kubernetes/certs/etcdca.crt"|g' /etc/kubernetes/manifests/kube-apiserver.yaml
-  sed -i 's|/etc/kubernetes/certs/cabundle.crt|/etc/kubernetes/certs/etcdca.crt|g' /etc/default/etcd
-  systemctl_restart 10 5 10 etcd
-
-  sed -i 's|ETCDCTL_CA_FILE=/etc/kubernetes/certs/ca.crt|ETCDCTL_CA_FILE=/etc/kubernetes/certs/etcdca.crt|g' /etc/environment
-  source /etc/environment
-  /etc/kubernetes/generate-proxy-certs.sh
-
-  touch ${STEPS_DIR}/${FUNCNAME[0]}
-}
-
-sa_token_signer() {
-  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
-
-  cp -p ${NEW_CERTS_DIR}/cabundle.crt /etc/kubernetes/certs/
-  cp -p ${NEW_CERTS_DIR}/apiserver.key /etc/kubernetes/certs/sa.key
-
-  sed -i 's|"--service-account-key-file=/etc/kubernetes/certs/apiserver.key"|"--service-account-key-file=/etc/kubernetes/certs/sa.key"|g' /etc/kubernetes/manifests/kube-apiserver.yaml
-  sed -i 's|"--root-ca-file=/etc/kubernetes/certs/ca.crt"|"--root-ca-file=/etc/kubernetes/certs/cabundle.crt"|g' /etc/kubernetes/manifests/kube-controller-manager.yaml
-  sed -i 's|"--service-account-private-key-file=/etc/kubernetes/certs/apiserver.key"|"--service-account-private-key-file=/etc/kubernetes/certs/sa.key"|g' /etc/kubernetes/manifests/kube-controller-manager.yaml
-
-  touch ${STEPS_DIR}/${FUNCNAME[0]}
-}
-
-apiserver_kubelet() {
-  [ -f ${STEPS_DIR}/${FUNCNAME[0]} ] && exit ${SKIP_EXIT_CODE}
-
-  cp -p ${NEW_CERTS_DIR}/ca.* /etc/kubernetes/certs/
-  cp -p ${NEW_CERTS_DIR}/client.* /etc/kubernetes/certs/
-
-  if [[ -f /etc/default/etcd ]]; then
-      cp -p ${NEW_CERTS_DIR}/kubeconfig ~/.kube/config
-      cp -p ${NEW_CERTS_DIR}/apiserver.* /etc/kubernetes/certs/
-      cp -p ${WD}/kube-apiserver.yaml /etc/kubernetes/manifests/kube-apiserver.yaml
-      cp -p ${WD}/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml
-  fi
-
-  rm -f /var/lib/kubelet/pki/kubelet-client-current.pem
-  systemctl_restart 10 5 10 kubelet
-
-  if [[ -f /etc/default/etcd ]]; then
-      cp -p ${WD}/etcd /etc/default/etcd
-      cp -p ${WD}/environment /etc/environment
-      systemctl_restart 10 5 10 etcd
-  fi
-
-  touch ${STEPS_DIR}/${FUNCNAME[0]}
-}
-
-cleanup() {
-  rm -rf ${WD}
-  rm -f /etc/kubernetes/certs/sa.*
-  rm -f /etc/kubernetes/certs/etcdca.*
-  rm -f /etc/kubernetes/certs/cabundle.*
-  rm -rf /etc/kubernetes/certs.bak
-}
-
-restart_mirror_pod_docker() {
-  systemctl_restart 10 5 10 kubelet
-  sudo docker stop $1
-  sudo docker rm $1
-}
-
-restart_mirror_pod_containerd() {
-  systemctl_restart 10 5 10 kubelet
-  sudo ctr -n k8s.io t kill -s SIGKILL $1
-  sleep 5
-  sudo ctr -n k8s.io c delete $1
-}
-
-"$@"
-`)
-
-func k8sRotateCertsShBytes() ([]byte, error) {
-	return _k8sRotateCertsSh, nil
-}
-
-func k8sRotateCertsSh() (*asset, error) {
-	bytes, err := k8sRotateCertsShBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/rotate-certs.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sWindowsazurecnifuncPs1 = []byte(`
 
 # TODO: remove - dead code?
@@ -19642,7 +19486,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                 k8sManifestsKubernetesmasterKubeApiserverYaml,
 	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":        k8sManifestsKubernetesmasterKubeControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                 k8sManifestsKubernetesmasterKubeSchedulerYaml,
-	"k8s/rotate-certs.sh":                                                k8sRotateCertsSh,
 	"k8s/windowsazurecnifunc.ps1":                                        k8sWindowsazurecnifuncPs1,
 	"k8s/windowsazurecnifunc.tests.ps1":                                  k8sWindowsazurecnifuncTestsPs1,
 	"k8s/windowscnifunc.ps1":                                             k8sWindowscnifuncPs1,
@@ -19797,7 +19640,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmaster-kube-controller-manager.yaml":  {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-scheduler.yaml":           {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
 		}},
-		"rotate-certs.sh":                 {k8sRotateCertsSh, map[string]*bintree{}},
 		"windowsazurecnifunc.ps1":         {k8sWindowsazurecnifuncPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.tests.ps1":   {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":              {k8sWindowscnifuncPs1, map[string]*bintree{}},
