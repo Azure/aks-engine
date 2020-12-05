@@ -575,6 +575,8 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       component: nmi
@@ -1638,6 +1640,8 @@ spec:
         name: xtables-lock
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
 `)
 
 func k8sAddonsAntreaYamlBytes() ([]byte, error) {
@@ -2139,6 +2143,8 @@ spec:
       k8s-app: azure-cnms
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
@@ -2284,6 +2290,8 @@ spec:
       k8s-app: azure-npm
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
@@ -3369,6 +3377,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azuredisk-node-windows
@@ -3526,6 +3538,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azuredisk-node
@@ -4785,6 +4801,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azurefile-node-windows
@@ -4932,6 +4952,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azurefile-node
@@ -5285,6 +5309,10 @@ metadata:
     k8s-app: blobfuse
     kubernetes.io/cluster-service: "true"
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       name: blobfuse
@@ -5789,7 +5817,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
@@ -6482,7 +6510,7 @@ spec:
           secretName: cilium-clustermesh
   updateStrategy:
     rollingUpdate:
-      maxUnavailable: 2
+      maxUnavailable: 50%
     type: RollingUpdate
 ---
 apiVersion: apps/v1
@@ -7054,6 +7082,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       k8s-app: cloud-node-manager
@@ -7111,6 +7143,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       k8s-app: cloud-node-manager-windows
@@ -7944,6 +7980,8 @@ spec:
             optional: true
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -8095,6 +8133,8 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       component: oms-agent-win
@@ -8675,6 +8715,10 @@ metadata:
     app: flannel
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       tier: node
@@ -8815,6 +8859,10 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       k8s-app: azure-ip-masq-agent
@@ -8919,6 +8967,8 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: keyvault-flexvolume
@@ -9926,6 +9976,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       k8s-app: node-problem-detector
@@ -10039,6 +10093,8 @@ spec:
       k8s-app: nvidia-device-plugin
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
 {{- if IsKubernetesVersionGe "1.17.0"}}
@@ -10548,6 +10604,10 @@ metadata:
   name: drainsafe-controller-scheduledevent-manager
   namespace: drainsafe-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       control-plane: controller-manager
@@ -10906,6 +10966,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-secrets-store
@@ -11059,6 +11123,8 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-secrets-store-provider-azure
@@ -11129,6 +11195,10 @@ metadata:
     k8s-app: smb
     kubernetes.io/cluster-service: "true"
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       name: smb

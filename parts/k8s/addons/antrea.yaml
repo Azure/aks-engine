@@ -718,3 +718,5 @@ spec:
         name: xtables-lock
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
