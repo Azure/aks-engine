@@ -290,6 +290,10 @@ metadata:
   name: drainsafe-controller-scheduledevent-manager
   namespace: drainsafe-system
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       control-plane: controller-manager

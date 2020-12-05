@@ -472,6 +472,8 @@ spec:
             optional: true
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -623,6 +625,8 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       component: oms-agent-win

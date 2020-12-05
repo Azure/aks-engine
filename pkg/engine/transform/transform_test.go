@@ -110,6 +110,28 @@ func TestNormalizeResourcesForK8sMasterOnlyUpgrade(t *testing.T) {
 	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeResourcesForK8sMasterOnlyUpgrade")
 }
 
+func TestRemoveKMSResourcesFromTemplate(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "TestNormalizeResourcesForK8sMasterOnlyUpgrade")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template_kms.json")
+	Expect(e).To(BeNil())
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template_kms_upgrade.json")
+	Expect(e).To(BeNil())
+	templateJSON := string(fileContents)
+	var template interface{}
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
+	templateMap := template.(map[string]interface{})
+	transformer := &Transformer{
+		Translator: &i18n.Translator{
+			Locale: nil,
+		},
+	}
+	e = transformer.RemoveKMSResourcesFromTemplate(logger, templateMap)
+	Expect(e).To(BeNil())
+	ValidateTemplate(templateMap, expectedFileContents, "TestRemoveKMSResourcesFromTemplate")
+}
+
 func TestNormalizeResourcesForK8sMasterUpgrade(t *testing.T) {
 	RegisterTestingT(t)
 	logger := logrus.New().WithField("testName", "TestNormalizeResourcesForK8sMasterUpgrade")

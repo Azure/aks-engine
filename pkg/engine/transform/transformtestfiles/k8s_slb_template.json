@@ -2298,7 +2298,8 @@
           "name": "vmLoopNode"
         },
         "dependsOn": [
-          "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]"
+          "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
+          "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]"
         ],
         "location": "[variables('location')]",
         "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'/cse', '-master-', copyIndex(variables('masterOffset')))]",

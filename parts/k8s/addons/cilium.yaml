@@ -353,7 +353,7 @@ spec:
           secretName: cilium-clustermesh
   updateStrategy:
     rollingUpdate:
-      maxUnavailable: 2
+      maxUnavailable: 50%
     type: RollingUpdate
 ---
 apiVersion: apps/v1

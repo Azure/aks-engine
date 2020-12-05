@@ -957,6 +957,15 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
+	// test 1.20
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "ExecProbeTimeout=false,RotateKubeletServerCertificate=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
 	// test user-overrides
 	cs = CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig

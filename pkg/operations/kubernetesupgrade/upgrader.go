@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -198,6 +199,14 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
 		}
 	}
+
+	if to.Bool(ku.DataModel.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
+		err = transformer.RemoveKMSResourcesFromTemplate(ku.logger, templateMap)
+		if err != nil {
+			return ku.Translator.Errorf("error removing KMS resources from template: %s", err.Error())
+		}
+	}
+
 	//TODO: rename this as it's not only touching master resources
 	if err = transformer.NormalizeResourcesForK8sMasterUpgrade(ku.logger, templateMap, ku.DataModel.Properties.MasterProfile.IsManagedDisks(), nil); err != nil {
 		ku.logger.Error(err.Error())

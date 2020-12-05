@@ -13,6 +13,8 @@ spec:
       k8s-app: nvidia-device-plugin
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
 {{- if IsKubernetesVersionGe "1.17.0"}}

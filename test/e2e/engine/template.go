@@ -72,7 +72,11 @@ type Config struct {
 	LinuxContainerdURL             string `envconfig:"LINUX_CONTAINERD_URL"`
 	WindowsContainerdURL           string `envconfig:"WINDOWS_CONTAINERD_URL"`
 	WindowsProvisioningScriptsURL  string `envconfig:"WINDOWS_PROVISIONING_SCRIPTS_URL" default:""`
-	*ArcOnboardingConfig
+	ArcClientID                    string `envconfig:"ARC_CLIENT_ID" default:""`
+	ArcClientSecret                string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	ArcSubscriptionID              string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	ArcLocation                    string `envconfig:"ARC_LOCATION" default:""`
+	ArcTenantID                    string `envconfig:"ARC_TENANT_ID" default:""`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -88,15 +92,6 @@ type Engine struct {
 	Config             *Config
 	ClusterDefinition  *api.VlabsARMContainerService // Holds the parsed ClusterDefinition
 	ExpandedDefinition *api.ContainerService         // Holds the expanded ClusterDefinition
-}
-
-// ArcOnboardingConfig holds the azure arc onboarding addon configuration
-type ArcOnboardingConfig struct {
-	ClientID       string `envconfig:"ARC_CLIENT_ID" default:""`
-	ClientSecret   string `envconfig:"ARC_CLIENT_SECRET" default:""`
-	SubscriptionID string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
-	Location       string `envconfig:"ARC_LOCATION" default:""`
-	TenantID       string `envconfig:"TENANT_ID"`
 }
 
 // ParseConfig will return a new engine config struct taking values from env vars
@@ -156,7 +151,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity == nil {
+	if prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity == nil && !prop.IsAzureStackCloud() {
 		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(config.UseManagedIdentity)
 	}
 
@@ -344,12 +339,40 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				if addon.Config == nil {
 					addon.Config = make(map[string]string)
 				}
-				if cfg.ArcOnboardingConfig != nil {
-					addon.Config["tenantID"] = config.ArcOnboardingConfig.TenantID
-					addon.Config["subscriptionID"] = config.ArcOnboardingConfig.SubscriptionID
-					addon.Config["clientID"] = config.ArcOnboardingConfig.ClientID
-					addon.Config["clientSecret"] = config.ArcOnboardingConfig.ClientSecret
-					addon.Config["location"] = config.ArcOnboardingConfig.Location
+				if addon.Config["tenantID"] == "" {
+					if config.ArcTenantID != "" {
+						addon.Config["tenantID"] = config.ArcTenantID
+					} else {
+						addon.Config["tenantID"] = config.TenantID
+					}
+				}
+				if addon.Config["subscriptionID"] == "" {
+					if config.ArcSubscriptionID != "" {
+						addon.Config["subscriptionID"] = config.ArcSubscriptionID
+					} else {
+						addon.Config["subscriptionID"] = config.SubscriptionID
+					}
+				}
+				if addon.Config["clientID"] == "" {
+					if config.ArcClientID != "" {
+						addon.Config["clientID"] = config.ArcClientID
+					} else {
+						addon.Config["clientID"] = config.ClientID
+					}
+				}
+				if addon.Config["clientSecret"] == "" {
+					if config.ArcClientSecret != "" {
+						addon.Config["clientSecret"] = config.ArcClientSecret
+					} else {
+						addon.Config["clientSecret"] = config.ClientSecret
+					}
+				}
+				if addon.Config["location"] == "" {
+					if config.ArcLocation != "" {
+						addon.Config["location"] = config.ArcLocation
+					} else {
+						addon.Config["location"] = "eastus"
+					}
 				}
 				addon.Config["clusterName"] = cfg.Name
 				addon.Config["resourceGroup"] = fmt.Sprintf("%s-arc", cfg.Name) // set to config.Name once Arc is supported in all regions
