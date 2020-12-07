@@ -119,12 +119,10 @@ else
   else
     SKIP_AFTER_UPGRADE=""
   fi
-  if [ "${SCALE_CLUSTER}" = "true" ]; then
-    if [ "${SKIP_AFTER_UPGRADE}" = "" ]; then
-      SKIP_AFTER_UPGRADE="${SKIP_AFTER_SCALE_DOWN}"
-    else
-      SKIP_AFTER_UPGRADE="${SKIP_AFTER_SCALE_DOWN}|${SKIP_AFTER_UPGRADE}"
-    fi
+  if [ "${SCALE_CLUSTER}" = "true" ] && [ "${SKIP_AFTER_UPGRADE}" != "" ]; then
+    SKIP_AFTER_UPGRADE="${SKIP_AFTER_SCALE_DOWN}|${SKIP_AFTER_UPGRADE}"
+  elif [ "${SCALE_CLUSTER}" = "true" ]; then
+    SKIP_AFTER_UPGRADE="${SKIP_AFTER_SCALE_DOWN}"
   else
     SKIP_AFTER_UPGRADE="${SKIP_AFTER_UPGRADE}"
   fi
