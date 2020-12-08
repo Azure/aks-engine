@@ -8,6 +8,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // TODO These interfaces do not follow best practices
@@ -21,6 +22,8 @@ type Client interface {
 	ListAllPods() (*v1.PodList, error)
 	// ListNodes returns a list of Nodes registered in the api server.
 	ListNodes() (*v1.NodeList, error)
+	// ListNodesByOptions returns a list of Nodes registered in the api server.
+	ListNodesByOptions(opts metav1.ListOptions) (*v1.NodeList, error)
 	// ListServiceAccounts returns a list of Service Accounts in a namespace
 	ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error)
 	// GetDaemonSet returns details about DaemonSet with passed in name.

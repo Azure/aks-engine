@@ -28,6 +28,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -319,12 +320,17 @@ func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
 	node.Status.NodeInfo.KubeletVersion = "1.9.10"
 	node2 := &v1.Node{}
 	node2.Name = "k8s-agentpool3-1234"
-	node2.Status.Conditions = append(node2.Status.Conditions, v1.NodeCondition{Type: v1.NodeOutOfDisk, Status: v1.ConditionTrue})
+	node2.Status.Conditions = append(node2.Status.Conditions, v1.NodeCondition{Type: v1.NodeMemoryPressure, Status: v1.ConditionTrue})
 	node2.Status.NodeInfo.KubeletVersion = "1.9.9"
 	nodeList := &v1.NodeList{}
 	nodeList.Items = append(nodeList.Items, *node)
 	nodeList.Items = append(nodeList.Items, *node2)
 	return nodeList, nil
+}
+
+// ListNodesByOptions returns a list of Nodes registered in the api server
+func (mkc *MockKubernetesClient) ListNodesByOptions(opts metav1.ListOptions) (*v1.NodeList, error) {
+	return &v1.NodeList{}, nil
 }
 
 // ListServiceAccounts returns a list of Service Accounts in the provided namespace
