@@ -43,6 +43,7 @@ type Metadata struct {
 type Spec struct {
 	Taints        []Taint `json:"taints"`
 	Unschedulable bool    `json:"unschedulable"`
+	ProviderID    string  `json:"providerID"`
 }
 
 // Taint defines a Node Taint

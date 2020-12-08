@@ -2752,5 +2752,45 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
 		})
+
+		It("should be able to install vmss node prototype", func() {
+			if cfg.RunVMSSNodePrototype {
+				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
+					By("Creating a DaemonSet with a large container")
+					_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					pods, err := pod.GetAllRunningByLabelWithRetry("app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(pods).NotTo(BeEmpty())
+					By("Choosing a target VMSS node to use as the prototype")
+					var targetNode string
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					for _, n := range nodes {
+						if strings.Contains(n.Spec.ProviderID, "virtualMachineScaleSets") {
+							targetNode = n.Metadata.Name
+						}
+					}
+					Expect(targetNode).NotTo(BeEmpty())
+					cmd := exec.Command("helm", "upgrade", "--install",
+						"--repo", "https://jackfrancis.github.io/kamino/",
+						"vmss-prototype", "vmss-prototype",
+						"--namespace", "default",
+						"--set", "kamino.scheduleOnControlPlane=true",
+						"--set", fmt.Sprintf("kamino.targetNode=%s", targetNode))
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+					By("Ensuring that the kamino-vmss-prototype pod runs to completion")
+					pods, err = pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, 120*time.Minute)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(len(pods)).To(Equal(1))
+				} else {
+					Skip("no VMSS node pools")
+				}
+			} else {
+				Skip("InstallVMSSNodePrototype disabled")
+			}
+		})
 	})
 })

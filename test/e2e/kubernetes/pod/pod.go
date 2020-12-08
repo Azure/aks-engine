@@ -707,6 +707,71 @@ func GetAllRunningByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
 	return pods, nil
 }
 
+// GetAllSucceededByLabelAsync wraps GetAllSucceededByLabel with a struct response for goroutine + channel usage
+func GetAllSucceededByLabelAsync(labelKey, labelVal, namespace string) GetAllByPrefixResult {
+	pods, err := GetAllSucceededByLabel(labelKey, labelVal, namespace)
+	return GetAllByPrefixResult{
+		Pods: pods,
+		Err:  err,
+	}
+}
+
+// GetAllSucceededByLabelWithRetry will return all completed pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllSucceededByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllSucceededByLabelWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetAllSucceededByLabelAsync(labelKey, labelVal, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllSucceededByLabelWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllSucceededByLabelWithRetryError == nil && len(pods) > 0 {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllSucceededByLabelWithRetry timed out: %s\n", mostRecentGetAllSucceededByLabelWithRetryError)
+		}
+	}
+}
+
+// GetAllSucceededByLabel will return all completed pods in a given namespace that match a label
+func GetAllSucceededByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
+	cmd := exec.Command("k", "get", "pods", "-n", namespace, "-l", fmt.Sprintf("%s=%s", labelKey, labelVal), "-o", "json")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error getting pod:\n")
+		util.PrintCommand(cmd)
+		return nil, err
+	}
+	pl := List{}
+	err = json.Unmarshal(out, &pl)
+	if err != nil {
+		log.Printf("Error unmarshalling pods json:%s\n", err)
+		return nil, err
+	}
+	pods := []Pod{}
+	for _, p := range pl.Pods {
+		if p.Status.Phase == "Succeeded" {
+			pods = append(pods, p)
+		}
+	}
+	return pods, nil
+}
+
 // GetAllRunningByPrefixAsync wraps GetAllRunningByPrefix with a struct response for goroutine + channel usage
 func GetAllRunningByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	pods, err := GetAllRunningByPrefix(prefix, namespace)
