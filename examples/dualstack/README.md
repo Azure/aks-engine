@@ -5,6 +5,7 @@
 AKS Engine enables you to create dual stack (IPv4 *and* IPv6) Kubernetes clusters on Microsoft Azure.
 
 - Dual stack support is available for Kubernetes version 1.16.0 and later
+- Dual stack services support was added in 1.20.0 (recommended kubernetes version)
 
 > Official docs are available here - https://kubernetes.io/docs/concepts/services-networking/dual-stack/
 
@@ -16,9 +17,7 @@ This example shows you how to configure a dual stack cluster:
 
 **Note** 
 
-When using kubernetes version 1.16, the IPv6 cluster subnet needs to be /8 as the default node CIDR mask size for IPv6 is /24
-
-For kubernetes version 1.17+, the default node CIDR mask size for IPv6 is /64 and the default clusters subnet is `fc00::/48`. In 1.17+ node CIDR mask size can be configured by 
+The default node CIDR mask size for IPv6 is /64 and the default clusters subnet is `fc00::/48`. In 1.17+ node CIDR mask size can be configured by 
 
 ```
         "controllerManagerConfig" : {
@@ -30,14 +29,14 @@ For kubernetes version 1.17+, the default node CIDR mask size for IPv6 is /64 an
 
 Things to try out after the cluster is deployed -
 
-- Nodes are Kubernetes version 1.16.0 or later
+- Nodes are Kubernetes version 1.20.0 or later
 
 ```bash
 $ kubectl get nodes
 NAME                        STATUS   ROLES    AGE   VERSION
-k8s-linuxpool1-20403072-0   Ready    agent    22m   v1.16.0
-k8s-linuxpool1-20403072-1   Ready    agent    36m   v1.16.0
-k8s-master-20403072-0       Ready    master   37m   v1.16.0
+k8s-linuxpool1-20403072-0   Ready    agent    22m   v1.20.0
+k8s-linuxpool1-20403072-1   Ready    agent    36m   v1.20.0
+k8s-master-20403072-0       Ready    master   37m   v1.20.0
 ```
 
 - Nodes have 2 internal IPs, one from each ip family
@@ -85,7 +84,27 @@ PING fc00:200::7(fc00:200::7) 56 data bytes
 64 bytes from fc00:200::7: icmp_seq=2 ttl=62 time=0.762 ms
 ```
 
-- Able to create services with IPv6 using `spec.IPFamily=IPv6` in the service manifest -
+- Able to create services with IPv6 using `spec.ipFamilies=[IPv6]` in the service manifest:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx-ipv6
+spec:
+  ipFamilies:
+    - IPv6
+  ipFamilyPolicy: SingleStack
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: nginx
+  type: LoadBalancer
+```
 
 ```
 azureuser@k8s-master-13083844-0:~$ kubectl get svc
@@ -97,6 +116,7 @@ nginx-ipv6    LoadBalancer   fd00::6283       2603:1030:805:3::3   80:31140/TCP 
 ## Limitations
 
 - Dual stack clusters are supported only with kubenet and azurecni.
+  - Dual stack cluster with azurecni are only supported with `bridge` network mode.
 - Dual stack clusters are supported only with Linux.
 - Dual stack clusters with Windows is not supported at this time because it requires
   - Kubernetes version 1.19+ and 
