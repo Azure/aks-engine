@@ -60,6 +60,7 @@ const (
 	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	podLookupRetries                          = 5
+	sigPublishingTimeout                      = 120 * time.Minute // :(
 )
 
 var (
@@ -2797,7 +2798,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 					By("Ensuring that the kamino-vmss-prototype pod runs to completion")
-					pods, err = pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, 120*time.Minute)
+					pods, err = pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, sigPublishingTimeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(pods)).To(Equal(1))
 					elapsed = time.Since(start)
