@@ -16,7 +16,7 @@ trigger: none
 pr: none
 
 stages:
-  - stage: build-2019-containerd
+  - stage: build_2019_containerd
     dependsOn: []
     jobs:
     - template: vhd-builder-windows-template.yaml
@@ -24,7 +24,7 @@ stages:
         containerRuntime: containerd
         windowsServerVersion: 2019
 
-  - stage: build-2019-docker
+  - stage: build_2019_docker
     dependsOn: []
     jobs:
     - template: vhd-builder-windows-template.yaml
