@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
 )
@@ -87,7 +88,7 @@ func (d *Daemonset) Delete(retries int) error {
 }
 
 // CreateDaemonsetDeleteIfExists will create a daemonset, deleting any pre-existing daemonset with the same name + namespace
-func CreateDaemonsetDeleteIfExists(filename, name, namespace string, sleep, timeout time.Duration) (*Daemonset, error) {
+func CreateDaemonsetDeleteIfExists(filename, name, namespace, labelKey, labelVal string, sleep, timeout time.Duration) (*Daemonset, error) {
 	d, err := Get(name, namespace, 3)
 	if err == nil {
 		log.Printf("daemonset %s in namespace %s already exists, will delete\n", name, namespace)
@@ -96,6 +97,10 @@ func CreateDaemonsetDeleteIfExists(filename, name, namespace string, sleep, time
 			log.Printf("unable to delete daemonset %s in namespace %s\n", name, namespace)
 			return nil, err
 		}
+	}
+	_, err = pod.WaitForMaxRunningByLabelWithRetry(0, labelKey, labelVal, namespace, 500*time.Millisecond, timeout)
+	if err != nil {
+		return nil, err
 	}
 	return CreateDaemonsetFromFileWithRetry(filename, name, namespace, sleep, timeout)
 }

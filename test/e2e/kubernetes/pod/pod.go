@@ -683,6 +683,38 @@ func WaitForMinRunningByLabelWithRetry(min int, labelKey, labelVal, namespace st
 	}
 }
 
+// WaitForMaxRunningByLabelWithRetry will return all pods in a given namespace that match a prefix, waiting for a minimum number
+func WaitForMaxRunningByLabelWithRetry(max int, labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentWaitForMaxRunningByLabelWithRetry error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetAllRunningByLabelAsync(labelKey, labelVal, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentWaitForMaxRunningByLabelWithRetry = result.Err
+			pods = result.Pods
+			if mostRecentWaitForMaxRunningByLabelWithRetry == nil && len(pods) <= max {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("WaitForMaxRunningByLabelWithRetry timed out: %s\n", mostRecentWaitForMaxRunningByLabelWithRetry)
+		}
+	}
+}
+
 // GetAllRunningByLabelWithRetry will return all pods in a given namespace that match a prefix, retrying if error up to a timeout
 func GetAllRunningByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)

@@ -2760,7 +2760,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					numAgentNodes := len(nodes) - len(masterNodes)
 					By("Creating a DaemonSet with a large container")
-					d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+					d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", "app", "large-container-daemonset", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					start := time.Now()
 					pods, err := pod.WaitForMinRunningByLabelWithRetry(numAgentNodes, "app", "large-container-daemonset", "default", 1*time.Second, cfg.Timeout)
@@ -2768,7 +2768,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					numLargeContainerPods := len(pods)
 					Expect(pods).NotTo(BeEmpty())
 					elapsed := time.Since(start)
-					log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, len(pods))
+					log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, numLargeContainerPods)
 					By("Choosing a target VMSS node to use as the prototype")
 					var targetNode string
 					for _, n := range nodes {
@@ -2777,13 +2777,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						}
 					}
 					Expect(targetNode).NotTo(BeEmpty())
-					cmd := exec.Command("helm", "upgrade", "--install",
+					cmd := exec.Command("helm", "status", "vmss-prototype")
+					out, err := cmd.CombinedOutput()
+					if err == nil {
+						By("Found pre-existing 'vmss-prototype' helm release, deleting it...")
+						cmd := exec.Command("helm", "delete", "vmss-prototype")
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
+					cmd = exec.Command("helm", "upgrade", "--install",
 						"--repo", "https://jackfrancis.github.io/kamino/",
 						"vmss-prototype", "vmss-prototype",
 						"--namespace", "default",
 						"--set", "kamino.scheduleOnControlPlane=true",
 						"--set", fmt.Sprintf("kamino.targetNode=%s", targetNode))
-					out, err := cmd.CombinedOutput()
+					out, err = cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 					By("Ensuring that the kamino-vmss-prototype pod runs to completion")
