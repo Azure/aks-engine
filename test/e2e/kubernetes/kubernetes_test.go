@@ -2792,6 +2792,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						"--namespace", "default",
 						"--set", "kamino.scheduleOnControlPlane=true",
 						"--set", fmt.Sprintf("kamino.targetNode=%s", targetNode))
+					start = time.Now()
 					out, err = cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
@@ -2799,6 +2800,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pods, err = pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, 120*time.Minute)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(pods)).To(Equal(1))
+					elapsed = time.Since(start)
+					log.Printf("Took %s to run kamino-vmss-prototype Job to completion\n", elapsed)
 					By("Adding one new node to ensure that daemonset with a large container gets to a Running state quickly")
 					ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
 					defer cancel()
