@@ -2756,11 +2756,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to install vmss node prototype", func() {
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					numAgentNodes := len(nodes) - len(masterNodes)
 					By("Creating a DaemonSet with a large container")
 					d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					start := time.Now()
-					pods, err := pod.GetAllRunningByLabelWithRetry("app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+					pods, err := pod.WaitForMinRunningByLabelWithRetry(numAgentNodes, "app", "large-container-daemonset", "default", 1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					numLargeContainerPods := len(pods)
 					Expect(pods).NotTo(BeEmpty())
@@ -2768,9 +2771,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, len(pods))
 					By("Choosing a target VMSS node to use as the prototype")
 					var targetNode string
-					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					numNodes := len(nodes)
 					for _, n := range nodes {
 						if strings.Contains(n.Spec.ProviderID, "virtualMachineScaleSets") {
 							targetNode = n.Metadata.Name
@@ -2807,6 +2807,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						vmssSku = vmss.Sku
 					}
 					Expect(vmssName).NotTo(BeEmpty())
+					start = time.Now()
 					err = azureClient.SetVirtualMachineScaleSetCapacity(
 						ctx,
 						cfg.ResourceGroup,
@@ -2818,15 +2819,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						eng.ExpandedDefinition.Location,
 					)
 					By("Waiting for the new node to become Ready")
-					ready := node.WaitOnReadyMin(numNodes+1, 1*time.Second, cfg.Timeout)
+					ready := node.WaitOnReadyMin(numAgentNodes+1, 500*time.Millisecond, cfg.Timeout)
 					Expect(ready).To(BeTrue())
+					elapsed = time.Since(start)
+					log.Printf("Took %s to add 1 node derived from peer node prototype\n", elapsed)
 					By("Ensuring that we have one additional large container pod after scaling out by one")
 					start = time.Now()
 					_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+1, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					By("Ensuring that the daemonset pod achieved a Running state in under 5 seconds")
 					elapsed = time.Since(start)
-					log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, len(pods))
+					log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", elapsed)
 					Expect(elapsed < 10*time.Second).To(BeTrue())
 					By("Deleting large container DaemonSet")
 					Expect(err).NotTo(HaveOccurred())
