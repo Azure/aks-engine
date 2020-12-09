@@ -2757,15 +2757,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					By("Creating a DaemonSet with a large container")
-					_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+					d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
+					start := time.Now()
 					pods, err := pod.GetAllRunningByLabelWithRetry("app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
+					numLargeContainerPods := len(pods)
 					Expect(pods).NotTo(BeEmpty())
+					elapsed := time.Since(start)
+					log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, len(pods))
 					By("Choosing a target VMSS node to use as the prototype")
 					var targetNode string
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
+					numNodes := len(nodes)
 					for _, n := range nodes {
 						if strings.Contains(n.Spec.ProviderID, "virtualMachineScaleSets") {
 							targetNode = n.Metadata.Name
@@ -2785,6 +2790,48 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pods, err = pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, 120*time.Minute)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(pods)).To(Equal(1))
+					By("Adding one new node to ensure that daemonset with a large container gets to a Running state quickly")
+					ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel()
+					// Getting vmss for the vm
+					vmssPage, err := azureClient.ListVirtualMachineScaleSets(ctx, cfg.ResourceGroup)
+					vmssList := vmssPage.Values()
+					// Name of VMSS of nodeName
+					var vmssName string
+					var vmssSku *compute.Sku
+					for _, vmss := range vmssList {
+						if !strings.Contains(targetNode, *vmss.Name) {
+							continue
+						}
+						vmssName = *vmss.Name
+						vmssSku = vmss.Sku
+					}
+					Expect(vmssName).NotTo(BeEmpty())
+					err = azureClient.SetVirtualMachineScaleSetCapacity(
+						ctx,
+						cfg.ResourceGroup,
+						vmssName,
+						compute.Sku{
+							Name:     vmssSku.Name,
+							Capacity: to.Int64Ptr(*vmssSku.Capacity + 1),
+						},
+						eng.ExpandedDefinition.Location,
+					)
+					By("Waiting for the new node to become Ready")
+					ready := node.WaitOnReadyMin(numNodes+1, 1*time.Second, cfg.Timeout)
+					Expect(ready).To(BeTrue())
+					By("Ensuring that we have one additional large container pod after scaling out by one")
+					start = time.Now()
+					_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+1, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					By("Ensuring that the daemonset pod achieved a Running state in under 5 seconds")
+					elapsed = time.Since(start)
+					log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, len(pods))
+					Expect(elapsed < 10*time.Second).To(BeTrue())
+					By("Deleting large container DaemonSet")
+					Expect(err).NotTo(HaveOccurred())
+					err = d.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
 				} else {
 					Skip("no VMSS node pools")
 				}
