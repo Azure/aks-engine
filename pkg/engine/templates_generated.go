@@ -16684,6 +16684,9 @@ function Write-KubeClusterConfig {
             NodeLabels = $global:KubeletNodeLabels;
             ConfigArgs = $global:KubeletConfigArgs
         };
+        Kubeproxy    = @{
+            FeatureGates = $global:KubeproxyFeatureGates
+        };
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{
@@ -16836,6 +16839,8 @@ $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
 $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
+
+$global:KubeproxyFeatureGates = @( {{GetKubeProxyFeatureGatesPsh}} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"

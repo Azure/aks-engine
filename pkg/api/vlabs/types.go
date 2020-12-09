@@ -60,6 +60,7 @@ type FeatureFlags struct {
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
 	EnableIPv6Only           bool `json:"enableIPv6Only,omitempty"`
+	EnableWinDSR             bool `json:"enableWinDSR,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -987,4 +988,9 @@ func (f *FeatureFlags) IsIPv6DualStackEnabled() bool {
 // IsIPv6OnlyEnabled checks if IPv6Only feature is enabled
 func (f *FeatureFlags) IsIPv6OnlyEnabled() bool {
 	return f != nil && f.EnableIPv6Only
+}
+
+// IsWinDSREnabled checks if WinDSR feature is enabled
+func (f *FeatureFlags) IsWinDSREnabled() bool {
+	return f != nil && f.EnableWinDSR
 }

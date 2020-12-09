@@ -103,6 +103,8 @@ $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
+$global:KubeproxyFeatureGates = @( {{GetKubeProxyFeatureGatesPsh}} )
+
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"
 

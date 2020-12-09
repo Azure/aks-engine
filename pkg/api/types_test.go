@@ -5285,6 +5285,14 @@ func TestIsFeatureEnabled(t *testing.T) {
 			expected: false,
 		},
 		{
+			name:    "wind dsr",
+			feature: "EnableWinDSR",
+			flags: &FeatureFlags{
+				EnableWinDSR: true,
+			},
+			expected: true,
+		},
+		{
 			name:    "Non-existent feature",
 			feature: "Foo",
 			flags: &FeatureFlags{
@@ -5756,6 +5764,61 @@ func TestGetKubeProxyFeatureGates(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			actual := test.properties.GetKubeProxyFeatureGates()
+			if actual != test.expectedFeatureGates {
+				t.Errorf("expected featureGates %s, but got %s", test.expectedFeatureGates, actual)
+			}
+		})
+	}
+}
+
+func TestGetKubeProxyFeatureGatesWindowsArguments(t *testing.T) {
+	tests := []struct {
+		name                 string
+		properties           *Properties
+		expectedFeatureGates string
+	}{
+		{
+			name: "default",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{},
+			},
+			expectedFeatureGates: "",
+		},
+		{
+			name: "IPV6 enabled",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expectedFeatureGates: "\"IPv6DualStack=true\"",
+		},
+		{
+			name: "WinDSR enabled",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableWinDSR: true,
+				},
+			},
+			expectedFeatureGates: "\"WinDSR=true\", \"WinOverlay=false\"",
+		},
+		{
+			name: "both IPV6 and WinDSR enabled",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+					EnableWinDSR:        true,
+				},
+			},
+			expectedFeatureGates: "\"IPv6DualStack=true\", \"WinDSR=true\", \"WinOverlay=false\"",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetKubeProxyFeatureGatesWindowsArguments()
 			if actual != test.expectedFeatureGates {
 				t.Errorf("expected featureGates %s, but got %s", test.expectedFeatureGates, actual)
 			}

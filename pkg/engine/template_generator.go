@@ -265,6 +265,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return kc.GetOrderedKubeletConfigStringForPowershell()
 		},
+		"GetKubeProxyFeatureGatesPsh": func() string {
+			return cs.Properties.GetKubeProxyFeatureGatesWindowsArguments()
+		},
 		"GetKubeletHealthZPort": func() string {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--healthz-port"]
 		},

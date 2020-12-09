@@ -646,6 +646,27 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 	}
 }
 
+func TestWinDSREnabledToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.FeatureFlags.EnableWinDSR = true
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	} else if !vlabsCS.Properties.FeatureFlags.EnableWinDSR {
+		t.Errorf("expected the EnableWinDSR feature flag to be true")
+	}
+}
+
+func TestWinDSRDefaultToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	} else if vlabsCS.Properties.FeatureFlags.EnableWinDSR {
+		t.Errorf("expected the EnableWinDSR feature flag to be false")
+	}
+}
+
 func TestPPGToVLabs(t *testing.T) {
 	ppgResourceID1 := "ppgResourceID1"
 	ppgResourceID2 := "ppgResourceID2"
