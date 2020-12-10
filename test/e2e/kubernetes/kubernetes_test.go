@@ -2856,8 +2856,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						},
 						eng.ExpandedDefinition.Location,
 					)
-					By("Waiting for the new node to become Ready")
-					ready = node.WaitOnReadyMin(numAgentNodes+1, 500*time.Millisecond, cfg.Timeout)
+					By("Waiting for the new node created from prototype to become Ready")
+					ready = node.WaitOnReadyMin(numAgentNodes+2, 500*time.Millisecond, cfg.Timeout)
 					Expect(ready).To(BeTrue())
 					elapsed = time.Since(start)
 					log.Printf("Took %s to add 1 node derived from peer node prototype\n", elapsed)
