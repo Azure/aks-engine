@@ -6,7 +6,7 @@ SETTINGS_JSON="${SETTINGS_JSON:-./settings.json}"
 SP_JSON="${SP_JSON:-./sp.json}"
 SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-$(az account show -o json --query="id" | tr -d '"')}"
 CREATE_TIME="$(date +%s)"
-STORAGE_ACCOUNT_NAME="aksimages${CREATE_TIME}"
+STORAGE_ACCOUNT_NAME="aksimages${CREATE_TIME}${RANDOM}"
 
 
 echo "Subscription ID: ${SUBSCRIPTION_ID}"
