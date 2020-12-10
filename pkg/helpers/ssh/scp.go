@@ -15,7 +15,7 @@ import (
 
 // CopyToRemote copies a file to a remote host
 func CopyToRemote(host *RemoteHost, file *RemoteFile) (combinedOutput string, err error) {
-	c, err := client(host)
+	c, err := clientWithRetry(host)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
@@ -41,7 +41,7 @@ func CopyFromRemote(host *RemoteHost, remoteFile *RemoteFile, destinationPath st
 		return "", errors.Wrap(err, "opening destination file")
 	}
 	defer f.Close()
-	c, err := client(host)
+	c, err := clientWithRetry(host)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}

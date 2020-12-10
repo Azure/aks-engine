@@ -12,7 +12,7 @@ require (
 	github.com/onsi/ginkgo v1.12.2
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
-	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
+	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 )
 
 replace github.com/Azure/aks-engine v0.43.0 => ../..

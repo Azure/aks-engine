@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-export WD=/tmp/akse
+export WD=/etc/kubernetes/rotate-certs
 export NEW_CERTS_DIR=${WD}/certs
 export STEPS_DIR=${WD}/steps
 export SKIP_EXIT_CODE=25
@@ -120,6 +120,25 @@ cleanup() {
   rm -f /etc/kubernetes/certs/etcdca.*
   rm -f /etc/kubernetes/certs/cabundle.*
   rm -rf /etc/kubernetes/certs.bak
+}
+
+restart_mirror_pod_docker() {
+  systemctl_restart 10 5 10 kubelet
+  restart_pod_docker $1
+}
+
+restart_mirror_pod_containerd() {
+  restart_pod_containerd $1
+}
+
+restart_pod_docker() {
+  sudo docker stop $1
+  sudo docker rm $1
+}
+
+restart_pod_containerd() {
+  restart_pod_containerd $1
+  systemctl_restart 10 5 10 kubelet
 }
 
 "$@"

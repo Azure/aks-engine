@@ -61,22 +61,51 @@ function renameResultsFile {
 }
 
 function rotateCertificates {
-  docker run --rm \
-    -v $(pwd):${WORK_DIR} \
-    -v /etc/ssl/certs:/etc/ssl/certs \
-    -w ${WORK_DIR} \
-    -e REGION=${REGION} \
-    -e RESOURCE_GROUP=${RESOURCE_GROUP} \
-    ${DEV_IMAGE} \
-    ./bin/aks-engine rotate-certs \
-    --api-model _output/${RESOURCE_GROUP}/apimodel.json \
-    --ssh-host ${API_SERVER} \
-    --debug \
-    --location ${REGION} \
-    --linux-ssh-private-key _output/${RESOURCE_GROUP}-ssh  \
-    --generate-new-certificates || exit 1
+  local CERTS_PATH=_output/${RESOURCE_GROUP}/certificateProfile.json
 
-    rm -rf _output/${RESOURCE_GROUP}/_rotate_certs_ouput
+  USE_CERTS_PATH=false
+  if [ -f ${CERTS_PATH} ]; then
+    USE_CERTS_PATH=true
+  else
+    # use certificateProfile.json the next time around
+    jq '.properties.certificateProfile' _output/${RESOURCE_GROUP}/apimodel.json > ${CERTS_PATH}
+  fi
+
+  if [ "${USE_CERTS_PATH}" = "true" ] ; then
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -v /etc/ssl/certs:/etc/ssl/certs \
+      -w ${WORK_DIR} \
+      -e REGION=${REGION} \
+      -e RESOURCE_GROUP=${RESOURCE_GROUP} \
+      ${DEV_IMAGE} \
+      ./bin/aks-engine rotate-certs \
+      --api-model _output/${RESOURCE_GROUP}/apimodel.json \
+      --ssh-host ${API_SERVER} \
+      --location ${REGION} \
+      --linux-ssh-private-key _output/${RESOURCE_GROUP}-ssh \
+      --certificate-profile ${CERTS_PATH} \
+      --debug
+  else
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -v /etc/ssl/certs:/etc/ssl/certs \
+      -w ${WORK_DIR} \
+      -e REGION=${REGION} \
+      -e RESOURCE_GROUP=${RESOURCE_GROUP} \
+      ${DEV_IMAGE} \
+      ./bin/aks-engine rotate-certs \
+      --api-model _output/${RESOURCE_GROUP}/apimodel.json \
+      --ssh-host ${API_SERVER} \
+      --location ${REGION} \
+      --linux-ssh-private-key _output/${RESOURCE_GROUP}-ssh \
+      --debug
+  fi
+
+  if [ "${USE_CERTS_PATH}" = "true" ] ; then
+    # generate new certificates the next time around
+    rm -f ${CERTS_PATH}
+  fi
 }
 
 echo "Running E2E tests against a cluster built with the following API model:"
@@ -123,6 +152,10 @@ else
   else
     SKIP_AFTER_UPGRADE="${SKIP_AFTER_UPGRADE}"
   fi
+fi
+if [ "${ROTATE_CERTS}" = "true" ]; then
+  SKIP_AFTER_SCALE_DOWN="${SKIP_AFTER_SCALE_DOWN}|should be able to autoscale"
+  SKIP_AFTER_SCALE_UP="${SKIP_AFTER_SCALE_DOWN}|should be able to autoscale"
 fi
 
 docker run --rm \
@@ -212,10 +245,6 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
   API_SERVER=${RESOURCE_GROUP}.${REGION}.${RESOURCE_MANAGER_VM_DNS_SUFFIX:-cloudapp.azure.com}
 
-  if [ "${ROTATE_CERTS}" = "true" ]; then
-    rotateCertificates
-  fi
-
   if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
       docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -261,6 +290,9 @@ else
 fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
+  fi
   for pool in $(echo ${ADD_NODE_POOL_INPUT} | jq -c '.[]'); do
     echo $pool > ${TMP_DIR}/addpool-input.json
     docker run --rm \
@@ -285,11 +317,6 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   CLEANUP_AFTER_ADD_NODE_POOL=${CLEANUP_ON_EXIT}
   if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
     CLEANUP_AFTER_ADD_NODE_POOL="false"
-  fi
-
-  if [ "${ROTATE_CERTS}" = "true" ]; then
-    // Add ROTATE_CERTS_AFTER_ADD_NODE_POOL?
-    rotateCertificates
   fi
 
   docker run --rm \
@@ -346,6 +373,9 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
+  fi
   nodepoolcount=$(jq '.properties.agentPoolProfiles| length' < _output/$RESOURCE_GROUP/apimodel.json)
   for ((i = 0; i < $nodepoolcount; ++i)); do
     nodepool=$(jq -r --arg i $i '. | .properties.agentPoolProfiles[$i | tonumber].name' < _output/$RESOURCE_GROUP/apimodel.json)
@@ -406,11 +436,6 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
       --client-secret ${AZURE_CLIENT_SECRET} || exit 1
   done
 
-  if [ "${ROTATE_CERTS}" = "true" ]; then
-    // Add ROTATE_CERTS_AFTER_SCALE_DOWN?
-    rotateCertificates
-  fi
-
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -v /etc/ssl/certs:/etc/ssl/certs \
@@ -465,6 +490,9 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
+  fi
   # modify the master VM SKU to simulate vertical vm scaling via upgrade
   docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -499,11 +527,6 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       --identity-system ${IDENTITY_SYSTEM}\
       --client-id ${AZURE_CLIENT_ID} \
       --client-secret ${AZURE_CLIENT_SECRET} || exit 1
-
-    if [ "${ROTATE_CERTS}" = "true" ]; then
-      // Add ROTATE_CERTS_AFTER_UPGRADE?
-      rotateCertificates
-    fi
 
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -560,6 +583,9 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
+  if [ "${ROTATE_CERTS}" = "true" ]; then
+    rotateCertificates
+  fi
   for nodepool in $(jq -r '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
     -v $(pwd):${WORK_DIR} \
@@ -582,11 +608,6 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     --client-id ${AZURE_CLIENT_ID} \
     --client-secret ${AZURE_CLIENT_SECRET} || exit 1
   done
-
-  if [ "${ROTATE_CERTS}" = "true" ]; then
-    // Add ROTATE_CERTS_AFTER_SCALE_UP?
-    rotateCertificates
-  fi
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \

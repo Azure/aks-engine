@@ -47,12 +47,30 @@ func TestRotateCertsCmdValidateArgs(t *testing.T) {
 			rcc: &rotateCertsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
-				newCertsPath:           existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
 			},
 			expectedErr: nil,
 			name:        "Valid input",
+		},
+		{
+			rcc: &rotateCertsCmd{
+				linuxSSHPrivateKeyPath: existingFile,
+				sshHostURI:             "server.example.com",
+				location:               "southcentralus",
+			},
+			expectedErr: errors.New("--api-model must be specified"),
+			name:        "Missing api-model",
+		},
+		{
+			rcc: &rotateCertsCmd{
+				apiModelPath:           missingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				sshHostURI:             "server.example.com",
+				location:               "southcentralus",
+			},
+			expectedErr: errors.Errorf("specified --api-model does not exist (%s)", missingFile),
+			name:        "Invalid api-model",
 		},
 		{
 			rcc: &rotateCertsCmd{
@@ -109,40 +127,15 @@ func TestRotateCertsCmdValidateArgs(t *testing.T) {
 			rcc: &rotateCertsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
-				newCertsPath:           "",
-				sshHostURI:             "server.example.com",
-				location:               "southcentralus",
-				generateCerts:          false,
-			},
-			expectedErr: errors.New("either --generate-new-certificates or --certificate-profile should be specified"),
-			name:        "Either generate certs or pass certs profile path",
-		},
-		{
-			rcc: &rotateCertsCmd{
-				apiModelPath:           existingFile,
-				linuxSSHPrivateKeyPath: existingFile,
-				newCertsPath:           "",
-				sshHostURI:             "server.example.com",
-				location:               "southcentralus",
-				generateCerts:          false,
-			},
-			expectedErr: errors.New("either --generate-new-certificates or --certificate-profile should be specified"),
-			name:        "Either generate certs or pass certs profile path",
-		},
-		{
-			rcc: &rotateCertsCmd{
-				apiModelPath:           existingFile,
-				linuxSSHPrivateKeyPath: existingFile,
 				newCertsPath:           existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
-				generateCerts:          true,
 			},
 			expectedErr: nil,
 			assert: func(rcc *rotateCertsCmd) {
-				g.Expect(rcc.generateCerts).To(Equal(false), "cannot set both --generate-new-certificates and --certificate-profile")
+				g.Expect(rcc.generateCerts).To(Equal(false))
 			},
-			name: "Ignore generate certs if certs profile path is also set",
+			name: "Unset generateCerts if newCertsPath is set",
 		},
 	}
 	for _, tc := range cases {

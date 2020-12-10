@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-package rotatecerts
+package internal
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
@@ -20,14 +20,16 @@ type Client interface {
 	ListDeployments(namespace string, opts metav1.ListOptions) (*appsv1.DeploymentList, error)
 	// ListDaemonSets returns a list of daemonsets in the provided namespace.
 	ListDaemonSets(namespace string, opts metav1.ListOptions) (*appsv1.DaemonSetList, error)
-	// ListSecrets returns a list of secrets in the provided namespace.
-	ListSecrets(namespace string, opts metav1.ListOptions) (*v1.SecretList, error)
+	// GetDeployment returns a given deployment in a namespace.
+	GetDeployment(namespace, name string) (*appsv1.Deployment, error)
 	// PatchDeployment applies a JSON patch to a deployment in the provided namespace.
 	PatchDeployment(namespace, name, jsonPatch string) (*appsv1.Deployment, error)
 	// PatchDaemonSet applies a JSON patch to a daemonset in the provided namespace.
 	PatchDaemonSet(namespace, name, jsonPatch string) (*appsv1.DaemonSet, error)
 	// DeletePods deletes all pods in a namespace that match the option filters.
 	DeletePods(namespace string, opts metav1.ListOptions) error
+	// DeleteServiceAccount deletes the passed in service account.
+	DeleteServiceAccount(secret *v1.ServiceAccount) error
 	// DeleteSecret deletes the passed in secret.
 	DeleteSecret(secret *v1.Secret) error
 }

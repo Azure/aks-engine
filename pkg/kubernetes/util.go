@@ -16,3 +16,28 @@ func IsNodeReady(node *v1.Node) bool {
 	}
 	return false
 }
+
+func IsAnyContainerCrashing(pod v1.Pod) bool {
+	for _, c := range pod.Status.ContainerStatuses {
+		if pod.Status.Phase == v1.PodRunning && IsContainerCrashing(c) {
+			return true
+		}
+	}
+	return false
+}
+
+func IsContainerCrashing(cs v1.ContainerStatus) bool {
+	if cs.State.Waiting != nil && cs.State.Waiting.Reason == "CrashLoopBackOff" {
+		return true
+	}
+	return false
+}
+
+func IsMirrorPod(pod v1.Pod) bool {
+	for k := range pod.ObjectMeta.Annotations {
+		if k == v1.MirrorPodAnnotationKey {
+			return true
+		}
+	}
+	return false
+}

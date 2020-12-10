@@ -13,6 +13,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -46,8 +47,19 @@ func NewClient(apiserverURL, kubeConfig string, interval, timeout time.Duration)
 	return &ClientSetClient{clientset: clientset, interval: interval, timeout: timeout}, nil
 }
 
-// ListPods returns Pods based on the passed in list options.
-func (c *ClientSetClient) ListPods(namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
+// ListPods returns Pods running on the passed in node.
+func (c *ClientSetClient) ListPods(node *v1.Node) (*v1.PodList, error) {
+	return c.ListPodsByOptions(metav1.NamespaceAll, metav1.ListOptions{
+		FieldSelector: fields.SelectorFromSet(fields.Set{"spec.nodeName": node.Name}).String()})
+}
+
+// ListAllPods returns all Pods running.
+func (c *ClientSetClient) ListAllPods() (*v1.PodList, error) {
+	return c.ListPodsByOptions(metav1.NamespaceAll, metav1.ListOptions{})
+}
+
+// ListPodsByOptions returns Pods based on the passed in list options.
+func (c *ClientSetClient) ListPodsByOptions(namespace string, opts metav1.ListOptions) (*v1.PodList, error) {
 	return c.clientset.CoreV1().Pods(namespace).List(opts)
 }
 
@@ -62,7 +74,12 @@ func (c *ClientSetClient) ListNodesByOptions(opts metav1.ListOptions) (*v1.NodeL
 }
 
 // ListServiceAccounts returns a list of Service Accounts in the provided namespace.
-func (c *ClientSetClient) ListServiceAccounts(namespace string, opts metav1.ListOptions) (*v1.ServiceAccountList, error) {
+func (c *ClientSetClient) ListServiceAccounts(namespace string) (*v1.ServiceAccountList, error) {
+	return c.ListServiceAccountsByOptions(namespace, metav1.ListOptions{})
+}
+
+// ListServiceAccountsByOptions returns a list of Service Accounts in the provided namespace.
+func (c *ClientSetClient) ListServiceAccountsByOptions(namespace string, opts metav1.ListOptions) (*v1.ServiceAccountList, error) {
 	return c.clientset.CoreV1().ServiceAccounts(namespace).List(opts)
 }
 

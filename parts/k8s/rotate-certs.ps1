@@ -20,8 +20,8 @@ function Prereqs {
 }
 
 function Backup {
-    cp "c:\k\config" "c:\k\config.bak"
-    cp "c:\k\ca.crt" "c:\k\ca.crt.bak"
+    Copy-Item "c:\k\config" "c:\k\config.bak"
+    Copy-Item "c:\k\ca.crt" "c:\k\ca.crt.bak"
 }
 
 function Update-CACertificate {
@@ -60,18 +60,27 @@ function Force-Kubelet-CertRotation {
     }
 }
 
-try
-{
-    $global:CACertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $CACertificatePath)))
+function Start-CertRotation {
+    try
+    {
+        $global:CACertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $CACertificatePath)))
 
-    Prereqs
-    Backup
-    Update-CACertificate
-    Update-KubeConfig
-    Force-Kubelet-CertRotation
+        Prereqs
+        Update-CACertificate
+        Update-KubeConfig
+        Force-Kubelet-CertRotation
+    }
+    catch
+    {
+        Write-Error $_
+        throw $_
+    }
 }
-catch
-{
-    Write-Error $_
-    throw $_
+
+function Clean {
+    Remove-Item "c:\k\config.bak" -Force -ErrorAction Ignore
+    Remove-Item "c:\k\ca.crt.bak" -Force -ErrorAction Ignore
+    Remove-Item $global:AgentKeyPath -Force -ErrorAction Ignore
+    Remove-Item $global:AgentCertificatePath -Force -ErrorAction Ignore
+    Remove-Item $global:CACertificatePath -Force -ErrorAction Ignore
 }

@@ -165,23 +165,23 @@ func (a *Apiloader) LoadAgentPoolProfile(contents []byte) (*AgentPoolProfile, er
 	return agentPoolProfile, nil
 }
 
-// LoadCertificateProfileFromFile loads an CertificateProfile object from a JSON file
+// LoadCertificateProfileFromFile loads a CertificateProfile object from a JSON file
 func (a *Apiloader) LoadCertificateProfileFromFile(jsonFile string) (*CertificateProfile, error) {
-	contents, e := ioutil.ReadFile(jsonFile)
-	if e != nil {
-		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, e.Error())
+	content, err := ioutil.ReadFile(jsonFile)
+	if err != nil {
+		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, err.Error())
 	}
-	return a.LoadCertificateProfile(contents)
+	return a.LoadCertificateProfile(content)
 }
 
-// LoadCertificateProfile marshalls raw data into a strongly typed AgentPoolProfile return object
-func (a *Apiloader) LoadCertificateProfile(contents []byte) (*CertificateProfile, error) {
+// LoadCertificateProfile marshalls raw data into a strongly typed CertificateProfile return object
+func (a *Apiloader) LoadCertificateProfile(content []byte) (*CertificateProfile, error) {
 	certificateProfile := &CertificateProfile{}
-	if e := json.Unmarshal(contents, &certificateProfile); e != nil {
-		return nil, e
+	if err := json.Unmarshal(content, &certificateProfile); err != nil {
+		return nil, err
 	}
-	if e := checkJSONKeys(contents, reflect.TypeOf(*certificateProfile), reflect.TypeOf(TypeMeta{})); e != nil {
-		return nil, e
+	if err := checkJSONKeys(content, reflect.TypeOf(*certificateProfile), reflect.TypeOf(TypeMeta{})); err != nil {
+		return nil, err
 	}
 	return certificateProfile, nil
 }
