@@ -33,7 +33,7 @@
             "image_sku": "{{user `image_sku`}}",
             "image_version": "{{user `image_version`}}",
             "resource_group_name": "{{user `resource_group_name`}}",
-            "capture_container_name": "aksengine-vhds-windows-{{user `windows_server_version`}}",
+            "capture_container_name": "aksengine-vhds-windows-{{user `windows_server_version`}}-{{user `container_runtime`}}",
             "capture_name_prefix": "aksengine-{{user `create_time`}}",
             "storage_account": "{{user `storage_account_name`}}",
             "communicator": "winrm",
