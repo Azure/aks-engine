@@ -496,7 +496,7 @@ loop:
 	}
 	// return error if more than 1 upgraded node is not ready
 	if upgradedNotReadyCount > 1 {
-		uc.Logger.Error("At least 2 of the previusly upgraded control plane nodes did not reach the NodeReady status")
+		uc.Logger.Error("At least 2 of the previously upgraded control plane nodes did not reach the NodeReady status")
 		return errors.New("too many upgraded nodes are not ready")
 	}
 	return nil
