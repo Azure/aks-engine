@@ -7,6 +7,11 @@
 		"LB_TEST_TIMEOUT": "10m",
 		"CLUSTER_INIT_POD_NAME": "aks-engine-pod-init",
 		"CLUSTER_INIT_JOB_NAME": "aks-engine-job-init",
+		"SKIP_TESTS": "true",
+		"SKIP_TESTS_AFTER_ADD_POOL": "true",
+		"SKIP_TESTS_AFTER_SCALE_DOWN": "true",
+		"SKIP_TESTS_AFTER_UPGRADE": "false",
+		"SKIP_TESTS_AFTER_SCALE_UP": "false",
 		"STABILITY_ITERATIONS": "0"
 	},
 	"apiModel": {
@@ -103,7 +108,7 @@
 			"agentPoolProfiles": [
 				{
 					"name": "pool1",
-					"count": 1,
+					"count": 3,
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vmSize": "Standard_D2_v3",
 					"OSDiskSizeGB": 200,
@@ -112,7 +117,6 @@
 						128
 					],
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-					"scalesetPriority": "Spot",
 					"auditDEnabled": true,
 					"availabilityZones": [
 						"1",
@@ -132,17 +136,15 @@
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vmSize": "Standard_D16_v3",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-					"scalesetPriority": "Spot",
 					"distro": "ubuntu-18.04"
 				},
 				{
 					"name": "poolwin",
-					"count": 2,
+					"count": 3,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
 					"OSDiskSizeGB": 200,
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Spot",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				}
 			],

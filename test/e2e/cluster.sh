@@ -71,6 +71,14 @@ function rotateCertificates {
     jq '.properties.certificateProfile' _output/${RESOURCE_GROUP}/apimodel.json > ${CERTS_PATH}
   fi
 
+  # delete
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    "${DEV_IMAGE}" kubectl get no,po -A -o wide \
+    --kubeconfig _output/${RESOURCE_GROUP}/kubeconfig/kubeconfig.${REGION}.json
+  # end delete
+
   if [ "${USE_CERTS_PATH}" = "true" ] ; then
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -101,6 +109,38 @@ function rotateCertificates {
       --linux-ssh-private-key _output/${RESOURCE_GROUP}-ssh \
       --debug
   fi
+
+  # delete
+  ret=$?
+
+  CONFIG="_output/${RESOURCE_GROUP}/kubeconfig/kubeconfig.${REGION}.json"
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    "${DEV_IMAGE}" kubectl get no,po -A -o wide \
+    --kubeconfig ${CONFIG}
+
+  if [ $ret -ne 0 ]; then
+    CONFIG="_output/${RESOURCE_GROUP}/_rotate_certs_output/kubeconfig/kubeconfig.${REGION}.json"
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      "${DEV_IMAGE}" kubectl get no,po -A -o wide \
+      --kubeconfig ${CONFIG}
+  fi
+
+  if [ $ret -ne 0 ]; then
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      "${DEV_IMAGE}" kubectl logs \
+      -l component=kube-apiserver,tier=control-plane \
+      -n kube-system \
+      --tail=-1 \
+      --kubeconfig ${CONFIG}
+    exit $ret1
+  fi
+  # end delete
 
   if [ "${USE_CERTS_PATH}" = "true" ] ; then
     # generate new certificates the next time around
@@ -527,6 +567,13 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       --identity-system ${IDENTITY_SYSTEM}\
       --client-id ${AZURE_CLIENT_ID} \
       --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      "${DEV_IMAGE}" kubectl delete no \
+      --field-selector='spec.unschedulable=true' \
+      --kubeconfig _output/${RESOURCE_GROUP}/kubeconfig/kubeconfig.${REGION}.json
 
     docker run --rm \
       -v $(pwd):${WORK_DIR} \

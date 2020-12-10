@@ -2742,10 +2742,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				for _, n := range nodes {
 					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
 						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+systemdValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
+						Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("Copying script to node %s", n.Metadata.Name))
 						systemdValidationCommand = fmt.Sprintf("/tmp/%s", systemdValidateScript)
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, systemdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
+						Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("Executing script to node %s", n.Metadata.Name))
 					}
 				}
 			} else {
