@@ -2797,9 +2797,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(vmssName).NotTo(BeEmpty())
 					originalCapacity := *vmssSku.Capacity
 					By("Adding one new node to get a baseline")
+					ctx2, cancel2 := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel2()
 					start = time.Now()
 					err = azureClient.SetVirtualMachineScaleSetCapacity(
-						ctx,
+						ctx2,
 						cfg.ResourceGroup,
 						vmssName,
 						compute.Sku{
@@ -2845,9 +2847,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					elapsed = time.Since(start)
 					log.Printf("Took %s to run kamino-vmss-prototype Job to completion\n", elapsed)
 					By("Adding one new node to ensure that daemonset with a large container gets to a Running state quickly")
+					ctx3, cancel3 := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel3()
 					start = time.Now()
 					err = azureClient.SetVirtualMachineScaleSetCapacity(
-						ctx,
+						ctx3,
 						cfg.ResourceGroup,
 						vmssName,
 						compute.Sku{
