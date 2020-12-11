@@ -1,11 +1,7 @@
 [Unit]
 Description=Kubelet
 ConditionPathExists=/usr/local/bin/kubelet
-{{- if NeedsContainerd}}
-Requires=containerd.service
-{{else}}
-Requires=docker.service
-{{- end}}
+Requires={{GetContainerRuntime}}.service
 
 [Service]
 Restart=always

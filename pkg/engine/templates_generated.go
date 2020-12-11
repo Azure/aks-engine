@@ -13481,10 +13481,7 @@ func k8sCloudInitArtifactsDhcpv6Service() (*asset, error) {
 
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
-{{- if NeedsContainerd}}
-After=containerd.service
-{{else}}
-After=docker.service
+After={{GetContainerRuntime}}.service
 {{- end}}
 [Service]
 Restart=always
@@ -13944,11 +13941,7 @@ func k8sCloudInitArtifactsKubeletMonitorTimer() (*asset, error) {
 var _k8sCloudInitArtifactsKubeletService = []byte(`[Unit]
 Description=Kubelet
 ConditionPathExists=/usr/local/bin/kubelet
-{{- if NeedsContainerd}}
-Requires=containerd.service
-{{else}}
-Requires=docker.service
-{{- end}}
+Requires={{GetContainerRuntime}}.service
 
 [Service]
 Restart=always
@@ -14844,24 +14837,13 @@ write_files:
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
 
-  {{if NeedsContainerd}}
-- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+- path: /etc/systemd/system/{{GetContainerRuntime}}.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
   content: |
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
-  {{else}}
-- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-  {{end}}
-{{end}}
 
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
@@ -14893,6 +14875,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
+{{- /* for historical reasons, we overload the name "docker" here; in fact this monitor service supports both docker and containerd */}}
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -15422,24 +15405,13 @@ write_files:
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
 
-  {{if NeedsContainerd}}
-- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+- path: /etc/systemd/system/{{GetContainerRuntime}}.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
   content: |
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
-  {{else}}
-- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-  {{end}}
-{{end}}
 
 {{- if HasKubeletHealthZPort}}
 - path: /etc/systemd/system/kubelet-monitor.service
@@ -15468,6 +15440,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
+{{- /* for historical reasons, we overload the name "docker" here; in fact this monitor service supports both docker and containerd */}}
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -15748,11 +15721,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
-  {{- if NeedsContainerd}}
-            After=containerd.service
-  {{else}}
-            After=docker.service
-  {{- end}}
+            After={{GetContainerRuntime}}.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime

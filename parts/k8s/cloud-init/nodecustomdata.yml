@@ -98,24 +98,13 @@ write_files:
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
 
-  {{if NeedsContainerd}}
-- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+- path: /etc/systemd/system/{{GetContainerRuntime}}.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
   content: |
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
-  {{else}}
-- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-  {{end}}
-{{end}}
 
 {{- if HasKubeletHealthZPort}}
 - path: /etc/systemd/system/kubelet-monitor.service
@@ -144,6 +133,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
+{{- /* for historical reasons, we overload the name "docker" here; in fact this monitor service supports both docker and containerd */}}
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -424,11 +414,7 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
-  {{- if NeedsContainerd}}
-            After=containerd.service
-  {{else}}
-            After=docker.service
-  {{- end}}
+            After={{GetContainerRuntime}}.service
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime

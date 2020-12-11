@@ -90,24 +90,13 @@ write_files:
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
 
-  {{if NeedsContainerd}}
-- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+- path: /etc/systemd/system/{{GetContainerRuntime}}.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
   content: |
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
-  {{else}}
-- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-  {{end}}
-{{end}}
 
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
@@ -139,6 +128,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
+{{- /* for historical reasons, we overload the name "docker" here; in fact this monitor service supports both docker and containerd */}}
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
