@@ -14843,6 +14843,7 @@ write_files:
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
+{{- end}}
 
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
@@ -15411,6 +15412,7 @@ write_files:
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
+{{- end}}
 
 {{- if HasKubeletHealthZPort}}
 - path: /etc/systemd/system/kubelet-monitor.service

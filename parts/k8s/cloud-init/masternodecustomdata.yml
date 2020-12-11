@@ -97,6 +97,7 @@ write_files:
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
+{{- end}}
 
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
