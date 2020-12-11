@@ -967,11 +967,11 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	}
 
 	// test user-overrides
-	cs = CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "1.20.0", 3, 2, false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	k["--feature-gates"] = "DynamicKubeletConfig=true"
+	k["--feature-gates"] = "DynamicKubeletConfig=true,ExecProbeTimeout=true"
 	cs.setKubeletConfig(false)
-	if k["--feature-gates"] != "DynamicKubeletConfig=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "DynamicKubeletConfig=true,ExecProbeTimeout=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}

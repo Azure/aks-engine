@@ -4,7 +4,6 @@
 package api
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
@@ -1076,17 +1075,16 @@ func certsAlreadyPresent(c *CertificateProfile, m int) map[string]bool {
 // combine user-provided --feature-gates vals with defaults
 // a minimum k8s version may be declared as required for defaults assignment
 func addDefaultFeatureGates(m map[string]string, version string, minVersion string, defaults string) {
-	if minVersion != "" {
-		if common.IsKubernetesVersionGe(version, minVersion) {
-			m["--feature-gates"] = combineValues(m["--feature-gates"], defaults)
-		} else {
-			m["--feature-gates"] = combineValues(m["--feature-gates"], "")
-		}
-	} else {
+	if minVersion == "" || common.IsKubernetesVersionGe(version, minVersion) {
 		m["--feature-gates"] = combineValues(m["--feature-gates"], defaults)
+	} else {
+		m["--feature-gates"] = combineValues(m["--feature-gates"], "")
 	}
 }
 
+// combineValues takes a variadic string input of strings matching a pattern []string{"foo=bar","key=val"}
+// and returns a single, comma-delimited, concatenated string of all key/val string values, e.g.: "foo=bar,key=val"
+// if more than one key is encountered, the first one is always preferred
 func combineValues(inputs ...string) string {
 	valueMap := make(map[string]string)
 	for _, input := range inputs {
@@ -1101,7 +1099,10 @@ func applyValueStringToMap(valueMap map[string]string, input string) {
 		// trim spaces (e.g. if the input was "foo=true, bar=true" - we want to drop the space after the comma)
 		value := strings.Trim(values[index], " ")
 		valueParts := strings.Split(value, "=")
-		if len(valueParts) == 2 {
+		if len(valueParts) != 2 {
+			continue
+		}
+		if _, ok := valueMap[valueParts[0]]; !ok {
 			valueMap[valueParts[0]] = valueParts[1]
 		}
 	}
@@ -1114,11 +1115,11 @@ func mapToString(valueMap map[string]string) string {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	var buf bytes.Buffer
+	ret := []string{}
 	for _, key := range keys {
-		buf.WriteString(fmt.Sprintf("%s=%s,", key, valueMap[key]))
+		ret = append(ret, fmt.Sprintf("%s=%s", key, valueMap[key]))
 	}
-	return strings.TrimSuffix(buf.String(), ",")
+	return strings.Join(ret, ",")
 }
 
 func generateEtcdEncryptionKey() string {
