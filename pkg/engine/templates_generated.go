@@ -13481,7 +13481,11 @@ func k8sCloudInitArtifactsDhcpv6Service() (*asset, error) {
 
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
+{{- if NeedsContainerd}}
+After=containerd.service
+{{else}}
 After=docker.service
+{{- end}}
 [Service]
 Restart=always
 RestartSec=10
@@ -15744,7 +15748,11 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+  {{- if NeedsContainerd}}
+            After=containerd.service
+  {{else}}
             After=docker.service
+  {{- end}}
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime

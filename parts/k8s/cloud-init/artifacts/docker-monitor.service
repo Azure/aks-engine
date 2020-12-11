@@ -1,6 +1,10 @@
 [Unit]
 Description=a script that checks docker health and restarts if needed
+{{- if NeedsContainerd}}
+After=containerd.service
+{{else}}
 After=docker.service
+{{- end}}
 [Service]
 Restart=always
 RestartSec=10

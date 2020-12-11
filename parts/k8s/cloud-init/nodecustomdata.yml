@@ -424,7 +424,11 @@ coreos:
       drop-ins:
         - name: "10-flatcar.conf"
           content: |
+  {{- if NeedsContainerd}}
+            After=containerd.service
+  {{else}}
             After=docker.service
+  {{- end}}
             [Service]
             ExecStart=
             ExecStart=/opt/bin/health-monitor.sh container-runtime
