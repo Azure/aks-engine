@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
 )
@@ -66,6 +67,42 @@ type List struct {
 type GetResult struct {
 	ds  *Daemonset
 	err error
+}
+
+// Delete will delete a Daemonset in a given namespace
+func (d *Daemonset) Delete(retries int) error {
+	var zeroValueDuration time.Duration
+	var kubectlOutput []byte
+	var kubectlError error
+	for i := 0; i < retries; i++ {
+		cmd := exec.Command("k", "delete", "daemonset", "-n", d.Metadata.Namespace, d.Metadata.Name)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
+		if kubectlError != nil {
+			log.Printf("Error while trying to delete DaemonSet %s in namespace %s:%s\n", d.Metadata.Namespace, d.Metadata.Name, string(kubectlOutput))
+			continue
+		}
+		break
+	}
+
+	return kubectlError
+}
+
+// CreateDaemonsetDeleteIfExists will create a daemonset, deleting any pre-existing daemonset with the same name + namespace
+func CreateDaemonsetDeleteIfExists(filename, name, namespace, labelKey, labelVal string, sleep, timeout time.Duration) (*Daemonset, error) {
+	d, err := Get(name, namespace, 3)
+	if err == nil {
+		log.Printf("daemonset %s in namespace %s already exists, will delete\n", name, namespace)
+		err = d.Delete(3)
+		if err != nil {
+			log.Printf("unable to delete daemonset %s in namespace %s\n", name, namespace)
+			return nil, err
+		}
+	}
+	_, err = pod.WaitForMaxRunningByLabelWithRetry(0, labelKey, labelVal, namespace, 500*time.Millisecond, timeout)
+	if err != nil {
+		return nil, err
+	}
+	return CreateDaemonsetFromFileWithRetry(filename, name, namespace, sleep, timeout)
 }
 
 // CreateDaemonsetFromFile will create a Pod from file with a name
