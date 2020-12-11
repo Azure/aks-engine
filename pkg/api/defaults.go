@@ -1087,6 +1087,9 @@ func addDefaultFeatureGates(m map[string]string, version string, minVersion stri
 	}
 }
 
+// combineValues takes a variadic string input of strings matching a pattern []string{"foo=bar","key=val"}
+// and returns a single, comma-delimited, concatenated string of all key/val string values, e.g.: "foo=bar,key=val"
+// if more than one key is encountered, the first one is always preferred
 func combineValues(inputs ...string) string {
 	valueMap := make(map[string]string)
 	for _, input := range inputs {
@@ -1102,7 +1105,9 @@ func applyValueStringToMap(valueMap map[string]string, input string) {
 		value := strings.Trim(values[index], " ")
 		valueParts := strings.Split(value, "=")
 		if len(valueParts) == 2 {
-			valueMap[valueParts[0]] = valueParts[1]
+			if _, ok := valueMap[valueParts[0]]; !ok {
+				valueMap[valueParts[0]] = valueParts[1]
+			}
 		}
 	}
 }
