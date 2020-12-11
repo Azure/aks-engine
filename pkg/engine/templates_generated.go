@@ -13482,7 +13482,6 @@ func k8sCloudInitArtifactsDhcpv6Service() (*asset, error) {
 var _k8sCloudInitArtifactsDockerMonitorService = []byte(`[Unit]
 Description=a script that checks docker health and restarts if needed
 After={{GetContainerRuntime}}.service
-{{- end}}
 [Service]
 Restart=always
 RestartSec=10
