@@ -64,7 +64,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7]",
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.8 1.3.9]",
 		},
 		"should error when KubernetesConfig has containerdVersion value for docker container runtime": {
 			properties: &Properties{
