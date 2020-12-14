@@ -3,6 +3,7 @@ name: Nightly
 on:
   schedule:
     - cron: '0 0 * * *' # Every day at midnight
+  workflow_dispatch:
 
 jobs:
 
