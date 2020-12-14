@@ -117,31 +117,31 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 	common.KubernetesImageBaseTypeGCR: {
 		"1.20": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.19": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.1",
 		},
 		"1.16": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.3.7",
+			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.4",
 		},
