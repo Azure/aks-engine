@@ -19,13 +19,21 @@
 
 Enabling Managed Identity configures aks-engine to include and use MSI identities for all interactions with the Azure Resource Manager (ARM) API.
 
-Instead of using a static service principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This support is currently alpha and requires Kubernetes v1.9.1 or newer.
+Instead of using a static service principal written to `/etc/kubernetes/azure.json`, Kubernetes will use a dynamic, time-limited token fetched from the MSI extension running on master and agent nodes. This is currently the default cluster configuration. Because the managed identity requires role assignment resources in order to grant the proper privileges to the control plane VMs to allow the Azure Kubernetes cloud provider to create Azure resources, you will need to create your cluster (`aks-engine deploy` or `az group deployment create` [or equivalent] using the `aks-engine generate`-created ARM template) using a service principal that can create role assignment resources in the resource group.
 
-Enable Managed Identity by adding `useManagedIdentity` in `kubernetesConfig`.
+You may disable Managed Identity and instead delegate the use of a service principal to the Azure cloud provider (this service principal will need Contributor privileges to the resource group):
 
 ```json
-"kubernetesConfig": {
-  "useManagedIdentity": true
+"properties": {
+  "orchestratorProfile": {
+    "kubernetesConfig": {
+      "useManagedIdentity": false
+    }
+  },
+  "servicePrincipalProfile": {
+    "clientId": "<my service principal id>",
+    "secret": "<my service principal password>"
+  }
 }
 ```
 

@@ -84,6 +84,8 @@ Or, system-assigned identity enabled:
 }
 ```
 
+When you use a system-assigned identity configuration, you will need to submit your `aks-engine generate`-built ARM template as an ARM deployment with a service principal that can create role assignment resources in the resource group.
+
 2. To uniquely identify the cluster, you need a cluster name:
 ```json
 {
@@ -137,7 +139,7 @@ As mentioned above, `aks-engine generate` expects all cluster definition data to
 ```sh
 $ bin/aks-engine generate --api-model ./examples/kubernetes.json \
   --output-directory ./cluster_artifacts \
-  --set masterProfile.dnsPrefix=my-cluster,orchestratorProfile.kubernetesConfig.useManagedIdentity=true,linuxProfile.ssh.publicKeys[0].keyData=$(cat ~/.ssh/id_rsa.pub)
+  --set masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=$(cat ~/.ssh/id_rsa.pub)
 INFO[0000] new API model file has been generated during merge: /var/folders/jq/t_y8l4556rv__mzvjhkd61n00000gp/T/mergedApiModel831700038
 WARN[0000] No "location" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only
 INFO[0000] Generating assets into ./cluster_artifacts...
