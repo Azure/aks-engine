@@ -17,7 +17,7 @@ namespace RunProcess
         
         // RunProcess starts a process, sets the priority class of that process to 'High'
         // and redirects all standard output / error for logging.
-        public static int RunProcess(string executable, string args = "") {
+        public static int RunProcess(string executable, string args = "", ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal) {
             Process p = new Process();
             p.StartInfo.FileName = executable;
             p.StartInfo.WorkingDirectory = Path.GetDirectoryName(executable);
@@ -39,7 +39,7 @@ namespace RunProcess
 
             // I don't know why this sleep is needed but it is :-/
             Thread.Sleep(2000);
-            p.PriorityClass = ProcessPriorityClass.High;
+            p.PriorityClass = priorityClass;
             p.WaitForExit();
 
             return p.ExitCode;

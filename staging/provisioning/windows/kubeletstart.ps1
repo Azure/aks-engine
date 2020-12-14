@@ -253,8 +253,14 @@ if ($global:NetworkPlugin -eq "kubenet") {
 }
 
 # Start the kubelet
-# Use run-process.cs to set process priority class as 'High'
-Add-Type -Path .\run-process.cs
+# Use run-process.cs to set process priority class as 'AboveNormal'
+# Load a signed version of runprocess.dll if it exists for Azure SysLock compliance
+# otherwise load class from cs file (for CI/testing)
+if (Test-Path "$global:KubeDir\runprocess.dll") {
+    [System.Reflection.Assembly]::LoadFrom("$global:KubeDir\runprocess.dll")
+} else {
+    Add-Type -Path "$global:KubeDir\run-process.cs"
+}
 $exe = "$global:KubeDir\kubelet.exe"
 $args = ($KubeletArgList -join " ")
-[RunProcess.exec]::RunProcess($exe, $args)
+[RunProcess.exec]::RunProcess($exe, $args, [System.Diagnostics.ProcessPriorityClass]::AboveNormal)
