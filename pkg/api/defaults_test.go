@@ -5629,3 +5629,38 @@ func ExampleContainerService_setOrchestratorDefaults() {
 	// level=warning msg="Any new nodes will have Moby version 19.03.12\n"
 	// level=warning msg="Any new nodes will have containerd version 1.3.7\n"
 }
+
+func TestCombineValues(t *testing.T) {
+	cases := []struct {
+		name    string
+		inputs  []string
+		outputs string
+	}{
+		{
+			name:    "simple",
+			inputs:  []string{"foo=bar", ""},
+			outputs: "foo=bar",
+		},
+		{
+			name:    "get defaults",
+			inputs:  []string{"", "ExecProbeTimeout=false,RotateKubeletServerCertificate=true"},
+			outputs: "ExecProbeTimeout=false,RotateKubeletServerCertificate=true",
+		},
+		{
+			name:    "user overrides a default",
+			inputs:  []string{"ExecProbeTimeout=true", "ExecProbeTimeout=false"},
+			outputs: "ExecProbeTimeout=true",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			ret := combineValues(c.inputs...)
+			if ret != c.outputs {
+				t.Errorf("expected combineValues output to be %s, but got %s", c.outputs, ret)
+			}
+		})
+	}
+}
