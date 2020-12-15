@@ -301,6 +301,30 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 		},
+		"should error when EtcdDiskSizeGB is not larger than EtcdStorageLimitGB": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						EtcdDiskSizeGB:     "4",
+						EtcdStorageLimitGB: 4,
+					},
+				},
+			},
+			expectedError: "etcdDiskSizeGB should be larger than etcdStorageLimitGB",
+		},
+		"should error when EtcdDiskSizeGB is smaller than 4": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						EtcdDiskSizeGB:     "3",
+						EtcdStorageLimitGB: 2,
+					},
+				},
+			},
+			expectedError: "etcdDiskSizeGB set to 3, should be at least 4",
+		},
 	}
 
 	for testName, test := range tests {
@@ -354,6 +378,24 @@ func ExampleProperties_validateOrchestratorProfile() {
 	// Output:
 	// level=warning msg="EtcdStorageLimitGB of 9 is larger than the recommended maximum of 8"
 	// level=warning msg="Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`"
+}
+
+func ExampleProperties_validateAgentPoolProfiles() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+
+	cs := getK8sDefaultContainerService(true)
+	cs.Properties.AgentPoolProfiles[0].StorageProfile = Ephemeral
+	cs.Properties.AgentPoolProfiles[0].Name = "foo"
+	if err := cs.Properties.validateAgentPoolProfiles(false); err != nil {
+		log.Error(err)
+	}
+
+	// Output:
+	// level=warning msg="Ephemeral OS disk is enabled for Agent Pool foo. This is an appropriate configuration for ephemeral nodes; data may be lost in some cases."
 }
 
 func Test_KubernetesConfig_Validate(t *testing.T) {

@@ -5664,3 +5664,398 @@ func TestCombineValues(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultMasterProfileDiskTypes(t *testing.T) {
+	cases := []struct {
+		name                    string
+		cs                      ContainerService
+		isUpgrade               bool
+		expectedDataDiskType    string
+		expectedOSDiskType      string
+		expectedUltraSSDEnabled bool
+	}{
+		{
+			name: "defaults",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expectedDataDiskType:    PremiumSSD,
+			expectedOSDiskType:      PremiumSSD,
+			expectedUltraSSDEnabled: false,
+		},
+		{
+			name: "ultrassd data disk defaults",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{
+						DataDiskType: UltraSSD,
+					},
+				},
+			},
+			expectedDataDiskType:    UltraSSD,
+			expectedOSDiskType:      PremiumSSD,
+			expectedUltraSSDEnabled: true,
+		},
+		{
+			name: "ultrassd everywhere",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{
+						DataDiskType:    UltraSSD,
+						OSDiskType:      UltraSSD,
+						UltraSSDEnabled: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedDataDiskType:    UltraSSD,
+			expectedOSDiskType:      UltraSSD,
+			expectedUltraSSDEnabled: true,
+		},
+		{
+			name: "skip defaults if upgrade",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expectedDataDiskType:    "",
+			expectedOSDiskType:      "",
+			expectedUltraSSDEnabled: false,
+			isUpgrade:               true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.Properties.setMasterProfileDefaults(c.isUpgrade)
+			if c.cs.Properties.MasterProfile.DataDiskType != c.expectedDataDiskType {
+				t.Errorf("expected %s, but got %s", c.expectedDataDiskType, c.cs.Properties.MasterProfile.DataDiskType)
+			}
+			if c.cs.Properties.MasterProfile.OSDiskType != c.expectedOSDiskType {
+				t.Errorf("expected %s, but got %s", c.expectedOSDiskType, c.cs.Properties.MasterProfile.OSDiskType)
+			}
+			if to.Bool(c.cs.Properties.MasterProfile.UltraSSDEnabled) != c.expectedUltraSSDEnabled {
+				t.Errorf("expected %t, but got %t", c.expectedUltraSSDEnabled, to.Bool(c.cs.Properties.MasterProfile.UltraSSDEnabled))
+			}
+		})
+	}
+}
+
+func TestDefaultAgentPoolProfileDiskTypes(t *testing.T) {
+	cases := []struct {
+		name                        string
+		cs                          ContainerService
+		isUpgrade                   bool
+		expectedOSDiskType          string
+		expectedOSDiskCachingType   string
+		expectedDataDiskCachingType string
+		expectedUltraSSDEnabled     bool
+	}{
+		{
+			name: "defaults",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name: "foo",
+						},
+					},
+				},
+			},
+			expectedOSDiskType:          "",
+			expectedOSDiskCachingType:   string(compute.CachingTypesReadWrite),
+			expectedDataDiskCachingType: string(compute.CachingTypesReadOnly),
+		},
+		{
+			name: "ephemeral defaults",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:           "foo",
+							StorageProfile: Ephemeral,
+						},
+					},
+				},
+			},
+			expectedOSDiskType:          StandardHDD,
+			expectedOSDiskCachingType:   string(compute.CachingTypesReadOnly),
+			expectedDataDiskCachingType: string(compute.CachingTypesReadOnly),
+		},
+		{
+			name: "custom config is respected",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                "foo",
+							OSDiskType:          UltraSSD,
+							OSDiskCachingType:   string(compute.CachingTypesReadOnly),
+							UltraSSDEnabled:     to.BoolPtr(true),
+							DataDiskType:        PremiumSSD,
+							DataDiskCachingType: string(compute.CachingTypesReadWrite),
+						},
+					},
+				},
+			},
+			expectedOSDiskType:          UltraSSD,
+			expectedOSDiskCachingType:   string(compute.CachingTypesReadOnly),
+			expectedDataDiskCachingType: string(compute.CachingTypesReadWrite),
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.Properties.setAgentProfileDefaults(false, false)
+			if c.cs.Properties.AgentPoolProfiles[0].OSDiskType != c.expectedOSDiskType {
+				t.Errorf("expected %s, but got %s", c.expectedOSDiskType, c.cs.Properties.AgentPoolProfiles[0].OSDiskType)
+			}
+			if c.cs.Properties.AgentPoolProfiles[0].OSDiskCachingType != c.expectedOSDiskCachingType {
+				t.Errorf("expected %s, but got %s", c.expectedOSDiskCachingType, c.cs.Properties.AgentPoolProfiles[0].OSDiskCachingType)
+			}
+			if c.cs.Properties.AgentPoolProfiles[0].DataDiskCachingType != c.expectedDataDiskCachingType {
+				t.Errorf("expected %s, but got %s", c.expectedDataDiskCachingType, c.cs.Properties.AgentPoolProfiles[0].DataDiskCachingType)
+			}
+		})
+	}
+}
+
+func TestDefaultEtcdDiskThroughput(t *testing.T) {
+	cases := []struct {
+		name                 string
+		cs                   ContainerService
+		isUpgrade            bool
+		isScale              bool
+		expectedEtcdDiskIOPS int
+		expectedEtcdDiskMBPS int
+	}{
+		{
+			name: "defaults",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{
+						DataDiskType: PremiumSSD,
+					},
+				},
+			},
+			expectedEtcdDiskIOPS: 0,
+			expectedEtcdDiskMBPS: 0,
+		},
+		{
+			name: "ultrassd defaults",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{
+						DataDiskType: UltraSSD,
+					},
+				},
+			},
+			expectedEtcdDiskIOPS: 76800,
+			expectedEtcdDiskMBPS: 2000,
+		},
+		{
+			name: "ultrassd with disk size",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+						KubernetesConfig: &KubernetesConfig{
+							EtcdDiskSizeGB: "128",
+						},
+					},
+					MasterProfile: &MasterProfile{
+						DataDiskType: UltraSSD,
+					},
+				},
+			},
+			expectedEtcdDiskIOPS: 38400,
+			expectedEtcdDiskMBPS: 2000,
+		},
+		{
+			name: "nothing for upgrade",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{
+						DataDiskType: UltraSSD,
+					},
+				},
+			},
+			expectedEtcdDiskIOPS: 0,
+			expectedEtcdDiskMBPS: 0,
+			isUpgrade:            true,
+		},
+		{
+			name: "nothing for scale",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.18.2",
+					},
+					MasterProfile: &MasterProfile{
+						DataDiskType: UltraSSD,
+					},
+				},
+			},
+			expectedEtcdDiskIOPS: 0,
+			expectedEtcdDiskMBPS: 0,
+			isScale:              true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setOrchestratorDefaults(c.isUpgrade, c.isScale)
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskIOPS != c.expectedEtcdDiskIOPS {
+				t.Errorf("expected %d, but got %d", c.expectedEtcdDiskIOPS, c.cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskIOPS)
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskMBPS != c.expectedEtcdDiskMBPS {
+				t.Errorf("expected %d, but got %d", c.expectedEtcdDiskMBPS, c.cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskMBPS)
+			}
+		})
+	}
+}
+
+func TestGetDefaultUltraSSDConfig(t *testing.T) {
+	cases := []struct {
+		name              string
+		etcdDiskSizeGB    int
+		expectedSSDConfig ssdConfig
+	}{
+		{
+			name:           "default",
+			etcdDiskSizeGB: 0,
+			expectedSSDConfig: ssdConfig{
+				iops: 1200,
+				mbps: 300,
+			},
+		},
+		{
+			name:           "8 GB",
+			etcdDiskSizeGB: 8,
+			expectedSSDConfig: ssdConfig{
+				iops: 2400,
+				mbps: 600,
+			},
+		},
+		{
+			name:           "16 GB",
+			etcdDiskSizeGB: 16,
+			expectedSSDConfig: ssdConfig{
+				iops: 4800,
+				mbps: 1200,
+			},
+		},
+		{
+			name:           "32 GB",
+			etcdDiskSizeGB: 32,
+			expectedSSDConfig: ssdConfig{
+				iops: 9600,
+				mbps: 2000,
+			},
+		},
+		{
+			name:           "64 GB",
+			etcdDiskSizeGB: 64,
+			expectedSSDConfig: ssdConfig{
+				iops: 19200,
+				mbps: 2000,
+			},
+		},
+		{
+			name:           "128 GB",
+			etcdDiskSizeGB: 128,
+			expectedSSDConfig: ssdConfig{
+				iops: 38400,
+				mbps: 2000,
+			},
+		},
+		{
+			name:           "256 GB",
+			etcdDiskSizeGB: 256,
+			expectedSSDConfig: ssdConfig{
+				iops: 76800,
+				mbps: 2000,
+			},
+		},
+		{
+			name:           "512 GB",
+			etcdDiskSizeGB: 512,
+			expectedSSDConfig: ssdConfig{
+				iops: 80000,
+				mbps: 2000,
+			},
+		},
+		{
+			name:           "1024 GB",
+			etcdDiskSizeGB: 1024,
+			expectedSSDConfig: ssdConfig{
+				iops: 160000,
+				mbps: 2000,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			ssdConfig := getDefaultUltraSSDConfig(c.etcdDiskSizeGB)
+			if c.expectedSSDConfig.iops != ssdConfig.iops {
+				t.Errorf("expected %d, but got %d", c.expectedSSDConfig.iops, ssdConfig.iops)
+			}
+			if c.expectedSSDConfig.mbps != ssdConfig.mbps {
+				t.Errorf("expected %d, but got %d", c.expectedSSDConfig.mbps, ssdConfig.mbps)
+			}
+		})
+	}
+}
