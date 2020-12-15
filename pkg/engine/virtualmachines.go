@@ -170,6 +170,9 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 			Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
 		}
 		if cs.Properties.MasterProfile.IsStorageAccount() {
+			etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
+			dataDisk.CreateOption = compute.DiskCreateOptionTypesEmpty
+			dataDisk.DiskSizeGB = to.Int32Ptr(int32(etcdSizeGB))
 			dataDisk.Vhd = &compute.VirtualHardDisk{
 				URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/', variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-etcddisk.vhd')]"),
 			}

@@ -105,8 +105,10 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		}
 	}
 
-	etcdDiskResource := createEtcdDisk(cs)
-	masterResources = append(masterResources, etcdDiskResource)
+	if p.MasterProfile.IsManagedDisks() {
+		etcdDiskResource := createEtcdDisk(cs)
+		masterResources = append(masterResources, etcdDiskResource)
+	}
 
 	masterVM := CreateMasterVM(cs)
 	masterResources = append(masterResources, masterVM)
