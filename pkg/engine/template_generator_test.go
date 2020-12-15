@@ -1459,7 +1459,7 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			ExpectedResult: true,
 		},
 		{
-			Name:     "GetKubeProxyFeatureGatesPsh",
+			Name:     "GetKubeProxyFeatureGatesPsh - Windows DSR",
 			FuncName: "GetKubeProxyFeatureGatesPsh",
 			MutateFunc: func(cs api.ContainerService) api.ContainerService {
 				cs.Properties.FeatureFlags = &api.FeatureFlags{
@@ -1468,6 +1468,17 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 				return cs
 			},
 			ExpectedResult: "\"WinDSR=true\", \"WinOverlay=false\"",
+		},
+		{
+			Name:     "GetKubeProxyFeatureGatesPsh - IPV6",
+			FuncName: "GetKubeProxyFeatureGatesPsh",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.FeatureFlags = &api.FeatureFlags{
+					EnableIPv6DualStack: true,
+				}
+				return cs
+			},
+			ExpectedResult: "\"IPv6DualStack=true\"",
 		},
 		{
 			Name:     "GetEmptyApplicationInsightsTelemetryKeys",

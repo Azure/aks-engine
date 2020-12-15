@@ -5285,7 +5285,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 			expected: false,
 		},
 		{
-			name:    "wind dsr",
+			name:    "Windows DSR",
 			feature: "EnableWinDSR",
 			flags: &FeatureFlags{
 				EnableWinDSR: true,
@@ -5781,6 +5781,15 @@ func TestGetKubeProxyFeatureGatesWindowsArguments(t *testing.T) {
 			name: "default",
 			properties: &Properties{
 				FeatureFlags: &FeatureFlags{},
+			},
+			expectedFeatureGates: "",
+		},
+		{
+			name: "Non kubeproxy feature",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableTelemetry: true,
+				},
 			},
 			expectedFeatureGates: "",
 		},
