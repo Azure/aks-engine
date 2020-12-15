@@ -9,7 +9,7 @@ AKS Engine is a legacy ARM template-driven way to provision a self-managed Kuber
 
 ## Overview
 
-AKS Engine provides tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS Engine is limited in its support for ongoing operational needs such as scaling, in-place upgrading, and extension management. The [Cluster API Provider for Azure a.k.a. CAPZ](https://capz.sigs.k8s.io/) provides more complete operational capabilities.
+AKS Engine provides tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS Engine is limited in its support for ongoing operational needs such as scaling, in-place upgrading, and extension management. The [Cluster API Provider for Azure a.k.a. CAPZ](https://capz.sigs.k8s.io/) provides more complete operational capabilities. AKS Engine remains the tool for managing Kubernetes clusters on Azure Stack Hub as CAPZ does not yet work there.
 
 ## Getting started
 
