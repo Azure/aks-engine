@@ -5,11 +5,11 @@
 [![GoDoc](https://godoc.org/github.com/Azure/aks-engine?status.svg)](https://godoc.org/github.com/Azure/aks-engine)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Azure/aks-engine)](https://goreportcard.com/report/github.com/Azure/aks-engine)
 
-AKS Engine is the easiest way to provision a self-managed Kubernetes cluster on Azure.
+AKS Engine is a legacy ARM template-driven way to provision a self-managed Kubernetes cluster on Azure.
 
 ## Overview
 
-AKS Engine provides convenient tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure.
+AKS Engine provides tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS Engine is limited in its support for ongoing operational needs such as scaling, in-place upgrading, and extension management. The [Cluster API Provider for Azure a.k.a. CAPZ](https://capz.sigs.k8s.io/) provides more complete operational capabilities.
 
 ## Getting started
 
@@ -23,7 +23,7 @@ Please see the [FAQ][] for answers about AKS Engine and its progenitor ACS-Engin
 
 ## Join the community
 
-Want to get involved? The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute. The [developer guide][developer-guide] will help you onboard as a developer.
+If you are committed to using AKS Engine longer term and would like to become a project maintainer, please reach out to us via the [#aks-engine-dev Slack channel](https://kubernetes.slack.com/archives/CU1CXUHN0)! The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute. The [developer guide][developer-guide] will help you onboard as a developer. The AKS Engine community is committed to integrating and validating new versions of Kubernetes into AKS Engine. We encourage AKS Engine users to evaluate moving to CAPZ as it provides stronger support for managing the cluster lifecycle compared to AKS Engine.
 
 ## Support
 
