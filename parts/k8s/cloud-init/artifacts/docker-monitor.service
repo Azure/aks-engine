@@ -1,6 +1,6 @@
 [Unit]
 Description=a script that checks docker health and restarts if needed
-After=docker.service
+After={{GetContainerRuntime}}.service
 [Service]
 Restart=always
 RestartSec=10
