@@ -612,8 +612,8 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.OSDiskCachingType = api.OSDiskCachingType
 	p.DataDiskCachingType = api.DataDiskCachingType
 	p.VMSSName = api.VMSSName
-	p.OSDiskSSDType = api.OSDiskSSDType
-	p.DataDiskSSDType = api.DataDiskSSDType
+	p.OSDiskType = api.OSDiskType
+	p.DataDiskType = api.DataDiskType
 }
 
 func convertServicePrincipalProfileToVLabs(api *ServicePrincipalProfile, v *vlabs.ServicePrincipalProfile) {

@@ -564,8 +564,8 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.PlatformUpdateDomainCount = vlabs.PlatformUpdateDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
-	api.OSDiskSSDType = vlabs.OSDiskSSDType
-	api.DataDiskSSDType = vlabs.DataDiskSSDType
+	api.OSDiskType = vlabs.OSDiskType
+	api.DataDiskType = vlabs.DataDiskType
 	api.UltraSSDEnabled = vlabs.UltraSSDEnabled
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
 	api.AuditDEnabled = vlabs.AuditDEnabled
@@ -652,8 +652,8 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.OSDiskCachingType = vlabs.OSDiskCachingType
 	api.DataDiskCachingType = vlabs.DataDiskCachingType
 	api.VMSSName = vlabs.VMSSName
-	api.OSDiskSSDType = vlabs.OSDiskSSDType
-	api.DataDiskSSDType = vlabs.DataDiskSSDType
+	api.OSDiskType = vlabs.OSDiskType
+	api.DataDiskType = vlabs.DataDiskType
 }
 
 func convertVLabsKeyVaultSecrets(vlabs *vlabs.KeyVaultSecrets, api *KeyVaultSecrets) {
