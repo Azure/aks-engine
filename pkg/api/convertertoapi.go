@@ -119,6 +119,7 @@ func convertVLabsFeatureFlags(vlabs *vlabs.FeatureFlags, api *FeatureFlags) {
 	api.EnableIPv6DualStack = vlabs.EnableIPv6DualStack
 	api.EnableTelemetry = vlabs.EnableTelemetry
 	api.EnableIPv6Only = vlabs.EnableIPv6Only
+	api.EnableWinDSR = vlabs.EnableWinDSR
 }
 
 func convertVLabsExtensionProfile(vlabs *vlabs.ExtensionProfile, api *ExtensionProfile) {

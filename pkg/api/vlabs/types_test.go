@@ -1006,3 +1006,41 @@ func TestShouldEnableAzureCloudAddon(t *testing.T) {
 		})
 	}
 }
+
+func TestIsWinDSREnabled(t *testing.T) {
+
+	cases := []struct {
+		name         string
+		featureFlags *FeatureFlags
+		expected     bool
+	}{
+		{
+			name:         "nil",
+			featureFlags: nil,
+			expected:     false,
+		},
+		{
+			name:         "EnableWinDSR is disabled",
+			featureFlags: &FeatureFlags{},
+			expected:     false,
+		},
+		{
+			name: "EnableWinDSR is disabled",
+			featureFlags: &FeatureFlags{
+				EnableWinDSR: true,
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := c.featureFlags.IsWinDSREnabled()
+			if actual != c.expected {
+				t.Fatalf("expected test \"%s\" featureFlags.IsWinDSREnabled() to return %t but instead returned %t", c.name, c.expected, actual)
+			}
+		})
+	}
+}

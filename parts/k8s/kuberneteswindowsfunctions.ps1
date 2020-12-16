@@ -262,6 +262,9 @@ function Write-KubeClusterConfig {
             NodeLabels = $global:KubeletNodeLabels;
             ConfigArgs = $global:KubeletConfigArgs
         };
+        Kubeproxy    = @{
+            FeatureGates = $global:KubeproxyFeatureGates
+        };
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{

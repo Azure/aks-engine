@@ -1,4 +1,5 @@
 $Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
+$KubeproxyFeatureGates = $Global:ClusterConfiguration.Kubernetes.Kubeproxy.FeatureGates # This is the initial feature list passed in from aks-engine
 
 $KubeNetwork = "azure"
 if ($Global:ClusterConfiguration.Cni.Name -eq "kubenet") {
@@ -17,10 +18,13 @@ while (!$hnsNetwork) {
     $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 }
 
-# add dualstack feature gate if dualstack enabled
-$isDualStackEnabled = ("IPv6DualStack=true" | ? { $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs -match $_ }) -ne $null
-if ($isDualStackEnabled) {
-    $global:KubeproxyArgList += @("--feature-gates=IPv6DualStack=true")
+# enable WinDsr if WinDsr feature gate is enabled
+if ($KubeproxyFeatureGates -contains "WinDSR=true") {
+    $global:KubeproxyArgList += @("--enable-dsr=true")
+}
+
+if ($KubeproxyFeatureGates.Count -ne 0) {
+    $global:KubeproxyArgList += @("--feature-gates='" + ($KubeproxyFeatureGates -join "','") + "'")
 }
 
 #

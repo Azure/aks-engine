@@ -507,6 +507,7 @@ func TestConvertVLabsContainerService(t *testing.T) {
 				EnableCSERunInBackground: true,
 				BlockOutboundInternet:    false,
 				EnableTelemetry:          false,
+				EnableWinDSR:             true,
 			},
 			AADProfile: &vlabs.AADProfile{
 				ClientAppID:  "SampleClientAppID",
@@ -563,6 +564,11 @@ func TestConvertVLabsContainerService(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("unexpected error while executing ConvertVLabsContainerService: %s", err.Error())
+	}
+	if apiCs != nil && apiCs.Properties != nil &&
+		apiCs.Properties.FeatureFlags != nil &&
+		!apiCs.Properties.FeatureFlags.EnableWinDSR {
+		t.Error("unexpected false output while checking for EnableWinDSR")
 	}
 
 	//Test Vlabs with Kubernetes Orchestrator
@@ -767,7 +773,9 @@ func TestTelemetryEnabled(t *testing.T) {
 		t.Errorf("unexpected error while executing ConvertVLabsContainerService: %s", err.Error())
 	}
 
-	if !vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+	if apiCs != nil && apiCs.Properties != nil &&
+		apiCs.Properties.FeatureFlags != nil &&
+		!apiCs.Properties.FeatureFlags.EnableTelemetry {
 		t.Error("unexpected false output while checking for EnableTelemetry")
 	}
 }
