@@ -24,6 +24,7 @@ const (
 	osProfileFieldName                = "osProfile"
 	propertiesFieldName               = "properties"
 	resourcesFieldName                = "resources"
+	outputsFieldName                  = "outputs"
 	storageProfileFieldName           = "storageProfile"
 	typeFieldName                     = "type"
 	vmSizeFieldName                   = "vmSize"
@@ -248,7 +249,7 @@ func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, t
 
 // NormalizeForK8sVMASScalingUp takes a template and removes elements that are unwanted in a K8s VMAS scale up/down case
 func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templateMap map[string]interface{}) error {
-	if err := t.NormalizeMasterResourcesForScaling(logger, templateMap); err != nil {
+	if err := t.RemoveResourcesAndOutputsForScaling(logger, templateMap); err != nil {
 		return err
 	}
 	rtIndex := -1
@@ -351,8 +352,8 @@ func removeIndexesFromArray(array []interface{}, indexes []int) []interface{} {
 	return array
 }
 
-// NormalizeMasterResourcesForScaling takes a template and removes elements that are unwanted in any scale up/down case
-func (t *Transformer) NormalizeMasterResourcesForScaling(logger *logrus.Entry, templateMap map[string]interface{}) error {
+// NormalizeMasterResourcesForVMSSPoolUpgrade takes a template and removes elements that are unwanted in any upgrade case
+func (t *Transformer) NormalizeMasterResourcesForVMSSPoolUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
 	resources := templateMap[resourcesFieldName].([]interface{})
 	indexesToRemove := []int{}
 	//update master nodes resources
@@ -409,6 +410,38 @@ func (t *Transformer) NormalizeMasterResourcesForScaling(logger *logrus.Entry, t
 		}
 	}
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+
+	return nil
+}
+
+// RemoveResourcesAndOutputsForScaling takes a template and removes elements that are unwanted in any scale up/down case
+func (t *Transformer) RemoveResourcesAndOutputsForScaling(logger *logrus.Entry, templateMap map[string]interface{}) error {
+	resources := templateMap[resourcesFieldName].([]interface{})
+	indexesToRemove := []int{}
+	//remove master nodes resources from agent pool scaling template
+	for index, resource := range resources {
+		resourceMap, ok := resource.(map[string]interface{})
+		if !ok {
+			logger.Warnf("Template improperly formatted")
+			continue
+		}
+
+		var resourceName string
+		resourceName, ok = resourceMap[nameFieldName].(string)
+		if !ok {
+			logger.Warnf("Template improperly formatted")
+			continue
+		}
+		if strings.Contains(resourceName, "variables('master") {
+			indexesToRemove = append(indexesToRemove, index)
+		}
+		if strings.Contains(resourceName, "variables('agentPublicIPAddressName')") {
+			indexesToRemove = append(indexesToRemove, index)
+		}
+		continue
+	}
+	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+	delete(templateMap, outputsFieldName)
 
 	return nil
 }
@@ -691,7 +724,7 @@ func (t *Transformer) NormalizeForK8sAddVMASPool(l *logrus.Entry, templateMap ma
 	if err := t.RemoveJumpboxResourcesFromTemplate(l, templateMap); err != nil {
 		return err
 	}
-	if err := t.NormalizeMasterResourcesForScaling(l, templateMap); err != nil {
+	if err := t.RemoveResourcesAndOutputsForScaling(l, templateMap); err != nil {
 		return err
 	}
 	if err := removeSingleOfType(l, templateMap, vnetResourceType); err != nil {

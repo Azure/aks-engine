@@ -21,7 +21,7 @@ func TestNormalizeForK8sVMASScalingUp(t *testing.T) {
 	logger := logrus.New().WithField("testName", "TestNormalizeForK8sVMASScalingUp")
 	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template.json")
 	Expect(e).To(BeNil())
-	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_scale_template.json")
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_vmas_scale_up_template.json")
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
@@ -52,12 +52,12 @@ func TestNormalizeForK8sAddVMASPool(t *testing.T) {
 	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sAddVMASPool")
 }
 
-func TestNormalizeMasterResourcesForScaling(t *testing.T) {
+func TestNormalizeMasterResourcesForVMSSPoolUpgrade(t *testing.T) {
 	RegisterTestingT(t)
-	logger := logrus.New().WithField("testName", "TestNormalizeMasterResourcesForScaling")
+	logger := logrus.New().WithField("testName", "TestNormalizeMasterResourcesForVMSSPoolUpgrade")
 	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template.json")
 	Expect(e).To(BeNil())
-	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/master_resources_scale_temaplate.json")
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_vmss_pool_upgrade_template.json")
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
@@ -65,9 +65,27 @@ func TestNormalizeMasterResourcesForScaling(t *testing.T) {
 	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
-	e = transformer.NormalizeMasterResourcesForScaling(logger, templateMap)
+	e = transformer.NormalizeMasterResourcesForVMSSPoolUpgrade(logger, templateMap)
 	Expect(e).To(BeNil())
-	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeMasterResourcesForScaling")
+	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeMasterResourcesForVMSSPoolUpgrade")
+}
+
+func TestRemoveMasterResourcesAndOutputsForScaling(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "RemoveResourcesAndOutputsForScaling")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template.json")
+	Expect(e).To(BeNil())
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_scale_template.json")
+	Expect(e).To(BeNil())
+	templateJSON := string(fileContents)
+	var template interface{}
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
+	templateMap := template.(map[string]interface{})
+	transformer := Transformer{}
+	e = transformer.RemoveResourcesAndOutputsForScaling(logger, templateMap)
+	Expect(e).To(BeNil())
+	ValidateTemplate(templateMap, expectedFileContents, "RemoveResourcesAndOutputsForScaling")
 }
 
 func TestNormalizeForK8sVMASScalingUpWithVnet(t *testing.T) {
