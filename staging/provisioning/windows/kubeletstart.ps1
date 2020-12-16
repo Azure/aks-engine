@@ -197,9 +197,8 @@ if ($global:NetworkPlugin -eq "azure") {
     # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
     Restart-Service Kubeproxy
 
-    # startup the service
+    # Set env file for Azure Stack
     $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
-    Invoke-Expression $KubeletCommandLine
 }
 
 if ($global:NetworkPlugin -eq "kubenet") {
@@ -247,12 +246,21 @@ if ($global:NetworkPlugin -eq "kubenet") {
             # Add route to all other POD networks
             Update-CNIConfigKubenetDocker $podCIDR $masterSubnetGW
         }
-
-        # startup the service
-        Invoke-Expression $KubeletCommandLine
     }
     catch {
         Write-Error $_
     }
-
 }
+
+# Start the kubelet
+# Use run-process.cs to set process priority class as 'AboveNormal'
+# Load a signed version of runprocess.dll if it exists for Azure SysLock compliance
+# otherwise load class from cs file (for CI/testing)
+if (Test-Path "$global:KubeDir\runprocess.dll") {
+    [System.Reflection.Assembly]::LoadFrom("$global:KubeDir\runprocess.dll")
+} else {
+    Add-Type -Path "$global:KubeDir\run-process.cs"
+}
+$exe = "$global:KubeDir\kubelet.exe"
+$args = ($KubeletArgList -join " ")
+[RunProcess.exec]::RunProcess($exe, $args, [System.Diagnostics.ProcessPriorityClass]::AboveNormal)

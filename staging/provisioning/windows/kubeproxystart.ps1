@@ -31,5 +31,14 @@ Import-Module $global:HNSModule
 # and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
-$KubeproxyCmdline = "$global:KubeDir\kube-proxy.exe "+ ($global:KubeproxyArgList -join " ")
-Invoke-Expression $KubeproxyCmdline
+# Use run-process.cs to set process priority class as 'AboveNormal'
+# Load a signed version of runprocess.dll if it exists for Azure SysLock compliance
+# otherwise load class from cs file (for CI/testing)
+if (Test-Path "$global:KubeDir\runprocess.dll") {
+    [System.Reflection.Assembly]::LoadFrom("$global:KubeDir\runprocess.dll")
+} else {
+    Add-Type -Path "$global:KubeDir\run-process.cs"
+}
+$exe = "$global:KubeDir\kube-proxy.exe"
+$args = ($global:KubeproxyArgList -join " ")
+[RunProcess.exec]::RunProcess($exe, $args, [System.Diagnostics.ProcessPriorityClass]::AboveNormal)
