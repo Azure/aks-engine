@@ -1210,6 +1210,8 @@ type ssdConfig struct {
 	mbps int
 }
 
+// getDefaultUltraSSDConfig returns a known-working IOPS + MBPS config based on the size of the etcd disk
+// See https://docs.microsoft.com/en-us/azure/virtual-machines/disks-types#ultra-disk
 func getDefaultUltraSSDConfig(etcdDiskSizeGB int) ssdConfig {
 	if etcdDiskSizeGB >= 1024 {
 		return ssdConfig{
