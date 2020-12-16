@@ -22,9 +22,9 @@
 						"dataDir": "/mnt/docker"
 					},
 					"kubeReservedCgroup": "kubesystem",
-					"etcdVersion": "3.3.19",
+					"etcdVersion": "3.3.21",
 					"etcdStorageLimitGB": 8,
-					"etcdDiskSizeGB": "1024",
+					"etcdDiskSizeGB": "128",
 					"clusterSubnet": "10.239.0.0/16",
 					"addons": [
 						{
@@ -100,7 +100,7 @@
 					"1",
 					"2"
 				],
-				"ultraSSDEnabled": true
+				"dataDiskType": "UltraSSD"
 			},
 			"agentPoolProfiles": [
 				{
