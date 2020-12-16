@@ -24,6 +24,7 @@ const (
 	osProfileFieldName                = "osProfile"
 	propertiesFieldName               = "properties"
 	resourcesFieldName                = "resources"
+	outputsFieldName                  = "outputs"
 	storageProfileFieldName           = "storageProfile"
 	typeFieldName                     = "type"
 	vmSizeFieldName                   = "vmSize"
@@ -351,8 +352,8 @@ func removeIndexesFromArray(array []interface{}, indexes []int) []interface{} {
 	return array
 }
 
-// NormalizeMasterResourcesForScaling takes a template and removes elements that are unwanted in any scale up/down case
-func (t *Transformer) NormalizeMasterResourcesForScaling(logger *logrus.Entry, templateMap map[string]interface{}) error {
+// NormalizeMasterResourcesForVMSSPoolUpgrade takes a template and removes elements that are unwanted in any upgrade case
+func (t *Transformer) NormalizeMasterResourcesForVMSSPoolUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
 	resources := templateMap[resourcesFieldName].([]interface{})
 	indexesToRemove := []int{}
 	//update master nodes resources
@@ -409,6 +410,35 @@ func (t *Transformer) NormalizeMasterResourcesForScaling(logger *logrus.Entry, t
 		}
 	}
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+
+	return nil
+}
+
+// NormalizeMasterResourcesForScaling takes a template and removes elements that are unwanted in any scale up/down case
+func (t *Transformer) NormalizeMasterResourcesForScaling(logger *logrus.Entry, templateMap map[string]interface{}) error {
+	resources := templateMap[resourcesFieldName].([]interface{})
+	indexesToRemove := []int{}
+	//remove master nodes resources from agent pool scaling template
+	for index, resource := range resources {
+		resourceMap, ok := resource.(map[string]interface{})
+		if !ok {
+			logger.Warnf("Template improperly formatted")
+			continue
+		}
+
+		var resourceName string
+		resourceName, ok = resourceMap[nameFieldName].(string)
+		if !ok {
+			logger.Warnf("Template improperly formatted")
+			continue
+		}
+		if strings.Contains(resourceName, "variables('master") {
+			indexesToRemove = append(indexesToRemove, index)
+		}
+		continue
+	}
+	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+	delete(templateMap, outputsFieldName)
 
 	return nil
 }

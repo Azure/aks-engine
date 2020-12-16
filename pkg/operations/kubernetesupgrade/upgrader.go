@@ -583,9 +583,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			}
 		}
 
-		// TODO: rename this!
-		// This is not called in scaling scenarios. only in this upgrade scenario!
-		if err = transformer.NormalizeMasterResourcesForScaling(ku.logger, templateMap); err != nil {
+		if err = transformer.NormalizeMasterResourcesForVMSSPoolUpgrade(ku.logger, templateMap); err != nil {
 			return err
 		}
 
