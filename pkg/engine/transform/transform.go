@@ -662,7 +662,7 @@ func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry,
 
 		// Remove control plane resources
 		switch resourceType {
-		case vmssResourceType, vmResourceType, vmExtensionType, roleResourceType, nicResourceType:
+		case vmResourceType, vmExtensionType, roleResourceType, nicResourceType:
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
 				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
@@ -679,10 +679,9 @@ func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry,
 			}
 		case vnetResourceType:
 			RemoveNsgDependency(logger, resourceName, resourceMap)
-		}
-
-		if resourceType == vmssResourceType {
-			RemoveNsgDependency(logger, resourceName, resourceMap)
+		case vmssResourceType:
+			filteredResources = filteredResources[:len(filteredResources)-1]
+			continue
 		}
 
 		tags, _ := resourceMap[tagsFieldName].(map[string]interface{})
@@ -703,22 +702,6 @@ func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry,
 			}
 
 			if removeVM {
-				logger.Infoln(fmt.Sprintf("Removing agent resource: %s from template", resourceName))
-				filteredResources = filteredResources[:len(filteredResources)-1]
-			}
-		case vmssResourceType:
-			logger.Infoln(fmt.Sprintf("Evaluating if agent pool: %s, resource: %s needs to be removed", poolName, resourceName))
-			logger.Infoln(fmt.Sprintf("agentPoolsToPreserve: %v...", agentPoolsToPreserve))
-
-			removeVMSS := true
-
-			for pool, preserve := range agentPoolsToPreserve {
-				if strings.Contains(resourceName, "variables('"+pool) && preserve {
-					removeVMSS = false
-				}
-			}
-
-			if removeVMSS {
 				logger.Infoln(fmt.Sprintf("Removing agent resource: %s from template", resourceName))
 				filteredResources = filteredResources[:len(filteredResources)-1]
 			}
