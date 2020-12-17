@@ -204,66 +204,68 @@ func (uc *UpgradeCluster) setNodesToUpgrade(kubeClient kubernetes.Client, resour
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 
-	for vmScaleSetPage, err := uc.Client.ListVirtualMachineScaleSets(ctx, resourceGroup); vmScaleSetPage.NotDone(); err = vmScaleSetPage.NextWithContext(ctx) {
-		if err != nil {
-			return err
-		}
-		for _, vmScaleSet := range vmScaleSetPage.Values() {
-			if uc.IsVMSSToBeUpgraded != nil && !uc.IsVMSSToBeUpgraded(*vmScaleSet.Name, uc.DataModel) {
-				continue
+	if !uc.ControlPlaneOnly {
+		for vmScaleSetPage, err := uc.Client.ListVirtualMachineScaleSets(ctx, resourceGroup); vmScaleSetPage.NotDone(); err = vmScaleSetPage.NextWithContext(ctx) {
+			if err != nil {
+				return err
 			}
-			for vmScaleSetVMsPage, err := uc.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, *vmScaleSet.Name); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.NextWithContext(ctx) {
-				if err != nil {
-					return err
+			for _, vmScaleSet := range vmScaleSetPage.Values() {
+				if uc.IsVMSSToBeUpgraded != nil && !uc.IsVMSSToBeUpgraded(*vmScaleSet.Name, uc.DataModel) {
+					continue
 				}
-				// set agent pool node count to match VMSS capacity
-				for _, pool := range uc.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
-					if poolName, _, _ := utils.VmssNameParts(*vmScaleSet.Name); poolName == pool.Name {
-						pool.Count = int(*vmScaleSet.Sku.Capacity)
-						break
+				for vmScaleSetVMsPage, err := uc.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, *vmScaleSet.Name); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.NextWithContext(ctx) {
+					if err != nil {
+						return err
 					}
-				}
-				scaleSetToUpgrade := AgentPoolScaleSet{
-					Name:     *vmScaleSet.Name,
-					Sku:      *vmScaleSet.Sku,
-					Location: *vmScaleSet.Location,
-				}
-				if vmScaleSet.VirtualMachineProfile != nil &&
-					vmScaleSet.VirtualMachineProfile.OsProfile != nil &&
-					vmScaleSet.VirtualMachineProfile.OsProfile.WindowsConfiguration != nil {
-					scaleSetToUpgrade.IsWindows = true
-					uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
-				}
-				for _, vm := range vmScaleSetVMsPage.Values() {
-					currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName), vm.Tags, *vm.VirtualMachineScaleSetVMProperties.LatestModelApplied)
-					if uc.Force {
-						if currentVersion == "" {
-							currentVersion = "Unknown"
+					// set agent pool node count to match VMSS capacity
+					for _, pool := range uc.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
+						if poolName, _, _ := utils.VmssNameParts(*vmScaleSet.Name); poolName == pool.Name {
+							pool.Count = int(*vmScaleSet.Sku.Capacity)
+							break
 						}
 					}
+					scaleSetToUpgrade := AgentPoolScaleSet{
+						Name:     *vmScaleSet.Name,
+						Sku:      *vmScaleSet.Sku,
+						Location: *vmScaleSet.Location,
+					}
+					if vmScaleSet.VirtualMachineProfile != nil &&
+						vmScaleSet.VirtualMachineProfile.OsProfile != nil &&
+						vmScaleSet.VirtualMachineProfile.OsProfile.WindowsConfiguration != nil {
+						scaleSetToUpgrade.IsWindows = true
+						uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
+					}
+					for _, vm := range vmScaleSetVMsPage.Values() {
+						currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName), vm.Tags, *vm.VirtualMachineScaleSetVMProperties.LatestModelApplied)
+						if uc.Force {
+							if currentVersion == "" {
+								currentVersion = "Unknown"
+							}
+						}
 
-					if currentVersion == "" {
-						uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
-						continue
+						if currentVersion == "" {
+							uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
+							continue
+						}
+						if uc.Force || currentVersion != goalVersion {
+							uc.Logger.Infof(
+								"VM %s in VMSS %s has a current version of %s and a desired version of %s. Upgrading this node.",
+								*vm.Name,
+								*vmScaleSet.Name,
+								currentVersion,
+								goalVersion,
+							)
+							scaleSetToUpgrade.VMsToUpgrade = append(
+								scaleSetToUpgrade.VMsToUpgrade,
+								AgentPoolScaleSetVM{
+									Name:       *vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName,
+									InstanceID: *vm.InstanceID,
+								},
+							)
+						}
 					}
-					if uc.Force || currentVersion != goalVersion {
-						uc.Logger.Infof(
-							"VM %s in VMSS %s has a current version of %s and a desired version of %s. Upgrading this node.",
-							*vm.Name,
-							*vmScaleSet.Name,
-							currentVersion,
-							goalVersion,
-						)
-						scaleSetToUpgrade.VMsToUpgrade = append(
-							scaleSetToUpgrade.VMsToUpgrade,
-							AgentPoolScaleSetVM{
-								Name:       *vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName,
-								InstanceID: *vm.InstanceID,
-							},
-						)
-					}
+					uc.AgentPoolScaleSetsToUpgrade = append(uc.AgentPoolScaleSetsToUpgrade, scaleSetToUpgrade)
 				}
-				uc.AgentPoolScaleSetsToUpgrade = append(uc.AgentPoolScaleSetsToUpgrade, scaleSetToUpgrade)
 			}
 		}
 	}
