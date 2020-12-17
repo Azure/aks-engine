@@ -424,45 +424,6 @@ func (t *Transformer) RemoveResourcesAndOutputsForScaling(logger *logrus.Entry, 
 	return nil
 }
 
-func (t *Transformer) removeCustomData(logger *logrus.Entry, resourceProperties map[string]interface{}) bool {
-	osProfile, ok := resourceProperties[osProfileFieldName].(map[string]interface{})
-	if !ok {
-		logger.Warnf("Template improperly formatted")
-		return ok
-	}
-
-	if osProfile[customDataFieldName] != nil && osProfile[windowsConfigurationFieldName] == nil {
-		delete(osProfile, customDataFieldName)
-	}
-	return ok
-}
-
-func (t *Transformer) removeDataDisks(logger *logrus.Entry, resourceProperties map[string]interface{}) bool {
-	storageProfile, ok := resourceProperties[storageProfileFieldName].(map[string]interface{})
-	if !ok {
-		logger.Warnf("Template improperly formatted. Could not find: %s", storageProfileFieldName)
-		return ok
-	}
-
-	if storageProfile[dataDisksFieldName] != nil {
-		delete(storageProfile, dataDisksFieldName)
-	}
-	return ok
-}
-
-func (t *Transformer) removeImageReference(logger *logrus.Entry, resourceProperties map[string]interface{}) bool {
-	storageProfile, ok := resourceProperties[storageProfileFieldName].(map[string]interface{})
-	if !ok {
-		logger.Warnf("Template improperly formatted. Could not find: %s", storageProfileFieldName)
-		return ok
-	}
-
-	if storageProfile[imageReferenceFieldName] != nil {
-		delete(storageProfile, imageReferenceFieldName)
-	}
-	return ok
-}
-
 // NormalizeResourcesForK8sMasterUpgrade takes a template and removes elements that are unwanted in any scale up/down case
 func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry, templateMap map[string]interface{}, isMasterManagedDisk bool, agentPoolsToPreserve map[string]bool) error {
 	resources := templateMap[resourcesFieldName].([]interface{})
