@@ -50,6 +50,7 @@ const (
 	roleResourceType            = "Microsoft.Authorization/roleAssignments"
 	keyVaultResourceType        = "Microsoft.KeyVault/vaults"
 	publicIPAddressResourceType = "Microsoft.Network/publicIPAddresses"
+	storageAccountsResourceType = "Microsoft.Storage/storageAccounts"
 
 	// resource ids
 	nsgID     = "nsgID"
@@ -645,12 +646,12 @@ func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry,
 	resourceTypeToProcess := map[string]bool{
 		vmResourceType: true, vmExtensionType: true, nicResourceType: true,
 		vnetResourceType: true, nsgResourceType: true, lbResourceType: true,
-		vmssResourceType: true, vmasResourceType: true, roleResourceType: true}
+		vmssResourceType: true, vmasResourceType: true, roleResourceType: true,
+		storageAccountsResourceType: true}
 	logger.Infoln(fmt.Sprintf("Resource count before running NormalizeResourcesForK8sMasterUpgrade: %d", len(resources)))
 
 	filteredResources := resources[:0]
 
-	// remove agent nodes resources if needed and set dataDisk createOption to attach
 	for _, resource := range resources {
 		filteredResources = append(filteredResources, resource)
 		resourceMap, ok := resource.(map[string]interface{})
@@ -677,115 +678,84 @@ func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry,
 			continue
 		}
 
-		if resourceType == vmssResourceType || resourceType == vnetResourceType {
-			RemoveNsgDependency(logger, resourceName, resourceMap)
-			continue
-		}
-
-		if resourceType == lbResourceType {
-			if strings.Contains(resourceName, "variables('masterInternalLbName')") {
-				RemoveNsgDependency(logger, resourceName, resourceMap)
-				continue
-			}
-		}
-
-		if resourceType == nicResourceType {
-			RemoveNsgDependency(logger, resourceName, resourceMap)
+		// Remove control plane resources
+		switch resourceType {
+		case vmssResourceType, vmResourceType, vmExtensionType, roleResourceType, nicResourceType:
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
-				continue
-			} else {
-				// Remove agent NICs if upgrade master nodes
-				if agentPoolsToPreserve == nil {
-					logger.Infoln(fmt.Sprintf("Removing nic: %s from template", resourceName))
-					if len(filteredResources) > 0 {
-						filteredResources = filteredResources[:len(filteredResources)-1]
-					}
-				}
+				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
 			}
+		case nsgResourceType:
+			if strings.Contains(resourceName, "variables('nsgName')") {
+				filteredResources = filteredResources[:len(filteredResources)-1]
+				continue
+			}
+		case publicIPAddressResourceType, lbResourceType:
+			if strings.Contains(resourceName, "variables('master") {
+				filteredResources = filteredResources[:len(filteredResources)-1]
+				continue
+			}
+		case vnetResourceType:
+			RemoveNsgDependency(logger, resourceName, resourceMap)
 		}
 
-		if strings.EqualFold(resourceType, vmResourceType) &&
-			strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
-			resourceProperties, ok := resourceMap[propertiesFieldName].(map[string]interface{})
-			if !ok {
-				logger.Warnf("Template improperly formatted for field name: %s, resource name: %s", propertiesFieldName, resourceName)
-				continue
-			}
-
-			storageProfile, ok := resourceProperties[storageProfileFieldName].(map[string]interface{})
-			if !ok {
-				logger.Warnf("Template improperly formatted: %s", storageProfileFieldName)
-				continue
-			}
-
-			dataDisks, ok := storageProfile[dataDisksFieldName].([]interface{})
-			if !ok {
-				logger.Warnf("Template improperly formatted for field name: %s, property name: %s", storageProfileFieldName, dataDisksFieldName)
-				continue
-			}
-
-			dataDisk, ok := dataDisks[0].(map[string]interface{})
-			if !ok {
-				logger.Warnf("Template improperly formatted for field name: %s, there is no data disks defined", dataDisksFieldName)
-				continue
-			}
-
-			dataDisk[createOptionFieldName] = "attach"
-
-			if isMasterManagedDisk {
-				managedDisk := compute.ManagedDiskParameters{}
-				id := "[concat('/subscriptions/', variables('subscriptionId'), '/resourceGroups/', variables('resourceGroup'),'/providers/Microsoft.Compute/disks/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"
-				managedDisk.ID = &id
-				diskInterface := &managedDisk
-				dataDisk[managedDiskFieldName] = diskInterface
-			}
+		if resourceType == vmssResourceType {
+			RemoveNsgDependency(logger, resourceName, resourceMap)
 		}
 
 		tags, _ := resourceMap[tagsFieldName].(map[string]interface{})
-		poolName := fmt.Sprint(tags["poolName"]) // poolName tag exists on agents only
+		poolName := fmt.Sprint(tags["poolName"])
 
-		if resourceType == vmResourceType {
+		// Remove resources for node pools not being upgraded
+		switch resourceType {
+		case vmResourceType:
 			logger.Infoln(fmt.Sprintf("Evaluating if agent pool: %s, resource: %s needs to be removed", poolName, resourceName))
-			// Not an agent (could be a master VM)
-			if tags["poolName"] == nil || strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
-				continue
-			}
-
 			logger.Infoln(fmt.Sprintf("agentPoolsToPreserve: %v...", agentPoolsToPreserve))
 
-			if len(agentPoolsToPreserve) == 0 || !agentPoolsToPreserve[poolName] {
-				logger.Infoln(fmt.Sprintf("Removing agent pool: %s, resource: %s from template", poolName, resourceName))
-				if len(filteredResources) > 0 {
-					filteredResources = filteredResources[:len(filteredResources)-1]
+			removeVM := true
+
+			for pool, preserve := range agentPoolsToPreserve {
+				if strings.Contains(resourceName, "variables('"+pool) && preserve {
+					removeVM = false
 				}
-			}
-		} else if resourceType == roleResourceType {
-			logger.Infoln(fmt.Sprintf("Evaluating if agent resource: %s needs to be removed", resourceName))
-			removeRole := true
-			// The usage of NormalizeResourcesForK8sMasterUpgrade across the code base seems to indicate that
-			// agentPoolsToPreserve == nil => master node upgrade
-			if len(agentPoolsToPreserve) == 0 && strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
-				removeRole = false
-			} else {
-				for pool, preserve := range agentPoolsToPreserve {
-					if strings.Contains(resourceName, "variables('"+pool) && preserve {
-						removeRole = false
-					}
-				}
-			}
-			if removeRole {
-				logger.Infoln(fmt.Sprintf("Removing agent resource: %s from template", resourceName))
-				if len(filteredResources) > 0 {
-					filteredResources = filteredResources[:len(filteredResources)-1]
-				}
-			}
-		} else if resourceType == vmExtensionType {
-			logger.Infoln(fmt.Sprintf("Evaluating if extension: %s needs to be removed", resourceName))
-			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
-				continue
 			}
 
+			if removeVM {
+				logger.Infoln(fmt.Sprintf("Removing agent resource: %s from template", resourceName))
+				filteredResources = filteredResources[:len(filteredResources)-1]
+			}
+		case vmssResourceType:
+			logger.Infoln(fmt.Sprintf("Evaluating if agent pool: %s, resource: %s needs to be removed", poolName, resourceName))
+			logger.Infoln(fmt.Sprintf("agentPoolsToPreserve: %v...", agentPoolsToPreserve))
+
+			removeVMSS := true
+
+			for pool, preserve := range agentPoolsToPreserve {
+				if strings.Contains(resourceName, "variables('"+pool) && preserve {
+					removeVMSS = false
+				}
+			}
+
+			if removeVMSS {
+				logger.Infoln(fmt.Sprintf("Removing agent resource: %s from template", resourceName))
+				filteredResources = filteredResources[:len(filteredResources)-1]
+			}
+		case roleResourceType:
+			logger.Infoln(fmt.Sprintf("Evaluating if agent resource: %s needs to be removed", resourceName))
+			removeRole := true
+
+			for pool, preserve := range agentPoolsToPreserve {
+				if strings.Contains(resourceName, "variables('"+pool) && preserve {
+					removeRole = false
+				}
+			}
+
+			if removeRole {
+				logger.Infoln(fmt.Sprintf("Removing agent resource: %s from template", resourceName))
+				filteredResources = filteredResources[:len(filteredResources)-1]
+			}
+		case vmExtensionType:
+			logger.Infoln(fmt.Sprintf("Evaluating if extension: %s needs to be removed", resourceName))
 			logger.Infoln(fmt.Sprintf("agentPoolsToPreserve: %v...", agentPoolsToPreserve))
 
 			removeExtension := true
@@ -797,13 +767,36 @@ func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry,
 
 			if removeExtension {
 				logger.Infoln(fmt.Sprintf("Removing extension: %s from template", resourceName))
-				if len(filteredResources) > 0 {
-					filteredResources = filteredResources[:len(filteredResources)-1]
+				filteredResources = filteredResources[:len(filteredResources)-1]
+			}
+		case storageAccountsResourceType:
+			logger.Infoln(fmt.Sprintf("Evaluating if storage account: %s needs to be removed", resourceName))
+			logger.Infoln(fmt.Sprintf("agentPoolsToPreserve: %v...", agentPoolsToPreserve))
+
+			removeStorageAccount := true
+			for poolName, preserve := range agentPoolsToPreserve {
+				if strings.Contains(resourceName, "variables('"+poolName) && preserve {
+					removeStorageAccount = false
 				}
 			}
-		} else if resourceType == nsgResourceType {
-			logger.Infoln(fmt.Sprintf("Removing nsg resource: %s from template", resourceName))
-			if len(filteredResources) > 0 {
+
+			if removeStorageAccount {
+				logger.Infoln(fmt.Sprintf("Removing storage account: %s from template", resourceName))
+				filteredResources = filteredResources[:len(filteredResources)-1]
+			}
+		case nicResourceType:
+			logger.Infoln(fmt.Sprintf("Evaluating if NIC: %s needs to be removed", resourceName))
+			logger.Infoln(fmt.Sprintf("agentPoolsToPreserve: %v...", agentPoolsToPreserve))
+
+			removeNIC := true
+			for poolName, preserve := range agentPoolsToPreserve {
+				if strings.Contains(resourceName, "variables('"+poolName) && preserve {
+					removeNIC = false
+				}
+			}
+
+			if removeNIC {
+				logger.Infoln(fmt.Sprintf("Removing NIC: %s from template", resourceName))
 				filteredResources = filteredResources[:len(filteredResources)-1]
 			}
 		}

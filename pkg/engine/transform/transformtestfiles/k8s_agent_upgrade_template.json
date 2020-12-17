@@ -1794,47 +1794,6 @@
         "typeHandlerVersion": "2.0"
       },
       "type": "Microsoft.Compute/virtualMachines/extensions"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "copy": {
-        "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
-        "name": "loop"
-      },
-      "location": "[variables('location')]",
-      "name": "[concat(variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]",
-      "properties": {
-        "enableIPForwarding": true,
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "primary": true,
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('agentpool2VnetSubnetID')]"
-              }
-            }
-          }
-        ]
-      },
-      "type": "Microsoft.Network/networkInterfaces"
-    },
-    {
-      "apiVersion": "[variables('apiVersionStorage')]",
-      "copy": {
-        "count": "[variables('agentpool2StorageAccountsCount')]",
-        "name": "loop"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpool2AccountName'))]",
-      "properties": {
-        "accountType": "[variables('vmSizesMap')[variables('agentpool2VMSize')].storageAccountType]"
-      },
-      "type": "Microsoft.Storage/storageAccounts"
     }
   ]
 }
