@@ -366,52 +366,28 @@ func (t *Transformer) NormalizeMasterResourcesForVMSSPoolUpgrade(logger *logrus.
 			continue
 		}
 
-		resourceType, ok := resourceMap[typeFieldName].(string)
-		if !ok || resourceType != vmResourceType {
-			var resourceName string
-			resourceName, ok = resourceMap[nameFieldName].(string)
+		if resourceType, ok := resourceMap[typeFieldName].(string); ok {
+			if resourceType != vmssResourceType && resourceType != roleResourceType {
+				indexesToRemove = append(indexesToRemove, index)
+				continue
+			}
+			resourceName, ok := resourceMap[nameFieldName].(string)
 			if !ok {
 				logger.Warnf("Template improperly formatted")
 				continue
 			}
-			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") && resourceType == vmExtensionType {
+			if (resourceType == vmssResourceType || resourceType == roleResourceType) && strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
 				indexesToRemove = append(indexesToRemove, index)
+				continue
 			}
-			continue
 		}
 
-		resourceName, ok := resourceMap[nameFieldName].(string)
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		// make sure this is only modifying the master vms
-		if !strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
-			continue
-		}
-
-		resourceProperties, ok := resourceMap[propertiesFieldName].(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		hardwareProfile, ok := resourceProperties[hardwareProfileFieldName].(map[string]interface{})
-		if !ok {
-			logger.Warnf("Template improperly formatted")
-			continue
-		}
-
-		if hardwareProfile[vmSizeFieldName] != nil {
-			delete(hardwareProfile, vmSizeFieldName)
-		}
-
-		if !t.removeCustomData(logger, resourceProperties) || !t.removeDataDisks(logger, resourceProperties) || !t.removeImageReference(logger, resourceProperties) {
-			continue
+		if _, ok := resourceMap[dependsOnFieldName].([]interface{}); ok {
+			delete(resourceMap, dependsOnFieldName)
 		}
 	}
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+	delete(templateMap, outputsFieldName)
 
 	return nil
 }
@@ -532,19 +508,25 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
 			}
+			if resourceType == nicResourceType {
+				delete(resourceMap, dependsOnFieldName)
+			}
 		case nsgResourceType:
 			if strings.Contains(resourceName, "variables('nsgName')") {
 				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
 			}
 		case publicIPAddressResourceType:
-			if !strings.Contains(resourceName, "variables('master") {
+			filteredResources = filteredResources[:len(filteredResources)-1]
+			continue
+		case lbResourceType:
+			if strings.Contains(resourceName, "variables('masterInternalLbName')") || strings.Contains(resourceName, "variables('masterLbName')") {
 				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
 			}
-		case lbResourceType:
-			if strings.Contains(resourceName, "variables('masterInternalLbName')") {
-				RemoveNsgDependency(logger, resourceName, resourceMap)
+		case vnetResourceType:
+			if strings.Contains(resourceName, "variables('virtualNetworkName')") {
+				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
 			}
 		}

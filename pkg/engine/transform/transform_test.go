@@ -55,7 +55,7 @@ func TestNormalizeForK8sAddVMASPool(t *testing.T) {
 func TestNormalizeMasterResourcesForVMSSPoolUpgrade(t *testing.T) {
 	RegisterTestingT(t)
 	logger := logrus.New().WithField("testName", "TestNormalizeMasterResourcesForVMSSPoolUpgrade")
-	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template.json")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_slb_vmss_template.json")
 	Expect(e).To(BeNil())
 	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_vmss_pool_upgrade_template.json")
 	Expect(e).To(BeNil())
