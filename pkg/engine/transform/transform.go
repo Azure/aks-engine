@@ -432,7 +432,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 		vnetResourceType: true, nsgResourceType: true, lbResourceType: true,
 		vmssResourceType: true, vmasResourceType: true, roleResourceType: true,
 		publicIPAddressResourceType: true, storageAccountsResourceType: true,
-		keyVaultResourceType: true}
+		keyVaultResourceType: true, rtResourceType: true}
 	logger.Infoln(fmt.Sprintf("Resource count before running NormalizeResourcesForK8sMasterUpgrade: %d", len(resources)))
 
 	filteredResources := resources[:0]
@@ -478,7 +478,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
 			}
-		case publicIPAddressResourceType:
+		case publicIPAddressResourceType, rtResourceType:
 			filteredResources = filteredResources[:len(filteredResources)-1]
 			continue
 		case lbResourceType:

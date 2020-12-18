@@ -1649,12 +1649,6 @@
   "resources": [
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('routeTableName')]",
-      "type": "Microsoft.Network/routeTables"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('masterCount'), variables('masterOffset'))]",
         "name": "masterLbLoopNode"
