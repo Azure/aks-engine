@@ -207,7 +207,6 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		}
 	}
 
-	//TODO: rename this as it's not only touching master resources
 	if err = transformer.NormalizeResourcesForK8sMasterUpgrade(ku.logger, templateMap, ku.DataModel.Properties.MasterProfile.IsManagedDisks(), nil); err != nil {
 		ku.logger.Error(err.Error())
 		return err

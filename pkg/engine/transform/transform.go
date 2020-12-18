@@ -354,7 +354,7 @@ func removeIndexesFromArray(array []interface{}, indexes []int) []interface{} {
 	return array
 }
 
-// NormalizeMasterResourcesForVMSSPoolUpgrade takes a template and removes elements that are unwanted in any upgrade case
+// NormalizeMasterResourcesForVMSSPoolUpgrade removes superfluous template resources for upgrading VMSS nodes
 func (t *Transformer) NormalizeMasterResourcesForVMSSPoolUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
 	resources := templateMap[resourcesFieldName].([]interface{})
 	indexesToRemove := []int{}
