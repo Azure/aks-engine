@@ -805,13 +805,12 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 
 		// Default to aks-engine WIndows Server 2019 docker image
 		defaultImageConfig := AKSWindowsServer2019OSImageConfig
-
-		if cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
-			// Use to using aks-engine Windows Server 2019 conatinerD VHD
-			defaultImageConfig = AKSWindowsServer2019ContainerDOSImageConfig
-		} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
+		if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
 			// Use 'vanilla' Windows Server 2019 images
 			defaultImageConfig = WindowsServer2019OSImageConfig
+		} else if cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
+			// Use to using aks-engine Windows Server 2019 conatinerD VHD
+			defaultImageConfig = AKSWindowsServer2019ContainerDOSImageConfig
 		}
 
 		// This allows caller to use the latest ImageVersion and WindowsSku for adding a new Windows pool to an existing cluster.
@@ -839,10 +838,16 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 			}
 
 			if windowsProfile.ImageVersion == "" {
-				// default versions are specific to a publisher/offer/sku
-				if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
-					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
-				} else {
+				// default versions are specific to a publisher/offer/sku for aks-engine VHDs
+				aksEngineImageConfigs := []AzureOSImageConfig{AKSWindowsServer2019ContainerDOSImageConfig, AKSWindowsServer2019OSImageConfig}
+				for _, imageConfig := range aksEngineImageConfigs {
+					if windowsProfile.WindowsPublisher == imageConfig.ImagePublisher && windowsProfile.WindowsOffer == imageConfig.ImageOffer && windowsProfile.WindowsSku == imageConfig.ImageSku {
+						windowsProfile.ImageVersion = imageConfig.ImageVersion
+						break
+					}
+				}
+				// set imageVersion to 'latest' if still unset
+				if windowsProfile.ImageVersion == "" {
 					windowsProfile.ImageVersion = "latest"
 				}
 			}
@@ -862,7 +867,7 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
 		windowsImageConfigs := []AzureOSImageConfig{AKSWindowsServer2019OSImageConfig, WindowsServer2019OSImageConfig}
 		if cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
-			windowsImageConfigs = []AzureOSImageConfig{AKSWindowsServer2019ContainerDOSImageConfig}
+			windowsImageConfigs = []AzureOSImageConfig{AKSWindowsServer2019ContainerDOSImageConfig, WindowsServer2019OSImageConfig}
 		}
 		for _, imageConfig := range windowsImageConfigs {
 			if windowsProfile.WindowsPublisher == imageConfig.ImagePublisher && windowsProfile.WindowsOffer == imageConfig.ImageOffer {
