@@ -367,6 +367,7 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.20.1
 1.20.0
 1.19.5
 1.19.4
