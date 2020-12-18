@@ -2307,6 +2307,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 		isAzureStack           bool
 		isUpgrade              bool
 		isScale                bool
+		containerRuntime       string
 	}{
 		{
 			"defaults in creating",
@@ -2328,6 +2329,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"aks vhd current version and ImageSku in creating",
@@ -2352,6 +2354,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"aks vhd override sku in creating",
@@ -2377,6 +2380,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"aks vhd override version in creating",
@@ -2402,6 +2406,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"vanilla vhd version and ImageSku in creating",
@@ -2426,6 +2431,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"vanilla vhd override sku in creating",
@@ -2451,6 +2457,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"vanilla vhd override version in creating",
@@ -2476,6 +2483,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"vanilla vhd speecific version in creating",
@@ -2502,6 +2510,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"user overrides latest version in creating",
@@ -2527,6 +2536,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"user overrides specific version in creating",
@@ -2553,6 +2563,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine sets default WindowsSku and ImageVersion when they are empty in upgrading",
@@ -2579,6 +2590,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not set default WindowsSku and ImageVersion when they are not empty in upgrading",
@@ -2605,6 +2617,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine sets default vanilla WindowsSku and ImageVersion when they are empty in upgrading",
@@ -2631,6 +2644,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not set vanilla default WindowsSku and ImageVersion when they are not empty in upgrading",
@@ -2657,6 +2671,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not override version when WindowsPublisher does not match in upgrading",
@@ -2683,6 +2698,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not override version when WindowsOffer does not match in upgrading",
@@ -2709,6 +2725,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not override provisioningScriptsPakcageURL during create",
@@ -2732,6 +2749,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine updates provisioningScriptsPackageURL during upgrade",
@@ -2759,6 +2777,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not override WindowsPauseImageURL during create",
@@ -2782,6 +2801,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not override WindowsPauseImageURL during upgrade",
@@ -2810,6 +2830,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not override AlwaysPullWindowsPauseImage during create",
@@ -2833,6 +2854,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not override AlwaysPullWindowsPauseImage during upgrade",
@@ -2862,6 +2884,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			true,
 			false,
+			Docker,
 		},
 		{
 			"aks-engine does not change any value in scaling",
@@ -2887,6 +2910,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			false,
 			false,
 			true,
+			Docker,
 		},
 	}
 
@@ -2896,6 +2920,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			t.Parallel()
 
 			mockCS := getMockBaseContainerService("1.16.0")
+			mockCS.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = test.containerRuntime
 			mockCS.Properties.WindowsProfile = &test.windowsProfile
 			if test.isAzureStack {
 				mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{}
