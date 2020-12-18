@@ -1648,38 +1648,6 @@
   },
   "resources": [
     {
-      "apiVersion": "[variables('apiVersionStorage')]",
-      "copy": {
-        "count": "[variables('agentppol1StorageAccountsCount')]",
-        "name": "loop"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentppol1AccountName'))]",
-      "properties": {
-        "accountType": "[variables('vmSizesMap')[variables('agentppol1VMSize')].storageAccountType]"
-      },
-      "type": "Microsoft.Storage/storageAccounts"
-    },
-    {
-      "apiVersion": "[variables('apiVersionStorage')]",
-      "copy": {
-        "count": "[variables('agentpool2StorageAccountsCount')]",
-        "name": "loop"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('storageAccountPrefixes')[mod(add(copyIndex(),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(copyIndex(),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpool2AccountName'))]",
-      "properties": {
-        "accountType": "[variables('vmSizesMap')[variables('agentpool2VMSize')].storageAccountType]"
-      },
-      "type": "Microsoft.Storage/storageAccounts"
-    },
-    {
       "apiVersion": "[variables('apiVersionDefault')]",
       "location": "[variables('location')]",
       "name": "[variables('routeTableName')]",
