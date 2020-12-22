@@ -164,6 +164,7 @@ type FeatureFlags struct {
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
 	EnableIPv6Only           bool `json:"enableIPv6Only,omitempty"`
+	EnableWinDSR             bool `json:"enableWinDSR,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -1392,6 +1393,31 @@ func (p *Properties) GetKubeProxyFeatureGates() string {
 	return "{}"
 }
 
+// GetKubeProxyFeatureGatesWindowsArguments returns the feature gates string for the kube-proxy arguments in Windows nodes
+func (p *Properties) GetKubeProxyFeatureGatesWindowsArguments() string {
+	featureGates := map[string]bool{}
+
+	if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		featureGates["IPv6DualStack"] = true
+	}
+	if p.FeatureFlags.IsFeatureEnabled("EnableWinDSR") {
+		// WinOverlay must be set to false
+		featureGates["WinDSR"] = true
+		featureGates["WinOverlay"] = false
+	}
+
+	keys := []string{}
+	for key := range featureGates {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("\"%s=%t\", ", key, featureGates[key]))
+	}
+	return strings.TrimSuffix(buf.String(), ", ")
+}
+
 // HasAADAdminGroupID returns true if the cluster has an AADProfile w/ a valid AdminGroupID
 func (p *Properties) HasAADAdminGroupID() bool {
 	return p.AADProfile != nil && p.AADProfile.AdminGroupID != ""
@@ -2296,6 +2322,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 			return f.EnableTelemetry
 		case "EnableIPv6Only":
 			return f.EnableIPv6Only
+		case "EnableWinDSR":
+			return f.EnableWinDSR
 		default:
 			return false
 		}

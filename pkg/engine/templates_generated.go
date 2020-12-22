@@ -41326,6 +41326,9 @@ function Write-KubeClusterConfig {
             NodeLabels = $global:KubeletNodeLabels;
             ConfigArgs = $global:KubeletConfigArgs
         };
+        Kubeproxy    = @{
+            FeatureGates = $global:KubeproxyFeatureGates
+        };
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{
@@ -41494,6 +41497,8 @@ $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelRes
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}"
 {{end}}
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
+
+$global:KubeproxyFeatureGates = @( {{GetKubeProxyFeatureGatesPsh}} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"
