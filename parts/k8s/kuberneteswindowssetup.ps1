@@ -119,6 +119,8 @@ $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables
 {{end}}
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
+$global:KubeproxyFeatureGates = @( {{GetKubeProxyFeatureGatesPsh}} )
+
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"
 

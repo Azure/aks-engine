@@ -295,6 +295,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return kc.GetOrderedKubeletConfigStringForPowershell()
 		},
+		"GetKubeProxyFeatureGatesPsh": func() string {
+			return cs.Properties.GetKubeProxyFeatureGatesWindowsArguments()
+		},
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
 			return common.GetOrderedEscapedKeyValsString(config)
 		},
