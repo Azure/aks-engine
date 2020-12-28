@@ -15573,6 +15573,7 @@ write_files:
             "isGateway": true,
             "ipMasq": false,
             "hairpinMode": false,
+            "promiscMode": true,
             "ipam": {
                 "type": "host-local",
                 "subnet": "{{` + "`" + `{{.PodCIDR}}` + "`" + `}}",
