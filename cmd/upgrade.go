@@ -176,8 +176,10 @@ func (uc *upgradeCmd) loadCluster() error {
 	}
 	if uc.containerService.Properties.OrchestratorProfile != nil &&
 		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig != nil &&
-		to.Bool(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
-		return errors.Errorf("Clusters with enableEncryptionWithExternalKms=true are not upgradable using `aks-engine upgrade`!")
+		to.Bool(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) &&
+		to.Bool(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) &&
+		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID == "" {
+		return errors.Errorf("Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable using `aks-engine upgrade`!")
 	}
 
 	// Set 60 minutes cordonDrainTimeout for Azure Stack Cloud to give it enough time to move around resources during Node Drain,

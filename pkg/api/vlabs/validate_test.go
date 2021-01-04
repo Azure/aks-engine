@@ -352,7 +352,7 @@ func ExampleProperties_validateOrchestratorProfile() {
 
 	// Output:
 	// level=warning msg="EtcdStorageLimitGB of 9 is larger than the recommended maximum of 8"
-	// level=warning msg="Clusters with enableEncryptionWithExternalKms=true are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`"
+	// level=warning msg="Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`"
 }
 
 func Test_KubernetesConfig_Validate(t *testing.T) {
