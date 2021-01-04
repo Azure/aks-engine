@@ -24,7 +24,7 @@ if ($KubeproxyFeatureGates -contains "WinDSR=true") {
 }
 
 if ($KubeproxyFeatureGates.Count -ne 0) {
-    $global:KubeproxyArgList += @("--feature-gates='" + ($KubeproxyFeatureGates -join "','") + "'")
+    $global:KubeproxyArgList += @("--feature-gates=" + ($KubeproxyFeatureGates -join ","))
 }
 
 #
@@ -44,5 +44,5 @@ if (Test-Path "$global:KubeDir\runprocess.dll") {
     Add-Type -Path "$global:KubeDir\run-process.cs"
 }
 $exe = "$global:KubeDir\kube-proxy.exe"
-$args = ($global:KubeproxyArgList -join " ")
+$args = $global:KubeproxyArgList -join " "
 [RunProcess.exec]::RunProcess($exe, $args, [System.Diagnostics.ProcessPriorityClass]::AboveNormal)
