@@ -345,6 +345,7 @@ func ExampleProperties_validateOrchestratorProfile() {
 	cs = getK8sDefaultContainerService(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		EnableEncryptionWithExternalKms: to.BoolPtr(true),
+		UseManagedIdentity:              to.BoolPtr(true),
 	}
 	if err := cs.Properties.ValidateOrchestratorProfile(false); err != nil {
 		log.Error(err)
