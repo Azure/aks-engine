@@ -38,19 +38,20 @@ const (
 	proximityPlacementGroupFieldName  = "proximityPlacementGroup"
 
 	// ARM resource Types
-	nsgResourceType             = "Microsoft.Network/networkSecurityGroups"
-	rtResourceType              = "Microsoft.Network/routeTables"
-	vmResourceType              = "Microsoft.Compute/virtualMachines"
-	vmExtensionType             = "Microsoft.Compute/virtualMachines/extensions"
-	nicResourceType             = "Microsoft.Network/networkInterfaces"
-	vnetResourceType            = "Microsoft.Network/virtualNetworks"
-	vmasResourceType            = "Microsoft.Compute/availabilitySets"
-	vmssResourceType            = "Microsoft.Compute/virtualMachineScaleSets"
-	lbResourceType              = "Microsoft.Network/loadBalancers"
-	roleResourceType            = "Microsoft.Authorization/roleAssignments"
-	keyVaultResourceType        = "Microsoft.KeyVault/vaults"
-	publicIPAddressResourceType = "Microsoft.Network/publicIPAddresses"
-	storageAccountsResourceType = "Microsoft.Storage/storageAccounts"
+	nsgResourceType                  = "Microsoft.Network/networkSecurityGroups"
+	rtResourceType                   = "Microsoft.Network/routeTables"
+	vmResourceType                   = "Microsoft.Compute/virtualMachines"
+	vmExtensionType                  = "Microsoft.Compute/virtualMachines/extensions"
+	nicResourceType                  = "Microsoft.Network/networkInterfaces"
+	vnetResourceType                 = "Microsoft.Network/virtualNetworks"
+	vmasResourceType                 = "Microsoft.Compute/availabilitySets"
+	vmssResourceType                 = "Microsoft.Compute/virtualMachineScaleSets"
+	lbResourceType                   = "Microsoft.Network/loadBalancers"
+	roleResourceType                 = "Microsoft.Authorization/roleAssignments"
+	keyVaultResourceType             = "Microsoft.KeyVault/vaults"
+	publicIPAddressResourceType      = "Microsoft.Network/publicIPAddresses"
+	storageAccountsResourceType      = "Microsoft.Storage/storageAccounts"
+	userAssignedIdentityResourceType = "Microsoft.ManagedIdentity/userAssignedIdentities"
 
 	// resource ids
 	nsgID     = "nsgID"
@@ -380,6 +381,11 @@ func (t *Transformer) NormalizeMasterResourcesForVMSSPoolUpgrade(logger *logrus.
 				indexesToRemove = append(indexesToRemove, index)
 				continue
 			}
+			// If our role assignment derives from a static user-assigned ID created or referenced during cluster creation, we don't need to re-create it
+			if resourceType == roleResourceType && strings.Contains(resourceName, "variables('userAssignedID')") {
+				indexesToRemove = append(indexesToRemove, index)
+				continue
+			}
 		}
 
 		if _, ok := resourceMap[dependsOnFieldName].([]interface{}); ok {
@@ -432,7 +438,8 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 		vnetResourceType: true, nsgResourceType: true, lbResourceType: true,
 		vmssResourceType: true, vmasResourceType: true, roleResourceType: true,
 		publicIPAddressResourceType: true, storageAccountsResourceType: true,
-		keyVaultResourceType: true, rtResourceType: true}
+		keyVaultResourceType: true, rtResourceType: true,
+		userAssignedIdentityResourceType: true}
 	logger.Infoln(fmt.Sprintf("Resource count before running NormalizeResourcesForK8sMasterUpgrade: %d", len(resources)))
 
 	filteredResources := resources[:0]
@@ -478,7 +485,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 				filteredResources = filteredResources[:len(filteredResources)-1]
 				continue
 			}
-		case publicIPAddressResourceType, rtResourceType:
+		case publicIPAddressResourceType, rtResourceType, userAssignedIdentityResourceType:
 			filteredResources = filteredResources[:len(filteredResources)-1]
 			continue
 		case lbResourceType:
