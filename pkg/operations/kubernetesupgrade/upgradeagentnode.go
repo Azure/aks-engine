@@ -98,7 +98,7 @@ func (kan *UpgradeAgentNode) CreateNode(ctx context.Context, poolName string, ag
 
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	deploymentSuffix := random.Int31()
-	deploymentName := fmt.Sprintf("agent-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
+	deploymentName := fmt.Sprintf("k8s-upgrade-%s-%d-%s-%d", poolName, agentNo, time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
 
 	return armhelpers.DeployTemplateSync(kan.Client, kan.logger, kan.ResourceGroup, deploymentName, kan.TemplateMap, kan.ParametersMap)
 }

@@ -207,7 +207,6 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		}
 	}
 
-	//TODO: rename this as it's not only touching master resources
 	if err = transformer.NormalizeResourcesForK8sMasterUpgrade(ku.logger, templateMap, ku.DataModel.Properties.MasterProfile.IsManagedDisks(), nil); err != nil {
 		ku.logger.Error(err.Error())
 		return err
@@ -599,9 +598,9 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		deploymentSuffix := random.Int31()
-		deploymentName := fmt.Sprintf("agentscaleset-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
+		deploymentName := fmt.Sprintf("k8s-upgrade-update-vmss-pools-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
 
-		ku.logger.Infof("Deploying the agent scale sets ARM template...")
+		ku.logger.Infof("Deploying ARM template to update all VMSS node pools...")
 		_, err = ku.Client.DeployTemplate(
 			ctx,
 			ku.ClusterTopology.ResourceGroup,
@@ -614,6 +613,8 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			return err
 		}
 	}
+
+	ku.logger.Infof("Will now perform a rolling upgrade of each VMSS, one node (VM instance) at a time...")
 
 	for _, vmssToUpgrade := range ku.ClusterTopology.AgentPoolScaleSetsToUpgrade {
 		ku.logger.Infof("Upgrading VMSS %s", vmssToUpgrade.Name)

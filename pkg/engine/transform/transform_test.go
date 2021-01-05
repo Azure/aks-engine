@@ -55,7 +55,7 @@ func TestNormalizeForK8sAddVMASPool(t *testing.T) {
 func TestNormalizeMasterResourcesForVMSSPoolUpgrade(t *testing.T) {
 	RegisterTestingT(t)
 	logger := logrus.New().WithField("testName", "TestNormalizeMasterResourcesForVMSSPoolUpgrade")
-	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template.json")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_slb_vmss_template.json")
 	Expect(e).To(BeNil())
 	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_vmss_pool_upgrade_template.json")
 	Expect(e).To(BeNil())
@@ -148,34 +148,6 @@ func TestRemoveKMSResourcesFromTemplate(t *testing.T) {
 	e = transformer.RemoveKMSResourcesFromTemplate(logger, templateMap)
 	Expect(e).To(BeNil())
 	ValidateTemplate(templateMap, expectedFileContents, "TestRemoveKMSResourcesFromTemplate")
-}
-
-func TestNormalizeResourcesForK8sMasterUpgrade(t *testing.T) {
-	RegisterTestingT(t)
-	logger := logrus.New().WithField("testName", "TestNormalizeResourcesForK8sMasterUpgrade")
-	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template.json")
-	Expect(e).To(BeNil())
-	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_master_upgrade_template.json")
-	Expect(e).To(BeNil())
-	templateJSON := string(fileContents)
-	var template interface{}
-	e = json.Unmarshal([]byte(templateJSON), &template)
-	Expect(e).NotTo(HaveOccurred())
-	templateMap := template.(map[string]interface{})
-	transformer := &Transformer{
-		Translator: &i18n.Translator{
-			Locale: nil,
-		},
-	}
-	agentsToKeepMap := make(map[string]bool)
-	agentsToKeepMap["agentppol1"] = true // keep the typo or update the templates in ./transformtestfiles
-	agentsToKeepMap["agentpool2"] = true
-	// The usage of NormalizeResourcesForK8sMasterUpgrade across the code base seems to indicate that
-	// agentPoolsToPreserve == nil => master node upgrade
-	// so, maybe this test is not of much value
-	e = transformer.NormalizeResourcesForK8sMasterUpgrade(logger, templateMap, false, agentsToKeepMap)
-	Expect(e).To(BeNil())
-	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeResourcesForK8sMasterUpgrade")
 }
 
 func TestNormalizeResourcesForK8sAgentUpgrade(t *testing.T) {
