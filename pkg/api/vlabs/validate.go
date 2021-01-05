@@ -262,6 +262,9 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 					return errors.Errorf("enableEncryptionWithExternalKms is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
 						minVersion.String(), o.OrchestratorVersion)
 				}
+				if to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) && a.OrchestratorProfile.KubernetesConfig.UserAssignedID == "" {
+					log.Warnf("Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`")
+				}
 			}
 
 			if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
@@ -400,7 +403,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 
 	if m.IsVirtualMachineScaleSets() {
 		if !isUpdate {
-			log.Warnf("Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!")
+			log.Warnf("Clusters with a VMSS control plane are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`")
 		}
 		e := validateVMSS(a.OrchestratorProfile, false, m.StorageProfile, a.HasWindows(), a.IsAzureStackCloud())
 		if e != nil {

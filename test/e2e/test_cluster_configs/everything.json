@@ -17,7 +17,7 @@
 					"networkPlugin": "azure",
 					"networkMode": "bridge",
 					"enableEncryptionWithExternalKms": true,
-					"useManagedIdentity": true,
+					"useManagedIdentity": false,
 					"containerRuntimeConfig": {
 						"dataDir": "/mnt/docker"
 					},

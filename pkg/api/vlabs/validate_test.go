@@ -342,8 +342,18 @@ func ExampleProperties_validateOrchestratorProfile() {
 		log.Error(err)
 	}
 
+	cs = getK8sDefaultContainerService(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		EnableEncryptionWithExternalKms: to.BoolPtr(true),
+		UseManagedIdentity:              to.BoolPtr(true),
+	}
+	if err := cs.Properties.ValidateOrchestratorProfile(false); err != nil {
+		log.Error(err)
+	}
+
 	// Output:
 	// level=warning msg="EtcdStorageLimitGB of 9 is larger than the recommended maximum of 8"
+	// level=warning msg="Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`"
 }
 
 func Test_KubernetesConfig_Validate(t *testing.T) {
@@ -3432,7 +3442,7 @@ func ExampleProperties_validateMasterProfile() {
 	}
 	// Output:
 	// level=warning msg="Running only 1 control plane VM not recommended for production clusters, use 3 or 5 for control plane redundancy"
-	// level=warning msg="Clusters with VMSS masters are not yet upgradable! You will not be able to upgrade your cluster until a future version of aks-engine!"
+	// level=warning msg="Clusters with a VMSS control plane are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`"
 }
 
 func ExampleProperties_validateZones() {
