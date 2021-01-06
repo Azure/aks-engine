@@ -1683,10 +1683,6 @@ func (a *Properties) validateContainerRuntime(isUpdate bool) error {
 
 	// TODO: These validations should be relaxed once ContainerD and CNI plugins are more readily available
 	if containerRuntime == Containerd && a.HasWindows() {
-		if a.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
-			return errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd")
-		}
-
 		if a.OrchestratorProfile.KubernetesConfig.NetworkPlugin == "kubenet" {
 			if a.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
 				return errors.Errorf("WindowsSdnPluginURL must be provided when using Windows with ContainerRuntime=containerd and networkPlugin=kubenet")
