@@ -54,6 +54,7 @@ jobs:
       -e TENANT_ID=${TENANT_ID} \
       -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
       -e USE_MANAGED_IDENTITY="false" \
+      -e CONTAINER_RUNTIME=${{ parameters.containerRuntime }} \
       ${DEIS_GO_DEV_IMAGE} make test-kubernetes
     displayName: run e2e tests
     condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
