@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
-$global:containerdPackageUrl = "https://github.com/containerd/containerd/releases/download/v1.4.1/containerd-1.4.1-windows-amd64.tar.gz"
+$global:containerdPackageUrl = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.3+azure/windows/windows_amd64/moby-containerd-1.4.3+azure-1.amd64.zip"
 
 function Write-Log($Message) {
     $msg = $message | Timestamp
@@ -149,13 +149,20 @@ function Install-ContainerD {
     Write-Log "Getting containerD binaries from $global:containerdPackageUrl"
 
     $installDir = "c:\program files\containerd"
-    $tarPath = [IO.Path]::Combine($installDir, "containerd.tar.gz")
-
     Write-Log "Installing containerd to $installDir"
     New-Item -ItemType Directory $installDir -Force | Out-Null
-    Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $tarPath
-    tar -xzf $tarPath --strip=1 -C $installDir
-    Remove-Item -Path $tarPath | Out-Null
+
+    if ($global:containerdPackageUrl.endswith(".zip")) {
+        $zipPath = [IO.Path]::Combine($installDir, "containerd.zip")
+        Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $zipPath
+        Expand-Archive -path $zipPath -DestinationPath $installDir -Force
+        Remove-Item -Path $zipPath | Out-Null
+    } else {
+        $tarPath = [IO.Path]::Combine($installDir, "containerd.tar.gz")
+        Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $tarPath
+        tar -xzf $tarPath --strip=1 -C $installDir
+        Remove-Item -Path $tarPath | Out-Null
+    }
 
     $newPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine) + ";$installDir"
     [Environment]::SetEnvironmentVariable("Path", $newPath, [EnvironmentVariableTarget]::Machine)

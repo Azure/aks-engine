@@ -242,6 +242,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				}
 				o.KubernetesConfig.ContainerdVersion = DefaultContainerdVersion
 			}
+
+			if o.KubernetesConfig.WindowsContainerdURL == "" {
+				o.KubernetesConfig.WindowsContainerdURL = DefaultWindowsContainerdURL
+			}
 		}
 		if o.KubernetesConfig.ClusterSubnet == "" {
 			if o.IsAzureCNI() {

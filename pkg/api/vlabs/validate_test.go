@@ -1748,20 +1748,6 @@ func TestProperties_ValidateContainerRuntime_Windows(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "ContainerD-AzureCNI-NoWindowsContainerdURL",
-			p: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						ContainerRuntime:     Containerd,
-						NetworkPlugin:        "Azure",
-						WindowsContainerdURL: "",
-					},
-				},
-			},
-			expectedErr: errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd"),
-		},
-		{
 			name: "ContainerD-kubenet",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -1775,20 +1761,6 @@ func TestProperties_ValidateContainerRuntime_Windows(t *testing.T) {
 				},
 			},
 			expectedErr: nil,
-		},
-		{
-			name: "ContainerD-kubenet-NoWindowsContainerdURL",
-			p: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						ContainerRuntime:     Containerd,
-						NetworkPlugin:        "kubenet",
-						WindowsContainerdURL: "",
-					},
-				},
-			},
-			expectedErr: errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd"),
 		},
 		{
 			name: "ContainerD-kubenet-NoWindowsSdnPluginURL",
