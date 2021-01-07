@@ -76,7 +76,7 @@ func TestGetCSEErrorCode(t *testing.T) {
 				"ERR_CIS_ASSIGN_FILE_PERMISSION":             112,
 				"ERR_PACKER_COPY_FILE":                       113,
 				"ERR_CIS_APPLY_PASSWORD_CONFIG":              115,
-				"ERR_VHD_FILE_NOT_FOUND":                     124,
+				"ERR_VHD_FILE_NOT_FOUND":                     186,
 				"ERR_VHD_BUILD_ERROR":                        125,
 				"ERR_AZURE_STACK_GET_ARM_TOKEN":              120,
 				"ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION":  121,
