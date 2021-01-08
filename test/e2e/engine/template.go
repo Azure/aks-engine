@@ -250,24 +250,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			}
 		}
 	}
-
-	if config.ContainerRuntime == "containerd" {
-		if prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
-			prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.3/containerd-1.4.3-windows-amd64.tar.gz"
-		}
-		if prop.WindowsProfile != nil {
-			if prop.WindowsProfile.WindowsPublisher == "" &&
-				prop.WindowsProfile.WindowsOffer == "" &&
-				prop.WindowsProfile.WindowsSku == "" &&
-				prop.WindowsProfile.ImageVersion == "" {
-				prop.WindowsProfile.WindowsPublisher = "microsoft-aks"
-				prop.WindowsProfile.WindowsOffer = "aks-windows"
-				prop.WindowsProfile.WindowsSku = "2019-datacenter-core-ctrd-2103"
-				prop.WindowsProfile.ImageVersion = "latest"
-			}
-		}
-	}
-
+	
 	if config.ContainerRuntime != "" {
 		prop.OrchestratorProfile.KubernetesConfig.ContainerRuntime = config.ContainerRuntime
 	}
