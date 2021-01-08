@@ -144,9 +144,9 @@ var (
 	//Ubuntu1804Gen2OSImageConfig is Gen2 flavor the Ubunutu 18.04-LTS Linux distribution.
 	Ubuntu1804Gen2OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-gen2-2020-q4",
+		ImageSku:       "aks-ubuntu-1804-gen2-2021-q1",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.12.15",
+		ImageVersion:   "2021.01.06",
 	}
 
 	//RHELOSImageConfig is the RHEL Linux distribution.
@@ -168,17 +168,17 @@ var (
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-2020-q4",
+		ImageSku:       "aks-ubuntu-1604-2021-q1",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.12.15",
+		ImageVersion:   "2021.01.06",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-2020-q4",
+		ImageSku:       "aks-ubuntu-1804-2021-q1",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.12.15",
+		ImageVersion:   "2021.01.06",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
