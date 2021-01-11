@@ -201,6 +201,7 @@ docker run --rm \
 -e WINDOWS_CONTAINERD_URL=${WINDOWS_CONTAINERD_URL} \
 -e LINUX_MOBY_URL=${LINUX_MOBY_URL} \
 -e VALIDATE_CPU_LOAD=${VALIDATE_CPU_LOAD} \
+-e RUN_VMSS_NODE_PROTOTYPE=${RUN_VMSS_NODE_PROTOTYPE} \
 "${DEV_IMAGE}" make test-kubernetes || tryExit && renameResultsFile "deploy"
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ] || [ "${ROTATE_CERTS}" = "true" ]; then
