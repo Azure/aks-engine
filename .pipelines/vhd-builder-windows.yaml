@@ -16,13 +16,14 @@ trigger: none
 pr: none
 
 stages:
-  - stage: build_2019_containerd
-    dependsOn: []
-    jobs:
-    - template: vhd-builder-windows-template.yaml
-      parameters:
-        containerRuntime: containerd
-        windowsServerVersion: 2019
+# Uncomment this stage in a future PR to build/test containred VHD in addition to docker
+#  - stage: build_2019_containerd
+#    dependsOn: []
+#    jobs:
+#    - template: vhd-builder-windows-template.yaml
+#      parameters:
+#        containerRuntime: containerd
+#        windowsServerVersion: 2019
 
   - stage: build_2019_docker
     dependsOn: []
