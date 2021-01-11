@@ -1,6 +1,7 @@
 {
 	"env": {
-		"GINKGO_FOCUS": "should be able to install vmss node prototype"
+		"GINKGO_FOCUS": "should be able to install vmss node prototype",
+		"RUN_VMSS_NODE_PROTOTYPE": true
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
