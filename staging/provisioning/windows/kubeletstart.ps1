@@ -191,8 +191,8 @@ if ($global:NetworkPlugin -eq "azure") {
     # Find if network created by CNI exists, if yes, remove it
     # This is required to keep the network non-persistent behavior
     # Going forward, this would be done by HNS automatically during restart of the node
-    ./cleanupnetwork.ps1 
-    
+    & "c:\k\cleanupnetwork.ps1"
+
     # Restart Kubeproxy, which would wait, until the network is created
     # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
     Restart-Service Kubeproxy

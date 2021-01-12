@@ -49,7 +49,7 @@ if ($global:EnableHostsConfigAgent) {
 # Perform cleanup
 #
 
-./cleanupnetwork.ps1 
+& "c:\k\cleanupnetwork.ps1"
 
 #
 # Create required networks
