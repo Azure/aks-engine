@@ -227,7 +227,7 @@ if ($global:NetworkPlugin -eq "kubenet") {
             $process | Stop-Process | Out-Null
         }
 
-        ./cleanupnetwork.ps1 
+        & "c:\k\cleanupnetwork.ps1"
 
         Write-Host "Creating a new hns Network"
         $hnsNetwork = New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
