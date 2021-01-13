@@ -25,20 +25,46 @@ const (
 
 // Distro string consts
 const (
-	Ubuntu               Distro = "ubuntu"
-	Ubuntu1804           Distro = "ubuntu-18.04"
-	Ubuntu1804Gen2       Distro = "ubuntu-18.04-gen2"
-	RHEL                 Distro = "rhel"
-	CoreOS               Distro = "coreos"
-	AKS1604Deprecated    Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
-	AKS1804Deprecated    Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
-	AKSDockerEngine      Distro = "aks-docker-engine" // deprecated docker-engine distro.
-	AKSUbuntu1604        Distro = "aks-ubuntu-16.04"
-	AKSUbuntu1804        Distro = "aks-ubuntu-18.04"
-	ACC1604              Distro = "acc-16.04"
-	AKSUbuntuGPU1804     Distro = "aks-ubuntu-gpu-18.04"
-	AKSUbuntuGPU1804Gen2 Distro = "aks-ubuntu-gpu-18.04-gen2"
+	Ubuntu                         Distro = "ubuntu"
+	Ubuntu1804                     Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2                 Distro = "ubuntu-18.04-gen2"
+	RHEL                           Distro = "rhel"
+	CoreOS                         Distro = "coreos"
+	AKS1604Deprecated              Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
+	AKS1804Deprecated              Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
+	AKSDockerEngine                Distro = "aks-docker-engine" // deprecated docker-engine distro.
+	AKSUbuntu1604                  Distro = "aks-ubuntu-16.04"
+	AKSUbuntu1804                  Distro = "aks-ubuntu-18.04"
+	AKSUbuntu1804Gen2              Distro = "ubuntu-18.04-gen2" // same distro as Ubuntu1804Gen2, renamed for clarity
+	ACC1604                        Distro = "acc-16.04"
+	AKSUbuntuGPU1804               Distro = "aks-ubuntu-gpu-18.04"
+	AKSUbuntuGPU1804Gen2           Distro = "aks-ubuntu-gpu-18.04-gen2"
+	AKSUbuntuContainerd1804        Distro = "aks-ubuntu-containerd-18.04"
+	AKSUbuntuContainerd1804Gen2    Distro = "aks-ubuntu-containerd-18.04-gen2"
+	AKSUbuntuGPUContainerd1804     Distro = "aks-ubuntu-gpu-containerd-18.04"
+	AKSUbuntuGPUContainerd1804Gen2 Distro = "aks-ubuntu-gpu-containerd-18.04-gen2"
 )
+
+var AKSDistrosAvailableOnVHD []Distro = []Distro{
+	AKSUbuntu1604,
+	AKSUbuntu1804,
+	AKSUbuntu1804Gen2,
+	AKSUbuntuGPU1804,
+	AKSUbuntuGPU1804Gen2,
+	AKSUbuntuContainerd1804,
+	AKSUbuntuContainerd1804Gen2,
+	AKSUbuntuGPUContainerd1804,
+	AKSUbuntuGPUContainerd1804Gen2,
+}
+
+func (d Distro) IsVHDDistro() bool {
+	for _, distro := range AKSDistrosAvailableOnVHD {
+		if d == distro {
+			return true
+		}
+	}
+	return false
+}
 
 const (
 	// SwarmVersion is the Swarm orchestrator version
