@@ -425,6 +425,7 @@ try
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
+        Register-NodeResetScriptTask
         Update-DefenderPreferences
 
         if (Test-Path $CacheDir)
