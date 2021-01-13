@@ -35,10 +35,10 @@ const (
 	AKSDockerEngine                Distro = "aks-docker-engine" // deprecated docker-engine distro.
 	AKSUbuntu1604                  Distro = "aks-ubuntu-16.04"
 	AKSUbuntu1804                  Distro = "aks-ubuntu-18.04"
-	AKSUbuntu1804Gen2              Distro = "ubuntu-18.04-gen2"
+	AKSUbuntu1804Gen2              Distro = "ubuntu-18.04-gen2" // same distro as Ubuntu1804Gen2, renamed for clarity
 	ACC1604                        Distro = "acc-16.04"
 	AKSUbuntuGPU1804               Distro = "aks-ubuntu-gpu-18.04"
-	AKSUbuntuGPU1804Gen2           Distro = "aks-ubuntu-gpu-18.04-gen2" // same distro as Ubuntu1804Gen2, renamed for clarity
+	AKSUbuntuGPU1804Gen2           Distro = "aks-ubuntu-gpu-18.04-gen2"
 	AKSUbuntuContainerd1804        Distro = "aks-ubuntu-containerd-18.04"
 	AKSUbuntuContainerd1804Gen2    Distro = "aks-ubuntu-containerd-18.04-gen2"
 	AKSUbuntuGPUContainerd1804     Distro = "aks-ubuntu-gpu-containerd-18.04"
