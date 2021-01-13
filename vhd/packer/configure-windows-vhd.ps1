@@ -94,7 +94,8 @@ function Get-FilesToCacheOnVHD {
             "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.3.zip",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.4.zip",
-            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.8.zip"
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.8.zip",
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.9.zip"
         );
         "c:\akse-cache\containerd\"   = @(
             $global:containerdPackageUrl
