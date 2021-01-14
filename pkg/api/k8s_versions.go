@@ -61,7 +61,7 @@ const (
 	csiSecretsStoreDriverImageReference               string = "oss/kubernetes-csi/secrets-store/driver:v0.0.18"
 	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
 	azureArcOnboardingImageReference                  string = "arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0"
-	azureKMSProviderImageReference                    string = "k8s/kms/keyvault:v0.0.9"
+	azureKMSProviderImageReference                    string = "k8s/kms/keyvault:v0.0.10"
 )
 
 var kubernetesImageBaseDefaultImages = map[string]map[string]string{
