@@ -7,5 +7,5 @@ $global:KubeletNodeLabels = $Global:ClusterConfiguration.Kubernetes.Kubelet.Node
 
 $NodeLabels = $KubeletNodeLabels -split ","
 ForEach ($NodeLabel in $NodeLabels) {
-  c:\k\kubectl.exe --kubeconfig='c:\\k\\config' --overwrite $env:computername $HOSTNAME $NodeLabel
+  c:\k\kubectl.exe --kubeconfig='c:\\k\\config' --overwrite $env:computername.ToLower() $NodeLabel
 }
