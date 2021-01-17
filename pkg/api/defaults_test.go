@@ -246,7 +246,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.ReschedulerAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
 		common.MetricsServerAddonName:          specConfig.MCRKubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
-		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020",
+		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01112021",
 		common.IPMASQAgentAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
 		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
