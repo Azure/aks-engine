@@ -181,7 +181,7 @@
             "containers": [
               {
                 "name": "omsagent",
-                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10052020",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01112021",
                 "cpuRequests": "150m",
                 "memoryRequests": "250Mi",
                 "cpuLimits": "1",
@@ -189,7 +189,7 @@
               },
               {
                 "name": "omsagentWin",
-                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod10052020",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod01112021",
                 "cpuRequests": "150m",
                 "memoryRequests": "250Mi",
                 "cpuLimits": "1",
@@ -197,7 +197,7 @@
               }
             ],
             "config": {
-              "dockerProviderVersion": "10.0.0-1",
+              "dockerProviderVersion": "12.0.0-0",
               "omsAgentVersion": "1.10.0.1"
             }
           },
