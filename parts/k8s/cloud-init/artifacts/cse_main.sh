@@ -219,12 +219,12 @@ time_metric "EnsureContainerd" ensureContainerd
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
+{{/* configure and enable kms plugin */}}
+{{- if EnableEncryptionWithExternalKms}}
 if [[ -n ${MASTER_NODE} ]]; then
-  {{/* configure and enable kms plugin */}}
-  {{- if EnableEncryptionWithExternalKms}}
   time_metric "EnsureKMSKeyvaultKey" ensureKMSKeyvaultKey
-  {{end}}
 fi
+{{end}}
 
 time_metric "EnsureKubelet" ensureKubelet
 {{if IsAzurePolicyAddonEnabled}}
