@@ -13952,10 +13952,33 @@ KMS_KEYVAULT_NAME=$(jq -r '.providerVaultName' ${AZURE_JSON_PATH})
 KMS_KEY_NAME=$(jq -r '.providerKeyName' ${AZURE_JSON_PATH})
 USER_ASSIGNED_IDENTITY_ID=$(jq -r '.userAssignedIdentityID' ${AZURE_JSON_PATH})
 PROVIDER_KEY_VERSION=$(jq -r '.providerKeyVersion' ${AZURE_JSON_PATH})
+AZURE_CLOUD=$(jq -r '.cloud' ${AZURE_JSON_PATH})
 
-TOKEN_URL="https://login.microsoftonline.com/$TENANT_ID/oauth2/token"
-SCOPE="https://vault.azure.net"
-KEYVAULT_URL="https://$KMS_KEYVAULT_NAME.vault.azure.net/keys/$KMS_KEY_NAME/versions?maxresults=1&api-version=7.1"
+# get the required parameters specific for cloud
+if [[ $AZURE_CLOUD == "AzurePublicCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.microsoftonline.com/"
+    KEYVAULT_DNS_SUFFIX="vault.azure.net"
+elif [[ $AZURE_CLOUD == "AzureChinaCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.chinacloudapi.cn/"
+    KEYVAULT_DNS_SUFFIX="vault.azure.cn"
+elif [[ $AZURE_CLOUD == "AzureGermanCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.microsoftonline.de/"
+    KEYVAULT_DNS_SUFFIX="vault.microsoftazure.de"
+elif [[ $AZURE_CLOUD == "AzureUSGovernmentCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.microsoftonline.us/"
+    KEYVAULT_DNS_SUFFIX="vault.usgovcloudapi.net"
+elif [[ $AZURE_CLOUD == "AzureStackCloud" ]]; then
+    AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
+    ACTIVE_DIRECTORY_ENDPOINT=$(jq -r '.activeDirectoryEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+    KEYVAULT_DNS_SUFFIX=$(jq -r '.keyVaultDNSSuffix' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+else
+    echo "Invalid cloud name"
+    exit 120
+fi
+
+TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
+KEYVAULT_URL="https://${KMS_KEYVAULT_NAME}.${KEYVAULT_DNS_SUFFIX}/keys/${KMS_KEY_NAME}/versions?maxresults=1&api-version=7.1"
+KEYVAULT_ENDPOINT="https://${KEYVAULT_DNS_SUFFIX}"
 KMS_KUBERNETES_FILE=/etc/kubernetes/manifests/kube-azure-kms.yaml
 
 # provider key version already exists
@@ -13971,9 +13994,10 @@ echo "Parameters"
 echo "------------------------------------------------------------------------"
 echo "SERVICE_PRINCIPAL_CLIENT_ID:     ..."
 echo "SERVICE_PRINCIPAL_CLIENT_SECRET: ..."
+echo "ACTIVE_DIRECTORY_ENDPOINT:       $ACTIVE_DIRECTORY_ENDPOINT"
 echo "TENANT_ID:                       $TENANT_ID"
 echo "TOKEN_URL:                       $TOKEN_URL"
-echo "SCOPE:                           $SCOPE"
+echo "SCOPE:                           $KEYVAULT_ENDPOINT"
 echo "------------------------------------------------------------------------"
 
 if [[ $SERVICE_PRINCIPAL_CLIENT_ID == "msi" ]] && [[ $SERVICE_PRINCIPAL_CLIENT_SECRET == "msi" ]]; then
@@ -13981,12 +14005,12 @@ if [[ $SERVICE_PRINCIPAL_CLIENT_ID == "msi" ]] && [[ $SERVICE_PRINCIPAL_CLIENT_S
         # using system-assigned identity to access keyvault
         TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 \
             -H Metadata:true \
-            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=$SCOPE" | jq '.access_token' | xargs)
+            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=$KEYVAULT_ENDPOINT" | jq '.access_token' | xargs)
     else
         # using user-assigned managed identity to access keyvault
         TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 \
             -H Metadata:true \
-            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&client_id=$USER_ASSIGNED_IDENTITY_ID&resource=$SCOPE" | jq '.access_token' | xargs)
+            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&client_id=$USER_ASSIGNED_IDENTITY_ID&resource=$KEYVAULT_ENDPOINT" | jq '.access_token' | xargs)
     fi
 else
     # use service principal token to access keyvault
@@ -13995,7 +14019,7 @@ else
         -d "grant_type=client_credentials" \
         -d "client_id=$SERVICE_PRINCIPAL_CLIENT_ID" \
         --data-urlencode "client_secret=$SERVICE_PRINCIPAL_CLIENT_SECRET" \
-        --data-urlencode "resource=$SCOPE" \
+        --data-urlencode "resource=$KEYVAULT_ENDPOINT" \
         ${TOKEN_URL} | jq '.access_token' | xargs)
 fi
 
