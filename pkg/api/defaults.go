@@ -51,7 +51,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults()
+		properties.setMasterProfileDefaults(params.IsUpgrade)
 	}
 
 	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
@@ -389,6 +389,23 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		if !isUpgrade && !isScale {
+			if cs.Properties.MasterProfile != nil {
+				if cs.Properties.MasterProfile.DataDiskType == UltraSSD {
+					if o.KubernetesConfig.EtcdDiskIOPS == 0 || o.KubernetesConfig.EtcdDiskMBPS == 0 {
+						etcdSizeGB, _ := strconv.Atoi(o.KubernetesConfig.EtcdDiskSizeGB)
+						ultraSSDConfig := getDefaultUltraSSDConfig(etcdSizeGB)
+						if o.KubernetesConfig.EtcdDiskIOPS == 0 {
+							o.KubernetesConfig.EtcdDiskIOPS = ultraSSDConfig.iops
+						}
+						if o.KubernetesConfig.EtcdDiskMBPS == 0 {
+							o.KubernetesConfig.EtcdDiskMBPS = ultraSSDConfig.mbps
+						}
+					}
+				}
+			}
+		}
+
 		if a.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB == 0 {
 			a.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB = DefaultEtcdStorageLimitGB
 		}
@@ -657,7 +674,7 @@ func (p *Properties) setExtensionDefaults() {
 	}
 }
 
-func (p *Properties) setMasterProfileDefaults() {
+func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	// set default to VMAS for now
 	if p.MasterProfile.AvailabilityProfile == "" {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet
@@ -694,6 +711,20 @@ func (p *Properties) setMasterProfileDefaults() {
 
 	if p.MasterProfile.OSDiskCachingType == "" {
 		p.MasterProfile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+	}
+
+	if !isUpgrade {
+		if p.MasterProfile.DataDiskType == "" {
+			p.MasterProfile.DataDiskType = PremiumSSD
+		}
+		if p.MasterProfile.DataDiskType == UltraSSD {
+			if p.MasterProfile.UltraSSDEnabled == nil {
+				p.MasterProfile.UltraSSDEnabled = to.BoolPtr(true)
+			}
+		}
+		if p.MasterProfile.OSDiskType == "" {
+			p.MasterProfile.OSDiskType = PremiumSSD
+		}
 	}
 }
 
@@ -764,13 +795,19 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
 		}
 
-		if profile.OSDiskCachingType == "" {
-			if profile.IsEphemeral() {
+		if profile.IsEphemeral() {
+			if profile.OSDiskCachingType == "" {
 				profile.OSDiskCachingType = string(compute.CachingTypesReadOnly)
-			} else {
-				profile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+			}
+			if profile.OSDiskType == "" {
+				profile.OSDiskType = StandardHDD
 			}
 		}
+
+		if profile.OSDiskCachingType == "" {
+			profile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+		}
+
 		if profile.DataDiskCachingType == "" {
 			profile.DataDiskCachingType = string(compute.CachingTypesReadOnly)
 		}
@@ -1165,5 +1202,67 @@ func (cs *ContainerService) setCSIProxyDefaults() {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
 			w.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
 		}
+	}
+}
+
+type ssdConfig struct {
+	iops int
+	mbps int
+}
+
+// getDefaultUltraSSDConfig returns a known-working IOPS + MBPS config based on the size of the etcd disk
+// See https://docs.microsoft.com/en-us/azure/virtual-machines/disks-types#ultra-disk
+func getDefaultUltraSSDConfig(etcdDiskSizeGB int) ssdConfig {
+	if etcdDiskSizeGB >= 1024 {
+		return ssdConfig{
+			iops: 160000,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 512 {
+		return ssdConfig{
+			iops: 80000,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 256 {
+		return ssdConfig{
+			iops: 76800,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 128 {
+		return ssdConfig{
+			iops: 38400,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 64 {
+		return ssdConfig{
+			iops: 19200,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 32 {
+		return ssdConfig{
+			iops: 9600,
+			mbps: 2000,
+		}
+	}
+	if etcdDiskSizeGB >= 16 {
+		return ssdConfig{
+			iops: 4800,
+			mbps: 1200,
+		}
+	}
+	if etcdDiskSizeGB >= 8 {
+		return ssdConfig{
+			iops: 2400,
+			mbps: 600,
+		}
+	}
+	return ssdConfig{
+		iops: 1200,
+		mbps: 300,
 	}
 }

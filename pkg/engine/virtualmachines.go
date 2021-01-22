@@ -162,17 +162,23 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 
 	storageProfile := &compute.StorageProfile{}
 	imageRef := cs.Properties.MasterProfile.ImageRef
-	etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
+
 	if !cs.Properties.MasterProfile.HasCosmosEtcd() {
 		dataDisk := compute.DataDisk{
-			CreateOption: compute.DiskCreateOptionTypesEmpty,
-			DiskSizeGB:   to.Int32Ptr(int32(etcdSizeGB)),
+			CreateOption: compute.DiskCreateOptionTypesAttach,
 			Lun:          to.Int32Ptr(0),
 			Name:         to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
 		}
 		if cs.Properties.MasterProfile.IsStorageAccount() {
+			etcdSizeGB, _ := strconv.Atoi(kubernetesConfig.EtcdDiskSizeGB)
+			dataDisk.CreateOption = compute.DiskCreateOptionTypesEmpty
+			dataDisk.DiskSizeGB = to.Int32Ptr(int32(etcdSizeGB))
 			dataDisk.Vhd = &compute.VirtualHardDisk{
 				URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/', variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-etcddisk.vhd')]"),
+			}
+		} else {
+			dataDisk.ManagedDisk = &compute.ManagedDiskParameters{
+				ID: to.StringPtr("[resourceId('Microsoft.Compute/disks', concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk'))]"),
 			}
 		}
 		storageProfile.DataDisks = &[]compute.DataDisk{
@@ -203,6 +209,19 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		osDisk.Vhd = &compute.VirtualHardDisk{
 			URI: to.StringPtr("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('masterStorageAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'vhds/',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')),'-osdisk.vhd')]"),
 		}
+	} else if cs.Properties.MasterProfile.OSDiskType != "" {
+		var diskType compute.StorageAccountTypes
+		switch cs.Properties.MasterProfile.OSDiskType {
+		case api.UltraSSD:
+			diskType = compute.StorageAccountTypesUltraSSDLRS
+		case api.PremiumSSD:
+			diskType = compute.StorageAccountTypesPremiumLRS
+		case api.StandardSSD:
+			diskType = compute.StorageAccountTypesStandardLRS
+		}
+		osDisk.ManagedDisk = &compute.ManagedDiskParameters{
+			StorageAccountType: diskType,
+		}
 	}
 
 	if cs.Properties.MasterProfile.OSDiskSizeGB > 0 {
@@ -224,6 +243,60 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	return VirtualMachineARM{
 		ARMResource:    armResource,
 		VirtualMachine: virtualMachine,
+	}
+}
+
+func createEtcdDisk(cs *api.ContainerService) DiskARM {
+	var diskType compute.DiskStorageAccountTypes
+	if cs.Properties.MasterProfile != nil {
+		switch cs.Properties.MasterProfile.DataDiskType {
+		case api.UltraSSD:
+			diskType = compute.UltraSSDLRS
+		case api.PremiumSSD:
+			diskType = compute.PremiumLRS
+		case api.StandardSSD:
+			diskType = compute.StandardSSDLRS
+		case api.StandardHDD:
+			diskType = compute.StandardLRS
+		}
+	}
+	hasAvailabilityZones := cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasAvailabilityZones()
+	etcdSizeGB, _ := strconv.Atoi(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskSizeGB)
+	etcdDisk := compute.Disk{
+		Type:     to.StringPtr("Microsoft.Compute/disks"),
+		Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')),'-etcddisk')]"),
+		Location: to.StringPtr("[variables('location')]"),
+		Sku: &compute.DiskSku{
+			Name: diskType,
+		},
+		DiskProperties: &compute.DiskProperties{
+			CreationData: &compute.CreationData{
+				CreateOption: compute.Empty,
+			},
+			DiskSizeGB: to.Int32Ptr(int32(etcdSizeGB)),
+		},
+	}
+
+	if hasAvailabilityZones {
+		etcdDisk.Zones = &[]string{
+			"[string(parameters('availabilityZones')[mod(copyIndex(variables('masterOffset')), length(parameters('availabilityZones')))])]",
+		}
+	}
+
+	if diskType == compute.UltraSSDLRS {
+		etcdDisk.DiskProperties.DiskIOPSReadWrite = to.Int64Ptr(int64(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskIOPS))
+		etcdDisk.DiskProperties.DiskMBpsReadWrite = to.Int64Ptr(int64(cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdDiskMBPS))
+	}
+
+	return DiskARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionCompute')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+				"name":  "etcdDiskLoopNode",
+			},
+		},
+		Disk: etcdDisk,
 	}
 }
 
@@ -535,16 +608,31 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		Caching:      compute.CachingTypes(profile.OSDiskCachingType),
 	}
 
-	if profile.IsStorageAccount() {
+	if profile.IsEphemeral() {
+		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
+			Option: compute.Local,
+		}
+	} else if profile.IsStorageAccount() {
 		osDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')),'-osdisk')]", profile.Name))
 		osDisk.Vhd = &compute.VirtualHardDisk{
 			URI: to.StringPtr(fmt.Sprintf("[concat(reference(concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('%[1]sOffset')),variables('maxVMsPerStorageAccount')),variables('%[1]sStorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('%[1]sAccountName')),variables('apiVersionStorage')).primaryEndpoints.blob,'osdisk/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')), '-osdisk.vhd')]", profile.Name)),
 		}
-	}
-
-	if profile.IsEphemeral() {
-		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
-			Option: compute.Local,
+	} else if profile.IsManagedDisks() {
+		if profile.OSDiskType != "" {
+			var diskType compute.StorageAccountTypes
+			switch profile.OSDiskType {
+			case api.UltraSSD:
+				diskType = compute.StorageAccountTypesUltraSSDLRS
+			case api.PremiumSSD:
+				diskType = compute.StorageAccountTypesPremiumLRS
+			case api.StandardSSD:
+				diskType = compute.StorageAccountTypesStandardSSDLRS
+			case api.StandardHDD:
+				diskType = compute.StorageAccountTypesStandardLRS
+			}
+			osDisk.ManagedDisk = &compute.ManagedDiskParameters{
+				StorageAccountType: diskType,
+			}
 		}
 	}
 

@@ -191,3 +191,6 @@ const (
 	// AddonModeReconcile
 	AddonModeReconcile = "Reconcile"
 )
+
+// ScaleSetPrioritySpot means the ScaleSet will use Spot VMs
+const ScaleSetPrioritySpot = "Spot"

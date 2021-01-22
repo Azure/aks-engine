@@ -23,6 +23,7 @@
 					"name": "linuxpool1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
+					"osDiskType": "StandardSSD",
 					"availabilityProfile": "VirtualMachineScaleSets"
 				},
 				{
@@ -30,6 +31,7 @@
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
+					"osDiskType": "StandardSSD",
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"scalesetPriority": "Spot"
 				}

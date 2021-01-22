@@ -36,6 +36,11 @@ func (arm ARMResource) MarshalJSON() ([]byte, error) {
 	return json.Marshal(arm)
 }
 
+type DiskARM struct {
+	ARMResource
+	compute.Disk
+}
+
 // VirtualMachineARM embeds the ARMResource type in compute.VirtualMachine.
 type VirtualMachineARM struct {
 	ARMResource

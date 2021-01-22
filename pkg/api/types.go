@@ -427,6 +427,8 @@ type KubernetesConfig struct {
 	GCLowThreshold                    int                   `json:"gclowthreshold,omitempty"`
 	EtcdVersion                       string                `json:"etcdVersion,omitempty"`
 	EtcdDiskSizeGB                    string                `json:"etcdDiskSizeGB,omitempty"`
+	EtcdDiskIOPS                      int                   `json:"etcdDiskIOPS,omitempty"`
+	EtcdDiskMBPS                      int                   `json:"etcdDiskMBPS,omitempty"`
 	EtcdStorageLimitGB                int                   `json:"etcdStorageLimitGB,omitempty"`
 	EtcdEncryptionKey                 string                `json:"etcdEncryptionKey,omitempty"`
 	EnableDataEncryptionAtRest        *bool                 `json:"enableDataEncryptionAtRest,omitempty"`
@@ -511,6 +513,8 @@ type MasterProfile struct {
 	AvailabilityZones         []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
+	OSDiskType                string            `json:"osDiskType,omitempty"`
+	DataDiskType              string            `json:"dataDiskType,omitempty"`
 	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
@@ -605,6 +609,8 @@ type AgentPoolProfile struct {
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
 	OSDiskCachingType                   string               `json:"osDiskCachingType,omitempty"`
 	DataDiskCachingType                 string               `json:"dataDiskCachingType,omitempty"`
+	OSDiskType                          string               `json:"osDiskType,omitempty"`
+	DataDiskType                        string               `json:"dataDiskType,omitempty"`
 	// VMSSName is a read-only field; its value will be computed during template generation
 	VMSSName string `json:"vmssName,omitempty"`
 }
