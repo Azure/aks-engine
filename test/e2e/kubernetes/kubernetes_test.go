@@ -2754,6 +2754,35 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should be able to connect to hostPort", func() {
+			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			numAgentNodes := len(nodes) - len(masterNodes)
+			By("Creating a httpbin DaemonSet")
+			httpbinName := "httpbin"
+			httpbinNamespace := "default"
+			d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", httpbinName)), httpbinName, httpbinNamespace, "app", httpbinName, 5*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = pod.WaitForMinRunningByLabelWithRetry(numAgentNodes, "app", httpbinName, httpbinNamespace, 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			By("Ensuring that we have can connect locally using the configured httpbin container hostPort")
+			hostPortTestName := "hostport-test"
+			hostPortTestNamespace := "default"
+			j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", hostPortTestName)), hostPortTestName, hostPortTestNamespace, 3*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			ready, err := j.WaitOnSucceeded(5*time.Second, 1*time.Minute)
+			if err != nil {
+				pod.PrintPodsLogs(hostPortTestName, hostPortTestNamespace, 5*time.Second, 1*time.Minute)
+			}
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+			By("Cleaning up after ourselves")
+			err = j.Delete(util.DefaultDeleteRetries)
+			Expect(err).NotTo(HaveOccurred())
+			err = d.Delete(util.DefaultDeleteRetries)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("should be able to install vmss node prototype", func() {
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
