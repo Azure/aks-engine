@@ -1,31 +1,27 @@
-# AKS Engine - Dual Stack clusters
+# AKS Engine - Dual-stack clusters
 
 ## Overview
 
-AKS Engine enables you to create dual stack (IPv4 *and* IPv6) Kubernetes clusters on Microsoft Azure.
+AKS Engine enables you to create dual-stack (IPv4 *and* IPv6) Kubernetes clusters on Microsoft Azure.
 
-- Dual stack support is available for Kubernetes version 1.16.0 and later
-- Dual stack services support was added in 1.20.0 (recommended kubernetes version)
+- Dual-stack support is available for Kubernetes version 1.16.0 and later
+- Dual-stack services support was added in 1.20.0 (recommended kubernetes version)
 
 > Official docs are available here - https://kubernetes.io/docs/concepts/services-networking/dual-stack/
 
-In order to create IPv6 enabled Azure virtual networks and use standard loadbalancer with IPv6 you must first configure your subscription [as follows](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-ipv4-ipv6-dual-stack-cli#prerequisites).
-
-This example shows you how to configure a dual stack cluster:
+This example shows you how to configure a dual-stack cluster:
 
 1. **kubernetes.json** - deploying and using [Kubernetes](kubernetes.json).
 
-**Note** 
+The default node CIDR mask size for IPv6 is /64 and the default clusters subnet is `fc00::/48`. In 1.17+ node CIDR mask size can be configured by:
 
-The default node CIDR mask size for IPv6 is /64 and the default clusters subnet is `fc00::/48`. In 1.17+ node CIDR mask size can be configured by 
-
-```
+```yaml
         "controllerManagerConfig" : {
                 "--node-cidr-mask-size-ipv6": <value>
         }
 ```
 
-**The difference between node CIDR mask size and cluster subnet mask size can't be > 16**
+> The difference between node CIDR mask size and cluster subnet mask size can't be > 16**
 
 Things to try out after the cluster is deployed -
 
@@ -106,8 +102,8 @@ spec:
   type: LoadBalancer
 ```
 
-```
-azureuser@k8s-master-13083844-0:~$ kubectl get svc
+```bash
+$ kubectl get svc
 NAME          TYPE           CLUSTER-IP       EXTERNAL-IP          PORT(S)        AGE
 kubernetes    ClusterIP      10.0.0.1         <none>               443/TCP        58m
 nginx-ipv6    LoadBalancer   fd00::6283       2603:1030:805:3::3   80:31140/TCP   32s
@@ -115,13 +111,13 @@ nginx-ipv6    LoadBalancer   fd00::6283       2603:1030:805:3::3   80:31140/TCP 
 
 ## Limitations
 
-- Dual stack clusters are supported only with kubenet and azurecni.
-  - Dual stack cluster with azurecni are only supported with `bridge` network mode.
-- Dual stack clusters are supported only with Linux.
-- Dual stack clusters with Windows is not supported at this time because it requires
-  - Kubernetes version 1.19+ and 
-  - [backport to 2004 to support dualstack containers](https://github.com/Azure/aks-engine/issues/3568).
-- Dual stack clusters are supported with 
-  - ipvs kube-proxy mode (Kubernetes version 1.16+)
-  - iptables kube-proxy mode (Kubernetes version 1.18+).
-- API model enables Azure Standard LB for dual stack clusters. Azure Basic LBs have a limitation of only 1 IPv6 frontend configurations while Standard LB supports up to 600 IPv6 frontend configurations.
+- Dual-stack clusters are supported only with kubenet and azurecni.
+  - Dual-stack cluster with azurecni are only supported with `bridge` network mode.
+- Dual-stack clusters are supported only with Linux.
+- Dual-stack clusters with Windows is not supported at this time because it requires
+  - Kubernetes version 1.19+ and
+  - [backport to 2004 to support dual-stack containers](https://github.com/Azure/aks-engine/issues/3568).
+- Dual-stack clusters are supported with
+  - `ipvs` kube-proxy mode (Kubernetes version 1.16+)
+  - `iptables` kube-proxy mode (Kubernetes version 1.18+).
+- API model enables Azure Standard LB for dual-stack clusters. Azure Basic LBs have a limitation of only 1 IPv6 frontend configurations while Standard LB supports up to 600 IPv6 frontend configurations.
