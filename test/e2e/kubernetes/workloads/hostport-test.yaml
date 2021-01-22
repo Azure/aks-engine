@@ -9,7 +9,7 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-        - image: curlimages/curl
+        - image: mcr.microsoft.com/oss/tutum/curl:latest
           name: hostport-test
           env:
             - name: HOST_IP

@@ -913,6 +913,44 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
 
+		It("should be able to create and connect to a hostPort-configured pod", func() {
+			if eng.AnyAgentIsLinux() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				var numNodes int
+				for _, n := range nodes {
+					if n.IsLinux() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						numNodes++
+					}
+				}
+				By("Creating a httpbin DaemonSet")
+				httpbinName := "httpbin"
+				httpbinNamespace := "default"
+				d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", httpbinName)), httpbinName, httpbinNamespace, "app", httpbinName, 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = pod.WaitForMinRunningByLabelWithRetry(numNodes, "app", httpbinName, httpbinNamespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				By("Ensuring that we have can connect locally using the configured httpbin container hostPort")
+				hostPortTestName := "hostport-test"
+				hostPortTestNamespace := "default"
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", hostPortTestName)), hostPortTestName, hostPortTestNamespace, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(5*time.Second, 1*time.Minute)
+				if err != nil {
+					pod.PrintPodsLogs(hostPortTestName, hostPortTestNamespace, 5*time.Second, 1*time.Minute)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+				By("Cleaning up after ourselves")
+				err = j.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = d.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("hostPort test requires a Linux node")
+			}
+		})
+
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
 			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -2752,35 +2790,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
-		})
-
-		It("should be able to connect to hostPort", func() {
-			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			numAgentNodes := len(nodes) - len(masterNodes)
-			By("Creating a httpbin DaemonSet")
-			httpbinName := "httpbin"
-			httpbinNamespace := "default"
-			d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", httpbinName)), httpbinName, httpbinNamespace, "app", httpbinName, 5*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			_, err = pod.WaitForMinRunningByLabelWithRetry(numAgentNodes, "app", httpbinName, httpbinNamespace, 1*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			By("Ensuring that we have can connect locally using the configured httpbin container hostPort")
-			hostPortTestName := "hostport-test"
-			hostPortTestNamespace := "default"
-			j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", hostPortTestName)), hostPortTestName, hostPortTestNamespace, 3*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(5*time.Second, 1*time.Minute)
-			if err != nil {
-				pod.PrintPodsLogs(hostPortTestName, hostPortTestNamespace, 5*time.Second, 1*time.Minute)
-			}
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ready).To(Equal(true))
-			By("Cleaning up after ourselves")
-			err = j.Delete(util.DefaultDeleteRetries)
-			Expect(err).NotTo(HaveOccurred())
-			err = d.Delete(util.DefaultDeleteRetries)
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should be able to install vmss node prototype", func() {
