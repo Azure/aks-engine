@@ -918,8 +918,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				var numNodes int
+				controlPlaneNodeRegexString := fmt.Sprintf("^%s-.*", common.LegacyControlPlaneVMPrefix)
+				controlPlaneNodeRegexp, err := regexp.Compile(controlPlaneNodeRegexString)
+				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					if n.IsLinux() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+					if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
 						numNodes++
 					}
 				}

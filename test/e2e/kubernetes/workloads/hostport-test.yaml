@@ -18,3 +18,5 @@ spec:
                   fieldPath: status.hostIP
           command: [ "/bin/sh", "-c", "--" ]
           args: [ "curl -sS $(HOST_IP):8080/get" ]
+      nodeSelector:
+        beta.kubernetes.io/os: linux
