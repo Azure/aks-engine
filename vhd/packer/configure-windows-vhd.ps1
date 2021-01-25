@@ -105,7 +105,6 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.2.2/binaries/csi-proxy-v0.2.2.tar.gz"
         );
         "c:\akse-cache\win-k8s\"      = @(
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-azs/windowszip/v1.16.13-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.14-azs/windowszip/v1.16.14-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.17-azs/windowszip/v1.17.17-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.10-azs/windowszip/v1.18.10-azs-1int.zip",
