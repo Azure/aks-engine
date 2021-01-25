@@ -27,7 +27,7 @@ jobs:
     ORCHESTRATOR_RELEASE: ${{ parameters.k8sRelease }}
     CREATE_VNET: ${{ parameters.createVNET }}
     CLEANUP_ON_EXIT: true
-    CLEANUP_IF_FAIL: true
+    CLEANUP_IF_FAIL: false
     GINKGO_SKIP: ${{ parameters.skipTests }}
     STABILITY_ITERATIONS: ${{ parameters.stabilityIterations }}
     RETAIN_SSH: false
