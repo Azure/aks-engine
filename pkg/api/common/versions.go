@@ -268,8 +268,8 @@ var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.17.5":  false,
 	"1.17.6":  false,
 	"1.17.7":  false,
-	"1.17.9":  true,
-	"1.17.11": true,
+	"1.17.9":  false,
+	"1.17.11": false,
 	"1.17.17": true,
 	"1.18.10": true,
 }
@@ -288,8 +288,8 @@ var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
 	"1.17.5":  false,
 	"1.17.6":  false,
 	"1.17.7":  false,
-	"1.17.9":  true,
-	"1.17.11": true,
+	"1.17.9":  false,
+	"1.17.11": false,
 	"1.17.17": true,
 	"1.18.10": true,
 }
