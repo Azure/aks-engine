@@ -157,6 +157,14 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
 	}
 
+	if enableEncryptionWithExternalKms {
+		cloudInitFiles["kmsKeyvaultKeySystemdService"] = getBase64EncodedGzippedCustomScript(kmsKeyvaultKeySystemdService, cs)
+		cloudInitFiles["kmsKeyvaultKeyScript"] = getBase64EncodedGzippedCustomScript(kmsKeyvaultKeyScript, cs)
+		masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
+	} else {
+		masterVars["clusterKeyVaultName"] = ""
+	}
+
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName) {
 		cloudInitFiles["untaintNodesScript"] = getBase64EncodedGzippedCustomScript(untaintNodesScript, cs)
 		cloudInitFiles["untaintNodesSystemdService"] = getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs)
@@ -518,12 +526,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 
 	if cs.Properties.HasWindows() {
 		masterVars["windowsCustomScriptSuffix"] = " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; Copy-Item $inputFile $outputFile ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; "
-	}
-
-	if enableEncryptionWithExternalKms {
-		masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
-	} else {
-		masterVars["clusterKeyVaultName"] = ""
 	}
 
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {

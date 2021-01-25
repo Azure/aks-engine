@@ -57,6 +57,8 @@
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
 // ../../parts/k8s/cloud-init/artifacts/generateproxycerts.sh
 // ../../parts/k8s/cloud-init/artifacts/health-monitor.sh
+// ../../parts/k8s/cloud-init/artifacts/kms-keyvault-key.service
+// ../../parts/k8s/cloud-init/artifacts/kms-keyvault-key.sh
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/kubelet.service
@@ -12014,6 +12016,13 @@ ensureDHCPv6() {
   fi
 }
 {{end}}
+{{- if EnableEncryptionWithExternalKms}}
+ensureKMSKeyvaultKey() {
+    wait_for_file 3600 1 {{GetKMSKeyvaultKeyServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    wait_for_file 3600 1 {{GetKMSKeyvaultKeyCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    systemctlEnableAndStart kms-keyvault-key || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+}
+{{end}}
 ensureKubelet() {
   wait_for_file 1200 1 /etc/sysctl.d/11-aks-engine.conf || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sysctl_reload 10 5 120 || exit {{GetCSEErrorCode "ERR_SYSCTL_RELOAD"}}
@@ -12210,6 +12219,7 @@ configAzurePolicyAddon() {
   sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $ADDONS_DIR/azure-policy-deployment.yaml
 }
 {{end}}
+
 configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
@@ -13341,6 +13351,13 @@ time_metric "EnsureContainerd" ensureContainerd
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
+{{/* configure and enable kms plugin */}}
+{{- if EnableEncryptionWithExternalKms}}
+if [[ -n ${MASTER_NODE} ]]; then
+  time_metric "EnsureKMSKeyvaultKey" ensureKMSKeyvaultKey
+fi
+{{end}}
+
 time_metric "EnsureKubelet" ensureKubelet
 {{if IsAzurePolicyAddonEnabled}}
 if [[ -n ${MASTER_NODE} ]]; then
@@ -13890,6 +13907,169 @@ func k8sCloudInitArtifactsHealthMonitorSh() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/health-monitor.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsKmsKeyvaultKeyService = []byte(`[Unit]
+Description=setupkmskey
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart={{GetKMSKeyvaultKeyCSEScriptFilepath}}
+
+[Install]
+WantedBy=multi-user.target
+#EOF
+`)
+
+func k8sCloudInitArtifactsKmsKeyvaultKeyServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsKmsKeyvaultKeyService, nil
+}
+
+func k8sCloudInitArtifactsKmsKeyvaultKeyService() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsKmsKeyvaultKeyServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/kms-keyvault-key.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsKmsKeyvaultKeySh = []byte(`#!/usr/bin/env bash
+
+set +x
+set -euo pipefail
+
+AZURE_JSON_PATH="/etc/kubernetes/azure.json"
+SERVICE_PRINCIPAL_CLIENT_ID=$(jq -r '.aadClientId' ${AZURE_JSON_PATH})
+SERVICE_PRINCIPAL_CLIENT_SECRET=$(jq -r '.aadClientSecret' ${AZURE_JSON_PATH})
+TENANT_ID=$(jq -r '.tenantId' ${AZURE_JSON_PATH})
+KMS_KEYVAULT_NAME=$(jq -r '.providerVaultName' ${AZURE_JSON_PATH})
+KMS_KEY_NAME=$(jq -r '.providerKeyName' ${AZURE_JSON_PATH})
+USER_ASSIGNED_IDENTITY_ID=$(jq -r '.userAssignedIdentityID' ${AZURE_JSON_PATH})
+PROVIDER_KEY_VERSION=$(jq -r '.providerKeyVersion' ${AZURE_JSON_PATH})
+AZURE_CLOUD=$(jq -r '.cloud' ${AZURE_JSON_PATH})
+
+# get the required parameters specific for cloud
+if [[ $AZURE_CLOUD == "AzurePublicCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.microsoftonline.com/"
+    KEYVAULT_DNS_SUFFIX="vault.azure.net"
+elif [[ $AZURE_CLOUD == "AzureChinaCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.chinacloudapi.cn/"
+    KEYVAULT_DNS_SUFFIX="vault.azure.cn"
+elif [[ $AZURE_CLOUD == "AzureGermanCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.microsoftonline.de/"
+    KEYVAULT_DNS_SUFFIX="vault.microsoftazure.de"
+elif [[ $AZURE_CLOUD == "AzureUSGovernmentCloud" ]]; then
+    ACTIVE_DIRECTORY_ENDPOINT="https://login.microsoftonline.us/"
+    KEYVAULT_DNS_SUFFIX="vault.usgovcloudapi.net"
+elif [[ $AZURE_CLOUD == "AzureStackCloud" ]]; then
+    AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
+    ACTIVE_DIRECTORY_ENDPOINT=$(jq -r '.activeDirectoryEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+    KEYVAULT_DNS_SUFFIX=$(jq -r '.keyVaultDNSSuffix' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+else
+    echo "Invalid cloud name"
+    exit 120
+fi
+
+TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
+KEYVAULT_URL="https://${KMS_KEYVAULT_NAME}.${KEYVAULT_DNS_SUFFIX}/keys/${KMS_KEY_NAME}/versions?maxresults=1&api-version=7.1"
+KEYVAULT_ENDPOINT="https://${KEYVAULT_DNS_SUFFIX}"
+KMS_KUBERNETES_FILE=/etc/kubernetes/manifests/kube-azure-kms.yaml
+
+# provider key version already exists
+# this will be the case for BYOK
+if [[ -n $PROVIDER_KEY_VERSION ]]; then
+    echo "KMS provider key version already exists"
+    exit 0
+fi
+
+echo "Generating token for Azure Key Vault"
+echo "------------------------------------------------------------------------"
+echo "Parameters"
+echo "------------------------------------------------------------------------"
+echo "SERVICE_PRINCIPAL_CLIENT_ID:     ..."
+echo "SERVICE_PRINCIPAL_CLIENT_SECRET: ..."
+echo "ACTIVE_DIRECTORY_ENDPOINT:       $ACTIVE_DIRECTORY_ENDPOINT"
+echo "TENANT_ID:                       $TENANT_ID"
+echo "TOKEN_URL:                       $TOKEN_URL"
+echo "SCOPE:                           $KEYVAULT_ENDPOINT"
+echo "------------------------------------------------------------------------"
+
+if [[ $SERVICE_PRINCIPAL_CLIENT_ID == "msi" ]] && [[ $SERVICE_PRINCIPAL_CLIENT_SECRET == "msi" ]]; then
+    if [[ -z $USER_ASSIGNED_IDENTITY_ID ]]; then
+        # using system-assigned identity to access keyvault
+        TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 \
+            -H Metadata:true \
+            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=$KEYVAULT_ENDPOINT" | jq '.access_token' | xargs)
+    else
+        # using user-assigned managed identity to access keyvault
+        TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 \
+            -H Metadata:true \
+            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&client_id=$USER_ASSIGNED_IDENTITY_ID&resource=$KEYVAULT_ENDPOINT" | jq '.access_token' | xargs)
+    fi
+else
+    # use service principal token to access keyvault
+    TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X POST \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "grant_type=client_credentials" \
+        -d "client_id=$SERVICE_PRINCIPAL_CLIENT_ID" \
+        --data-urlencode "client_secret=$SERVICE_PRINCIPAL_CLIENT_SECRET" \
+        --data-urlencode "resource=$KEYVAULT_ENDPOINT" \
+        ${TOKEN_URL} | jq '.access_token' | xargs)
+fi
+
+
+if [[ -z $TOKEN ]]; then
+    echo "Error generating token for Azure Keyvault"
+    exit 120
+fi
+
+# Get the keyID for the kms key created as part of cluster bootstrap
+KEY_ID=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f \
+    ${KEYVAULT_URL} -H "Authorization: Bearer ${TOKEN}" | jq '.value[0].kid' | xargs)
+
+if [[ -z "$KEY_ID" || "$KEY_ID" == "null" ]]; then
+    echo "Error getting the kms key version"
+    exit 120
+fi
+
+# KID format: https://<keyvault name>.vault.azure.net/keys/<key name>/<key version>
+# Example KID: "https://akv0112master.vault.azure.net/keys/k8s/128a3d9956bc44feb6a0e2c2f35b732c"
+KEY_VERSION=${KEY_ID##*/}
+
+# Set the version in azure.json
+if [ -f $AZURE_JSON_PATH ]; then
+    # once the version is set in azure.json, kms plugin will just default to using the key
+    # this will be changed in upcoming kms release to set the version as container args
+    tmpDir=$(mktemp -d "$(pwd)/XXX")
+    jq --arg KEY_VERSION ${KEY_VERSION} '.providerKeyVersion=($KEY_VERSION)' "$AZURE_JSON_PATH" > $tmpDir/tmp
+    mv $tmpDir/tmp "$AZURE_JSON_PATH"
+    # set the permissions for azure json
+    chmod 0600 "$AZURE_JSON_PATH"
+    chown root:root "$AZURE_JSON_PATH"
+    rm -Rf $tmpDir
+fi
+
+set -x
+#EOF
+`)
+
+func k8sCloudInitArtifactsKmsKeyvaultKeyShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsKmsKeyvaultKeySh, nil
+}
+
+func k8sCloudInitArtifactsKmsKeyvaultKeySh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsKmsKeyvaultKeyShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/kms-keyvault-key.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -15139,6 +15319,20 @@ write_files:
             endpoint: unix:///opt/azurekms.socket
             cachesize: 1000
         - identity: {}
+
+- path: {{GetKMSKeyvaultKeyServiceCSEScriptFilepath}}
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsKeyvaultKeySystemdService"}}
+
+- path: {{GetKMSKeyvaultKeyCSEScriptFilepath}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsKeyvaultKeyScript"}}
 {{end}}
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
@@ -19528,6 +19722,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/etcd.service":                              k8sCloudInitArtifactsEtcdService,
 	"k8s/cloud-init/artifacts/generateproxycerts.sh":                     k8sCloudInitArtifactsGenerateproxycertsSh,
 	"k8s/cloud-init/artifacts/health-monitor.sh":                         k8sCloudInitArtifactsHealthMonitorSh,
+	"k8s/cloud-init/artifacts/kms-keyvault-key.service":                  k8sCloudInitArtifactsKmsKeyvaultKeyService,
+	"k8s/cloud-init/artifacts/kms-keyvault-key.sh":                       k8sCloudInitArtifactsKmsKeyvaultKeySh,
 	"k8s/cloud-init/artifacts/kubelet-monitor.service":                   k8sCloudInitArtifactsKubeletMonitorService,
 	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                     k8sCloudInitArtifactsKubeletMonitorTimer,
 	"k8s/cloud-init/artifacts/kubelet.service":                           k8sCloudInitArtifactsKubeletService,
@@ -19678,6 +19874,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"etcd.service":                              {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
 				"generateproxycerts.sh":                     {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
 				"health-monitor.sh":                         {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
+				"kms-keyvault-key.service":                  {k8sCloudInitArtifactsKmsKeyvaultKeyService, map[string]*bintree{}},
+				"kms-keyvault-key.sh":                       {k8sCloudInitArtifactsKmsKeyvaultKeySh, map[string]*bintree{}},
 				"kubelet-monitor.service":                   {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
 				"kubelet-monitor.timer":                     {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
 				"kubelet.service":                           {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},
