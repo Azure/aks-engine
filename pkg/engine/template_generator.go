@@ -703,6 +703,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDHCPv6ConfigCSEScriptFilepath": func() string {
 			return dhcpV6ConfigCSEScriptFilepath
 		},
+		"GetKMSKeyvaultKeyServiceCSEScriptFilepath": func() string {
+			return kmsKeyvaultKeyServiceCSEScriptFilepath
+		},
+		"GetKMSKeyvaultKeyCSEScriptFilepath": func() string {
+			return kmsKeyvaultKeyCSEScriptFilepath
+		},
 		"HasPrivateAzureRegistryServer": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer != ""
 		},

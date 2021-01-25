@@ -92,7 +92,8 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	if isKMSEnabled {
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMAS(cs)
-		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
+		keyVaultKey := CreateKeyVaultKey(cs)
+		masterResources = append(masterResources, keyVaultStorageAccount, keyVault, keyVaultKey)
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
@@ -192,9 +193,11 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	}
 
 	if isKMSEnabled {
+		// TODO (aramase) remove storage account creation as part of kms plugin v0.0.11
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMSS(cs)
-		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
+		keyVaultKey := CreateKeyVaultKey(cs)
+		masterResources = append(masterResources, keyVaultStorageAccount, keyVault, keyVaultKey)
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
