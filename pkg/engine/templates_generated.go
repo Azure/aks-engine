@@ -15224,6 +15224,11 @@ write_files:
                 "subnet": "{{` + "`" + `{{.PodCIDR}}` + "`" + `}}",
                 "routes": [{ "dst": "0.0.0.0/0" }]
             }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {"portMappings": true},
+            "snat": false
           }]
       }
     {{end}}
@@ -15772,6 +15777,11 @@ write_files:
                 "subnet": "{{` + "`" + `{{.PodCIDR}}` + "`" + `}}",
                 "routes": [{ "dst": "0.0.0.0/0" }]
             }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {"portMappings": true},
+            "snat": false
           }]
       }
   {{end}}
