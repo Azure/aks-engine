@@ -2800,7 +2800,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					numAgentNodes := len(nodes) - len(masterNodes)
+					var numAgentNodes int
+					controlPlaneNodeRegexStr := fmt.Sprintf("^%s-.*", common.LegacyControlPlaneVMPrefix)
+					controlPlaneNodeRegexp, err := regexp.Compile(controlPlaneNodeRegexStr)
+					Expect(err).NotTo(HaveOccurred())
+					for _, n := range nodes {
+						if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
+							numAgentNodes++
+						}
+					}
+					fmt.Println(numAgentNodes)
 					By("Creating a DaemonSet with a large container")
 					d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", "app", "large-container-daemonset", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2871,13 +2880,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						log.Printf("%s\n", out)
 						Expect(err).NotTo(HaveOccurred())
 					}
-					cmd = exec.Command("helm", "upgrade", "--install",
-						"--repo", "https://jackfrancis.github.io/kamino/",
-						"vmss-prototype", "vmss-prototype",
-						"--namespace", "default",
-						"--set", "kamino.scheduleOnControlPlane=true",
-						"--set", "kamino.newUpdatedNodes=2",
-						"--set", fmt.Sprintf("kamino.targetNode=%s", targetNode))
+					commandArgsSlice := []string{"upgrade", "--install"}
+					if cfg.KaminoVMSSPrototypeLocalChartPath == "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--repo", "https://jackfrancis.github.io/kamino/", "vmss-prototype", "vmss-prototype"}...)
+					} else {
+						commandArgsSlice = append(commandArgsSlice, []string{"vmss-prototype", cfg.KaminoVMSSPrototypeLocalChartPath}...)
+					}
+					commandArgsSlice = append(commandArgsSlice, []string{"--namespace", "default", "--set", "kamino.scheduleOnControlPlane=true", "--set", "kamino.newUpdatedNodes=2", "--set", fmt.Sprintf("kamino.targetNode=%s", targetNode)}...)
+					if cfg.KaminoVMSSPrototypeImageRegistry != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRegistry=%s", cfg.KaminoVMSSPrototypeImageRegistry)}...)
+					}
+					if cfg.KaminoVMSSPrototypeImageRepository != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRepository=%s", cfg.KaminoVMSSPrototypeImageRepository)}...)
+					}
+					if cfg.KaminoVMSSPrototypeImageTag != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageTag=%s", cfg.KaminoVMSSPrototypeImageTag), "--set", "kamino.container.pullByHash=false"}...)
+					}
+					cmd = exec.Command("helm", commandArgsSlice...)
 					start = time.Now()
 					out, err = cmd.CombinedOutput()
 					log.Printf("%s\n", out)
