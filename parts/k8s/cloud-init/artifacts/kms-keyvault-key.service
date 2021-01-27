@@ -1,0 +1,11 @@
+[Unit]
+Description=setupkmskey
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart={{GetKMSKeyvaultKeyCSEScriptFilepath}}
+
+[Install]
+WantedBy=multi-user.target
+#EOF

@@ -6,6 +6,8 @@ This walkthrough is to help you get start with Azure Active Directory(AAD) integ
 
 Please also refer to [Azure Active Directory plugin for client authentication](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/plugin/pkg/client/auth/azure/README.md) in Kubernetes repo for more details about OpenID Connect and AAD support in upstream.
 
+Note: This feature is not supported on Azure Stack Hub. 
+
 ## Prerequisites
 1. An Azure Active Directory tenant, referred to as `AAD Tenant`. You can use the tenant for your Azure subscription;
 2. A `Web app / API` type AAD application, referred to as `Server Application`. This application represents the `apiserver`. For groups to work properly, you'll need to edit the `Server Application` Manifest and set `groupMembershipClaims` to either `All` or `SecurityGroup`.
@@ -20,7 +22,7 @@ You also need to delegate permission to the application as follows:
 
 
 ## Deployment
-Follow the [deployment steps]([../tutorials/quickstart.md#deploy]). In step #4, add the following under 'properties' section:
+Follow the [deployment steps](../tutorials/quickstart.md#deploy). In step #4, add the following under 'properties' section:
 ```json
 "aadProfile": {
     "serverAppID": "",

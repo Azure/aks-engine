@@ -236,3 +236,66 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
 	}
 }
+
+func TestCreateKeyVaultKey(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				KubernetesConfig: &api.KubernetesConfig{},
+			},
+			MasterProfile: &api.MasterProfile{
+				Count: 1,
+			},
+		},
+	}
+
+	actual := CreateKeyVaultKey(cs)
+
+	expected := map[string]interface{}{
+		"type":       "Microsoft.KeyVault/vaults/keys",
+		"name":       "[concat(variables('clusterKeyVaultName'), '/', 'k8s')]",
+		"apiVersion": "[variables('apiVersionKeyVault')]",
+		"location":   "[variables('location')]",
+		"dependsOn": []string{
+			"[resourceId('Microsoft.KeyVault/vaults', variables('clusterKeyVaultName'))]",
+		},
+		"properties": map[string]interface{}{
+			"kty": "RSA",
+			"keyOps": []string{
+				"encrypt",
+				"decrypt",
+			},
+			"keySize": 2048,
+		},
+	}
+
+	if diff := cmp.Diff(actual, expected); diff != "" {
+		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
+	}
+
+	// premium keyvault sku
+	cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultSku = "premium"
+	actual = CreateKeyVaultKey(cs)
+
+	expected = map[string]interface{}{
+		"type":       "Microsoft.KeyVault/vaults/keys",
+		"name":       "[concat(variables('clusterKeyVaultName'), '/', 'k8s')]",
+		"apiVersion": "[variables('apiVersionKeyVault')]",
+		"location":   "[variables('location')]",
+		"dependsOn": []string{
+			"[resourceId('Microsoft.KeyVault/vaults', variables('clusterKeyVaultName'))]",
+		},
+		"properties": map[string]interface{}{
+			"kty": "RSA-HSM",
+			"keyOps": []string{
+				"encrypt",
+				"decrypt",
+			},
+			"keySize": 2048,
+		},
+	}
+
+	if diff := cmp.Diff(actual, expected); diff != "" {
+		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
+	}
+}

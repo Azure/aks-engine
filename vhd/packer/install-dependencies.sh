@@ -102,6 +102,7 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.2.2
 1.2.0_hotfix
 1.2.0
 1.1.8
@@ -367,12 +368,13 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.21.0-alpha.1
+1.20.2
 1.20.1
-1.20.0
 1.19.7
 1.19.6
+1.18.15
 1.18.14
-1.18.13
 1.18.10-azs
 1.17.17
 1.17.16
