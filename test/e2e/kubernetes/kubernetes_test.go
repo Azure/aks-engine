@@ -2809,7 +2809,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							numAgentNodes++
 						}
 					}
-					fmt.Println(numAgentNodes)
 					By("Creating a DaemonSet with a large container")
 					d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", "app", "large-container-daemonset", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
