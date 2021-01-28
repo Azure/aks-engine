@@ -2896,6 +2896,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageTag=%s", cfg.KaminoVMSSPrototypeImageTag), "--set", "kamino.container.pullByHash=false"}...)
 					}
 					cmd = exec.Command("helm", commandArgsSlice...)
+					util.PrintCommand(cmd)
 					start = time.Now()
 					out, err = cmd.CombinedOutput()
 					log.Printf("%s\n", out)
