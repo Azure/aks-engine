@@ -2916,7 +2916,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					start = time.Now()
 					_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+2, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					By("Ensuring that the daemonset pod achieved a Running state in under 5 seconds")
+					By("Ensuring that the daemonset pod achieved a Running state quicker compared to a pre-vmss-prototype-built node")
 					elapsed = time.Since(start)
 					log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node built from prototype\n", elapsed)
 					Expect(elapsed < timeToLargeContainerDaemonsetRunningBaseline).To(BeTrue())
