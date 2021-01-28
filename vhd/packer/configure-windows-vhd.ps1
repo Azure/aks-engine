@@ -145,7 +145,7 @@ function Get-FilesToCacheOnVHD {
             $dest = [IO.Path]::Combine($dir, $fileName)
 
             Write-Log "Downloading $URL to $dest"
-            Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $dest
+            curl.exe --retry 5 --retry-delay 0 -L $URL -o $dest
         }
     }
 }
