@@ -2919,9 +2919,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring that the daemonset pod achieved a Running state in under 5 seconds")
 					elapsed = time.Since(start)
 					log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node built from prototype\n", elapsed)
-					Expect(elapsed < 10*time.Second).To(BeTrue())
+					Expect(elapsed < timeToLargeContainerDaemonsetRunningBaseline).To(BeTrue())
 					By("Deleting large container DaemonSet")
-					Expect(err).NotTo(HaveOccurred())
 					err = d.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
 				} else {
