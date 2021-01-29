@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hostport-test
+spec:
+  completions: 1
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - image: mcr.microsoft.com/oss/tutum/curl:latest
+          name: hostport-test
+          env:
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          command: [ "/bin/sh", "-c", "--" ]
+          args: [ "curl -sS $(HOST_IP):8080/get" ]
+      nodeSelector:
+        beta.kubernetes.io/os: linux

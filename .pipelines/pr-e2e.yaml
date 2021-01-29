@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.28.4
+    image: mcr.microsoft.com/oss/azcu/go-dev:v1.29.0
 
 jobs:
 - job: unit_tests
@@ -64,7 +64,7 @@ jobs:
     k8sRelease: '1.18'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
-    enableKMSEncryption: true
+    enableKMSEncryption: false
     containerRuntime: 'docker'
     runSSHTests: true
 
@@ -74,7 +74,7 @@ jobs:
     k8sRelease: '1.19'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
-    enableKMSEncryption: true
+    enableKMSEncryption: false
     containerRuntime: 'docker'
     runSSHTests: true
 
@@ -104,7 +104,7 @@ jobs:
     k8sRelease: '1.18'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition-no-vnet.json'
     createVNET: false
-    enableKMSEncryption: true
+    enableKMSEncryption: false
     containerRuntime: 'containerd'
     runSSHTests: true
 
@@ -114,7 +114,7 @@ jobs:
     k8sRelease: '1.19'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition-no-vnet.json'
     createVNET: false
-    enableKMSEncryption: true
+    enableKMSEncryption: false
     containerRuntime: 'containerd'
     runSSHTests: true
 

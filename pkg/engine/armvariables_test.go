@@ -90,7 +90,7 @@ func TestK8sVars(t *testing.T) {
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
-		"apiVersionKeyVault":                 "2018-02-14",
+		"apiVersionKeyVault":                 "2019-09-01",
 		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
@@ -201,7 +201,6 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
-
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
@@ -810,7 +809,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
-		"apiVersionKeyVault":                 "2018-02-14",
+		"apiVersionKeyVault":                 "2019-09-01",
 		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
@@ -925,6 +924,37 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff := cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// enable external kms encryption
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(true)
+	expectedMap["clusterKeyVaultName"] = string("[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]")
+	expectedMap["cloudInitFiles"] = map[string]interface{}{
+		"provisionScript":              getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":              getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":            getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":             getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript":    getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"etcdSystemdService":           getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":    getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":         getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"kubeletSystemdService":        getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"etcdMonitorSystemdService":    getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+		"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+		"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"kmsKeyvaultKeySystemdService": getBase64EncodedGzippedCustomScript(kmsKeyvaultKeySystemdService, cs),
+		"kmsKeyvaultKeyScript":         getBase64EncodedGzippedCustomScript(kmsKeyvaultKeyScript, cs),
+	}
+
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	diff = cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)

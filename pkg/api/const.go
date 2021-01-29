@@ -229,7 +229,7 @@ const (
 	APIVersionAuthorizationSystem = "2018-09-01-preview"
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
-	APIVersionKeyVault            = "2018-02-14"
+	APIVersionKeyVault            = "2019-09-01"
 	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
@@ -314,11 +314,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.2.0_hotfix"
+	AzureCniPluginVerLinux = "v1.2.2"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.2.0_hotfix"
+	AzureCniPluginVerWindows = "v1.2.2"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.8.7"

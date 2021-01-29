@@ -913,6 +913,47 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
 
+		It("should be able to create and connect to a hostPort-configured pod", func() {
+			if eng.AnyAgentIsLinux() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				var numNodes int
+				controlPlaneNodeRegexString := fmt.Sprintf("^%s-.*", common.LegacyControlPlaneVMPrefix)
+				controlPlaneNodeRegexp, err := regexp.Compile(controlPlaneNodeRegexString)
+				Expect(err).NotTo(HaveOccurred())
+				for _, n := range nodes {
+					if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
+						numNodes++
+					}
+				}
+				By("Creating a httpbin DaemonSet")
+				httpbinName := "httpbin"
+				httpbinNamespace := "default"
+				d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", httpbinName)), httpbinName, httpbinNamespace, "app", httpbinName, 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = pod.WaitForMinRunningByLabelWithRetry(numNodes, "app", httpbinName, httpbinNamespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				By("Ensuring that we have can connect locally using the configured httpbin container hostPort")
+				hostPortTestName := "hostport-test"
+				hostPortTestNamespace := "default"
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", hostPortTestName)), hostPortTestName, hostPortTestNamespace, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(5*time.Second, 1*time.Minute)
+				if err != nil {
+					pod.PrintPodsLogs(hostPortTestName, hostPortTestNamespace, 5*time.Second, 1*time.Minute)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+				By("Cleaning up after ourselves")
+				err = j.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = d.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("hostPort test requires a Linux node")
+			}
+		})
+
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
 			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -2759,7 +2800,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					numAgentNodes := len(nodes) - len(masterNodes)
+					var numAgentNodes int
+					controlPlaneNodeRegexStr := fmt.Sprintf("^%s-.*", common.LegacyControlPlaneVMPrefix)
+					controlPlaneNodeRegexp, err := regexp.Compile(controlPlaneNodeRegexStr)
+					Expect(err).NotTo(HaveOccurred())
+					for _, n := range nodes {
+						if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
+							numAgentNodes++
+						}
+					}
 					By("Creating a DaemonSet with a large container")
 					d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", "app", "large-container-daemonset", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2813,14 +2862,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Waiting for the new node to become Ready")
 					ready := node.WaitOnReadyMin(numAgentNodes+1, 500*time.Millisecond, cfg.Timeout)
 					Expect(ready).To(BeTrue())
-					elapsed = time.Since(start)
-					log.Printf("Took %s to add 1 node\n", elapsed)
+					timeToAddNewNodeBaseline := time.Since(start)
+					log.Printf("Took %s to add 1 node\n", timeToAddNewNodeBaseline)
 					By("Ensuring that we have one additional large container pod after scaling out by one")
 					start = time.Now()
 					_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+1, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					elapsed = time.Since(start)
-					log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", elapsed)
+					timeToLargeContainerDaemonsetRunningBaseline := time.Since(start)
+					log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
 					cmd := exec.Command("helm", "status", "vmss-prototype")
 					out, err := cmd.CombinedOutput()
 					if err == nil {
@@ -2830,51 +2879,49 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						log.Printf("%s\n", out)
 						Expect(err).NotTo(HaveOccurred())
 					}
-					cmd = exec.Command("helm", "upgrade", "--install",
-						"--repo", "https://jackfrancis.github.io/kamino/",
-						"vmss-prototype", "vmss-prototype",
-						"--namespace", "default",
-						"--set", "kamino.scheduleOnControlPlane=true",
-						"--set", fmt.Sprintf("kamino.targetNode=%s", targetNode))
+					commandArgsSlice := []string{"upgrade", "--install"}
+					if cfg.KaminoVMSSPrototypeLocalChartPath == "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--repo", "https://jackfrancis.github.io/kamino/", "vmss-prototype", "vmss-prototype"}...)
+					} else {
+						commandArgsSlice = append(commandArgsSlice, []string{"vmss-prototype", cfg.KaminoVMSSPrototypeLocalChartPath}...)
+					}
+					commandArgsSlice = append(commandArgsSlice, []string{"--namespace", "default", "--set", "kamino.scheduleOnControlPlane=true", "--set", "kamino.newUpdatedNodes=2", "--set", fmt.Sprintf("kamino.targetNode=%s", targetNode)}...)
+					if cfg.KaminoVMSSPrototypeImageRegistry != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRegistry=%s", cfg.KaminoVMSSPrototypeImageRegistry)}...)
+					}
+					if cfg.KaminoVMSSPrototypeImageRepository != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRepository=%s", cfg.KaminoVMSSPrototypeImageRepository)}...)
+					}
+					if cfg.KaminoVMSSPrototypeImageTag != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageTag=%s", cfg.KaminoVMSSPrototypeImageTag), "--set", "kamino.container.pullByHash=false"}...)
+					}
+					cmd = exec.Command("helm", commandArgsSlice...)
+					util.PrintCommand(cmd)
 					start = time.Now()
 					out, err = cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 					By("Ensuring that the kamino-vmss-prototype pod runs to completion")
-					pods, err = pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, sigPublishingTimeout)
+					pods, err = pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", timeToLargeContainerDaemonsetRunningBaseline, sigPublishingTimeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(len(pods)).To(Equal(1))
 					elapsed = time.Since(start)
 					log.Printf("Took %s to run kamino-vmss-prototype Job to completion\n", elapsed)
-					By("Adding one new node to ensure that daemonset with a large container gets to a Running state quickly")
-					ctx3, cancel3 := context.WithTimeout(context.Background(), cfg.Timeout)
-					defer cancel3()
+					By("Waiting for the 2 new nodes created from prototype to become Ready")
 					start = time.Now()
-					err = azureClient.SetVirtualMachineScaleSetCapacity(
-						ctx3,
-						cfg.ResourceGroup,
-						vmssName,
-						compute.Sku{
-							Name:     vmssSku.Name,
-							Capacity: to.Int64Ptr(originalCapacity + 2),
-						},
-						eng.ExpandedDefinition.Location,
-					)
-					By("Waiting for the new node created from prototype to become Ready")
-					ready = node.WaitOnReadyMin(numAgentNodes+2, 500*time.Millisecond, cfg.Timeout)
+					ready = node.WaitOnReadyMin(numAgentNodes+2, 30*time.Second, timeToAddNewNodeBaseline)
 					Expect(ready).To(BeTrue())
 					elapsed = time.Since(start)
-					log.Printf("Took %s to add 1 node derived from peer node prototype\n", elapsed)
+					log.Printf("Took %s to add 2 nodes derived from peer node prototype\n", elapsed)
 					By("Ensuring that we have one additional large container pod after scaling out by one")
 					start = time.Now()
 					_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+2, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					By("Ensuring that the daemonset pod achieved a Running state in under 5 seconds")
+					By("Ensuring that the daemonset pod achieved a Running state quicker compared to a pre-vmss-prototype-built node")
 					elapsed = time.Since(start)
 					log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node built from prototype\n", elapsed)
-					Expect(elapsed < 10*time.Second).To(BeTrue())
+					Expect(elapsed < timeToLargeContainerDaemonsetRunningBaseline).To(BeTrue())
 					By("Deleting large container DaemonSet")
-					Expect(err).NotTo(HaveOccurred())
 					err = d.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
 				} else {

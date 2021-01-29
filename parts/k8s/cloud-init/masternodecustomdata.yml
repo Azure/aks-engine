@@ -290,6 +290,11 @@ write_files:
                 "subnet": "{{`{{.PodCIDR}}`}}",
                 "routes": [{ "dst": "0.0.0.0/0" }]
             }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {"portMappings": true},
+            "snat": false
           }]
       }
     {{end}}
@@ -380,6 +385,20 @@ write_files:
             endpoint: unix:///opt/azurekms.socket
             cachesize: 1000
         - identity: {}
+
+- path: {{GetKMSKeyvaultKeyServiceCSEScriptFilepath}}
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsKeyvaultKeySystemdService"}}
+
+- path: {{GetKMSKeyvaultKeyCSEScriptFilepath}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsKeyvaultKeyScript"}}
 {{end}}
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
