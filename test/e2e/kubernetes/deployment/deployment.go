@@ -886,7 +886,7 @@ func GetAsync(name, namespace string) GetResult {
 func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration) ([]pod.Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan pod.GetAllByPrefixResult)
+	ch := make(chan pod.GetPodsResult)
 	var mostRecentWaitForReplicasError error
 	var pods []pod.Pod
 	go func() {
@@ -934,7 +934,7 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 func (d *Deployment) WaitForReplicasWithAction(min, max int, sleep, timeout time.Duration, action func() error) ([]pod.Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan pod.GetAllByPrefixResult)
+	ch := make(chan pod.GetPodsResult)
 	var mostRecentWaitForReplicasError error
 	var pods []pod.Pod
 	go func() {
