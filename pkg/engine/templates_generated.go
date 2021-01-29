@@ -15742,6 +15742,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
+    {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
+    iptables -I FORWARD -d 168.63.129.16 -p tcp -j DROP
     #EOF
 
 {{- if not HasCosmosEtcd  }}
@@ -16229,6 +16231,8 @@ write_files:
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
+    {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
+    iptables -I FORWARD -d 168.63.129.16 -p tcp -j DROP
     #EOF
 
 {{- if IsCustomCloudProfile}}
