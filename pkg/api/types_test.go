@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/to"
+	. "github.com/onsi/gomega"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -5210,6 +5211,37 @@ func TestKubernetesConfig_RequiresDocker(t *testing.T) {
 	if !k.RequiresDocker() {
 		t.Error("expected RequiresDocker to return true for docker runtime")
 	}
+}
+
+func TestProperties_GetMasterVMNameList(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	p := &Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		},
+		MasterProfile: &MasterProfile{
+			Count:               3,
+			DNSPrefix:           "myprefix1",
+			AvailabilityProfile: "AvailabilitySet",
+		},
+	}
+	actual := p.GetMasterVMNameList()
+	expected := []string{
+		fmt.Sprintf("%s-30819786-0", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-1", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-2", common.LegacyControlPlaneVMPrefix),
+	}
+	g.Expect(actual).To(Equal(expected))
+
+	p.MasterProfile.AvailabilityProfile = "VirtualMachineScaleSets"
+	actual = p.GetMasterVMNameList()
+	expected = []string{
+		fmt.Sprintf("%s-30819786-vmss000000", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-vmss000001", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-vmss000002", common.LegacyControlPlaneVMPrefix),
+	}
+	g.Expect(actual).To(Equal(expected))
 }
 
 func TestProperties_GetMasterVMPrefix(t *testing.T) {

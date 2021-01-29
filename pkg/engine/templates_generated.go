@@ -92,6 +92,8 @@
 // ../../parts/k8s/manifests/kubernetesmaster-kube-apiserver.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-scheduler.yaml
+// ../../parts/k8s/rotate-certs.ps1
+// ../../parts/k8s/rotate-certs.sh
 // ../../parts/k8s/windowsazurecnifunc.ps1
 // ../../parts/k8s/windowsazurecnifunc.tests.ps1
 // ../../parts/k8s/windowscnifunc.ps1
@@ -18156,6 +18158,184 @@ func k8sManifestsKubernetesmasterKubeSchedulerYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sRotateCertsPs1 = []byte(`<#
+.DESCRIPTION
+    This script rotates a windows node certificates.
+    It assumes that client.key, client.crt and ca.crt will be dropped in $env:temp.
+#>
+
+. c:\AzureData\k8s\windowskubeletfunc.ps1
+. c:\AzureData\k8s\kuberneteswindowsfunctions.ps1
+
+$global:KubeDir = "c:\k"
+
+$global:AgentKeyPath = [io.path]::Combine($env:temp, "client.key")
+$global:AgentCertificatePath = [io.path]::Combine($env:temp, "client.crt")
+$global:CACertificatePath = [io.path]::Combine($env:temp, "ca.crt")
+
+function Prereqs {
+    Assert-FileExists $global:AgentKeyPath
+    Assert-FileExists $global:AgentCertificatePath
+    Assert-FileExists $global:CACertificatePath
+}
+
+function Backup {
+    Copy-Item "c:\k\config" "c:\k\config.bak"
+    Copy-Item "c:\k\ca.crt" "c:\k\ca.crt.bak"
+}
+
+function Update-CACertificate {
+    Write-Log "Write ca root"
+    Write-CACert -CACertificate $global:CACertificate -KubeDir $global:KubeDir
+}
+
+function Update-KubeConfig {
+    Write-Log "Write kube config"
+    $ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string) 
+    $MasterIP = $ClusterConfiguration.Kubernetes.ControlPlane.IpAddress
+
+    $CloudProviderConfig = ConvertFrom-Json ((Get-Content "c:\k\azure.json" -ErrorAction Stop) | out-string) 
+    $MasterFQDNPrefix = $CloudProviderConfig.ResourceGroup
+
+    $AgentKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $AgentKeyPath)))
+    $AgentCertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $AgentCertificatePath)))
+
+    Write-KubeConfig -CACertificate $global:CACertificate ` + "`" + `
+        -KubeDir $global:KubeDir ` + "`" + `
+        -MasterFQDNPrefix $MasterFQDNPrefix ` + "`" + `
+        -MasterIP $MasterIP ` + "`" + `
+        -AgentKey $AgentKey ` + "`" + `
+        -AgentCertificate $AgentCertificate
+}
+
+function Force-Kubelet-CertRotation {
+    Remove-Item "/var/lib/kubelet/pki/kubelet-client-current.pem" -Force -ErrorAction Ignore
+    Remove-Item "/var/lib/kubelet/pki/kubelet.crt" -Force -ErrorAction Ignore
+    Remove-Item "/var/lib/kubelet/pki/kubelet.key" -Force -ErrorAction Ignore
+
+    $err = Retry-Command -Command "c:\k\windowsnodereset.ps1" -Args @{Foo="Bar"} -Retries 3 -RetryDelaySeconds 10
+    if(!$err) {
+        Write-Error 'Error reseting Windows node'
+        throw $_
+    }
+}
+
+function Start-CertRotation {
+    try
+    {
+        $global:CACertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $CACertificatePath)))
+
+        Prereqs
+        Update-CACertificate
+        Update-KubeConfig
+        Force-Kubelet-CertRotation
+    }
+    catch
+    {
+        Write-Error $_
+        throw $_
+    }
+}
+
+function Clean {
+    Remove-Item "c:\k\config.bak" -Force -ErrorAction Ignore
+    Remove-Item "c:\k\ca.crt.bak" -Force -ErrorAction Ignore
+    Remove-Item $global:AgentKeyPath -Force -ErrorAction Ignore
+    Remove-Item $global:AgentCertificatePath -Force -ErrorAction Ignore
+    Remove-Item $global:CACertificatePath -Force -ErrorAction Ignore
+}
+`)
+
+func k8sRotateCertsPs1Bytes() ([]byte, error) {
+	return _k8sRotateCertsPs1, nil
+}
+
+func k8sRotateCertsPs1() (*asset, error) {
+	bytes, err := k8sRotateCertsPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/rotate-certs.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sRotateCertsSh = []byte(`#!/bin/bash -ex
+
+export WD=/etc/kubernetes/rotate-certs
+export NEW_CERTS_DIR=${WD}/certs
+
+# copied from cse_helpers.sh, sourcing that file not always works
+systemctl_restart() {
+  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
+  for i in $(seq 1 $retries); do
+    timeout $timeout systemctl daemon-reload
+    timeout $timeout systemctl restart $svcname && break ||
+      if [ $i -eq $retries ]; then
+        return 1
+      else
+        sleep $wait_sleep
+      fi
+  done
+}
+
+backup() {
+  if [ ! -d /etc/kubernetes/certs.bak ]; then
+    cp -rp /etc/kubernetes/certs/ /etc/kubernetes/certs.bak
+  fi
+}
+
+cp_certs() {
+  cp -p ${NEW_CERTS_DIR}/etcdpeer* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/etcdclient* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/etcdserver* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/ca.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/client.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/apiserver.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/kubeconfig ~/.kube/config
+
+  rm -f /var/lib/kubelet/pki/kubelet-client-current.pem
+}
+
+cp_proxy() {
+  source /etc/environment
+  /etc/kubernetes/generate-proxy-certs.sh
+}
+
+agent_certs() {
+  cp -p ${NEW_CERTS_DIR}/ca.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/client.* /etc/kubernetes/certs/
+
+  rm -f /var/lib/kubelet/pki/kubelet-client-current.pem
+  sync
+  sleep 5
+  systemctl_restart 10 5 10 kubelet
+}
+
+cleanup() {
+  rm -rf ${WD}
+  rm -rf /etc/kubernetes/certs.bak
+}
+
+"$@"
+`)
+
+func k8sRotateCertsShBytes() ([]byte, error) {
+	return _k8sRotateCertsSh, nil
+}
+
+func k8sRotateCertsSh() (*asset, error) {
+	bytes, err := k8sRotateCertsShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/rotate-certs.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sWindowsazurecnifuncPs1 = []byte(`
 
 # TODO: remove - dead code?
@@ -20104,6 +20284,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                 k8sManifestsKubernetesmasterKubeApiserverYaml,
 	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":        k8sManifestsKubernetesmasterKubeControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                 k8sManifestsKubernetesmasterKubeSchedulerYaml,
+	"k8s/rotate-certs.ps1":                                               k8sRotateCertsPs1,
+	"k8s/rotate-certs.sh":                                                k8sRotateCertsSh,
 	"k8s/windowsazurecnifunc.ps1":                                        k8sWindowsazurecnifuncPs1,
 	"k8s/windowsazurecnifunc.tests.ps1":                                  k8sWindowsazurecnifuncTestsPs1,
 	"k8s/windowscnifunc.ps1":                                             k8sWindowscnifuncPs1,
@@ -20260,6 +20442,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmaster-kube-controller-manager.yaml":  {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-scheduler.yaml":           {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
 		}},
+		"rotate-certs.ps1":                {k8sRotateCertsPs1, map[string]*bintree{}},
+		"rotate-certs.sh":                 {k8sRotateCertsSh, map[string]*bintree{}},
 		"windowsazurecnifunc.ps1":         {k8sWindowsazurecnifuncPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.tests.ps1":   {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":              {k8sWindowscnifuncPs1, map[string]*bintree{}},

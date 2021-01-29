@@ -6,14 +6,17 @@ package ssh
 import (
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/util/retry"
 )
 
 // ExecuteRemote executes a script in a remote host
 func ExecuteRemote(host *RemoteHost, script string) (combinedOutput string, err error) {
-	c, err := client(host)
+	c, err := clientWithRetry(host)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
@@ -42,6 +45,19 @@ func PublicKeyAuth(sshPrivateKeyPath string) (ssh.AuthMethod, error) {
 	return ssh.PublicKeys(k), nil
 }
 
+func clientWithRetry(host *RemoteHost) (*ssh.Client, error) {
+	// TODO Granular retry func
+	retryFunc := func(err error) bool { return true }
+	backoff := wait.Backoff{Steps: 300, Duration: 10 * time.Second}
+	var c *ssh.Client
+	var err error
+	err = retry.OnError(backoff, retryFunc, func() error {
+		c, err = client(host)
+		return err
+	})
+	return c, err
+}
+
 func client(host *RemoteHost) (*ssh.Client, error) {
 	jbConfig, err := config(host.Jumpbox.AuthConfig)
 	if err != nil {
@@ -63,7 +79,11 @@ func client(host *RemoteHost) (*ssh.Client, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "starting new client connection to host (%s)", host.URI)
 	}
-	return ssh.NewClient(ncc, chans, reqs), nil
+	c, err := ssh.NewClient(ncc, chans, reqs), nil
+	if err != nil {
+		return nil, errors.Wrapf(err, "creating new ssh client for host (%s)", host.URI)
+	}
+	return c, nil
 }
 
 func config(authConfig *AuthConfig) (*ssh.ClientConfig, error) {
