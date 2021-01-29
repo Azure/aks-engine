@@ -60,7 +60,7 @@ const (
 	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	podLookupRetries                          = 5
-	sigPublishingTimeout                      = 120 * time.Minute // :(
+	sigPublishingTimeout                      = 4 * time.Hour // :(
 )
 
 var (
