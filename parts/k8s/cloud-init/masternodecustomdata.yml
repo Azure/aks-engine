@@ -462,7 +462,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
     {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
-    iptables -I FORWARD -d 168.63.129.16 -p tcp -j DROP
+    iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
     #EOF
 
 {{- if not HasCosmosEtcd  }}
