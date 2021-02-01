@@ -85,8 +85,12 @@ function rotateCertificates {
   # Retry if it fails the first time (validate --certificate-profile instead of regenerating a new set of certs)
   exit_code=$?
   if [ $exit_code -ne 0 ]; then
-    local CERTS_PATH=_output/${RESOURCE_GROUP}/certificateProfile.json
-    jq '.properties.certificateProfile' _output/${RESOURCE_GROUP}/_rotate_certs_output/apimodel.json > ${CERTS_PATH}
+    docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      ${DEV_IMAGE} \
+      /bin/bash -c "jq '.properties.certificateProfile' _output/${RESOURCE_GROUP}/_rotate_certs_output/apimodel.json > _output/${RESOURCE_GROUP}/certificateProfile.json" || exit 1
 
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -104,7 +108,7 @@ function rotateCertificates {
       --client-id ${AZURE_CLIENT_ID} \
       --client-secret ${AZURE_CLIENT_SECRET} \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-      --certificate-profile ${CERTS_PATH} --force \
+      --certificate-profile _output/${RESOURCE_GROUP}/certificateProfile.json --force \
       --debug
 
     exit $?
