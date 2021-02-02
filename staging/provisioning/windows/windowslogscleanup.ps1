@@ -13,7 +13,7 @@ function Write-Log ($message) {
 
 Write-Log "Entering windowslogscleanup.ps1"
 
-$logFilePrefixes = @("kubelet", "kubelet.err", "kubeproxy", "kubeproxy.err")
+$logFilePrefixes = @("kubelet", "kubelet.err", "kubeproxy", "kubeproxy.err", "containerd.err", "containerd")
 
 foreach ($logFilePrefix in $logFilePrefixes) {
     $oldLogs = [IO.Directory]::GetFiles("c:\k", "$($logFilePrefix)-*.log")

@@ -1,6 +1,19 @@
 $ProgressPreference = "SilentlyContinue"
 
-$lockedFiles = "kubelet.err.log", "kubelet.log", "kubeproxy.log", "kubeproxy.err.log", "azure-vnet-telemetry.log", "azure-vnet.log", "network-interfaces.json", "interfaces.json", "csi-proxy.log", "csi-proxy.err.log"
+$lockedFiles = @(
+  "kubelet.err.log", 
+  "kubelet.log", 
+  "kubeproxy.log", 
+  "kubeproxy.err.log", 
+  "azure-vnet-telemetry.log", 
+  "azure-vnet.log", 
+  "network-interfaces.json", 
+  "interfaces.json", 
+  "csi-proxy.log", 
+  "csi-proxy.err.log",
+  "containerd.log",
+  "containerd.err.log"
+)
 
 $timeStamp = get-date -format 'yyyyMMdd-hhmmss'
 $zipName = "$env:computername-$($timeStamp)_logs.zip"
@@ -84,6 +97,16 @@ if ((Test-Path "$Env:ProgramFiles\containerd\diag.ps1") -And (Test-Path "$Env:Pr
 }
 else {
   Write-Host "Containerd hyperv logs not avalaible"
+}
+
+# log containerd containers (this is done for docker via networking collectlogs.ps1)
+$res = Get-Command ctr.exe -ErrorAction SilentlyContinue
+if ($res)
+{ 
+  & ctr.exe -n k8s.io c ls > "$ENV:TEMP\$timeStamp-containerd-containers.txt"
+  & ctr.exe -n k8s.io t ls > "$ENV:TEMP\$timeStamp-containerd-tasks.txt"
+  $paths += "$ENV:TEMP\$timeStamp-containerd-containers.txt"
+  $paths += "$ENV:TEMP\$timeStamp-containerd-tasks.txt"
 }
 
 Write-Host "Compressing all logs to $zipName"

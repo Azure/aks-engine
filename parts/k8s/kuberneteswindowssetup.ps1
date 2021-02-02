@@ -256,28 +256,6 @@ try
 
         Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
 
-        if ($useContainerD) {
-            Write-Log "Installing ContainerD"
-            $containerdTimer = [System.Diagnostics.Stopwatch]::StartNew()
-            $cniBinPath = $global:AzureCNIBinDir
-            $cniConfigPath = $global:AzureCNIConfDir
-            if ($global:NetworkPlugin -eq "kubenet") {
-                $cniBinPath = $global:CNIPath
-                $cniConfigPath = $global:CNIConfigPath
-            }
-            Install-Containerd -ContainerdUrl $global:ContainerdUrl -CNIBinDir $cniBinPath -CNIConfDir $cniConfigPath
-            $containerdTimer.Stop()
-            $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
-            # TODO: disable/uninstall Docker later
-        } else {
-            Write-Log "Install docker"
-            $dockerTimer = [System.Diagnostics.Stopwatch]::StartNew()
-            Install-Docker -DockerVersion $global:DockerVersion
-            Set-DockerLogFileOptions
-            $dockerTimer.Stop()
-            $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
-        }
-
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
 
@@ -288,6 +266,28 @@ try
         if ($global:WindowsKubeBinariesURL){
             Write-Log "Overwriting kube node binaries from $global:WindowsKubeBinariesURL"
             Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
+        }
+
+        if ($useContainerD) {
+            Write-Log "Installing ContainerD"
+            $containerdTimer = [System.Diagnostics.Stopwatch]::StartNew()
+            $cniBinPath = $global:AzureCNIBinDir
+            $cniConfigPath = $global:AzureCNIConfDir
+            if ($global:NetworkPlugin -eq "kubenet") {
+                $cniBinPath = $global:CNIPath
+                $cniConfigPath = $global:CNIConfigPath
+            }
+            Install-Containerd -ContainerdUrl $global:ContainerdUrl -CNIBinDir $cniBinPath -CNIConfDir $cniConfigPath -KubeDir $global:KubeDir
+            $containerdTimer.Stop()
+            $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
+            # TODO: disable/uninstall Docker later
+        } else {
+            Write-Log "Install docker"
+            $dockerTimer = [System.Diagnostics.Stopwatch]::StartNew()
+            Install-Docker -DockerVersion $global:DockerVersion
+            Set-DockerLogFileOptions
+            $dockerTimer.Stop()
+            $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
         }
 
         Write-Log "Write Azure cloud provider config"

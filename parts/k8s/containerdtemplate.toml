@@ -11,7 +11,7 @@ state = "C:\\ProgramData\\containerd\\state"
 
 [debug]
   address = ""
-  level = "debug"
+  level = "info"
 
 [metrics]
   address = ""
@@ -32,6 +32,7 @@ state = "C:\\ProgramData\\containerd\\state"
     max_container_log_line_size = 16384
     [plugins.cri.containerd]
       snapshotter = "windows"
+      discard_unpacked_layers = true
       no_pivot = false
       [plugins.cri.containerd.default_runtime]
         runtime_type = "io.containerd.runhcs.v1"
