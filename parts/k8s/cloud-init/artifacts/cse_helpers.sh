@@ -193,7 +193,7 @@ apt_get_dist_upgrade() {
   done
   echo Executed apt-get dist-upgrade $i times
 }
-unnattended_upgrade() {
+unattended_upgrade() {
   retries=10
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
