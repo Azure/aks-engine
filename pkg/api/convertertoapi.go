@@ -169,6 +169,7 @@ func convertVLabsLinuxProfile(vlabs *vlabs.LinuxProfile, api *LinuxProfile) {
 		api.CustomNodesDNS = &CustomNodesDNS{}
 		api.CustomNodesDNS.DNSServer = vlabs.CustomNodesDNS.DNSServer
 	}
+	api.RunUnattendedUpgradesOnBootstrap = vlabs.RunUnattendedUpgradesOnBootstrap
 }
 
 func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile) {

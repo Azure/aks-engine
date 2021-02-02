@@ -193,6 +193,18 @@ apt_get_dist_upgrade() {
   done
   echo Executed apt-get dist-upgrade $i times
 }
+unnattended_upgrade() {
+  retries=10
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks
+    /usr/bin/unattended-upgrade && break ||
+    if [ $i -eq $retries ]; then
+      return 1
+    else sleep 5
+    fi
+  done
+  echo Executed unattended-upgrade $i times
+}
 systemctl_restart() {
   retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
   for i in $(seq 1 $retries); do

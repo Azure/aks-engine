@@ -136,10 +136,11 @@ type LinuxProfile struct {
 	SSH           struct {
 		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
 	} `json:"ssh" validate:"required"`
-	Secrets            []KeyVaultSecrets   `json:"secrets,omitempty"`
-	ScriptRootURL      string              `json:"scriptroot,omitempty"`
-	CustomSearchDomain *CustomSearchDomain `json:"customSearchDomain,omitempty"`
-	CustomNodesDNS     *CustomNodesDNS     `json:"customNodesDNS,omitempty"`
+	Secrets                          []KeyVaultSecrets   `json:"secrets,omitempty"`
+	ScriptRootURL                    string              `json:"scriptroot,omitempty"`
+	CustomSearchDomain               *CustomSearchDomain `json:"customSearchDomain,omitempty"`
+	CustomNodesDNS                   *CustomNodesDNS     `json:"customNodesDNS,omitempty"`
+	RunUnattendedUpgradesOnBootstrap *bool               `json:"runUnattendedUpgradesOnBootstrap,omitempty"`
 }
 
 // PublicKey represents an SSH key for LinuxProfile

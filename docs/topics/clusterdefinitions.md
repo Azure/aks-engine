@@ -857,6 +857,7 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | adminUsername                    | yes      | Describes the username to be used on all linux clusters                                  |
 | ssh.publicKeys[].keyData         | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster      |
 | secrets                          | no       | Specifies an array of key vaults to pull secrets from and what secrets to pull from each |
+| runUnattendedUpgradesOnBootstrap | no       | Invoke an unattended-upgrade when each Linux node VM comes online for the first time. In practice this is accomplished by performing an `apt-get update`, followed by an `apt-get dist-upgrade`, to fetch updated apt configuration, and install all available downstream package updates, respectively. |
 | customSearchDomain.name          | no       | describes the search domain to be used on all linux clusters                             |
 | customSearchDomain.realmUser     | no       | describes the realm user with permissions to update dns registries on Windows Server DNS |
 | customSearchDomain.realmPassword | no       | describes the realm user password to update dns registries on Windows Server DNS         |
