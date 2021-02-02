@@ -1745,7 +1745,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 func (p *Pod) Logs() error {
 	var commandTimeout time.Duration
 	for _, container := range p.Spec.Containers {
-		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
+		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace, "--timestamps")
 		out, err := util.RunAndLogCommand(cmd, commandTimeout)
 		log.Printf("\n%s\n", string(out))
 		if err != nil {
