@@ -2798,6 +2798,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to install vmss node prototype", func() {
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
+					By("Installing kured with node annotations configuration")
+					cmd := exec.Command("k", "apply", "-f", filepath.Join(WorkloadDir, "kured-annotations.yaml"))
+					util.PrintCommand(cmd)
+					_, err := cmd.CombinedOutput()
+					Expect(err).NotTo(HaveOccurred())
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					var numAgentNodes int
@@ -2824,6 +2829,24 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						elapsed := time.Since(start)
 						log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, numLargeContainerPods)
 					}
+					By("Marking all nodes as needing reboots")
+					for _, n := range nodes {
+						if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("\"sudo touch /var/run/reboot-required\""), false, 30*time.Second, cfg.Timeout)
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+					By("Waiting for one node to be marked as SchedulingDisabled by kured")
+					ready := node.WaitOnReadyMax(len(nodes)-1, 5*time.Second, cfg.Timeout)
+					Expect(ready).To(BeTrue())
+					By("Waiting for nodes to be be rebooted and annotated correctly")
+					_, err = node.WaitForNodesWithAnnotation(numAgentNodes, "weave.works/kured-most-recent-reboot-needed", "", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					_, err = node.WaitForNodesWithAnnotation(0, "weave.works/kured-reboot-in-progress", "", 1*time.Minute, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					By("Waiting for all nodes to be Ready again")
+					ready = node.WaitOnReady(len(nodes), 30*time.Second, cfg.Timeout)
+					Expect(ready).To(Equal(true))
 					By("Choosing a target VMSS node to use as the prototype")
 					var targetNode string
 					for _, n := range nodes {
@@ -2878,7 +2901,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						timeToLargeContainerDaemonsetRunningBaseline = time.Since(start)
 						log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
 					}
-					cmd := exec.Command("helm", "status", "vmss-prototype")
+					cmd = exec.Command("helm", "status", "vmss-prototype")
 					out, err := cmd.CombinedOutput()
 					if err == nil {
 						By("Found pre-existing 'vmss-prototype' helm release, deleting it...")
@@ -2893,7 +2916,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					} else {
 						commandArgsSlice = append(commandArgsSlice, []string{"vmss-prototype", cfg.KaminoVMSSPrototypeLocalChartPath}...)
 					}
-					commandArgsSlice = append(commandArgsSlice, []string{"--namespace", "default", "--set", "kamino.scheduleOnControlPlane=true", "--set", "kamino.newUpdatedNodes=2", "--set", "kamino.logLevel=DEBUG"}...)
+					commandArgsSlice = append(commandArgsSlice, []string{"--namespace", "default", "--set", "kamino.scheduleOnControlPlane=true", "--set", "kamino.newUpdatedNodes=2", "--set", "kamino.logLevel=DEBUG", "--set", fmt.Sprintf("kamino.targetVMSS=%s", vmssName), "--set", "kamino.auto.lastPatchAnnotation=weave.works/kured-most-recent-reboot-needed", "--set", "kamino.auto.pendingRebootAnnotation=weave.works/kured-reboot-in-progress", "--set", "kamino.auto.minimumReadyTime=1s"}...)
 					if cfg.KaminoVMSSPrototypeImageRegistry != "" {
 						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRegistry=%s", cfg.KaminoVMSSPrototypeImageRegistry)}...)
 					}
@@ -2904,9 +2927,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageTag=%s", cfg.KaminoVMSSPrototypeImageTag), "--set", "kamino.container.pullByHash=false"}...)
 					}
 					if cfg.KaminoVMSSPrototypeDryRun {
-						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.targetVMSS=%s", vmssName), "--set", "kamino.auto.lastPatchAnnotation=weave.works/kured-most-recent-reboot-needed", "--set", "kamino.auto.pendingRebootAnnotation=weave.works/kured-reboot-in-progress", "--set", "kamino.auto.dryRun=true"}...)
-					} else {
-						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.targetNode=%s", targetNode)}...)
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", "kamino.auto.dryRun=true"}...)
 					}
 					cmd = exec.Command("helm", commandArgsSlice...)
 					util.PrintCommand(cmd)
