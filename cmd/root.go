@@ -18,7 +18,9 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack"
 	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/uuid"
@@ -356,4 +358,24 @@ func getKubeClient(cs *api.ContainerService, interval, timeout time.Duration) (k
 		return nil, err
 	}
 	return client, nil
+}
+
+func writeArtifacts(outputDirectory string, cs *api.ContainerService, apiVersion string, translator *i18n.Translator) error {
+	ctx := engine.Context{Translator: translator}
+	tplgen, err := engine.InitializeTemplateGenerator(ctx)
+	if err != nil {
+		return errors.Wrap(err, "initializing template generator")
+	}
+	tpl, params, err := tplgen.GenerateTemplateV2(cs, engine.DefaultGeneratorCode, BuildTag)
+	if err != nil {
+		return errors.Wrap(err, "generating template")
+	}
+	if tpl, err = transform.PrettyPrintArmTemplate(tpl); err != nil {
+		return errors.Wrap(err, "pretty-printing template")
+	}
+	if params, err = transform.BuildAzureParametersFile(params); err != nil {
+		return errors.Wrap(err, "pretty-printing template parameters")
+	}
+	w := &engine.ArtifactWriter{Translator: translator}
+	return w.WriteTLSArtifacts(cs, apiVersion, tpl, params, outputDirectory, true, false)
 }

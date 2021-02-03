@@ -1074,3 +1074,13 @@ func (mc *MockAKSEngineClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context,
 
 	return "00000000-0000-0000-0000-000000000000", "4D+vyd5/jScBmsAwZOF/0GOBQ5kuFQc9JVaW+HlnJ58cyePJcwTpks+rVmvgcXGmmyujLDNEVPiT8pB274a9Yg==", "westus", nil
 }
+
+// GetVirtualMachinePowerState returns the virtual machine's PowerState status code
+func (mc *MockAKSEngineClient) GetVirtualMachinePowerState(ctx context.Context, resourceGroup, name string) (string, error) {
+	return "", nil
+}
+
+// GetVirtualMachineScaleSetInstancePowerState returns the virtual machine's PowerState status code
+func (mc *MockAKSEngineClient) GetVirtualMachineScaleSetInstancePowerState(ctx context.Context, resourceGroup, name, instanceID string) (string, error) {
+	return "", nil
+}

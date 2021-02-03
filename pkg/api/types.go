@@ -889,6 +889,19 @@ func (p *Properties) AnyAgentIsLinux() bool {
 	return false
 }
 
+// GetMasterVMNameList returns the control plane VM name list
+func (p *Properties) GetMasterVMNameList() []string {
+	masters := []string{}
+	for i := 0; i < p.MasterProfile.Count; i++ {
+		if p.MasterProfile.IsAvailabilitySet() {
+			masters = append(masters, fmt.Sprintf("%s%d", p.GetMasterVMPrefix(), i))
+		} else {
+			masters = append(masters, fmt.Sprintf("%svmss00000%d", p.GetMasterVMPrefix(), i))
+		}
+	}
+	return masters
+}
+
 // GetMasterVMPrefix returns the prefix of master VMs
 func (p *Properties) GetMasterVMPrefix() string {
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"

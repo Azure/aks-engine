@@ -566,3 +566,26 @@ func TestSerializeContainerService(t *testing.T) {
 		t.Errorf("expected SerializedCS JSON %s, but got %s", expected, string(b))
 	}
 }
+
+func TestLoadCertificateProfileFromFile(t *testing.T) {
+	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
+	apiloader := &Apiloader{
+		Translator: &i18n.Translator{
+			Locale: locale,
+		},
+	}
+
+	_, err := apiloader.LoadCertificateProfileFromFile("../engine/profiles/certificate-profile/kubernetes.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	// Test error scenario
+	_, err = apiloader.LoadCertificateProfileFromFile("../this-file-doesnt-exist.json")
+	if err == nil {
+		t.Errorf("expected error passing a non-existent filepath string to apiloader.LoadCertificateProfileFromFile(), instead got nil")
+	}
+}
