@@ -29,7 +29,7 @@ fi
 VHD_INFO="artifacts/vhd/windows-vhd-publishing-info.json"
 
 if [ ! -f "$VHD_INFO" ]; then
-    echo "Could not find sku template file: ${VHD_INFO}!"
+    echo "Could not find VHD info file: ${VHD_INFO}!"
     exit 1
 fi
 
@@ -40,7 +40,7 @@ sku_id="${SKU_PREFIX}-${short_date}"
 
 echo "Checking if offer contains SKU: $sku_id"
 # Check if SKU already exists in offer
-(set -x; hack/tools/bin/pub skus list -p microsoft-aks -o aks-windows | jq ".[] | .planId" | tr -d '"' | tee skus.txt)
+(set -x; hack/tools/bin/pub skus list -p $PUBLISHER -o $OFFER | jq ".[] | .planId" | tr -d '"' | tee skus.txt)
 echo ""
 
 if grep -q $sku_id skus.txt; then
