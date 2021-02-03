@@ -10,16 +10,8 @@ Note: This feature is not supported on Azure Stack Hub.
 
 ## Prerequisites
 1. An Azure Active Directory tenant, referred to as `AAD Tenant`. You can use the tenant for your Azure subscription;
-2. A `Web app / API` type AAD application, referred to as `Server Application`. This application represents the `apiserver`. For groups to work properly, you'll need to edit the `Server Application` Manifest and set `groupMembershipClaims` to either `All` or `SecurityGroup`.
-3. A `Native` type AAD application, referred to as `Client Application`. This application is for user login via `kubectl`. You'll need to add delegated permission to `Server Application`, please see [troubleshooting](#loginpageerror) section for detail.
-
-You also need to delegate permission to the application as follows:
-
-1. Go to Azure Portal, navigate to `Azure Active Directory` -> `App registrations`.
-2. Select the `Client Application`, Navigate to `Settings` -> `Required permissions`
-3. Choose `Add`, select the `Server Application`. You may need to enter the Server Application's name into the search field and search for it.
-   In permissions tab, select `Delegated permissions` -> `Access {Server Application}`
-
+2. An `App Registration` to represent the `apiserver`.For more information on how to do this please refer to [Creating an Active Directory Server application](https://github.com/Azure/azure-arc-kubernetes-preview/blob/master/docs/aad-authn-authz.md#create-server-application).
+3. An `App Registration` to represent the `client`.. This application is for user login via `kubectl`. For more information on how to do this please refer to [Creating an Active Directory Client application](https://github.com/Azure/azure-arc-kubernetes-preview/blob/master/docs/aad-authn-authz.md#create-client-application)
 
 ## Deployment
 Follow the [deployment steps](../tutorials/quickstart.md#deploy). In step #4, add the following under 'properties' section:
