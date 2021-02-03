@@ -277,7 +277,7 @@ fi
 {{end}}
 
 {{- if RunUnattendedUpgrades}}
-apt_get_update && apt_get_dist_upgrade && unattended_upgrade
+apt_get_update && unattended_upgrade
 {{- end}}
 
 if [ -f /var/run/reboot-required ]; then
