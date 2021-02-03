@@ -12,6 +12,7 @@ func TestGetAzureLocations(t *testing.T) {
 		"australiaeast":      {},
 		"australiasoutheast": {},
 		"brazilsouth":        {},
+		"brazilsoutheast":    {},
 		"canadacentral":      {},
 		"canadaeast":         {},
 		"centralindia":       {},
@@ -61,6 +62,7 @@ func TestGetAzureLocations(t *testing.T) {
 		"westindia":          {},
 		"westus":             {},
 		"westus2":            {},
+		"westus3":            {},
 	}
 
 	locations := GetAzureLocations()

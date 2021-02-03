@@ -5015,6 +5015,7 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.australiaeast.cloudapp.azure.com",
 		"santest.australiasoutheast.cloudapp.azure.com",
 		"santest.brazilsouth.cloudapp.azure.com",
+		"santest.brazilsoutheast.cloudapp.azure.com",
 		"santest.canadacentral.cloudapp.azure.com",
 		"santest.canadaeast.cloudapp.azure.com",
 		"santest.centralindia.cloudapp.azure.com",
@@ -5064,6 +5065,7 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.westindia.cloudapp.azure.com",
 		"santest.westus.cloudapp.azure.com",
 		"santest.westus2.cloudapp.azure.com",
+		"santest.westus3.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -5088,6 +5090,7 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.australiaeast.cloudapp.azure.com",
 		"santest.australiasoutheast.cloudapp.azure.com",
 		"santest.brazilsouth.cloudapp.azure.com",
+		"santest.brazilsoutheast.cloudapp.azure.com",
 		"santest.canadacentral.cloudapp.azure.com",
 		"santest.canadaeast.cloudapp.azure.com",
 		"santest.centralindia.cloudapp.azure.com",
@@ -5137,6 +5140,7 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.westindia.cloudapp.azure.com",
 		"santest.westus.cloudapp.azure.com",
 		"santest.westus2.cloudapp.azure.com",
+		"santest.westus3.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -5670,6 +5674,7 @@ func TestGetLocations(t *testing.T) {
 		"australiaeast",
 		"australiasoutheast",
 		"brazilsouth",
+		"brazilsoutheast",
 		"canadacentral",
 		"canadaeast",
 		"centralindia",
@@ -5719,6 +5724,7 @@ func TestGetLocations(t *testing.T) {
 		"westindia",
 		"westus",
 		"westus2",
+		"westus3",
 	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
