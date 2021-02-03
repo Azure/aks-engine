@@ -469,8 +469,13 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 		// validate os type is linux if dual stack feature is enabled
 		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
-			if agentPoolProfile.OSType == Windows && !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.19.0") {
-				return errors.Errorf("Dual stack and single stack IPv6 feature is supported on Windows only from Kubernetes version 1.19, but OrchestratorProfile.OrchestratorVersion is '%s'", a.OrchestratorProfile.OrchestratorVersion)
+			if agentPoolProfile.OSType == Windows {
+				if a.FeatureFlags.IsIPv6DualStackEnabled() && !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.19.0") {
+					return errors.Errorf("Dual stack IPv6 feature is supported on Windows only from Kubernetes version 1.19, but OrchestratorProfile.OrchestratorVersion is '%s'", a.OrchestratorProfile.OrchestratorVersion)
+				}
+				if a.FeatureFlags.IsIPv6OnlyEnabled() {
+					return errors.Errorf("Single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+				}
 			}
 			if agentPoolProfile.Distro == Flatcar {
 				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)

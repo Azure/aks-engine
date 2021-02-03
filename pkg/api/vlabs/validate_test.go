@@ -4139,21 +4139,30 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 		}
 	})
 
-	t.Run("Should not support os type other than linux for versions less than 1.19 for single stack ipv6 and dual stack feature", func(t *testing.T) {
+	t.Run("Should not support os type other than linux for single stack ipv6 and versions less than 1.19 for dual stack feature", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(true)
+
+		masterProfile := cs.Properties.MasterProfile
+		masterProfile.Distro = Ubuntu
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+
+		agentPoolProfiles[0].OSType = Windows
+		cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+		cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.18"
+		expectedMsg := fmt.Sprintf("Dual stack IPv6 feature is supported on Windows only from Kubernetes version 1.19, but OrchestratorProfile.OrchestratorVersion is '%s'", cs.Properties.OrchestratorProfile.OrchestratorVersion)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+
+		cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
+		expectedMsg = fmt.Sprintf("Single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+
 		for _, featureFlags := range []FeatureFlags{{EnableIPv6DualStack: true}, {EnableIPv6Only: true}} {
 			cs.Properties.FeatureFlags = &featureFlags
-			masterProfile := cs.Properties.MasterProfile
-
-			masterProfile.Distro = Ubuntu
-			agentPoolProfiles := cs.Properties.AgentPoolProfiles
-			agentPoolProfiles[0].OSType = Windows
-			cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.18"
-			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is supported on Windows only from Kubernetes version 1.19, but OrchestratorProfile.OrchestratorVersion is '%s'", cs.Properties.OrchestratorProfile.OrchestratorVersion)
-			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
-				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-			}
 
 			agentPoolProfiles[0].OSType = Linux
 			agentPoolProfiles[0].Distro = Flatcar
@@ -4162,7 +4171,6 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 			}
 		}
-
 	})
 }
 
