@@ -775,6 +775,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetLinuxCSELogPath": func() string {
 			return linuxCSELogPath
 		},
+		"RunUnattendedUpgrades": func() bool {
+			if cs.Properties.LinuxProfile != nil {
+				return to.Bool(cs.Properties.LinuxProfile.RunUnattendedUpgradesOnBootstrap)
+			}
+			return false
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},

@@ -146,6 +146,7 @@
 				}
 			],
 			"linuxProfile": {
+				"runUnattendedUpgradesOnBootstrap": true,
 				"adminUsername": "azureuser",
 				"ssh": {
 					"publicKeys": [
