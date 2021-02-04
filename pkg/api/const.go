@@ -221,6 +221,8 @@ const (
 	VMSSVMType = "vmss"
 	// StandardVMType is the string const for the standard VM Type
 	StandardVMType = "standard"
+	// DefaultRunUnattendedUpgradesOnBootstrap sets the default configuration for running a blocking unattended-upgrade on Linux VMs as part of CSE
+	DefaultRunUnattendedUpgradesOnBootstrap = true
 )
 
 // Azure API Versions

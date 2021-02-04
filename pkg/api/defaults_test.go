@@ -5664,3 +5664,82 @@ func TestCombineValues(t *testing.T) {
 		})
 	}
 }
+
+func TestSetLinuxProfileDefaults(t *testing.T) {
+	cases := []struct {
+		name                                     string
+		p                                        *Properties
+		expectedRunUnattendedUpgradesOnBootstrap bool
+	}{
+		{
+			name: "default",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: true,
+		},
+		{
+			name: "explicit true",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: true,
+		},
+		{
+			name: "explicit false",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: false,
+		},
+		{
+			name: "custom cloud default",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{},
+				CustomCloudProfile: &CustomCloudProfile{
+					Environment: &azure.Environment{},
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: false,
+		},
+		{
+			name: "custom cloud explicit true",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				},
+				CustomCloudProfile: &CustomCloudProfile{
+					Environment: &azure.Environment{},
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: true,
+		},
+		{
+			name: "custom cloud explicit false",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				},
+				CustomCloudProfile: &CustomCloudProfile{
+					Environment: &azure.Environment{},
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.p.setLinuxProfileDefaults()
+			if c.expectedRunUnattendedUpgradesOnBootstrap != to.Bool(c.p.LinuxProfile.RunUnattendedUpgradesOnBootstrap) {
+				t.Errorf("expected RunUnattendedUpgradesOnBootstrap to be %t, but got %t", c.expectedRunUnattendedUpgradesOnBootstrap, to.Bool(c.p.LinuxProfile.RunUnattendedUpgradesOnBootstrap))
+			}
+		})
+	}
+}
