@@ -31,7 +31,7 @@ const (
 
 const (
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.11"
+	KubernetesWindowsDockerVersion = "19.03.14"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
