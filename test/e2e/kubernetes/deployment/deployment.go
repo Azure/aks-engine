@@ -342,7 +342,7 @@ func RunDeploymentMultipleTimes(deployRunnerCmd deployRunnerCmd, image, name, co
 		}
 		var podsSucceeded int
 		for _, p := range pods {
-			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, podTimeout)
+			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, true, sleep, podTimeout)
 			if err != nil {
 				log.Printf("pod %s did not succeed in time\n", p.Metadata.Name)
 				return successfulAttempts, err
