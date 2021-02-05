@@ -1570,9 +1570,8 @@ func (k *KubernetesConfig) validateNetworkPlugin(hasWindows, isUpdate bool) erro
 	if !valid {
 		if networkPlugin == NetworkPluginFlannel {
 			return errors.Errorf("networkPlugin '%s' has been deprecated and is no longer supported for new cluster creation", networkPlugin)
-		} else {
-			return errors.Errorf("unknown networkPlugin '%s' specified", networkPlugin)
 		}
+		return errors.Errorf("unknown networkPlugin '%s' specified", networkPlugin)
 	}
 
 	// Temporary safety check, to be removed when Windows support is added.
