@@ -152,7 +152,8 @@ func (a *Account) CreateGroupWithRetry(name, location string, sleep, timeout tim
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- a.CreateGroup(name, location):
+			default:
+				ch <- a.CreateGroup(name, location)
 				time.Sleep(sleep)
 			}
 		}
@@ -200,7 +201,8 @@ func (a *Account) ShowGroupWithRetry(name string, sleep, timeout time.Duration) 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- a.ShowGroup(name):
+			default:
+				ch <- a.ShowGroup(name)
 				time.Sleep(sleep)
 			}
 		}
@@ -387,7 +389,8 @@ func (a *Account) GetRGRouteTable(timeout time.Duration) (network.RouteTable, er
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- a.ListRGRouteTable():
+			default:
+				ch <- a.ListRGRouteTable()
 				time.Sleep(5 * time.Second)
 			}
 		}
