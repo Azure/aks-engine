@@ -10,8 +10,64 @@ Note: This feature is not supported on Azure Stack Hub.
 
 ## Prerequisites
 1. An Azure Active Directory tenant, referred to as `AAD Tenant`. You can use the tenant for your Azure subscription;
-2. An `App Registration` to represent the `apiserver`.For more information on how to do this please refer to [Creating an Active Directory Server application](https://github.com/Azure/azure-arc-kubernetes-preview/blob/master/docs/aad-authn-authz.md#create-server-application).
-3. An `App Registration` to represent the `client`.. This application is for user login via `kubectl`. For more information on how to do this please refer to [Creating an Active Directory Client application](https://github.com/Azure/azure-arc-kubernetes-preview/blob/master/docs/aad-authn-authz.md#create-client-application)
+2. Admin access to the Azure Tenant
+
+## Create server application
+
+The first Azure AD application is applied to get a user's Azure AD group membership. To create this application in the Azure portal:
+
+1. Select **Azure Active Directory** > **App registrations** > **New registration**.
+
+    a. Give the application a name, such as *KubernetesApiserver*.
+
+    b. For **Supported account types**, select **Accounts in this organizational directory only**.
+
+    c. Choose **Web** for the Redirect URI type, and then enter any URI-formatted value, such as `https://kubernetesapiserver`.
+
+    d. Select **Register** when you're finished.
+
+2. Select **Manifest**, and then edit the **groupMembershipClaims:** value as **"All"**. When you're finished with the updates, select **Save**.
+
+
+4. In the left pane of the Azure AD application, select **Expose an API**, and then select **+ Add a scope**.
+
+    a. Enter a **Scope name**, an **Admin consent display name**, **Admin consent description**, **User consent display name** and **User consent description**.
+
+    b. Select **Who can consent** as **Admins and Users**.
+    > [!NOTE]
+    > **Admins and Users** setting will enable every user to provide consent on their behalf. If you want to restrict that you can choose **Admins only**. However it will require one time admin consent on app.
+
+    c. Make sure **State** is set to **Enabled**.
+
+    d. Select **Add scope**.    
+
+5. Return to the application **Overview** page and note the **Application (client) ID**. When you deploy an OpenID enabled Kubernetes cluster with AAD integration, this value is called the server application ID.
+
+## Create client application
+
+The second Azure AD application is used when you sign in with the Kubernetes CLI (kubectl).
+
+1. Select **Azure Active Directory** > **App registrations** > **New registration**.
+
+    a. Give the application a name, such as *KubernetesClient*.
+
+    b. For **Supported account types**, select **Accounts in this organizational directory only**.
+
+    c. Select **Web** for the Redirect URI type, and then enter any URI-formatted value such as `https://kubernetesclient`.
+
+    d. Select **Register** when you're finished.
+
+2. In the left pane of the Azure AD application, select **API permissions**, and then select **+ Add a permission**.
+
+    a. Select **My APIs** tab, and then choose your Azure AD server application created in the previous step, such as *ArcAzureADServer*.
+
+    b. Select **Delegated permissions**, and then select the check box next to your Azure AD server app (KubernetesApiserver).
+
+    c. Select **Add permissions**.
+
+3. In the left pane of the Azure AD application, select **Authentication**. Under **Default client type**, select **Yes** to **Treat the client as a public client**. Click on **Save**.
+
+4. Return to the application **Overview** page and note the **Application (client) ID** and **Directory (tenant) ID**.
 
 ## Deployment
 Follow the [deployment steps](../tutorials/quickstart.md#deploy). In step #4, add the following under 'properties' section:
