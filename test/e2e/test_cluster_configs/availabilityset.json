@@ -2,7 +2,8 @@
 	"env": {
 		"UPGRADE_CLUSTER": true,
 		"SCALE_CLUSTER": true,
-		"STABILITY_ITERATIONS": "0"
+		"STABILITY_ITERATIONS": "0",
+		"GINKGO_SKIP_AFTER_UPGRADE": "dns-liveness pod"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
