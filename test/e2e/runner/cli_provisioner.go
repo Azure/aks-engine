@@ -179,12 +179,12 @@ func (cli *CLIProvisioner) provision() error {
 			if err != nil {
 				return errors.Errorf("Error trying to create vnet:%s", err.Error())
 			}
-			err = cli.Account.CreateSubnet(vnetName, masterSubnetName, "10.239.0.0/17")
+			err = cli.Account.CreateSubnetWithRetry(vnetName, masterSubnetName, "10.239.0.0/17", 30*time.Second, cli.Config.Timeout)
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet:%s", err.Error())
 			}
 			subnets = append(subnets, masterSubnetName)
-			err = cli.Account.CreateSubnet(vnetName, agentSubnetName, "10.239.128.0/17")
+			err = cli.Account.CreateSubnetWithRetry(vnetName, agentSubnetName, "10.239.128.0/17", 30*time.Second, cli.Config.Timeout)
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet in subnet:%s", err.Error())
 			}
@@ -196,14 +196,14 @@ func (cli *CLIProvisioner) provision() error {
 			if err != nil {
 				return errors.Errorf("Error trying to create vnet:%s", err.Error())
 			}
-			err = cli.Account.CreateSubnet(vnetName, masterSubnetName, "10.239.255.0/24")
+			err = cli.Account.CreateSubnetWithRetry(vnetName, masterSubnetName, "10.239.255.0/24", 30*time.Second, cli.Config.Timeout)
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet:%s", err.Error())
 			}
 			subnets = append(subnets, masterSubnetName)
 			for i, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
 				subnetName := fmt.Sprintf("%sCustomSubnet", pool.Name)
-				err = cli.Account.CreateSubnet(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/20", i*16))
+				err = cli.Account.CreateSubnetWithRetry(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/20", i*16), 30*time.Second, cli.Config.Timeout)
 				if err != nil {
 					return errors.Errorf("Error trying to create subnet:%s", err.Error())
 				}
