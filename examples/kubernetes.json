@@ -1,6 +1,17 @@
 {
   "apiVersion": "vlabs",
   "properties": {
+    "orchestratorProfile": {
+      "kubernetesConfig": {
+        "containerRuntime": "containerd",
+        "addons": [
+          {
+            "name": "flannel",
+            "enabled": true
+          }
+        ]
+      }
+    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
@@ -8,9 +19,11 @@
     },
     "agentPoolProfiles": [
       {
-        "name": "agentpool1",
-        "count": 2,
-        "vmSize": "Standard_D2_v3"
+        "name": "agent1",
+        "count": 3,
+        "vmSize": "Standard_D2_v3",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "scalesetPriority": "Spot"
       }
     ],
     "linuxProfile": {

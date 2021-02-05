@@ -812,7 +812,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultFlannelAddonsConfig := KubernetesAddon{
 		Name:    common.FlannelAddonName,
-		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel),
+		Enabled: to.BoolPtr(false),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.KubeFlannelContainerName,

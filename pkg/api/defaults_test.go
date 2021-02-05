@@ -1061,20 +1061,6 @@ func TestNetworkPluginDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, DefaultNetworkPlugin)
 	}
 
-	mockCS = getMockBaseContainerService("1.15.7")
-	properties = mockCS.Properties
-	properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
-		{
-			Name:    common.FlannelAddonName,
-			Enabled: to.BoolPtr(true),
-		},
-	}
-	mockCS.setOrchestratorDefaults(true, true)
-	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginFlannel {
-		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginFlannel)
-	}
-
 	mockCS = getMockBaseContainerService("1.19.2")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure

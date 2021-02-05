@@ -351,11 +351,7 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 		if vp.HasWindows() {
 			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPluginWindows
 		} else {
-			if vp.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.FlannelAddonName) {
-				api.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
-			} else {
-				api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPlugin
-			}
+			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPlugin
 		}
 	}
 }

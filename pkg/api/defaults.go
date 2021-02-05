@@ -194,11 +194,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		} else {
 			if o.KubernetesConfig.NetworkPlugin == "" {
-				if o.KubernetesConfig.IsAddonEnabled(common.FlannelAddonName) {
-					o.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
-				} else {
-					o.KubernetesConfig.NetworkPlugin = DefaultNetworkPlugin
-				}
+				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPlugin
 			}
 		}
 
