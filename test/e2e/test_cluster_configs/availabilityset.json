@@ -6,8 +6,12 @@
 		"GINKGO_SKIP_AFTER_UPGRADE": "dns-liveness pod"
 	},
 	"options": {
-        "allowedOrchestratorVersions": ["1.18", "1.19", "1.20"]
-    },
+		"allowedOrchestratorVersions": [
+			"1.18",
+			"1.19",
+			"1.20"
+		]
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
