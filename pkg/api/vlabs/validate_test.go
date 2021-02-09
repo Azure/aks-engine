@@ -360,7 +360,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	// Tests that should pass across all versions
 	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(true, false, false) {
 		c := KubernetesConfig{}
-		if err := c.Validate(k8sVersion, false, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 			t.Errorf("should not error on empty KubernetesConfig: %v, version %s", err, k8sVersion)
 		}
 
@@ -385,21 +385,21 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--route-reconciliation-period": ValidKubernetesCtrlMgrRouteReconciliationPeriod,
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 			t.Errorf("should not error on a KubernetesConfig with valid param values: %v", err)
 		}
 
 		c = KubernetesConfig{
 			ClusterSubnet: "10.16.x.0/invalid",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error on invalid ClusterSubnet")
 		}
 
 		c = KubernetesConfig{
 			DockerBridgeSubnet: "10.120.1.0/invalid",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error on invalid DockerBridgeSubnet")
 		}
 
@@ -408,7 +408,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--non-masquerade-cidr": "10.120.1.0/24",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 			t.Error("should not error on valid --non-masquerade-cidr")
 		}
 
@@ -425,7 +425,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c = KubernetesConfig{
 			MaxPods: KubernetesMinMaxPods - 1,
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error on invalid MaxPods")
 		}
 
@@ -434,7 +434,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-status-update-frequency": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error on invalid --node-status-update-frequency kubelet config")
 		}
 
@@ -443,7 +443,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-monitor-grace-period": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error on invalid --node-monitor-grace-period")
 		}
 
@@ -455,7 +455,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-status-update-frequency": "10s",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when --node-monitor-grace-period is not sufficiently larger than --node-status-update-frequency kubelet config")
 		}
 
@@ -464,7 +464,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--pod-eviction-timeout": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error on invalid --pod-eviction-timeout")
 		}
 
@@ -473,21 +473,21 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--route-reconciliation-period": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error on invalid --route-reconciliation-period")
 		}
 
 		c = KubernetesConfig{
 			DNSServiceIP: "192.168.0.10",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP but not ServiceCidr")
 		}
 
 		c = KubernetesConfig{
 			ServiceCidr: "192.168.0.10/24",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when ServiceCidr but not DNSServiceIP")
 		}
 
@@ -495,7 +495,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "invalid",
 			ServiceCidr:  "192.168.0.0/24",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is invalid")
 		}
 
@@ -503,7 +503,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "192.168.1.10",
 			ServiceCidr:  "192.168.0.0/not-a-len",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when ServiceCidr is invalid")
 		}
 
@@ -511,7 +511,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "192.168.1.10",
 			ServiceCidr:  "192.168.0.0/24",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is outside of ServiceCidr")
 		}
 
@@ -519,7 +519,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.255.255",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is broadcast address of ServiceCidr")
 		}
 
@@ -527,7 +527,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.0.1",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is first IP of ServiceCidr")
 		}
 
@@ -535,7 +535,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.255.10",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 			t.Error("should not error when DNSServiceIP and ServiceCidr are valid")
 		}
 
@@ -544,7 +544,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			NetworkPlugin: "azure",
 		}
 
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when ClusterSubnet has a mask of 24 bits or higher")
 		}
 
@@ -553,7 +553,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			NetworkPlugin: "azure",
 		}
 
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when ClusterSubnet has a mask of 24 bits or higher")
 		}
 
@@ -561,7 +561,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ProxyMode: KubeProxyMode("invalid"),
 		}
 
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when ProxyMode has an invalid string value")
 		}
 
@@ -570,7 +570,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				ProxyMode: validProxyModeValue,
 			}
 
-			if err := c.Validate(k8sVersion, false, false, false); err != nil {
+			if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 
@@ -578,7 +578,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				ProxyMode: validProxyModeValue,
 			}
 
-			if err := c.Validate(k8sVersion, false, false, false); err != nil {
+			if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 		}
@@ -590,7 +590,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			CloudProviderBackoff:   to.BoolPtr(true),
 			CloudProviderRateLimit: to.BoolPtr(true),
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
 		}
 	}
@@ -600,7 +600,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c := KubernetesConfig{
 			UseCloudControllerManager: to.BoolPtr(true),
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err != nil {
 			t.Error("should not error because UseCloudControllerManager is available since v1.8")
 		}
 	}
@@ -612,7 +612,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
 		}
 
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when more than 1 cluster subnet provided with ipv6dualstack feature disabled")
 		}
 
@@ -621,7 +621,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8,fec0::/7",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
 			t.Error("should error when more than 2 cluster subnets provided")
 		}
 
@@ -631,7 +631,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ProxyMode:     "iptables",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil && !common.IsKubernetesVersionGe(k8sVersion, "1.18.0") {
+		if err := c.Validate(k8sVersion, false, true, false, false); err == nil && !common.IsKubernetesVersionGe(k8sVersion, "1.18.0") {
 			t.Errorf("should error with ipv6 dual stack feature enabled as iptables mode not supported in %s", k8sVersion)
 		}
 
@@ -639,7 +639,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ServiceCidr: "10.0.0.0/16,fe80:20d::/112",
 		}
 
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Error("should error when more than 1 service cidr provided with ipv6dualstack feature disabled")
 		}
 
@@ -651,7 +651,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
 			t.Error("should error when more than 2 service cidr provided with ipv6dualstack feature enabled")
 		}
 
@@ -663,7 +663,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
 			t.Error("should error when secondary cidr is invalid with ipv6dualstack feature enabled")
 		}
 
@@ -675,7 +675,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err != nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err != nil {
 			t.Error("shouldn't have errored with ipv6 dual stack feature enabled")
 		}
 
@@ -686,7 +686,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			NetworkPolicy: "azure",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
 			t.Errorf("should error when network policy defined for azure cni dual stack: %v", err)
 		}
 
@@ -700,7 +700,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err != nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err != nil {
 			t.Errorf("shouldn't have errored with azure cni ipv6 dual stack feature enabled: %v", err)
 		}
 
@@ -713,7 +713,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
 			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
 		}
 
@@ -727,7 +727,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
 			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
 		}
 	}
@@ -737,10 +737,10 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c := KubernetesConfig{
 			NetworkPlugin: "azure",
 		}
-		if err := c.Validate(k8sVersion, false, false, true); err == nil {
+		if err := c.Validate(k8sVersion, false, false, true, false); err == nil {
 			t.Error("should error when network plugin is not kubenet for single stack IPv6")
 		}
-		if err := c.Validate(k8sVersion, false, true, true); err == nil {
+		if err := c.Validate(k8sVersion, false, true, true, false); err == nil {
 			t.Error("should error when dual stack and single stack IPv6 enabled simultaneously")
 		}
 	}
@@ -983,7 +983,7 @@ func ExampleKubernetesConfig_validateNetworkPlugin() {
 
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
-	if err := cs.Properties.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true); err != nil {
+	if err := cs.Properties.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true, false); err != nil {
 		fmt.Printf("error in ValidateNetworkPlugin: %s", err)
 	}
 
@@ -996,26 +996,35 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	p.OrchestratorProfile = &OrchestratorProfile{}
 	p.OrchestratorProfile.OrchestratorType = Kubernetes
 
-	for _, policy := range NetworkPluginValues {
+	for _, plugin := range NetworkPluginValues {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
-		p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = policy
-		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err != nil {
-			t.Errorf(
-				"should not error on networkPolicy=\"%s\"",
-				policy,
-			)
+		p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = plugin
+		err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false, false)
+		if plugin == NetworkPluginFlannel {
+			if err == nil {
+				t.Errorf("flannel should not be allowed for new clusters")
+			}
+		} else {
+			if err != nil {
+				t.Errorf("should not error on networkPolicy=\"%s\"", plugin)
+			}
 		}
 	}
 
+	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false, true); err != nil {
+		t.Errorf("flannel should be permitted for upgrade scenarios")
+	}
+
 	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "not-existing"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err == nil {
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false, false); err == nil {
 		t.Errorf(
 			"should error on invalid networkPlugin",
 		)
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true); err == nil {
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true, false); err == nil {
 		t.Errorf(
 			"should error on antrea for windows clusters",
 		)
@@ -1820,6 +1829,7 @@ func TestValidateAddons(t *testing.T) {
 	tests := []struct {
 		name        string
 		p           *Properties
+		isUpdate    bool
 		expectedErr error
 	}{
 		{
@@ -2077,10 +2087,28 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
+			expectedErr: errors.Errorf("%s addon is deprecated for new clusters", common.FlannelAddonName),
+		},
+		{
+			name: "flannel addon enabled - upgrade",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime: Containerd,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			isUpdate:    true,
 			expectedErr: nil,
 		},
 		{
-			name: "flannel addon enabled but no containerRuntime",
+			name: "flannel addon enabled but no containerRuntime - upgrade",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
@@ -2093,10 +2121,11 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
+			isUpdate:    true,
 			expectedErr: errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd),
 		},
 		{
-			name: "flannel addon enabled with docker",
+			name: "flannel addon enabled with docker - upgrade",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
@@ -2110,10 +2139,11 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
+			isUpdate:    true,
 			expectedErr: errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd),
 		},
 		{
-			name: "flannel addon enabled w/ NetworkPlugin=flannel",
+			name: "flannel addon enabled w/ NetworkPlugin=flannel - upgrade",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
@@ -2128,10 +2158,11 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
+			isUpdate:    true,
 			expectedErr: nil,
 		},
 		{
-			name: "flannel addon enabled w/ NetworkPlugin=azure",
+			name: "flannel addon enabled w/ NetworkPlugin=azure - upgrade",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
@@ -2146,10 +2177,11 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
+			isUpdate:    true,
 			expectedErr: errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, DefaultNetworkPlugin, NetworkPluginFlannel),
 		},
 		{
-			name: "flannel addon enabled w/ NetworkPlugin=kubenet",
+			name: "flannel addon enabled w/ NetworkPlugin=kubenet - upgrade",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
@@ -2164,10 +2196,11 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
+			isUpdate:    true,
 			expectedErr: errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, "kubenet", NetworkPluginFlannel),
 		},
 		{
-			name: "flannel addon enabled w/ NetworkPolicy=calico",
+			name: "flannel addon enabled w/ NetworkPolicy=calico - upgrade",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
@@ -2182,6 +2215,7 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
+			isUpdate:    true,
 			expectedErr: errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, "calico"),
 		},
 		{
@@ -2245,7 +2279,7 @@ func TestValidateAddons(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			gotErr := test.p.validateAddons()
+			gotErr := test.p.validateAddons(test.isUpdate)
 			if !helpers.EqualError(gotErr, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
@@ -2273,7 +2307,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: AvailabilitySet,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error on cluster-autoscaler with availability sets",
 		)
@@ -2287,7 +2321,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on azure-policy when ServicePrincipalProfile is empty",
 		)
@@ -2295,28 +2329,28 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.ServicePrincipalProfile = &ServicePrincipalProfile{
 		ClientID: "123",
 	}
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on azure-policy when ServicePrincipalProfile is not empty",
 		)
 	}
 
 	p.OrchestratorProfile.OrchestratorRelease = "1.12"
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error on azure-policy with k8s < 1.14",
 		)
 	}
 
 	p.OrchestratorProfile.OrchestratorRelease = "1.18"
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on azure-policy with k8s >= 1.14",
 		)
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on azure-policy with managed identity",
 		)
@@ -2343,7 +2377,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: VirtualMachineScaleSets,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"cluster-autoscaler addon pools configuration must have a 'name' property that correlates with a pool name in the agentPoolProfiles array",
 		)
@@ -2371,7 +2405,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: VirtualMachineScaleSets,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"addon cluster-autoscaler has a mode configuration 'foo', must be either EnsureExists or Reconcile",
 		)
@@ -2399,7 +2433,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: VirtualMachineScaleSets,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"cluster-autoscaler addon pool 'name' foo has invalid 'min-nodes' config, must be a string int, got baz",
 		)
@@ -2427,7 +2461,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: VirtualMachineScaleSets,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"cluster-autoscaler addon pool 'name' foo has invalid 'max-nodes' config, must be a string int, got baz",
 		)
@@ -2455,7 +2489,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: VirtualMachineScaleSets,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"cluster-autoscaler addon pool 'name' foo has invalid config, 'max-nodes' 1 must be greater than 'min-nodes' 5",
 		)
@@ -2484,7 +2518,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			AvailabilityProfile: VirtualMachineScaleSets,
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"cluster-autoscaler addon pool 'name' foo does not match any agentPoolProfiles nodepool name",
 		)
@@ -2504,14 +2538,14 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 	p.OrchestratorProfile.OrchestratorRelease = "1.9"
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error on nvidia-device-plugin with k8s < 1.10",
 		)
 	}
 
 	p.OrchestratorProfile.OrchestratorRelease = "1.16"
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on nvidia-device-plugin with k8s >= 1.12",
 		)
@@ -2527,7 +2561,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"expected error for non-empty Config with non-empty Data",
 		)
@@ -2545,7 +2579,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"expected error for non-empty Containers with non-empty Data",
 		)
@@ -2558,7 +2592,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"expected error for invalid base64",
 		)
@@ -2571,7 +2605,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error on providing valid addon.Data",
 		)
@@ -2594,7 +2628,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Error(
 			"should not error for correct config.",
 			err,
@@ -2618,7 +2652,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Error(
 			"should not error for correct config.",
 			err,
@@ -2640,7 +2674,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Error(
 			"should error as objectID not provided or UseManagedIdentity not true",
 			err,
@@ -2661,7 +2695,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error using when not using 'azure' for Network Plugin",
 		)
@@ -2679,7 +2713,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when missing the subnet for Application Gateway",
 		)
@@ -2696,7 +2730,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when useCloudControllerManager is disabled for azuredisk-csi-driver",
 		)
@@ -2713,7 +2747,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azuredisk-csi-driver",
 		)
@@ -2730,7 +2764,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when useCloudControllerManager is disabled for azurefile-csi-driver",
 		)
@@ -2747,7 +2781,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azurefile-csi-driver",
 		)
@@ -2765,7 +2799,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when the orchestrator version is less than 1.16.0 for cloud-node-manager",
 		)
@@ -2782,7 +2816,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when useCloudControllerManager is disabled for cloud-node-manager",
 		)
@@ -2799,7 +2833,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when useCloudControllerManager is enabled and cloud-node-manager isn't",
 		)
@@ -2816,7 +2850,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err != nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
 			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.16 for cloud-node-manager",
 		)
@@ -2838,7 +2872,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when using Windows cluster and k8s version is < 1.18 for cloud-node-manager",
 		)
@@ -2860,7 +2894,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when using Windows cluster and k8s version is >= 1.18 with cloud-node-manager disabled",
 		)
@@ -2878,7 +2912,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(false); err == nil {
 		t.Errorf(
 			"should error when both kube-dns and coredns are enabled",
 		)

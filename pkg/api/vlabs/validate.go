@@ -145,7 +145,7 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateLinuxProfile(); e != nil {
 		return e
 	}
-	if e := a.validateAddons(); e != nil {
+	if e := a.validateAddons(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateExtensions(); e != nil {
@@ -225,7 +225,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 		}
 
 		if o.KubernetesConfig != nil {
-			err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled(), a.FeatureFlags.IsIPv6OnlyEnabled())
+			err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled(), a.FeatureFlags.IsIPv6OnlyEnabled(), isUpdate)
 			if err != nil {
 				return err
 			}
@@ -660,7 +660,7 @@ func (a *Properties) validateLinuxProfile() error {
 	return validateKeyVaultSecrets(a.LinuxProfile.Secrets, false)
 }
 
-func (a *Properties) validateAddons() error {
+func (a *Properties) validateAddons(isUpdate bool) error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
 		var hasNSeriesSKU bool
@@ -785,17 +785,21 @@ func (a *Properties) validateAddons() error {
 						return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea)
 					}
 				case common.FlannelAddonName:
-					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
-						return errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, a.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
-					}
-					networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
-					if networkPlugin != "" {
-						if networkPlugin != NetworkPluginFlannel {
-							return errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, networkPlugin, NetworkPluginFlannel)
+					if isUpdate {
+						if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
+							return errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, a.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
 						}
-					}
-					if a.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
-						return errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd)
+						networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
+						if networkPlugin != "" {
+							if networkPlugin != NetworkPluginFlannel {
+								return errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, networkPlugin, NetworkPluginFlannel)
+							}
+						}
+						if a.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
+							return errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd)
+						}
+					} else {
+						return errors.Errorf("%s addon is deprecated for new clusters", common.FlannelAddonName)
 					}
 				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.14.0")
@@ -1264,7 +1268,7 @@ func validatePasswordComplexity(name string, password string) (out bool) {
 }
 
 // Validate validates the KubernetesConfig
-func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStackEnabled, isIPv6 bool) error {
+func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStackEnabled, isIPv6, isUpdate bool) error {
 	// number of minimum retries allowed for kubelet to post node status
 	const minKubeletRetries = 4
 
@@ -1501,7 +1505,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 	}
 
-	if e := k.validateNetworkPlugin(hasWindows); e != nil {
+	if e := k.validateNetworkPlugin(hasWindows, isUpdate); e != nil {
 		return e
 	}
 	if e := k.validateNetworkPolicy(k8sVersion, hasWindows); e != nil {
@@ -1552,7 +1556,7 @@ func (k *KubernetesConfig) validateContainerRuntimeConfig() error {
 	return nil
 }
 
-func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
+func (k *KubernetesConfig) validateNetworkPlugin(hasWindows, isUpdate bool) error {
 
 	networkPlugin := k.NetworkPlugin
 
@@ -1560,11 +1564,20 @@ func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
 	valid := false
 	for _, plugin := range NetworkPluginValues {
 		if networkPlugin == plugin {
-			valid = true
+			if plugin == NetworkPluginFlannel {
+				if isUpdate {
+					valid = true
+				}
+			} else {
+				valid = true
+			}
 			break
 		}
 	}
 	if !valid {
+		if networkPlugin == NetworkPluginFlannel {
+			return errors.Errorf("networkPlugin '%s' has been deprecated and is no longer supported for new cluster creation", networkPlugin)
+		}
 		return errors.Errorf("unknown networkPlugin '%s' specified", networkPlugin)
 	}
 
