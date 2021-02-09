@@ -17,6 +17,5 @@ require (
 	github.com/uber/jaeger-client-go v2.21.1+incompatible // indirect
 	go.opencensus.io v0.22.2 // indirect
 	golang.org/x/crypto v0.0.0-20191227163750-53104e6ec876 // indirect
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	google.golang.org/api v0.15.0 // indirect
 )
