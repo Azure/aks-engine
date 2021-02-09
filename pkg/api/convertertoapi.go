@@ -316,6 +316,8 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.CloudProviderDisableOutboundSNAT = vlabs.CloudProviderDisableOutboundSNAT
 	api.KubeReservedCgroup = vlabs.KubeReservedCgroup
 	api.MicrosoftAptRepositoryURL = vlabs.MicrosoftAptRepositoryURL
+	api.EnableMultipleStandardLoadBalancers = vlabs.EnableMultipleStandardLoadBalancers
+	api.Tags = vlabs.Tags
 	convertComponentsToAPI(vlabs, api)
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)

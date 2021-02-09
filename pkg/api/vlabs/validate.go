@@ -1516,6 +1516,13 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	if e := k.validateKubernetesImageBaseType(); e != nil {
 		return e
 	}
+
+	if to.Bool(k.EnableMultipleStandardLoadBalancers) && !common.IsKubernetesVersionGe(k8sVersion, "1.20.0-beta.1") {
+		return errors.Errorf("OrchestratorProfile.KubernetesConfig.EnableMultipleStandardLoadBalancers is available since kubernetes version v1.20.0-beta.1, current version is %s", k8sVersion)
+	}
+	if k.Tags != "" && !common.IsKubernetesVersionGe(k8sVersion, "1.20.0-beta.1") {
+		return errors.Errorf("OrchestratorProfile.KubernetesConfig.Tags is available since kubernetes version v1.20.0-beta.1, current version is %s", k8sVersion)
+	}
 	return k.validateContainerRuntimeConfig()
 }
 
