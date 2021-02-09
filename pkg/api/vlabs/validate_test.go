@@ -986,7 +986,7 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 		err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false, false)
 		if plugin == NetworkPluginFlannel {
 			if err == nil {
-				t.Errorf("flannel should be not be allowed for new clusters")
+				t.Errorf("flannel should not be allowed for new clusters")
 			}
 		} else {
 			if err != nil {
