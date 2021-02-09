@@ -141,14 +141,6 @@ func (rcc *rotateCertsCmd) validateArgs() (err error) {
 			Locale: locale,
 		},
 	}
-	if err = rcc.getAuthArgs().validateAuthArgs(); err != nil {
-		return errors.Wrap(err, "failed to get validate auth args")
-	}
-	armClient, err := rcc.authProvider.getClient()
-	if err != nil {
-		return errors.Wrap(err, "failed to get ARM client")
-	}
-	rcc.armClient = ops.NewARMClientWrapper(armClient, rotateCertsDefaultInterval, rotateCertsDefaultTimeout)
 	rcc.location = helpers.NormalizeAzureRegion(rcc.location)
 	if rcc.location == "" {
 		return errors.New("--location must be specified")
@@ -211,7 +203,14 @@ func (rcc *rotateCertsCmd) loadAPIModel() (err error) {
 	if rcc.cs.Properties.WindowsProfile != nil && !rcc.cs.Properties.WindowsProfile.GetSSHEnabled() {
 		return errors.New("SSH not enabled on Windows nodes. SSH is required in order to rotate agent nodes certificates")
 	}
-
+	if err = rcc.getAuthArgs().validateAuthArgs(); err != nil {
+		return errors.Wrap(err, "failed to get validate auth args")
+	}
+	armClient, err := rcc.authProvider.getClient()
+	if err != nil {
+		return errors.Wrap(err, "failed to get ARM client")
+	}
+	rcc.armClient = ops.NewARMClientWrapper(armClient, rotateCertsDefaultInterval, rotateCertsDefaultTimeout)
 	return
 }
 
