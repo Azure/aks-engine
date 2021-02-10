@@ -1196,6 +1196,18 @@ func (p *Properties) GetAADAdminGroupID() string {
 	return ""
 }
 
+func (p *Properties) NeedsAuditdRules() bool {
+	if p.MasterProfile != nil && p.MasterProfile.IsAuditDEnabled() {
+		return true
+	}
+	for _, pool := range p.AgentPoolProfiles {
+		if pool.IsAuditDEnabled() {
+			return true
+		}
+	}
+	return false
+}
+
 // ShouldEnableAzureCloudAddon determines whether or not we should enable the following addons:
 // 1. cloud-node-manager,
 // 2. azuredisk-csi-driver,

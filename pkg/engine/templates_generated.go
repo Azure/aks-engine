@@ -15339,15 +15339,13 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{- if not .MasterProfile.IsVHDDistro}}
-  {{- if .MasterProfile.IsAuditDEnabled}}
+{{- if .MasterProfile.IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
-  {{end}}
 {{end}}
 
 {{- if .MasterProfile.IsUbuntu1804}}
@@ -15929,15 +15927,13 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{- if not .IsVHDDistro}}
-  {{- if .IsAuditDEnabled}}
+{{- if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
-  {{end}}
 {{end}}
 
 {{- if .IsUbuntu1804}}
