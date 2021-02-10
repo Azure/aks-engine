@@ -233,7 +233,8 @@ pullContainerImage() {
   retrycmd 60 1 1200 $cli_tool pull $url || exit 35
 }
 loadContainerImage() {
-  local f=$(echo $1 | tr /: _)
+  local f
+  f=$(echo $1 | tr /: _)
   docker save $1 -o /opt/azure/containers/$f
   ctr -n=k8s.io images import /opt/azure/containers/$f
   docker load --input /opt/azure/containers/$f
