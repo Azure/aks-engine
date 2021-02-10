@@ -85,7 +85,7 @@ echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 MOBY_VERSION="19.03.14"
 CONTAINERD_VERSION="1.3.9"
 installMoby
-systemctl start docker
+systemctlEnableAndStart docker || exit 1
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 downloadGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
@@ -126,6 +126,7 @@ done
 installImg
 echo "  - img" >> ${VHD_LOGS_FILEPATH}
 
+systemctl status docker --no-pager || exit 1
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
 DASHBOARD_VERSIONS="
@@ -276,7 +277,7 @@ for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-pullContainerImage "docker" "busybox"
+loadContainerImage "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
