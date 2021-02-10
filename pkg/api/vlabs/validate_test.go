@@ -750,13 +750,13 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c := KubernetesConfig{
 			EnableMultipleStandardLoadBalancers: to.BoolPtr(true),
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Errorf("should error when enable multiple standard load balancer before v1.20.0")
 		}
 		c = KubernetesConfig{
 			Tags: "a=b",
 		}
-		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false, false); err == nil {
 			t.Errorf("should error when setting tags before v1.20.0")
 		}
 	}
