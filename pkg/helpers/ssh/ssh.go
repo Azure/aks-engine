@@ -45,6 +45,19 @@ func PublicKeyAuth(sshPrivateKeyPath string) (ssh.AuthMethod, error) {
 	return ssh.PublicKeys(k), nil
 }
 
+// ValidateConfig checks the JumpBox configuration
+func ValidateConfig(host *JumpBox) error {
+	jbConfig, err := config(host.AuthConfig)
+	if err != nil {
+		return errors.Wrap(err, "creating ssh client config")
+	}
+	_, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", host.URI, host.Port), jbConfig)
+	if err != nil {
+		return errors.Wrapf(err, "dialing ssh (%s)", host.URI)
+	}
+	return nil
+}
+
 func clientWithRetry(host *RemoteHost) (*ssh.Client, error) {
 	// TODO Granular retry func
 	retryFunc := func(err error) bool { return true }

@@ -36,6 +36,7 @@ In order to ensure that your `aks-engine rotate-certs` operation runs smoothly, 
 |--resource-group|yes|Azure resource group where the cluster infra is deployed.|
 |--client-id|depends|The Service Principal Client ID. Required if the auth-method is set to client_secret or client_certificate.|
 |--client-secret|depends| The Service Principal Client secret. Required if the auth-method is set to client_secret.|
+|--azure-env|depends| The target cloud name. Optional if target cloud is AzureCloud.|
 |--certificate-profile|no|Relative path to a JSON file containing the new set of certificates.|
 |--force|no|Force execution even if API Server is not responsive.|
 
@@ -52,7 +53,8 @@ Once you have read all the [requirements](#pre-requirements), run `aks-engine ro
   --resource-group <resource-group-name> \
   --client-id <service-principal-id> \
   --client-secret <service-principal-secret> \
-  --subscription-id <subscription-id>
+  --subscription-id <subscription-id> \
+  --azure-env <cloud-name>
 ```
 
 For example,
@@ -66,7 +68,8 @@ For example,
   --resource-group "my-cluster" \
   --client-id "12345678-XXXX-YYYY-ZZZZ-1234567890ab" \
   --client-secret "12345678-XXXX-YYYY-ZZZZ-1234567890ab" \
-  --subscription-id "12345678-XXXX-YYYY-ZZZZ-1234567890ab"
+  --subscription-id "12345678-XXXX-YYYY-ZZZZ-1234567890ab" \
+  --azure-env "AzureStackCloud" # optional if targeting AzureCloud
 ```
 
 > Fetching a new set of certificates from Key Vault is not supported at this point.

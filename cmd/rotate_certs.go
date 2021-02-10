@@ -104,7 +104,7 @@ func newRotateCertsCmd() *cobra.Command {
 				return errors.Wrap(err, "loading API model")
 			}
 			if err := rcc.init(); err != nil {
-				return errors.Wrap(err, "loading API model")
+				return err
 			}
 			cmd.SilenceUsage = true
 			return rcc.run()
@@ -233,6 +233,9 @@ func (rcc *rotateCertsCmd) init() (err error) {
 		rcc.sshPort = vmasSSHPort
 	}
 	rcc.jumpbox = &ssh.JumpBox{URI: rcc.sshHostURI, Port: rcc.sshPort, OperatingSystem: api.Linux, AuthConfig: rcc.linuxAuthConfig}
+	if err := ssh.ValidateConfig(rcc.jumpbox); err != nil {
+		return errors.Wrap(err, "validating ssh configuration")
+	}
 	return
 }
 
@@ -364,7 +367,6 @@ func (rcc *rotateCertsCmd) getAgentNodes() (nodeMap, error) {
 
 // distributeCerts copies the new set of certificates to the cluster nodes.
 func (rcc *rotateCertsCmd) distributeCerts() (err error) {
-	log.Info("Distributing certificates")
 	upload := func(files fileMap, node *ssh.RemoteHost) error {
 		for _, file := range files {
 			var co string
@@ -400,6 +402,7 @@ func (rcc *rotateCertsCmd) rotateMasterCerts() (err error) {
 	if err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
+	log.Info("Distributing control plane certificates")
 	if err = rcc.distributeCerts(); err != nil {
 		return errors.Wrap(err, "distributing certificates")
 	}
@@ -409,6 +412,7 @@ func (rcc *rotateCertsCmd) rotateMasterCerts() (err error) {
 	if err = rcc.rotateMasters(); err != nil {
 		return err
 	}
+	log.Infoln("Deleting temporary artifacts from control plane nodes")
 	if err = rcc.cleanupRemote(); err != nil {
 		return err
 	}
@@ -426,6 +430,7 @@ func (rcc *rotateCertsCmd) rotateAgentCerts() (err error) {
 	if err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
+	log.Info("Distributing agent certificates")
 	if err = rcc.distributeCerts(); err != nil {
 		return errors.Wrap(err, "distributing certificates")
 	}
@@ -435,6 +440,7 @@ func (rcc *rotateCertsCmd) rotateAgentCerts() (err error) {
 	if err = rcc.rotateAgents(); err != nil {
 		return err
 	}
+	log.Infoln("Deleting temporary artifacts from agent nodes")
 	if err = rcc.cleanupRemote(); err != nil {
 		return err
 	}
@@ -510,7 +516,6 @@ func (rcc *rotateCertsCmd) rotateAgents() error {
 }
 
 func (rcc *rotateCertsCmd) cleanupRemote() error {
-	log.Infoln("Deleting temporary artifacts from cluster nodes")
 	step := "cleanup"
 	for _, node := range rcc.nodes {
 		log.Debugf("Node: %s. Step: %s", node.URI, step)
