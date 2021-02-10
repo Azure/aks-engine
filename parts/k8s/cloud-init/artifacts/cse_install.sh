@@ -233,8 +233,8 @@ pullContainerImage() {
   retrycmd 60 1 1200 $cli_tool pull $url || exit 35
 }
 loadContainerImage() {
-  docker pull $1
-  docker save $1 | ctr -n=k8s.io images import -
+  docker pull $1 || exit 35
+  docker save $1 | ctr -n=k8s.io images import - || exit 35
 
 }
 overrideNetworkConfig() {
