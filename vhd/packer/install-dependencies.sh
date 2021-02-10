@@ -170,24 +170,6 @@ for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-# gcr URL for metrics-server v0.2.1 is different, so we can't (easily) re-use the above enumeration
-# so let's just do it boutique-style below until we no longer have to build images for k8s 1.15
-METRICS_SERVER_VERSION_FOR_K8S_1DOT15="v0.2.1"
-pullContainerImage "docker" k8s.gcr.io/metrics-server-amd64:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
-pullContainerImage "docker" mcr.microsoft.com/oss/kubernetes/metrics-server:$METRICS_SERVER_VERSION_FOR_K8S_1DOT15
-
-KUBE_DNS_VERSIONS="
-1.15.4
-"
-for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/k8s-dns-kube-dns:${KUBE_DNS_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 KUBE_ADDON_MANAGER_VERSIONS="
 9.1.1
 "
@@ -200,42 +182,11 @@ for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-KUBE_DNS_MASQ_VERSIONS="
-1.15.4
-"
-for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:${KUBE_DNS_MASQ_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/k8s-dns-dnsmasq-nanny:${KUBE_DNS_MASQ_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 MCR_PAUSE_VERSIONS="1.4.0"
 for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
     # Pull the arch independent MCR pause image which is built for Linux and Windows
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/pause:${PAUSE_VERSION}"
     pullContainerImage "docker" "${CONTAINER_IMAGE}"
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
-GCR_PAUSE_VERSIONS="3.1"
-for PAUSE_VERSION in ${GCR_PAUSE_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/pause-amd64:${PAUSE_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
-TILLER_VERSIONS="
-2.13.1
-"
-for TILLER_VERSION in ${TILLER_VERSIONS}; do
-    CONTAINER_IMAGE="gcr.io/kubernetes-helm/tiller:v${TILLER_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/tiller:v${TILLER_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
@@ -251,22 +202,8 @@ for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-K8S_DNS_SIDECAR_VERSIONS="
-1.14.10
-"
-for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-sidecar-amd64:${K8S_DNS_SIDECAR_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/k8s-dns-sidecar:${K8S_DNS_SIDECAR_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 CORE_DNS_VERSIONS="
 1.7.0
-1.6.9
-1.6.7
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/coredns:${CORE_DNS_VERSION}"
@@ -350,16 +287,6 @@ done
 KMS_PLUGIN_VERSIONS="0.0.10"
 for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/k8s/kms/keyvault:v${KMS_PLUGIN_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
-FLANNEL_VERSIONS="
-0.10.0
-0.8.0
-"
-for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
-    CONTAINER_IMAGE="quay.io/coreos/flannel:v${FLANNEL_VERSION}-amd64"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -558,7 +485,6 @@ done
 
 CLUSTER_PROPORTIONAL_AUTOSCALER_VERSIONS="
 1.7.1
-1.1.2-r2
 "
 for CLUSTER_PROPORTIONAL_AUTOSCALER_VERSION in ${CLUSTER_PROPORTIONAL_AUTOSCALER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:${CLUSTER_PROPORTIONAL_AUTOSCALER_VERSION}"
