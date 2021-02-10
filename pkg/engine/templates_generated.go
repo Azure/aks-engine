@@ -13468,10 +13468,10 @@ loadContainerImage() {
   local f
   f=$(echo $1 | tr /: _)
   mkdir -p /opt/azure/containers
-  docker save $1 -o /opt/azure/containers/$f
-  ctr -n=k8s.io images import /opt/azure/containers/$f
-  docker load --input /opt/azure/containers/$f
-  rm -f /opt/azure/containers/$f
+  docker save $1 -o /opt/azure/containers/$f.tar
+  ctr -n=k8s.io images import /opt/azure/containers/$f.tar
+  docker load --input /opt/azure/containers/$f.tar
+  rm -f /opt/azure/containers/$f.tar
 
 }
 overrideNetworkConfig() {
