@@ -320,6 +320,93 @@ func TestMasterProfileIsAuditDEnabled(t *testing.T) {
 	}
 }
 
+func TestNeedsAuditdRules(t *testing.T) {
+	cases := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "enabled on control plane",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: to.BoolPtr(true),
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "enabled on one node pool",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: nil,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AuditDEnabled: nil,
+					},
+					{
+						AuditDEnabled: to.BoolPtr(true),
+					},
+					{
+						AuditDEnabled: to.BoolPtr(false),
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "enabled",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: to.BoolPtr(true),
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AuditDEnabled: to.BoolPtr(true),
+					},
+					{
+						AuditDEnabled: to.BoolPtr(true),
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "disabled",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: nil,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AuditDEnabled: nil,
+					},
+					{
+						AuditDEnabled: to.BoolPtr(false),
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:     "nil",
+			p:        &Properties{},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.p.NeedsAuditdRules() {
+				t.Fatalf("Got unexpected Properrties.NeedsAuditdRules() result. Expected: %t. Got: %t.", c.expected, c.p.NeedsAuditdRules())
+			}
+		})
+	}
+}
+
 func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	cases := []struct {
 		name     string

@@ -170,13 +170,16 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		cloudInitFiles["untaintNodesSystemdService"] = getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs)
 	}
 
+	if cs.Properties.NeedsAuditdRules() {
+		cloudInitFiles["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules, cs)
+	}
+
 	if !cs.Properties.IsVHDDistroForAllNodes() {
 		cloudInitFiles["provisionCIS"] = getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs)
 		cloudInitFiles["labelNodesScript"] = getBase64EncodedGzippedCustomScript(labelNodesScript, cs)
 		cloudInitFiles["labelNodesSystemdService"] = getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs)
 		cloudInitFiles["aptPreferences"] = getBase64EncodedGzippedCustomScript(aptPreferences, cs)
 		cloudInitFiles["dockerClearMountPropagationFlags"] = getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs)
-		cloudInitFiles["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules, cs)
 		cloudInitFiles["generateProxyCertsScript"] = getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs)
 	}
 

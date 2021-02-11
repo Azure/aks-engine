@@ -282,7 +282,6 @@ func TestK8sVars(t *testing.T) {
 		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
-		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)
@@ -428,7 +427,6 @@ func TestK8sVars(t *testing.T) {
 		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
-		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
