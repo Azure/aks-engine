@@ -294,35 +294,13 @@ K8S_VERSIONS="
 1.17.16
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
-    HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube:v${KUBERNETES_VERSION}"
-    extractHyperkube "docker"
-    echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
-  else
-    for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
-      CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/${component}:v${KUBERNETES_VERSION}"
-      loadContainerImage ${CONTAINER_IMAGE}
-      echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    done
-    KUBE_BINARY_URL="https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"
-    extractKubeBinaries
-  fi
-  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) && [[ $KUBERNETES_VERSION != *"azs"* ]]; then
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/cloud-controller-manager:v${KUBERNETES_VERSION}"
+  for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/${component}:v${KUBERNETES_VERSION}"
     loadContainerImage ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-  fi
-done
-
-# Use kube-proxy image instead of hyperkube for kube-proxy container. Fixes #3529.
-KUBE_PROXY_VERSIONS="
-1.16.15
-1.16.14
-"
-for KUBE_PROXY_VERSION in ${KUBE_PROXY_VERSIONS}; do
-  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kube-proxy:v${KUBE_PROXY_VERSION}"
-  loadContainerImage ${CONTAINER_IMAGE}
-  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+  done
+  KUBE_BINARY_URL="https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"
+  extractKubeBinaries
 done
 
 # Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
