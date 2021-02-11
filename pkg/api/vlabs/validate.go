@@ -229,10 +229,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			if err != nil {
 				return err
 			}
-			minVersion, err := semver.Make("1.7.0")
-			if err != nil {
-				return errors.New("could not validate version")
-			}
 
 			if o.KubernetesConfig.EnableAggregatedAPIs {
 				if !o.KubernetesConfig.IsRBACEnabled() {
@@ -241,10 +237,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) {
-				if sv.LT(minVersion) {
-					return errors.Errorf("enableDataEncryptionAtRest is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-						minVersion.String(), o.OrchestratorVersion)
-				}
 				if o.KubernetesConfig.EtcdEncryptionKey != "" {
 					_, err = base64.StdEncoding.DecodeString(o.KubernetesConfig.EtcdEncryptionKey)
 					if err != nil {
@@ -254,27 +246,8 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
-				minVersion, err := semver.Make("1.10.0")
-				if err != nil {
-					return errors.Errorf("could not validate version")
-				}
-				if sv.LT(minVersion) {
-					return errors.Errorf("enableEncryptionWithExternalKms is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-						minVersion.String(), o.OrchestratorVersion)
-				}
 				if to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) && a.OrchestratorProfile.KubernetesConfig.UserAssignedID == "" {
 					log.Warnf("Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`")
-				}
-			}
-
-			if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
-				minVersionNotAllowed, err := semver.Make("1.15.0")
-				if err != nil {
-					return errors.Errorf("could not validate version")
-				}
-				if !sv.LT(minVersionNotAllowed) {
-					return errors.Errorf("RBAC support is required for Kubernetes version %s or greater; unable to build Kubernetes v%s cluster with enableRbac=false",
-						minVersionNotAllowed.String(), o.OrchestratorVersion)
 				}
 			}
 
@@ -295,14 +268,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
-				minVersion, err := semver.Make("1.11.0")
-				if err != nil {
-					return errors.Errorf("could not validate version")
-				}
-				if sv.LT(minVersion) {
-					return errors.Errorf("loadBalancerSku is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-						minVersion.String(), o.OrchestratorVersion)
-				}
 				if !to.Bool(a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB) {
 					return errors.Errorf("standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"")
 				}
@@ -663,7 +628,6 @@ func (a *Properties) validateLinuxProfile() error {
 func (a *Properties) validateAddons(isUpdate bool) error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
-		var hasNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
 		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
@@ -671,10 +635,6 @@ func (a *Properties) validateAddons(isUpdate bool) error {
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
 				isAvailabilitySets = true
-			}
-
-			if agentPool.IsNSeriesSKU() {
-				hasNSeriesSKU = true
 			}
 		}
 		for _, addon := range a.OrchestratorProfile.KubernetesConfig.Addons {
@@ -726,14 +686,6 @@ func (a *Properties) validateAddons(isUpdate bool) error {
 								return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid config, 'max-nodes' %d must be greater than or equal to 'min-nodes' %d", pool.Name, max, min)
 							}
 						}
-					}
-				case "nvidia-device-plugin":
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
-					if err != nil {
-						return err
-					}
-					if hasNSeriesSKU && !isValidVersion {
-						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
 				case "aad":
 					if !a.HasAADAdminGroupID() {
@@ -800,14 +752,6 @@ func (a *Properties) validateAddons(isUpdate bool) error {
 						}
 					} else {
 						return errors.Errorf("%s addon is deprecated for new clusters", common.FlannelAddonName)
-					}
-				case "azure-policy":
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.14.0")
-					if err != nil {
-						return err
-					}
-					if !isValidVersion {
-						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.14 and above. Please specify a compatible version")
 					}
 				case common.KubeDNSAddonName:
 					kubeDNSEnabled = true

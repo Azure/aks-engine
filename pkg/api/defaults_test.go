@@ -231,7 +231,7 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
-	kubernetesVersion := "1.16.14"
+	kubernetesVersion := common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
 	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
@@ -3161,15 +3161,8 @@ func TestEnableAggregatedAPIs(t *testing.T) {
 }
 
 func TestCloudControllerManagerEnabled(t *testing.T) {
-	// test that 1.16 defaults to false
-	cs := CreateMockContainerService("testcluster", "1.16.1", 3, 2, false)
-	cs.setOrchestratorDefaults(false, false)
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
-		t.Fatal("expected UseCloudControllerManager to default to false")
-	}
-
 	// test that 1.17 defaults to false
-	cs = CreateMockContainerService("testcluster", "1.17.0", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.17", "", false, false, false), 3, 2, false)
 	cs.setOrchestratorDefaults(false, false)
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
 		t.Fatal("expected UseCloudControllerManager to default to false")
@@ -4255,7 +4248,7 @@ func TestPreserveNodesProperties(t *testing.T) {
 
 func TestUbuntu1804Flags(t *testing.T) {
 	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
-	cs := CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].Distro = AKSUbuntu1804
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -4278,7 +4271,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = Ubuntu1804
 	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -4301,7 +4294,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 			ka["--resolv-conf"])
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].Distro = ""
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows

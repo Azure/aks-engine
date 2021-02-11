@@ -232,7 +232,7 @@ func TestGetLogsInit(t *testing.T) {
 			glc: &getLogsCmd{
 				linuxScriptPath:   "",
 				windowsScriptPath: "",
-				cs:                api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			hasWindows:   true,
 			isSSHEnabled: true,
@@ -243,7 +243,7 @@ func TestGetLogsInit(t *testing.T) {
 			glc: &getLogsCmd{
 				linuxScriptPath:   existingFile,
 				windowsScriptPath: existingFile,
-				cs:                api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			hasWindows:   true,
 			isSSHEnabled: true,
@@ -254,7 +254,7 @@ func TestGetLogsInit(t *testing.T) {
 			glc: &getLogsCmd{
 				linuxScriptPath:   existingFile,
 				windowsScriptPath: existingFile,
-				cs:                api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			hasWindows:   true,
 			isSSHEnabled: false,
@@ -265,7 +265,7 @@ func TestGetLogsInit(t *testing.T) {
 			glc: &getLogsCmd{
 				linuxScriptPath:   existingFile,
 				windowsScriptPath: existingFile,
-				cs:                api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			hasWindows:   false,
 			isSSHEnabled: false,
@@ -276,7 +276,7 @@ func TestGetLogsInit(t *testing.T) {
 			glc: &getLogsCmd{
 				linuxScriptPath:   missingFile,
 				windowsScriptPath: existingFile,
-				cs:                api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			hasWindows:   false,
 			isSSHEnabled: false,
@@ -287,7 +287,7 @@ func TestGetLogsInit(t *testing.T) {
 			glc: &getLogsCmd{
 				linuxScriptPath:   existingFile,
 				windowsScriptPath: missingFile,
-				cs:                api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			hasWindows:   false,
 			isSSHEnabled: false,
@@ -345,7 +345,7 @@ func TestGetLogsGetClusterNodes(t *testing.T) {
 		{
 			glc: &getLogsCmd{
 				controlPlaneOnly: false,
-				cs:               api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:               api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			isWindowsSSHEnabled: true,
 			nodeList:            []string{"k8s-master-22998975-0", "k8s-agentpool1-22998975-0", "windows10"},
@@ -356,7 +356,7 @@ func TestGetLogsGetClusterNodes(t *testing.T) {
 		{
 			glc: &getLogsCmd{
 				controlPlaneOnly: true,
-				cs:               api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:               api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			isWindowsSSHEnabled: true,
 			nodeList:            []string{"k8s-master-22998975-0", "k8s-agentpool1-22998975-0", "windows10"},
@@ -367,7 +367,7 @@ func TestGetLogsGetClusterNodes(t *testing.T) {
 		{
 			glc: &getLogsCmd{
 				controlPlaneOnly: false,
-				cs:               api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:               api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			isWindowsSSHEnabled: false,
 			nodeList:            []string{"k8s-master-22998975-0", "k8s-agentpool1-22998975-0", "windows10"},
@@ -378,7 +378,7 @@ func TestGetLogsGetClusterNodes(t *testing.T) {
 		{
 			glc: &getLogsCmd{
 				controlPlaneOnly: false,
-				cs:               api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:               api.CreateMockContainerService("test", "", 1, 1, false),
 			},
 			isWindowsSSHEnabled: true,
 			nodeList:            []string{"k8s-master-22998975-0", "k8s-agentpool1-22998975-0", "windows10"},
@@ -426,7 +426,7 @@ func TestGetLogsGetClusterNodeScripts(t *testing.T) {
 	}{
 		{
 			glc: &getLogsCmd{
-				cs:                  api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                  api.CreateMockContainerService("test", "", 1, 1, false),
 				linuxVHDScript:      linuxVHDScript,
 				linuxCustomScript:   linuxCustomScript,
 				windowsVHDScript:    windowsVHDScript,
@@ -443,7 +443,7 @@ func TestGetLogsGetClusterNodeScripts(t *testing.T) {
 		},
 		{
 			glc: &getLogsCmd{
-				cs:                  api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:                  api.CreateMockContainerService("test", "", 1, 1, false),
 				linuxVHDScript:      linuxVHDScript,
 				linuxCustomScript:   linuxCustomScript,
 				windowsVHDScript:    windowsVHDScript,
@@ -460,7 +460,7 @@ func TestGetLogsGetClusterNodeScripts(t *testing.T) {
 		},
 		{
 			glc: &getLogsCmd{
-				cs:               api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:               api.CreateMockContainerService("test", "", 1, 1, false),
 				linuxVHDScript:   linuxVHDScript,
 				windowsVHDScript: windowsVHDScript,
 			},
@@ -475,7 +475,7 @@ func TestGetLogsGetClusterNodeScripts(t *testing.T) {
 		},
 		{
 			glc: &getLogsCmd{
-				cs:               api.CreateMockContainerService("test", "1.11.11", 1, 1, false),
+				cs:               api.CreateMockContainerService("test", "", 1, 1, false),
 				linuxVHDScript:   linuxVHDScript,
 				windowsVHDScript: windowsVHDScript,
 			},

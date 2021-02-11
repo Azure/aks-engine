@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -150,14 +151,15 @@ func TestCreateUpgradeCommand(t *testing.T) {
 }
 
 func TestUpgradeShouldFailForSameVersion(t *testing.T) {
+	versionToUse := common.RationalizeReleaseAndVersion(api.Kubernetes, "", "", false, false, false)
 	setupValidVersions(map[string]bool{
-		"1.10.13": true,
+		versionToUse: true,
 	})
 	g := NewGomegaWithT(t)
 	upgradeCmd := &upgradeCmd{
 		resourceGroupName:           "rg",
 		apiModelPath:                "./not/used",
-		upgradeVersion:              "1.10.13",
+		upgradeVersion:              versionToUse,
 		location:                    "centralus",
 		timeoutInMinutes:            60,
 		cordonDrainTimeoutInMinutes: 60,
@@ -165,12 +167,12 @@ func TestUpgradeShouldFailForSameVersion(t *testing.T) {
 		client: &armhelpers.MockAKSEngineClient{},
 	}
 
-	containerServiceMock := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	containerServiceMock := api.CreateMockContainerService("testcluster", versionToUse, 3, 2, false)
 	containerServiceMock.Location = "centralus"
 	upgradeCmd.containerService = containerServiceMock
 	err := upgradeCmd.initialize()
 	g.Expect(err).To(HaveOccurred())
-	g.Expect(err.Error()).To(ContainSubstring("upgrading from Kubernetes version 1.10.13 to version 1.10.13 is not supported"))
+	g.Expect(err.Error()).To(ContainSubstring(fmt.Sprintf("upgrading from Kubernetes version %s to version %s is not supported", versionToUse, versionToUse)))
 	resetValidVersions()
 }
 

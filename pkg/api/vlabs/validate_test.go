@@ -83,7 +83,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.16.14",
+					OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -92,35 +92,11 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "enableAggregatedAPIs requires the enableRbac feature as a prerequisite",
 		},
-		"should error when KubernetesConfig has enableRBAC disabled for >= 1.15": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false, false)),
-					KubernetesConfig: &KubernetesConfig{
-						EnableRbac: &falseVal,
-					},
-				},
-			},
-			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false, false))),
-		},
-		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid version": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.6.9",
-					KubernetesConfig: &KubernetesConfig{
-						EnableDataEncryptionAtRest: &trueVal,
-					},
-				},
-			},
-			expectedError: "enableDataEncryptionAtRest is only available in Kubernetes version 1.7.0 or greater; unable to validate for Kubernetes version 1.6.9",
-		},
 		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid encryption key": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.16.14",
+					OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -129,35 +105,11 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "etcdEncryptionKey must be base64 encoded. Please provide a valid base64 encoded value or leave the etcdEncryptionKey empty to auto-generate the value",
 		},
-		"should error when KubernetesConfig has enableEncryptionWithExternalKms enabled with invalid version": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.6.9",
-					KubernetesConfig: &KubernetesConfig{
-						EnableEncryptionWithExternalKms: &trueVal,
-					},
-				},
-			},
-			expectedError: "enableEncryptionWithExternalKms is only available in Kubernetes version 1.10.0 or greater; unable to validate for Kubernetes version 1.6.9",
-		},
-		"should error when KubernetesConfig has Standard loadBalancerSku with invalid version": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.6.9",
-					KubernetesConfig: &KubernetesConfig{
-						LoadBalancerSku: StandardLoadBalancerSku,
-					},
-				},
-			},
-			expectedError: "loadBalancerSku is only available in Kubernetes version 1.11.0 or greater; unable to validate for Kubernetes version 1.6.9",
-		},
 		"should error when KubernetesConfig has Basic loadBalancerSku with loadBalancerOutboundIPs config": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.15",
+					OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerSku:             BasicLoadBalancerSku,
 						ExcludeMasterFromStandardLB: to.BoolPtr(true),
@@ -171,7 +123,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.15",
+					OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerOutboundIPs: to.IntPtr(17),
 					},
@@ -183,7 +135,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.16.14",
+					OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -220,7 +172,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.16.14",
+					OrchestratorVersion: "v" + common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 				},
 			},
 		},
@@ -2335,20 +2287,6 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorRelease = "1.12"
-	if err := p.validateAddons(false); err == nil {
-		t.Errorf(
-			"should error on azure-policy with k8s < 1.14",
-		)
-	}
-
-	p.OrchestratorProfile.OrchestratorRelease = "1.18"
-	if err := p.validateAddons(false); err != nil {
-		t.Errorf(
-			"should not error on azure-policy with k8s >= 1.14",
-		)
-	}
-
 	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
@@ -2524,32 +2462,6 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			VMSize: "Standard_NC6",
-		},
-	}
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "nvidia-device-plugin",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-	p.OrchestratorProfile.OrchestratorRelease = "1.9"
-	if err := p.validateAddons(false); err == nil {
-		t.Errorf(
-			"should error on nvidia-device-plugin with k8s < 1.10",
-		)
-	}
-
-	p.OrchestratorProfile.OrchestratorRelease = "1.16"
-	if err := p.validateAddons(false); err != nil {
-		t.Errorf(
-			"should not error on nvidia-device-plugin with k8s >= 1.12",
-		)
-	}
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
@@ -3073,7 +2985,7 @@ func TestValidateImageNameAndGroup(t *testing.T) {
 func TestProperties_ValidateManagedIdentity(t *testing.T) {
 	tests := []struct {
 		name                string
-		orchestratorRelease string
+		orchestratorVersion string
 		useManagedIdentity  bool
 		userAssignedID      string
 		masterProfile       MasterProfile
@@ -3082,7 +2994,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 	}{
 		{
 			name:                "use managed identity with master vmas",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
 				DNSPrefix: "dummy",
@@ -3098,7 +3010,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 		},
 		{
 			name:                "use master VMSS with empty user assigned ID",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
@@ -3124,7 +3036,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 			cs.Properties.MasterProfile = &test.masterProfile
 			cs.Properties.MasterProfile.VMSize = "Standard_DS2_v2"
 			cs.Properties.OrchestratorProfile = &OrchestratorProfile{
-				OrchestratorRelease: test.orchestratorRelease,
+				OrchestratorVersion: test.orchestratorVersion,
 				OrchestratorType:    Kubernetes,
 				KubernetesConfig: &KubernetesConfig{
 					UseManagedIdentity: to.BoolPtr(test.useManagedIdentity),
@@ -3146,7 +3058,6 @@ func TestMasterProfileValidate(t *testing.T) {
 		name                string
 		orchestratorType    string
 		orchestratorVersion string
-		orchestratorRelease string
 		useInstanceMetadata bool
 		masterProfile       MasterProfile
 		agentPoolProfiles   []*AgentPoolProfile
@@ -3189,7 +3100,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and storage account",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -3201,7 +3112,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and agent profiles with VMAS",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -3262,7 +3173,6 @@ func TestMasterProfileValidate(t *testing.T) {
 			cs.Properties.OrchestratorProfile = &OrchestratorProfile{
 				OrchestratorType:    test.orchestratorType,
 				OrchestratorVersion: test.orchestratorVersion,
-				OrchestratorRelease: test.orchestratorRelease,
 				KubernetesConfig: &KubernetesConfig{
 					UseInstanceMetadata: to.BoolPtr(test.useInstanceMetadata),
 				},
@@ -3280,7 +3190,7 @@ func TestMasterProfileValidate(t *testing.T) {
 func TestProperties_ValidateZones(t *testing.T) {
 	tests := []struct {
 		name                        string
-		orchestratorRelease         string
+		orchestratorVersion         string
 		loadBalancerSku             string
 		excludeMasterFromStandardLB bool
 		masterProfile               *MasterProfile
@@ -3290,7 +3200,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 	}{
 		{
 			name:                "Agent profile with zones vmas",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -3312,7 +3222,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "Master profile with zones and Agent profile without zones",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -3333,7 +3243,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "Master profile without zones and Agent profile with zones",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			masterProfile: &MasterProfile{
 				Count:               3,
 				DNSPrefix:           "foo",
@@ -3354,7 +3264,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "all zones and basic loadbalancer",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               5,
@@ -3377,7 +3287,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                        "all zones with standard loadbalancer and false excludeMasterFromStandardLB",
-			orchestratorRelease:         "1.16",
+			orchestratorVersion:         common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:             StandardLoadBalancerSku,
 			excludeMasterFromStandardLB: false,
 			masterProfile: &MasterProfile{
@@ -3408,7 +3318,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 			cs := getK8sDefaultContainerService(true)
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentProfiles
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = test.orchestratorVersion
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 				LoadBalancerSku:             test.loadBalancerSku,
 				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
@@ -3579,7 +3489,7 @@ func ExampleProperties_validateZones() {
 func TestProperties_ValidateLoadBalancer(t *testing.T) {
 	tests := []struct {
 		name                        string
-		orchestratorRelease         string
+		orchestratorVersion         string
 		loadBalancerSku             string
 		masterProfile               *MasterProfile
 		agentProfiles               []*AgentPoolProfile
@@ -3589,7 +3499,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 	}{
 		{
 			name:                "lowercase basic LB",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     "basic",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3609,7 +3519,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Basic LB",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3620,7 +3530,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "lowercase standard LB",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     "standard",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3631,7 +3541,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Standard LB without master excluded",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     StandardLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3644,7 +3554,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Standard LB",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     StandardLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3656,7 +3566,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "empty string LB value",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     "",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3667,7 +3577,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "invalid LB string value",
-			orchestratorRelease: "1.16",
+			orchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 			loadBalancerSku:     "foo",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3687,7 +3597,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 			cs := getK8sDefaultContainerService(true)
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentProfiles
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = test.orchestratorRelease
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = test.orchestratorVersion
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 				LoadBalancerSku:             test.loadBalancerSku,
 				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
@@ -3774,7 +3684,7 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.16"
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
@@ -4063,7 +3973,7 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.16"
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
@@ -4683,7 +4593,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.16.14",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							UseInstanceMetadata: to.BoolPtr(trueVal),
 						},
@@ -4704,7 +4614,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.16.14",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024",
 						},
@@ -4725,7 +4635,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.16.14",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024GB",
 						},
@@ -4746,7 +4656,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.16.14",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
@@ -4772,7 +4682,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.16.14",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
@@ -4838,7 +4748,7 @@ func TestValidateAcceleratedNetworkingEnabledWindows(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.16.14",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{

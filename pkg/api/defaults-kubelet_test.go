@@ -171,7 +171,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		}
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.8.6", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	// TODO test all default overrides
 	overrideVal := "/etc/override"
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
@@ -186,7 +186,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		}
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.16.0", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.setKubeletConfig(false)
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expectedKeys := []string{
@@ -245,7 +245,7 @@ func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
 }
 
 func TestKubeletConfigAzureStackDefaults(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false), 3, 2, false)
 	cs.Properties.CustomCloudProfile = &CustomCloudProfile{}
 	winProfile := &AgentPoolProfile{}
 	winProfile.Count = 1
@@ -362,7 +362,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		}
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.8.6", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	// TODO test all default overrides
 	overrideVal := "/etc/override"
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
@@ -377,7 +377,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		}
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.16.0", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expectedKeys := []string{
@@ -391,7 +391,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 }
 
 func TestKubeletConfigDefaultsRemovals(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false), 3, 2, false)
 	poolProfile := &AgentPoolProfile{}
 	poolProfile.Count = 1
 	poolProfile.Name = "agentpool2"
@@ -409,7 +409,7 @@ func TestKubeletConfigDefaultsRemovals(t *testing.T) {
 				key)
 		}
 	}
-	cs = CreateMockContainerService("testcluster", "1.16.0-beta.1", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, poolProfile)
 	cs.setKubeletConfig(false)
 	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
@@ -549,7 +549,7 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	}
 
 	// Test default (EnableSecureKubelet = false) for Windows
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 1, false)
 	p := GetK8sDefaultProperties(true)
 	cs.Properties = p
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
@@ -566,7 +566,7 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	}
 
 	// Test explicit EnableSecureKubelet = false for Windows
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 1, false)
 	p = GetK8sDefaultProperties(true)
 	cs.Properties = p
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(false)
@@ -583,7 +583,7 @@ func TestKubeletConfigEnableSecureKubelet(t *testing.T) {
 	}
 
 	// Test EnableSecureKubelet = true for Windows
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 1, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 1, false)
 	p = GetK8sDefaultProperties(true)
 	cs.Properties = p
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableSecureKubelet = to.BoolPtr(true)
@@ -712,7 +712,7 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 
 func TestEnforceNodeAllocatable(t *testing.T) {
 	// Validate default
-	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--enforce-node-allocatable"] != "pods" {
@@ -721,7 +721,7 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 	}
 
 	// Validate that --enforce-node-allocatable is overridable
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		KubeletConfig: map[string]string{
 			"--enforce-node-allocatable": "kube-reserved/system-reserved",
@@ -737,7 +737,7 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 
 func TestProtectKernelDefaults(t *testing.T) {
 	// Validate default
-	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	_, err := cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
@@ -761,7 +761,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	for _, distro := range DistroValues {
 		switch distro {
 		case AKSUbuntu1604, AKSUbuntu1804:
-			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+			cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
 			_, err = cs.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -785,7 +785,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 
 		// Validate that --protect-kernel-defaults is not enabled for relevant distros
 		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, ACC1604, Flatcar:
-			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+			cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 			if distro == Flatcar {
 				cs.Properties.MasterProfile.Distro = Ubuntu1804
 			} else {
@@ -814,7 +814,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	}
 
 	// Validate that --protect-kernel-defaults is not enabled for Windows
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows
 	_, err = cs.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -840,7 +840,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	for _, distro := range DistroValues {
 		switch distro {
 		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804:
-			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+			cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
@@ -967,7 +967,7 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	}
 
 	// test user-overrides
-	cs = CreateMockContainerService("testcluster", "1.20.0", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	k["--feature-gates"] = "DynamicKubeletConfig=true,ExecProbeTimeout=true"
 	cs.setKubeletConfig(false)

@@ -6,8 +6,6 @@ package api
 import (
 	"strconv"
 	"strings"
-
-	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 func (cs *ContainerService) setCloudControllerManagerConfig() {
@@ -32,11 +30,8 @@ func (cs *ContainerService) setCloudControllerManagerConfig() {
 		"--v":                           "2",
 	}
 
-	// Add new arguments for Azure cloud-controller-manager component.
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		// Disable cloud-node controller
-		staticCloudControllerManagerConfig["--controllers"] = "*,-cloud-node"
-	}
+	// Disable cloud-node controller
+	staticCloudControllerManagerConfig["--controllers"] = "*,-cloud-node"
 
 	// Set --cluster-name based on appropriate DNS prefix
 	if cs.Properties.MasterProfile != nil {

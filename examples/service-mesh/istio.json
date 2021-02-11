@@ -2,7 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorRelease": "1.17",
       "kubernetesConfig": {
         "apiServerConfig": {
           "--service-account-api-audiences": "api,istio-ca",

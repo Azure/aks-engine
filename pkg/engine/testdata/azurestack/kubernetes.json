@@ -3,7 +3,6 @@
     "location": "local",
     "properties": {
         "orchestratorProfile": {
-            "orchestratorRelease": "1.16",
             "kubernetesConfig": {
                 "kubernetesImageBase": "k8s.gcr.io/",
                 "useInstanceMetadata": false,

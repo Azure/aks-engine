@@ -18,7 +18,7 @@ import (
 
 func TestWriteTLSArtifacts(t *testing.T) {
 
-	cs := api.CreateMockContainerService("testcluster", "1.7.12", 1, 2, true)
+	cs := api.CreateMockContainerService("testcluster", "", 1, 2, true)
 	writer := &ArtifactWriter{
 		Translator: &i18n.Translator{
 			Locale: nil,
@@ -76,7 +76,7 @@ func TestWriteTLSArtifacts(t *testing.T) {
 	os.RemoveAll(defaultDir)
 
 	// Generate files with custom cloud profile in configuration
-	csCustom := api.CreateMockContainerService("testcluster", "1.11.6", 1, 2, false)
+	csCustom := api.CreateMockContainerService("testcluster", "", 1, 2, false)
 	csCustom.Location = "customlocation"
 	csCustom.Properties.CustomCloudProfile = &api.CustomCloudProfile{
 		Environment: &azure.Environment{
