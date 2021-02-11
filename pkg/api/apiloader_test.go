@@ -46,7 +46,6 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.16",
 				"kubernetesConfig": {
 					"kubernetesImageBase": "msazurestackqa/",
 					"useInstanceMetadata": false,
@@ -136,7 +135,6 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.16",
 				"kubernetesConfig": {
 					"kubernetesImageBase": "msazurestackqa/",
 					"useInstanceMetadata": false,

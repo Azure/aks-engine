@@ -4,6 +4,9 @@
 package common
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -668,11 +671,19 @@ func Test_IsSupportedKubernetesVersion(t *testing.T) {
 }
 
 func Test_IsValidMinVersion(t *testing.T) {
-	orchestratorRelease := "1.16"
+	defaultVersion := RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
+	verSlice := strings.Split(defaultVersion, ".")
+	minorVersionInt, err := strconv.Atoi(verSlice[1])
+	if err != nil {
+		t.Errorf("unexpected error during string to int conversion")
+	}
+	orchestratorRelease := verSlice[0] + "." + verSlice[1]
+	orchestratorReleaseNext := verSlice[0] + "." + strconv.Itoa(minorVersionInt+1)
+	orchestratorReleasePrior := verSlice[0] + "." + strconv.Itoa(minorVersionInt-1)
 	orchestratorVersion := ""
 
 	t.Run("Minimum version is valid", func(t *testing.T) {
-		minVersion := "1.16.0"
+		minVersion := orchestratorRelease + ".0"
 		_, err := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
 		if err != nil {
 			t.Errorf("version should be valid: %v", err)
@@ -680,7 +691,7 @@ func Test_IsValidMinVersion(t *testing.T) {
 	})
 
 	t.Run("Minimum version is invalid", func(t *testing.T) {
-		minVersion := "v1.16.0"
+		minVersion := "v" + orchestratorRelease + ".0"
 		_, err := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
 		if err == nil {
 			t.Errorf("version should be invalid: %v", err)
@@ -688,7 +699,7 @@ func Test_IsValidMinVersion(t *testing.T) {
 	})
 
 	t.Run("Kubernetes release is higher than required version", func(t *testing.T) {
-		minVersion := "1.13.0"
+		minVersion := orchestratorReleasePrior + ".0"
 		isValidVersion, _ := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
 		if !isValidVersion {
 			t.Errorf("minimum version should be valid")
@@ -696,7 +707,7 @@ func Test_IsValidMinVersion(t *testing.T) {
 	})
 
 	t.Run("Kubernetes release is lower than minimum required version", func(t *testing.T) {
-		minVersion := "1.17.0"
+		minVersion := orchestratorReleaseNext + ".0"
 		isValidVersion, _ := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
 		if isValidVersion {
 			t.Errorf("version should be not valid")
@@ -704,8 +715,10 @@ func Test_IsValidMinVersion(t *testing.T) {
 	})
 
 	t.Run("Kubernetes version is higher than required version", func(t *testing.T) {
-		orchestratorVersion = "1.16.14"
-		minVersion := "1.13.0"
+		orchestratorVersion = defaultVersion
+		minVersion := orchestratorReleasePrior + ".0"
+		fmt.Println(orchestratorVersion)
+		fmt.Println(minVersion)
 		isValidVersion, _ := IsValidMinVersion(Kubernetes, "", orchestratorVersion, minVersion)
 		if !isValidVersion {
 			t.Errorf("minimum version should be valid")
@@ -713,8 +726,8 @@ func Test_IsValidMinVersion(t *testing.T) {
 	})
 
 	t.Run("Kubernetes version is lower than minimum required version", func(t *testing.T) {
-		orchestratorVersion = "1.15.2"
-		minVersion := "1.15.4"
+		orchestratorVersion = orchestratorRelease + ".2"
+		minVersion := orchestratorRelease + ".4"
 		isValidVersion, _ := IsValidMinVersion(Kubernetes, "", orchestratorVersion, minVersion)
 		if isValidVersion {
 			t.Errorf("version should be not valid")

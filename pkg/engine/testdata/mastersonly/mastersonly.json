@@ -1,9 +1,6 @@
 {
     "apiVersion": "vlabs",
     "properties": {
-        "orchestratorProfile": {
-            "orchestratorRelease": "1.16"
-        },
         "masterProfile": {
             "count": 3,
             "dnsPrefix": "prefix",

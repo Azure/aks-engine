@@ -2,7 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorRelease": "1.16",
       "kubernetesConfig": {
         "useManagedIdentity": true,
         "userAssignedID": "aksenginetestid"

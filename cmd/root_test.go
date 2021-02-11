@@ -587,7 +587,7 @@ func TestWriteArtifacts(t *testing.T) {
 	t.Parallel()
 	g := NewGomegaWithT(t)
 
-	cs := api.CreateMockContainerService("testcluster", "1.16.14", 3, 2, false)
+	cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
