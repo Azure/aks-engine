@@ -9614,7 +9614,7 @@ func k8sAddonsKubeProxyYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubernetesDashboardYaml = []byte(`
+var _k8sAddonsKubernetesDashboardYaml = []byte(`{{- /* Note: dashboard addon is deprecated */}}
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -12197,7 +12197,7 @@ ensureKubelet() {
 }
 
 ensureAddons() {
-{{- if IsDashboardAddonEnabled}}
+{{- if IsDashboardAddonEnabled}} {{/* Note: dashboard addon is deprecated */}}
   retrycmd 120 5 30 $KUBECTL get namespace kubernetes-dashboard || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
 {{- end}}
 {{- if IsAzurePolicyAddonEnabled}}
@@ -15491,7 +15491,7 @@ MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
 
-{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}}
+{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}} {{/* Note: dashboard addon is deprecated */}}
 - path: /etc/kubernetes/addons/init/namespaces.yaml
   permissions: "0644"
   owner: root

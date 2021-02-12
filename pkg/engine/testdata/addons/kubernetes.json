@@ -11,10 +11,6 @@
             "enabled": false
           },
           {
-            "name": "kubernetes-dashboard",
-            "enabled": false
-          },
-          {
             "name": "cluster-autoscaler",
             "enabled": true,
             "containers": [

@@ -528,11 +528,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "dashboard disabled",
-			apiModelPath: "../examples/kubernetes-config/kubernetes-no-dashboard.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "private cluster single master",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-private-cluster-single-master.json",
 			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},

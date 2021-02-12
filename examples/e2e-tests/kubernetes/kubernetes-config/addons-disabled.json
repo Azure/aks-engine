@@ -21,10 +21,6 @@
             "enabled": false
           },
           {
-            "name": "kubernetes-dashboard",
-            "enabled": false
-          },
-          {
             "name": "nvidia-device-plugin",
             "enabled": false
           },

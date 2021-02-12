@@ -108,7 +108,7 @@ $ aks-engine get-versions
 | Name of addon                                                                                             | Enabled by default?                                                                                                                                                                                        | How many pods                   | Description                                                                                                                                                                                                                                                              |
 | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | tiller                                                                                                    | false                                                                                                                                                                                                      | 1                               | Delivers the Helm server-side component: tiller. See https://github.com/kubernetes/helm for more info                                                                                                                                                                    |
-| kubernetes-dashboard                                                                                      | true                                                                                                                                                                                                       | 1                               | Delivers the Kubernetes Dashboard component. See https://github.com/kubernetes/dashboard for more info                                                                                                                                                                   |
+| kubernetes-dashboard                                                                                      | false                                                                                                                                                                                                       | 1                               | Deprecated. We recommend installing dashboard manually, see: https://github.com/kubernetes/dashboard for more info.                                                                                                                                                                   |
 | rescheduler                                                                                               | false                                                                                                                                                                                                      | 1                               | Deprecated, no longer available after aks-engine v0.60.0.                                                                                                                                                                                                                            |
 | [cluster-autoscaler](../../examples/addons/cluster-autoscaler/README.md)                                  | false                                                                                                                                                                                                      | 1                               | Delivers the Kubernetes cluster autoscaler component. See https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure for more info; only supported for VMSS clusters on the first agent pool.                                           |
 | [nvidia-device-plugin](../../examples/addons/nvidia-device-plugin/README.md)                              | true if using a Kubernetes cluster with an N-series agent pool                                                                                                                                             | 1                               | Delivers the Kubernetes NVIDIA device plugin component. See https://github.com/NVIDIA/k8s-device-plugin for more info                                                                                                                                                    |
@@ -149,72 +149,35 @@ To enable an addon (using "tiller" as an example):
 }
 ```
 
-As you can see above, `addons` is an array child property of `kubernetesConfig`. Each addon that you want to add custom configuration to would be represented as an object item in the array. For example, to disable both tiller and dashboard:
+As you can see above, `addons` is an array child property of `kubernetesConfig`. Each addon that you want to add custom configuration to would be represented as an object item in the array. For example, to disable the "azuredisk-csi-driver" addon:
 
 ```json
 "kubernetesConfig": {
     "addons": [
         {
-            "name": "tiller",
-            "enabled" : false
-        },
-        {
-            "name": "kubernetes-dashboard",
+            "name": "azuredisk-csi-driver",
             "enabled" : false
         }
     ]
 }
 ```
 
-More usefully, let's add some custom configuration to the above addons:
+More usefully, let's add some custom configuration to an addon. The example below customizes the "cluster-autoscaler" addon:
 
 ```json
 "kubernetesConfig": {
     "addons": [
-        {
-            "name": "tiller",
-            "enabled": true,
-            "containers": [
-                {
-                  "name": "tiller",
-                  "image": "myDockerHubUser/tiller:v3.0.0-alpha",
-                  "cpuRequests": "1",
-                  "memoryRequests": "1024Mi",
-                  "cpuLimits": "1",
-                  "memoryLimits": "1024Mi"
-                }
-              ]
-        },
-        {
-            "name": "kubernetes-dashboard",
-            "enabled": true,
-            "containers": [
-                {
-                  "name": "kubernetes-dashboard",
-                  "cpuRequests": "50m",
-                  "memoryRequests": "512Mi",
-                  "cpuLimits": "50m",
-                  "memoryLimits": "512Mi"
-                },
-                {
-                  "name": "kubernetes-dashboard-metrics-scraper",
-                  "cpuRequests": "50m",
-                  "memoryRequests": "512Mi",
-                  "cpuLimits": "50m",
-                  "memoryLimits": "512Mi"
-                }
-              ]
-        },
         {
             "name": "cluster-autoscaler",
             "enabled": true,
             "containers": [
               {
                 "name": "cluster-autoscaler",
-                "cpuRequests": "100m",
-                "memoryRequests": "300Mi",
-                "cpuLimits": "100m",
-                "memoryLimits": "300Mi"
+                "image": "myDockerHubUser/cluster-autoscaler:v1.20.1-alpha",
+                "cpuRequests": "500m",
+                "memoryRequests": "800Mi",
+                "cpuLimits": "500m",
+                "memoryLimits": "800Mi"
               }
             ],
             "config": {
@@ -227,7 +190,7 @@ More usefully, let's add some custom configuration to the above addons:
 }
 ```
 
-Above you see custom configuration for both tiller and kubernetes-dashboard. Both include specific resource limit values across the following dimensions:
+The above example includes specific resource limit values across the following dimensions:
 
 - cpuRequests
 - memoryRequests
@@ -236,7 +199,7 @@ Above you see custom configuration for both tiller and kubernetes-dashboard. Bot
 
 See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for more on Kubernetes resource limits.
 
-Additionally above, we specified a custom docker image for tiller, let's say we want to build a cluster and test an alpha version of tiller in it. **Important note!** customizing the image is not sticky across upgrade/scale, to ensure that AKS Engine always delivers a version-curated, known-working addon when moving a cluster to a new version. Considering all that, providing a custom image reference for an addon configuration should be considered for testing/development, but not for a production cluster. If you'd like to entirely customize one of the addons available, including across scale/upgrade operations, you may include in an addon's spec a base64-encoded string of a Kubernetes yaml manifest. E.g.,
+Additionally above, we specified a custom docker image to use, let's say we want to build a cluster and test an alpha version of cluster-autoscaler in it. **Important note!** customizing the image is not sticky across upgrade/scale, to ensure that AKS Engine always delivers a version-curated, known-working addon when moving a cluster to a new version. Considering all that, providing a custom image reference for an addon configuration should be considered for testing/development, but not for a production cluster. If you'd like to entirely customize one of the addons available, including across scale/upgrade operations, you may include in an addon's spec a base64-encoded string of a Kubernetes yaml manifest. E.g.,
 
 ```json
 "kubernetesConfig": {

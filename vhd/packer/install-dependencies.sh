@@ -126,24 +126,6 @@ echo "  - img" >> ${VHD_LOGS_FILEPATH}
 systemctl status docker --no-pager || exit 1
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
-DASHBOARD_VERSIONS="
-2.0.4
-"
-for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/dashboard:v${DASHBOARD_VERSION}"
-    loadContainerImage ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
-DASHBOARD_METRICS_SCRAPER_VERSIONS="
-1.0.4
-"
-for DASHBOARD_METRICS_SCRAPER_VERSION in ${DASHBOARD_METRICS_SCRAPER_VERSIONS}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-scraper:v${DASHBOARD_METRICS_SCRAPER_VERSION}"
-    loadContainerImage ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 METRICS_SERVER_VERSIONS="
 0.3.7
 "

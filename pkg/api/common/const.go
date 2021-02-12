@@ -85,10 +85,10 @@ const (
 	SMBFlexVolumeAddonName = "smb-flexvolume"
 	// KeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DashboardAddonName = "kubernetes-dashboard"
+	// DashboardAddonName // Deprecated
+	DashboardAddonName = "kubernetes-dashboard" // Deprecated
 	// DashboardMetricsScraperContainerName is the name of the metrics-scraper container in the kubernetes-dashboard addon
-	DashboardMetricsScraperContainerName = "kubernetes-dashboard-metrics-scraper"
+	DashboardMetricsScraperContainerName = "kubernetes-dashboard-metrics-scraper" // Deprecated
 	// ReschedulerAddonName // Deprecated
 	ReschedulerAddonName = "rescheduler" // Deprecated
 	// ExecHealthZComponentName is the name of the exechealthz component

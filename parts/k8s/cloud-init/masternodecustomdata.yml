@@ -405,7 +405,7 @@ MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
 
-{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}}
+{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}} {{/* Note: dashboard addon is deprecated */}}
 - path: /etc/kubernetes/addons/init/namespaces.yaml
   permissions: "0644"
   owner: root
