@@ -2078,11 +2078,6 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	}
 }
 
-// IsReschedulerEnabled checks if the rescheduler addon is enabled
-func (k *KubernetesConfig) IsReschedulerEnabled() bool {
-	return k.IsAddonEnabled(common.ReschedulerAddonName)
-}
-
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning
 func (k *KubernetesConfig) PrivateJumpboxProvision() bool {
 	if k != nil && k.PrivateCluster != nil && *k.PrivateCluster.Enabled && k.PrivateCluster.JumpboxProfile != nil {

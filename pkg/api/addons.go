@@ -212,21 +212,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
-	defaultReschedulerAddonsConfig := KubernetesAddon{
-		Name:    common.ReschedulerAddonName,
-		Enabled: to.BoolPtr(DefaultReschedulerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.ReschedulerAddonName,
-				CPURequests:    "10m",
-				MemoryRequests: "100Mi",
-				CPULimits:      "10m",
-				MemoryLimits:   "100Mi",
-				Image:          kubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
-			},
-		},
-	}
-
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    common.MetricsServerAddonName,
 		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled),
@@ -909,7 +894,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultSMBFlexVolumeAddonsConfig,
 		defaultKeyVaultFlexVolumeAddonsConfig,
 		defaultDashboardAddonsConfig,
-		defaultReschedulerAddonsConfig,
 		defaultMetricsServerAddonsConfig,
 		defaultNVIDIADevicePluginAddonsConfig,
 		defaultContainerMonitoringAddonsConfig,

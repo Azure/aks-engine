@@ -161,7 +161,6 @@ The list below includes the addons currently unsupported on Azure Stack Hub:
 * Cluster Autoscaler
 * KeyVault Flex Volume
 * NVIDIA Device Plugin
-* Rescheduler
 * SMB Flex Volume
 
 ### Limited Number of Frontend Public IPs

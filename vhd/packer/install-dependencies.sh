@@ -200,15 +200,6 @@ for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-RESCHEDULER_VERSIONS="
-0.4.0
-"
-for RESCHEDULER_VERSION in ${RESCHEDULER_VERSIONS}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/rescheduler:v${RESCHEDULER_VERSION}"
-    loadContainerImage ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 VIRTUAL_KUBELET_VERSIONS="1.2.1.2"
 for VIRTUAL_KUBELET_VERSION in ${VIRTUAL_KUBELET_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/virtual-kubelet/virtual-kubelet:${VIRTUAL_KUBELET_VERSION}"

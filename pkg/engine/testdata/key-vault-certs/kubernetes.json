@@ -136,20 +136,6 @@
             ]
           },
           {
-            "name": "rescheduler",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "rescheduler",
-                "image": "k8s.gcr.io/rescheduler:v0.4.0",
-                "cpuRequests": "10m",
-                "memoryRequests": "100Mi",
-                "cpuLimits": "10m",
-                "memoryLimits": "100Mi"
-              }
-            ]
-          },
-          {
             "name": "metrics-server",
             "enabled": true,
             "containers": [

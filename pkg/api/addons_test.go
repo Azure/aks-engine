@@ -1448,49 +1448,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.15.4"),
 		},
 		{
-			name: "rescheduler addon enabled",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
-							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-							Addons: []KubernetesAddon{
-								{
-									Name:    common.ReschedulerAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.ReschedulerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.ReschedulerAddonName,
-							CPURequests:    "10m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "10m",
-							MemoryLimits:   "100Mi",
-							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
-						},
-					},
-				},
-			}, "1.15.4"),
-		},
-		{
 			name: "nvidia addon enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -4570,7 +4527,6 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.SMBFlexVolumeAddonName,
 				common.KeyVaultFlexVolumeAddonName,
 				common.DashboardAddonName,
-				common.ReschedulerAddonName,
 				common.MetricsServerAddonName,
 				common.NVIDIADevicePluginAddonName,
 				common.ContainerMonitoringAddonName,

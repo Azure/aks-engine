@@ -3386,37 +3386,6 @@ func TestAgentPoolIsNSeriesSKU(t *testing.T) {
 	}
 }
 
-func TestIsReschedulerEnabled(t *testing.T) {
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsReschedulerEnabled()
-	enabledDefault := DefaultReschedulerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return %t when no rescheduler addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	c.Addons = append(c.Addons, getMockAddon(common.ReschedulerAddonName))
-	enabled = c.IsReschedulerEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return true when a custom rescheduler addon has been specified, instead returned %t", enabled)
-	}
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    common.ReschedulerAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsReschedulerEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return false when a custom rescheduler addon has been specified as enabled, instead returned %t", enabled)
-	}
-}
-
 func TestIsIPMasqAgentEnabled(t *testing.T) {
 	cases := []struct {
 		p                                            Properties

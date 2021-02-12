@@ -130,11 +130,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.DashboardAddonName),
 			destinationFile: dashboardAddonDestinationFilename,
 		},
-		common.ReschedulerAddonName: {
-			sourceFile:      reschedulerAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.ReschedulerAddonName),
-			destinationFile: reschedulerAddonDestinationFilename,
-		},
 		common.NVIDIADevicePluginAddonName: {
 			sourceFile:      nvidiaAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.NVIDIADevicePluginAddonName),

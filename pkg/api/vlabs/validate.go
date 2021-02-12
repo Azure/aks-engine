@@ -766,6 +766,11 @@ func (a *Properties) validateAddons(isUpdate bool) error {
 					if err := addon.validateArcAddonConfig(); err != nil {
 						return err
 					}
+				case common.ReschedulerAddonName:
+					if isUpdate {
+						log.Warnf("The rescheduler addon has been deprecated and disabled, it will be removed during this update")
+					}
+					return errors.Errorf("The rescheduler addon has been deprecated and disabled, please remove it from your cluster configuration before creating a new cluster")
 				}
 			} else {
 				// Validation for addons if they are disabled

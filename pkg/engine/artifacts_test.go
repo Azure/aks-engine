@@ -30,7 +30,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedSMBFlexVolume          kubernetesComponentFileSpec
 		expectedKeyVaultFlexVolume     kubernetesComponentFileSpec
 		expectedDashboard              kubernetesComponentFileSpec
-		expectedRescheduler            kubernetesComponentFileSpec
 		expectedNvidia                 kubernetesComponentFileSpec
 		expectedContainerMonitoring    kubernetesComponentFileSpec
 		expectedIPMasqAgent            kubernetesComponentFileSpec
@@ -103,10 +102,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.DashboardAddonName,
-								Data: base64Data,
-							},
-							{
-								Name: common.ReschedulerAddonName,
 								Data: base64Data,
 							},
 							{
@@ -247,11 +242,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      dashboardAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: dashboardAddonDestinationFilename,
-			},
-			expectedRescheduler: kubernetesComponentFileSpec{
-				sourceFile:      reschedulerAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: reschedulerAddonDestinationFilename,
 			},
 			expectedNvidia: kubernetesComponentFileSpec{
 				sourceFile:      nvidiaAddonSourceFilename,
@@ -396,9 +386,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.DashboardAddonName,
 							},
 							{
-								Name: common.ReschedulerAddonName,
-							},
-							{
 								Name: common.NVIDIADevicePluginAddonName,
 							},
 							{
@@ -516,11 +503,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      dashboardAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: dashboardAddonDestinationFilename,
-			},
-			expectedRescheduler: kubernetesComponentFileSpec{
-				sourceFile:      reschedulerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: reschedulerAddonDestinationFilename,
 			},
 			expectedNvidia: kubernetesComponentFileSpec{
 				sourceFile:      nvidiaAddonSourceFilename,
@@ -680,11 +662,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      dashboardAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: dashboardAddonDestinationFilename,
-			},
-			expectedRescheduler: kubernetesComponentFileSpec{
-				sourceFile:      reschedulerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: reschedulerAddonDestinationFilename,
 			},
 			expectedNvidia: kubernetesComponentFileSpec{
 				sourceFile:      nvidiaAddonSourceFilename,
@@ -905,16 +882,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedDashboard.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedDashboard.destinationFile)
-					}
-				case common.ReschedulerAddonName:
-					if c.expectedRescheduler.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedRescheduler.sourceFile)
-					}
-					if c.expectedRescheduler.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedRescheduler.base64Data)
-					}
-					if c.expectedRescheduler.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedRescheduler.destinationFile)
 					}
 				case common.NVIDIADevicePluginAddonName:
 					if c.expectedNvidia.sourceFile != componentFileSpec[addon].sourceFile {
