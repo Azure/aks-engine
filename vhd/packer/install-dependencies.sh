@@ -174,7 +174,7 @@ for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-MCR_PAUSE_VERSIONS="1.4.0"
+MCR_PAUSE_VERSIONS="1.4.1"
 for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
     # Pull the arch independent MCR pause image which is built for Linux and Windows
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/pause:${PAUSE_VERSION}"
