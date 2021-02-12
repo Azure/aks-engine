@@ -16,7 +16,7 @@ import (
 // The bool value indicates if creating new clusters with this version is allowed
 var AllKubernetesSupportedVersions = map[string]bool{
 	"1.6.6":          false,
-	"1.6.9":          true, // need to keep 1.6.9 version support for v20160930
+	"1.6.9":          false,
 	"1.6.11":         false,
 	"1.6.12":         false,
 	"1.6.13":         false,
@@ -246,7 +246,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.20.0":         false,
 	"1.20.1":         false,
 	"1.20.2":         true,
-	"1.21.0-alpha.1": true,
+	"1.21.0-alpha.1": false,
 	"1.21.0-alpha.2": false, // disabled, see https://github.com/kubernetes/kubernetes/issues/98419
 	"1.21.0-alpha.3": true,
 }
