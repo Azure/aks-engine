@@ -510,7 +510,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
     [plugins."io.containerd.grpc.v1.cri".containerd]
       default_runtime_name = "runc"
@@ -527,7 +527,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
     [plugins."io.containerd.grpc.v1.cri".containerd]
       default_runtime_name = "runc"
@@ -543,7 +543,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
       conf_template = "/etc/containerd/kubenet_template.conf"
     [plugins."io.containerd.grpc.v1.cri".containerd]
@@ -561,7 +561,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
       conf_template = "/etc/containerd/kubenet_template.conf"
     [plugins."io.containerd.grpc.v1.cri".containerd]
