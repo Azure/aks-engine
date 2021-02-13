@@ -9,10 +9,6 @@
             "enabled": true
           },
           {
-            "name": "aci-connector",
-            "enabled": true
-          },
-          {
             "name": "blobfuse-flexvolume",
             "enabled": true
           },

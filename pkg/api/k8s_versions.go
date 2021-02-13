@@ -54,7 +54,7 @@ const (
 	KubeRBACProxyImageReference                       string = "gcr.io/kubebuilder/kube-rbac-proxy:v0.4.0"
 	ScheduledMaintenanceManagerImageReference         string = "quay.io/awesomenix/drainsafe-manager:latest"
 	nvidiaDevicePluginImageReference                  string = "oss/nvidia/k8s-device-plugin:1.0.0-beta6"
-	virtualKubeletImageReference                      string = "virtual-kubelet:1.2.1.2"
+	virtualKubeletImageReference                      string = "virtual-kubelet:1.2.1.2" // Deprecated
 	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.8"
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
 	csiSecretsStoreProviderAzureImageReference        string = "oss/azure/secrets-store/provider-azure:0.0.12"

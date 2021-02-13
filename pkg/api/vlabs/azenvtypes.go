@@ -17,7 +17,7 @@ type KubernetesSpecConfig struct {
 	KubernetesImageBase                  string `json:"kubernetesImageBase,omitempty"`
 	MCRKubernetesImageBase               string `json:"mcrKubernetesImageBase,omitempty"`
 	TillerImageBase                      string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase                string `json:"aciConnectorImageBase,omitempty"`
+	ACIConnectorImageBase                string `json:"aciConnectorImageBase,omitempty"` // Deprecated
 	NVIDIAImageBase                      string `json:"nvidiaImageBase,omitempty"`
 	AzureCNIImageBase                    string `json:"azureCNIImageBase,omitempty"`
 	CalicoImageBase                      string `json:"calicoImageBase,omitempty"`

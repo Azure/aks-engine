@@ -189,12 +189,6 @@
       "type": "bool"
     },
 {{end}}
-    "kubernetesACIConnectorEnabled": {
-      "metadata": {
-        "description": "ACI Connector Status"
-      },
-      "type": "bool"
-    },
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {

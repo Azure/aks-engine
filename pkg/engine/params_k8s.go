@@ -34,11 +34,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesAADPodIdentityEnabled", to.Bool(aadPodIdentityAddon.Enabled))
 			}
 		}
-		if kubernetesConfig.IsAddonEnabled(common.ACIConnectorAddonName) {
-			addValue(parametersMap, "kubernetesACIConnectorEnabled", true)
-		} else {
-			addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
-		}
 		addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 			CloudProviderBackoffMode:          kubernetesConfig.CloudProviderBackoffMode,
 			CloudProviderBackoff:              kubernetesConfig.CloudProviderBackoff,

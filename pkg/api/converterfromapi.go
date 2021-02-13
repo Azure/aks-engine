@@ -720,7 +720,6 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		KubernetesImageBase:                  api.KubernetesSpecConfig.KubernetesImageBase,
 		MCRKubernetesImageBase:               api.KubernetesSpecConfig.MCRKubernetesImageBase,
 		TillerImageBase:                      api.KubernetesSpecConfig.TillerImageBase,
-		ACIConnectorImageBase:                api.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                      api.KubernetesSpecConfig.NVIDIAImageBase,
 		AzureCNIImageBase:                    api.KubernetesSpecConfig.AzureCNIImageBase,
 		CalicoImageBase:                      api.KubernetesSpecConfig.CalicoImageBase,

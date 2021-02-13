@@ -343,11 +343,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "ACI connector",
-			apiModelPath: "../examples/addons/aci-connector/kubernetes-aci-connector.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "App gateway ingress",
 			apiModelPath: "../examples/addons/appgw-ingress/kubernetes-appgw-ingress.json",
 			setArgs:      defaultSet,

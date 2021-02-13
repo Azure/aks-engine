@@ -22,7 +22,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedMetricsServer          kubernetesComponentFileSpec
 		expectedTiller                 kubernetesComponentFileSpec
 		expectedAADPodIdentity         kubernetesComponentFileSpec
-		expectedACIConnector           kubernetesComponentFileSpec
 		expectedAzureDiskCSIDriver     kubernetesComponentFileSpec
 		expectedAzureFileCSIDriver     kubernetesComponentFileSpec
 		expectedClusterAutoscaler      kubernetesComponentFileSpec
@@ -70,10 +69,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.AADPodIdentityAddonName,
-								Data: base64Data,
-							},
-							{
-								Name: common.ACIConnectorAddonName,
 								Data: base64Data,
 							},
 							{
@@ -202,11 +197,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      aadPodIdentityAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: aadPodIdentityAddonDestinationFilename,
-			},
-			expectedACIConnector: kubernetesComponentFileSpec{
-				sourceFile:      aciConnectorAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: aciConnectorAddonDestinationFilename,
 			},
 			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
 				sourceFile:      azureDiskCSIAddonSourceFilename,
@@ -362,9 +352,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.AADPodIdentityAddonName,
 							},
 							{
-								Name: common.ACIConnectorAddonName,
-							},
-							{
 								Name: common.AzureDiskCSIDriverAddonName,
 							},
 							{
@@ -463,11 +450,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      aadPodIdentityAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: aadPodIdentityAddonDestinationFilename,
-			},
-			expectedACIConnector: kubernetesComponentFileSpec{
-				sourceFile:      aciConnectorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: aciConnectorAddonDestinationFilename,
 			},
 			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
 				sourceFile:      azureDiskCSIAddonSourceFilename,
@@ -622,11 +604,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      aadPodIdentityAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: aadPodIdentityAddonDestinationFilename,
-			},
-			expectedACIConnector: kubernetesComponentFileSpec{
-				sourceFile:      aciConnectorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: aciConnectorAddonDestinationFilename,
 			},
 			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
 				sourceFile:      azureDiskCSIAddonSourceFilename,
@@ -802,16 +779,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedAADPodIdentity.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAADPodIdentity.destinationFile)
-					}
-				case common.ACIConnectorAddonName:
-					if c.expectedACIConnector.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedACIConnector.sourceFile)
-					}
-					if c.expectedACIConnector.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedACIConnector.base64Data)
-					}
-					if c.expectedACIConnector.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedACIConnector.destinationFile)
 					}
 				case common.AzureDiskCSIDriverAddonName:
 					if c.expectedAzureDiskCSIDriver.sourceFile != componentFileSpec[addon].sourceFile {

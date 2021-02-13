@@ -15,25 +15,6 @@
             "enabled": false
           },
           {
-            "name": "aci-connector",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "aci-connector",
-                "cpuRequests": "50m",
-                "memoryRequests": "150Mi",
-                "cpuLimits": "50m",
-                "memoryLimits": "150Mi"
-              }
-            ],
-            "config": {
-              "nodeName": "aci-connector",
-              "os": "Linux",
-              "region": "westus",
-              "taint": "azure.com/aci"
-            }
-          },
-          {
             "name": "cluster-autoscaler",
             "enabled": true,
             "containers": [
