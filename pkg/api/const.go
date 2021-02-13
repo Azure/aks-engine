@@ -323,7 +323,7 @@ const (
 	AzureCniPluginVerWindows = "v1.2.2"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.8.7"
+	CNIPluginVer = "v0.9.1"
 	// WindowsPauseImageVersion specifies version of Windows pause image
 	WindowsPauseImageVersion = "1.4.0"
 	// DefaultAlwaysPullWindowsPauseImage is the default windowsProfile.AlwaysPullWindowsPauseImage value
