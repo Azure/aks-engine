@@ -104,9 +104,6 @@ EOF
 VNET_CNI_VERSIONS="
 1.2.2
 1.2.0_hotfix
-1.2.0
-1.1.8
-1.1.6
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
