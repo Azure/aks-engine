@@ -84,16 +84,16 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, internalLB)
 	}
 
-	var isKMSEnabled bool
+	var isKMSEnabled, isKMSWithBYOK bool
 	if kubernetesConfig != nil {
 		isKMSEnabled = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
+		isKMSWithBYOK = len(kubernetesConfig.KeyVaultName) > 0 && len(kubernetesConfig.KeyVaultKey) > 0 && len(kubernetesConfig.KeyVaultKeyVersion) > 0
 	}
 
-	if isKMSEnabled {
-		keyVaultStorageAccount := createKeyVaultStorageAccount()
+	if isKMSEnabled && !isKMSWithBYOK {
 		keyVault := CreateKeyVaultVMAS(cs)
 		keyVaultKey := CreateKeyVaultKey(cs)
-		masterResources = append(masterResources, keyVaultStorageAccount, keyVault, keyVaultKey)
+		masterResources = append(masterResources, keyVault, keyVaultKey)
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
@@ -119,7 +119,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	}
 
 	masterCSE := CreateCustomScriptExtension(cs)
-	if isKMSEnabled {
+	if isKMSEnabled && !isKMSWithBYOK {
 		masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]")
 	}
 
@@ -187,17 +187,16 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
-	var isKMSEnabled bool
+	var isKMSEnabled, isKMSWithBYOK bool
 	if kubernetesConfig != nil {
 		isKMSEnabled = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
+		isKMSWithBYOK = len(kubernetesConfig.KeyVaultName) > 0 && len(kubernetesConfig.KeyVaultKey) > 0 && len(kubernetesConfig.KeyVaultKeyVersion) > 0
 	}
 
-	if isKMSEnabled {
-		// TODO (aramase) remove storage account creation as part of kms plugin v0.0.11
-		keyVaultStorageAccount := createKeyVaultStorageAccount()
+	if isKMSEnabled && !isKMSWithBYOK {
 		keyVault := CreateKeyVaultVMSS(cs)
 		keyVaultKey := CreateKeyVaultKey(cs)
-		masterResources = append(masterResources, keyVaultStorageAccount, keyVault, keyVaultKey)
+		masterResources = append(masterResources, keyVault, keyVaultKey)
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {

@@ -253,6 +253,20 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 				},
 			},
 		},
+		"should error when enableEncryptionWithExternalKms=true with own key and all required parameters not provided": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: "Kubernetes",
+					KubernetesConfig: &KubernetesConfig{
+						EnableEncryptionWithExternalKms: to.BoolPtr(true),
+						KeyVaultName:                    "testkeyvault",
+						KeyVaultKey:                     "k8s",
+						// keyvault key version not provided
+					},
+				},
+			},
+			expectedError: "keyvault name, key name and key version are required for enableEncryptionWithExternalKms=true with your own key",
+		},
 	}
 
 	for testName, test := range tests {

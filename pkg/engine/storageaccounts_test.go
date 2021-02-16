@@ -142,26 +142,3 @@ func TestCreateAgentVMASStorageAccount(t *testing.T) {
 		t.Errorf("unexpected diff while comparing: %s", diff)
 	}
 }
-
-func TestCreateKeyVaultStorageAccount(t *testing.T) {
-	actual := createKeyVaultStorageAccount()
-	expected := StorageAccountARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionStorage')]",
-		},
-		Account: storage.Account{
-			Type:     to.StringPtr("Microsoft.Storage/storageAccounts"),
-			Name:     to.StringPtr("[variables('clusterKeyVaultName')]"),
-			Location: to.StringPtr("[variables('location')]"),
-			Sku: &storage.Sku{
-				Name: storage.StandardLRS,
-			},
-		},
-	}
-
-	diff := cmp.Diff(actual, expected)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while comparing: %s", diff)
-	}
-}

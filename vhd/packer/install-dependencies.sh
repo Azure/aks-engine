@@ -221,9 +221,9 @@ for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-KMS_PLUGIN_VERSIONS="0.0.10"
+KMS_PLUGIN_VERSIONS="0.0.11"
 for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/k8s/kms/keyvault:v${KMS_PLUGIN_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/azure/kms/keyvault:v${KMS_PLUGIN_VERSION}"
     loadContainerImage ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done

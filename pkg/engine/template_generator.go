@@ -554,6 +554,11 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"EnableEncryptionWithExternalKms": func() bool {
 			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms)
 		},
+		"EnableEncryptionWithExternalKmsBYOK": func() bool {
+			return len(cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultName) > 0 &&
+				len(cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultKey) > 0 &&
+				len(cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultKeyVersion) > 0
+		},
 		"EnableAggregatedAPIs": func() bool {
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 				return true

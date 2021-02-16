@@ -308,6 +308,9 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.AzureCNIVersion = vlabs.AzureCNIVersion
 	api.AzureCNIURLLinux = vlabs.AzureCNIURLLinux
 	api.AzureCNIURLWindows = vlabs.AzureCNIURLWindows
+	api.KeyVaultName = vlabs.KeyVaultName
+	api.KeyVaultKey = vlabs.KeyVaultKey
+	api.KeyVaultKeyVersion = vlabs.KeyVaultKeyVersion
 	api.KeyVaultSku = vlabs.KeyVaultSku
 	api.MaximumLoadBalancerRuleCount = vlabs.MaximumLoadBalancerRuleCount
 	api.ProxyMode = KubeProxyMode(vlabs.ProxyMode)

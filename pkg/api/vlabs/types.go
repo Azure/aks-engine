@@ -398,6 +398,9 @@ type KubernetesConfig struct {
 	AzureCNIVersion                     string                `json:"azureCNIVersion,omitempty"`
 	AzureCNIURLLinux                    string                `json:"azureCNIURLLinux,omitempty"`
 	AzureCNIURLWindows                  string                `json:"azureCNIURLWindows,omitempty"`
+	KeyVaultName                        string                `json:"keyvaultName,omitempty"`
+	KeyVaultKey                         string                `json:"keyvaultKey,omitempty"`
+	KeyVaultKeyVersion                  string                `json:"keyvaultKeyVersion,omitempty"`
 	KeyVaultSku                         string                `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount        int                   `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                           KubeProxyMode         `json:"kubeProxyMode,omitempty"`

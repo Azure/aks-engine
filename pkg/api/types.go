@@ -467,6 +467,9 @@ type KubernetesConfig struct {
 	AzureCNIVersion                     string                `json:"azureCNIVersion,omitempty"`
 	AzureCNIURLLinux                    string                `json:"azureCNIURLLinux,omitempty"`
 	AzureCNIURLWindows                  string                `json:"azureCNIURLWindows,omitempty"`
+	KeyVaultName                        string                `json:"keyvaultName,omitempty"`
+	KeyVaultKey                         string                `json:"keyvaultKey,omitempty"`
+	KeyVaultKeyVersion                  string                `json:"keyvaultKeyVersion,omitempty"`
 	KeyVaultSku                         string                `json:"keyVaultSku,omitempty"`
 	MaximumLoadBalancerRuleCount        int                   `json:"maximumLoadBalancerRuleCount,omitempty"`
 	ProxyMode                           KubeProxyMode         `json:"kubeProxyMode,omitempty"`
@@ -2188,15 +2191,17 @@ func (cs *ContainerService) GetAzureProdFQDN() string {
 // ProvisionScriptParametersInput is the struct used to pass in Azure environment variables and secrets
 // as either values or ARM template variables when generating provision script parameters.
 type ProvisionScriptParametersInput struct {
-	Location             string
-	ResourceGroup        string
-	TenantID             string
-	SubscriptionID       string
-	ClientID             string
-	ClientSecret         string
-	APIServerCertificate string
-	KubeletPrivateKey    string
-	ClusterKeyVaultName  string
+	Location                  string
+	ResourceGroup             string
+	TenantID                  string
+	SubscriptionID            string
+	ClientID                  string
+	ClientSecret              string
+	APIServerCertificate      string
+	KubeletPrivateKey         string
+	ClusterKeyVaultName       string
+	ClusterKeyVaultKey        string
+	ClusterKeyVaultKeyVersion string
 }
 
 // GetProvisionScriptParametersCommon returns the environment variables needed to run the Linux bootstrap scripts
@@ -2252,6 +2257,8 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"CONTAINER_RUNTIME":                       kubernetesConfig.ContainerRuntime,
 		"CONTAINERD_DOWNLOAD_URL_BASE":            cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase,
 		"KMS_PROVIDER_VAULT_NAME":                 input.ClusterKeyVaultName,
+		"KMS_PROVIDER_KEY_NAME":                   input.ClusterKeyVaultKey,
+		"KMS_PROVIDER_KEY_VERSION":                input.ClusterKeyVaultKeyVersion,
 		"IS_IPV6_ENABLED":                         strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"AUTHENTICATION_METHOD":                   cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"IDENTITY_SYSTEM":                         cs.Properties.GetCustomCloudIdentitySystem(),

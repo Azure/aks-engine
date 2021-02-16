@@ -13,7 +13,19 @@ spec:
     - name: azure-kms-provider
       image: {{ContainerImage "azure-kms-provider"}}
       imagePullPolicy: IfNotPresent
-      command: [{{ContainerConfig "command"}}]
+      args:
+      - --keyvault-name=<keyvaultName>
+      - --key-name=<keyvaultKeyName>
+      - --key-version=<keyvaultKeyVersion>
+      ports:
+        - containerPort: 8787
+          protocol: TCP
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8787
+        failureThreshold: 2
+        periodSeconds: 10
       resources:
         requests:
           cpu: 100m
@@ -27,8 +39,6 @@ spec:
       - name: etc-ssl
         mountPath: /etc/ssl
         readOnly: true
-      - name: var-lib-kubelet
-        mountPath: /var/lib/kubelet
       - name: msi
         mountPath: /var/lib/waagent/ManagedIdentity-Settings
         readOnly: true
@@ -41,9 +51,6 @@ spec:
     - name: etc-ssl
       hostPath:
         path: /etc/ssl
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
     - name: msi
       hostPath:
         path: /var/lib/waagent/ManagedIdentity-Settings

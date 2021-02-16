@@ -209,10 +209,7 @@ configureK8s() {
     "loadBalancerSku": "${LOAD_BALANCER_SKU}",
     "disableOutboundSNAT": ${LOAD_BALANCER_DISABLE_OUTBOUND_SNAT},
     "excludeMasterFromStandardLB": ${EXCLUDE_MASTER_FROM_STANDARD_LB},
-    "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
     "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},
-    "providerKeyName": "k8s",
-    "providerKeyVersion": "",
     "enableMultipleStandardLoadBalancers": ${ENABLE_MULTIPLE_STANDARD_LOAD_BALANCERS},
     "tags": "${TAGS}"
 }
@@ -364,13 +361,6 @@ ensureDHCPv6() {
     systemctlEnableAndStart dhcpv6 || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
     retrycmd 120 5 25 modprobe ip6_tables || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
   fi
-}
-{{end}}
-{{- if EnableEncryptionWithExternalKms}}
-ensureKMSKeyvaultKey() {
-    wait_for_file 3600 1 {{GetKMSKeyvaultKeyServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-    wait_for_file 3600 1 {{GetKMSKeyvaultKeyCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-    systemctlEnableAndStart kms-keyvault-key || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 {{end}}
 ensureKubelet() {

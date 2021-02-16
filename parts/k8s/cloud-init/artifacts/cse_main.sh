@@ -222,6 +222,8 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 {{/* configure and enable kms plugin */}}
 {{- if EnableEncryptionWithExternalKms}}
 if [[ -n ${MASTER_NODE} ]]; then
+  wait_for_file 3600 1 {{GetKMSKeyvaultKeyCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  source {{GetKMSKeyvaultKeyCSEScriptFilepath }}
   time_metric "EnsureKMSKeyvaultKey" ensureKMSKeyvaultKey
 fi
 {{end}}

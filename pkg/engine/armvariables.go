@@ -65,7 +65,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterProfile := cs.Properties.MasterProfile
 	profiles := cs.Properties.AgentPoolProfiles
 
-	var useManagedIdentity, userAssignedID, userAssignedClientID, enableEncryptionWithExternalKms bool
+	var useManagedIdentity, userAssignedID, userAssignedClientID, enableEncryptionWithExternalKms, enableEncryptionWithExternalKmsBYOK bool
 	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
@@ -75,6 +75,9 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		userAssignedID = kubernetesConfig.UserAssignedIDEnabled()
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
 		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
+		enableEncryptionWithExternalKmsBYOK = len(cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultName) > 0 &&
+			len(cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultKey) > 0 &&
+			len(cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultKeyVersion) > 0
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
@@ -91,15 +94,17 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	hasAgentPool := len(profiles) > 0
 	hasCosmosEtcd := masterProfile != nil && masterProfile.HasCosmosEtcd()
 	scriptParamsInput := api.ProvisionScriptParametersInput{
-		Location:             common.WrapAsARMVariable("location"),
-		ResourceGroup:        common.WrapAsARMVariable("resourceGroup"),
-		TenantID:             common.WrapAsARMVariable("tenantID"),
-		SubscriptionID:       common.WrapAsARMVariable("subscriptionId"),
-		ClientID:             common.WrapAsARMVariable("servicePrincipalClientId"),
-		ClientSecret:         common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
-		APIServerCertificate: common.WrapAsParameter("apiServerCertificate"),
-		KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
-		ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyVaultName"),
+		Location:                  common.WrapAsARMVariable("location"),
+		ResourceGroup:             common.WrapAsARMVariable("resourceGroup"),
+		TenantID:                  common.WrapAsARMVariable("tenantID"),
+		SubscriptionID:            common.WrapAsARMVariable("subscriptionId"),
+		ClientID:                  common.WrapAsARMVariable("servicePrincipalClientId"),
+		ClientSecret:              common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
+		APIServerCertificate:      common.WrapAsParameter("apiServerCertificate"),
+		KubeletPrivateKey:         common.WrapAsParameter("clientPrivateKey"),
+		ClusterKeyVaultName:       common.WrapAsARMVariable("clusterKeyVaultName"),
+		ClusterKeyVaultKey:        common.WrapAsARMVariable("clusterKeyVaultKey"),
+		ClusterKeyVaultKeyVersion: common.WrapAsARMVariable("clusterKeyVaultKeyVersion"),
 	}
 
 	var loadBalancerSku string
@@ -158,11 +163,19 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	}
 
 	if enableEncryptionWithExternalKms {
-		cloudInitFiles["kmsKeyvaultKeySystemdService"] = getBase64EncodedGzippedCustomScript(kmsKeyvaultKeySystemdService, cs)
+		if !enableEncryptionWithExternalKmsBYOK {
+			masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
+			masterVars["clusterKeyVaultKey"] = "k8s"
+		} else {
+			masterVars["clusterKeyVaultName"] = cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultName
+			masterVars["clusterKeyVaultKey"] = cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultKey
+		}
 		cloudInitFiles["kmsKeyvaultKeyScript"] = getBase64EncodedGzippedCustomScript(kmsKeyvaultKeyScript, cs)
-		masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
+		masterVars["clusterKeyVaultKeyVersion"] = cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultKeyVersion
 	} else {
 		masterVars["clusterKeyVaultName"] = ""
+		masterVars["clusterKeyVaultKey"] = ""
+		masterVars["clusterKeyVaultKeyVersion"] = ""
 	}
 
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName) {
