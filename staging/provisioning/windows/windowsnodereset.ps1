@@ -15,6 +15,7 @@ $global:NetworkMode = "L2Bridge"
 $global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
 $global:ContainerRuntime = $Global:ClusterConfiguration.Cri.Name
 $UseContainerD = ($global:ContainerRuntime -eq "containerd")
+$IsDualStackEnabled = $Global:ClusterConfiguration.Kubernetes.Kubeproxy.FeatureGates -contains "IPv6DualStack=true"
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
@@ -43,6 +44,35 @@ if ($global:CsiProxyEnabled) {
 if ($global:EnableHostsConfigAgent) {
     Write-Log "Stopping hosts-config-agent service"
     Stop-Service hosts-config-agent
+}
+
+# Due to a bug in hns there is a race where it picks up the incorrect IPv6 address from the node in some cases.
+# Hns service has to be restarted after the node internal IPv6 address is available when dual-stack is enabled.
+# TODO Remove this once the bug is fixed in hns.
+function Restart-HnsService {
+    do {
+        Start-Sleep -Seconds 1
+        $nodeInternalIPv6Address = (Get-NetIPAddress | Where-Object {$_.PrefixOrigin -eq "Dhcp" -and $_.AddressFamily -eq "IPv6"}).IPAddress 
+    } while ($nodeInternalIPv6Address -eq $null)
+    Write-Log "Got node internal IPv6 address: $nodeInternalIPv6Address"
+    
+    $hnsManagementIPv6Address = (Get-HnsNetwork | Where-Object {$_.IPv6 -eq $true}).ManagementIPv6
+    Write-Log "Got hns ManagementIPv6: $hnsManagementIPv6Address"
+
+    if ($hnsManagementIPv6Address -ne $nodeInternalIPv6Address) {
+        Restart-Service hns
+        Write-Log "Restarted hns service"
+
+        $hnsManagementIPv6Address = (Get-HnsNetwork | Where-Object {$_.IPv6 -eq $true}).ManagementIPv6
+        Write-Log "Got hns ManagementIPv6: $hnsManagementIPv6Address after restart"
+    }
+    else {
+        Write-Log "Hns network has correct IPv6 address, not restarting"
+    }
+}
+
+if ($IsDualStackEnabled) {
+    Restart-HnsService
 }
 
 #
