@@ -12,7 +12,7 @@ init-packer:
 
 az-login:
 	az login --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET} --tenant ${TENANT_ID}
-	az account set --subscription ${SUBSCRIPTION_ID}
+	az account set --subscription 5f9e89c2-67fb-4d82-a7c4-af75aa38df00
 
 run-packer: az-login
 	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer-windows | tee -a packer-output)
