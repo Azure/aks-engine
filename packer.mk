@@ -11,7 +11,7 @@ init-packer:
 	@./vhd/packer/init-variables.sh
 
 az-login:
-	az login --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET} --tenant ${TENANT_ID}
+	az login --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET} --tenant ${TENANT_ID} && az account set --subscription ${SUBSCRIPTION_ID}
 
 run-packer: az-login
 	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer-windows | tee -a packer-output)
