@@ -113,6 +113,7 @@ jobs:
   #     ${DEIS_GO_DEV_IMAGE} make delete-sa
   #   displayName: cleanup - delete temp storage account
   #   condition: always()
+  ##  Test change to trigger pipeline
 
   - script: |
       sudo chown -R $USER:$USER .
