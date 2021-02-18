@@ -3,8 +3,6 @@ jobs:
   timeoutInMinutes: 210
   strategy:
     maxParallel: 0
-  pool:
-    name: $(BUILD_POOL)
   steps:
   - script: |
       docker run --rm \
