@@ -1,9 +1,5 @@
-parameters:
-  containerRuntime: ''
-  windowsServerVersion: ''
-
 jobs:
-- job: build_vhd_windows_${{ parameters.windowsServerVersion }}_${{ parameters.containerRuntime }}
+- job: build_vhd_windows_2004_docker
   timeoutInMinutes: 210
   strategy:
     maxParallel: 0
@@ -25,8 +21,8 @@ jobs:
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
-      -e CONTAINER_RUNTIME=${{ parameters.containerRuntime }} \
-      -e WINDOWS_SERVER_VERSION=${{ parameters.windowsServerVersion }} \
+      -e CONTAINER_RUNTIME=docker \
+      -e WINDOWS_SERVER_VERSION=2004 \
       ${DEIS_GO_DEV_IMAGE} make run-packer-windows
     displayName: Building windows VHD
 
@@ -54,14 +50,14 @@ jobs:
       -e TENANT_ID=${TENANT_ID} \
       -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
       -e USE_MANAGED_IDENTITY="false" \
-      -e CONTAINER_RUNTIME=${{ parameters.containerRuntime }} \
+      -e CONTAINER_RUNTIME=docker \
       ${DEIS_GO_DEV_IMAGE} make test-kubernetes
     displayName: run e2e tests
     condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
 
   - task: PublishPipelineArtifact@1
     inputs:
-      artifact: '${{ parameters.windowsServerVersion }}-${{ parameters.containerRuntime }}-vhd-release-notes'
+      artifact: '2004-docker-vhd-release-notes'
       path: 'release-notes.txt'
 
   - script: |
@@ -99,7 +95,7 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      artifact: 'publishing_info_${{ parameters.windowsServerVersion }}_${{ parameters.containerRuntime }}'
+      artifact: 'publishing_info_2004_docker'
       path: 'windows-vhd-publishing-info.json'
     condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
 
