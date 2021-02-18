@@ -11416,7 +11416,7 @@ spec:
           args:
           - --csi-address=/csi/csi.sock
           - --probe-timeout=3s
-          - --health-port=9808
+          - --http-endpoint=0.0.0.0:9808
           - -v=2
           volumeMounts:
             - name: plugin-dir
