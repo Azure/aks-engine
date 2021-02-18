@@ -316,9 +316,14 @@ New-NSSMService {
         [string]
         [Parameter(Mandatory = $true)]
         $KubeProxyStartFile
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
 
-    $kubeletDependOnServices = "docker"
+    $kubeletDependOnServices = ""
+    if ($ContainerRuntime -eq "docker") {
+        $kubeletDependOnServices = "docker"
+    }
     if ($global:EnableCsiProxy) {
         $kubeletDependOnServices += " csi-proxy"
     }
@@ -374,6 +379,8 @@ Install-KubernetesServices {
     param(
         [Parameter(Mandatory = $true)][string]
         $KubeDir
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
 
     # TODO ksbrmnn fix callers to this function
@@ -383,5 +390,6 @@ Install-KubernetesServices {
 
     New-NSSMService -KubeDir $KubeDir `
         -KubeletStartFile $KubeletStartFile `
-        -KubeProxyStartFile $KubeProxyStartFile
+        -KubeProxyStartFile $KubeProxyStartFile `
+        -ContainerRuntime $ContainerRuntime
 }
