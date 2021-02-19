@@ -578,11 +578,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "1.16 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.16.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "1.17 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.17.json",
 			setArgs:      defaultSet,
@@ -795,11 +790,6 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "custom shared image",
 			apiModelPath: "../examples/custom-shared-image.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "containerd",
-			apiModelPath: "../examples/kubernetes-containerd.json",
 			setArgs:      defaultSet,
 		},
 		{

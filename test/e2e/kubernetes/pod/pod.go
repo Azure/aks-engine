@@ -1089,7 +1089,7 @@ func GetPodAsync(name, namespace string, timeout time.Duration) GetPodResult {
 
 // WaitOnSuccesses returns true if all pods matching a prefix substring are in a succeeded state within a period of time
 // successesNeeded is used to make sure we return the correct value even if the pod is in a CrashLoop
-func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
+func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, printLogs bool, sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan AreAllPodsRunningResult)
@@ -1247,8 +1247,8 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 	}
 }
 
-func EnsureContainersRunningInAllPods(containers []string, podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) error {
-	running, err := WaitOnSuccesses(podPrefix, namespace, successesNeeded, sleep, timeout)
+func EnsureContainersRunningInAllPods(containers []string, podPrefix, namespace string, successesNeeded int, printLogs bool, sleep, timeout time.Duration) error {
+	running, err := WaitOnSuccesses(podPrefix, namespace, successesNeeded, printLogs, sleep, timeout)
 	if err != nil {
 		return err
 	}
@@ -1273,8 +1273,8 @@ func EnsureContainersRunningInAllPods(containers []string, podPrefix, namespace 
 }
 
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
-func (p *Pod) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
-	return WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
+func (p *Pod) WaitOnReady(printLogs bool, sleep, timeout time.Duration) (bool, error) {
+	return WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, printLogs, sleep, timeout)
 }
 
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
@@ -1849,11 +1849,7 @@ func (p *Pod) ValidateLogsRotate(sleep, timeout time.Duration) (bool, error) {
 				return true, nil
 			}
 
-			err := p.Logs()
-			if err != nil {
-				log.Printf("Unable to print pod logs:\n %s", err)
-			}
-			err = p.Describe()
+			err := p.Describe()
 			if err != nil {
 				log.Printf("Unable to describe pod:\n %s", err)
 			}

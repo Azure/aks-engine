@@ -111,6 +111,11 @@ func IsNvidiaEnabledSKU(vmSize string) bool {
 		"Standard_NC24rs_v3": true,
 		"Standard_ND40s_v3":  true,
 		"Standard_ND40rs_v2": true,
+		// T4
+		"Standard_NC4as_T4_v3":  true,
+		"Standard_NC8as_T4_v3":  true,
+		"Standard_NC16as_T4_v3": true,
+		"Standard_NC64as_T4_v3": true,
 	}
 	// Trim the optional _Promo suffix.
 	vmSize = strings.TrimSuffix(vmSize, "_Promo")
@@ -505,7 +510,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
     [plugins."io.containerd.grpc.v1.cri".containerd]
       default_runtime_name = "runc"
@@ -522,7 +527,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
     [plugins."io.containerd.grpc.v1.cri".containerd]
       default_runtime_name = "runc"
@@ -538,7 +543,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
       conf_template = "/etc/containerd/kubenet_template.conf"
     [plugins."io.containerd.grpc.v1.cri".containerd]
@@ -556,7 +561,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "foo/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "foo/oss/kubernetes/pause:1.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
       conf_template = "/etc/containerd/kubenet_template.conf"
     [plugins."io.containerd.grpc.v1.cri".containerd]

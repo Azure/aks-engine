@@ -32,7 +32,7 @@
       "adminUsername": "azureuser",
       "adminPassword": "replacepassword1234$",
       "sshEnabled": true,
-      "windowsPauseImageURL": "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
+      "windowsPauseImageURL": "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
       "alwaysPullWindowsPauseImage": true
     },
     "linuxProfile": {

@@ -92,6 +92,8 @@
 // ../../parts/k8s/manifests/kubernetesmaster-kube-apiserver.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-scheduler.yaml
+// ../../parts/k8s/rotate-certs.ps1
+// ../../parts/k8s/rotate-certs.sh
 // ../../parts/k8s/windowsazurecnifunc.ps1
 // ../../parts/k8s/windowsazurecnifunc.tests.ps1
 // ../../parts/k8s/windowscnifunc.ps1
@@ -6868,10 +6870,9 @@ metadata:
   labels:
     io.cilium/app: operator
     name: cilium-operator
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-operator
   namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   selector:
@@ -12207,7 +12208,9 @@ configureK8s() {
     "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
     "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},
     "providerKeyName": "k8s",
-    "providerKeyVersion": ""
+    "providerKeyVersion": "",
+    "enableMultipleStandardLoadBalancers": ${ENABLE_MULTIPLE_STANDARD_LOAD_BALANCERS},
+    "tags": "${TAGS}"
 }
 EOF
   set -x
@@ -12297,9 +12300,10 @@ enableCRISystemdMonitor() {
 }
 {{- if NeedsContainerd}}
 installContainerd() {
+  removeMoby
   local v
   v=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-  if [[ $v != "${CONTAINERD_VERSION}" ]]; then
+  if [[ $v != "${CONTAINERD_VERSION}"* ]]; then
     os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
     if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
       url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
@@ -12308,12 +12312,7 @@ installContainerd() {
     else
       exit 25
     fi
-    removeMoby
     removeContainerd
-    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
-    retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
-    retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 moby-runc moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
   fi
@@ -12669,14 +12668,17 @@ installSGXDrivers() {
 {{end}}
 {{- if HasVHDDistroNodes}}
 cleanUpContainerImages() {
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager') &
+  {{- if NeedsContainerd}}
+  docker rmi -f $(docker images -a -q) &
+  {{else}}
   docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
-
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-proxy') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-controller-manager') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-apiserver') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-scheduler') &
   docker rmi registry:2.7.1 &
+  ctr -n=k8s.io image rm $(ctr -n=k8s.io images ls -q) &
+  {{- end}}
 }
 cleanUpGPUDrivers() {
   rm -Rf $GPU_DEST
@@ -13159,6 +13161,18 @@ apt_get_dist_upgrade() {
   done
   echo Executed apt-get dist-upgrade $i times
 }
+unattended_upgrade() {
+  retries=10
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks
+    /usr/bin/unattended-upgrade && break ||
+    if [ $i -eq $retries ]; then
+      return 1
+    else sleep 5
+    fi
+  done
+  echo Executed unattended-upgrade $i times
+}
 systemctl_restart() {
   retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
   for i in $(seq 1 $retries); do
@@ -13254,6 +13268,10 @@ installDeps() {
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
     retrycmd_no_stats 120 5 25 curl -fsSL ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
+    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     aptmarkWALinuxAgent hold
     packages+=" cgroup-lite ceph-common glusterfs-client"
     if [[ $UBUNTU_RELEASE == "18.04" ]]; then
@@ -13327,11 +13345,6 @@ installMoby() {
     removeMoby
   fi
   if [ -n "${install_pkgs}" ]; then
-    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
-    retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
-    retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
-    apt_get_update || exit 99
     apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
 }
@@ -13449,6 +13462,11 @@ extractKubeBinaries() {
 pullContainerImage() {
   local cli_tool=$1 url=$2
   retrycmd 60 1 1200 $cli_tool pull $url || exit 35
+}
+loadContainerImage() {
+  docker pull $1 || exit 35
+  docker save $1 | ctr -n=k8s.io images import - || exit 35
+
 }
 overrideNetworkConfig() {
   CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"
@@ -13754,6 +13772,10 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
   time_metric "PurgeApt" apt_get_purge apache2-utils &
 fi
 {{end}}
+
+{{- if RunUnattendedUpgrades}}
+apt_get_update && unattended_upgrade
+{{- end}}
 
 if [ -f /var/run/reboot-required ]; then
   trace_info "RebootRequired" "reboot=true"
@@ -15319,15 +15341,13 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{- if not .MasterProfile.IsVHDDistro}}
-  {{- if .MasterProfile.IsAuditDEnabled}}
+{{- if .MasterProfile.IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
-  {{end}}
 {{end}}
 
 {{- if .MasterProfile.IsUbuntu1804}}
@@ -15742,6 +15762,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
+    {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
+    iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
     #EOF
 
 {{- if not HasCosmosEtcd  }}
@@ -15907,15 +15929,13 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{- if not .IsVHDDistro}}
-  {{- if .IsAuditDEnabled}}
+{{- if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
-  {{end}}
 {{end}}
 
 {{- if .IsUbuntu1804}}
@@ -16229,6 +16249,8 @@ write_files:
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
+    {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
+    iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
     #EOF
 
 {{- if IsCustomCloudProfile}}
@@ -17006,7 +17028,7 @@ function DownloadFileOverHttp {
         $ProgressPreference = 'SilentlyContinue'
 
         $downloadTimer = [System.Diagnostics.Stopwatch]::StartNew()
-        Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        curl.exe --retry 5 --retry-delay 0 -L $Url -o $DestinationPath
         $downloadTimer.Stop()
 
         if ($global:AppInsightsClient -ne $null) {
@@ -17191,7 +17213,7 @@ function Write-KubeClusterConfig {
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
         Images = @{
-            # e.g. "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
+            # e.g. "mcr.microsoft.com/oss/kubernetes/pause:1.4.1"
             "Pause" = $global:WindowsPauseImageURL
         }
     }
@@ -18152,6 +18174,184 @@ func k8sManifestsKubernetesmasterKubeSchedulerYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/manifests/kubernetesmaster-kube-scheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sRotateCertsPs1 = []byte(`<#
+.DESCRIPTION
+    This script rotates a windows node certificates.
+    It assumes that client.key, client.crt and ca.crt will be dropped in $env:temp.
+#>
+
+. c:\AzureData\k8s\windowskubeletfunc.ps1
+. c:\AzureData\k8s\kuberneteswindowsfunctions.ps1
+
+$global:KubeDir = "c:\k"
+
+$global:AgentKeyPath = [io.path]::Combine($env:temp, "client.key")
+$global:AgentCertificatePath = [io.path]::Combine($env:temp, "client.crt")
+$global:CACertificatePath = [io.path]::Combine($env:temp, "ca.crt")
+
+function Prereqs {
+    Assert-FileExists $global:AgentKeyPath
+    Assert-FileExists $global:AgentCertificatePath
+    Assert-FileExists $global:CACertificatePath
+}
+
+function Backup {
+    Copy-Item "c:\k\config" "c:\k\config.bak"
+    Copy-Item "c:\k\ca.crt" "c:\k\ca.crt.bak"
+}
+
+function Update-CACertificate {
+    Write-Log "Write ca root"
+    Write-CACert -CACertificate $global:CACertificate -KubeDir $global:KubeDir
+}
+
+function Update-KubeConfig {
+    Write-Log "Write kube config"
+    $ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string) 
+    $MasterIP = $ClusterConfiguration.Kubernetes.ControlPlane.IpAddress
+
+    $CloudProviderConfig = ConvertFrom-Json ((Get-Content "c:\k\azure.json" -ErrorAction Stop) | out-string) 
+    $MasterFQDNPrefix = $CloudProviderConfig.ResourceGroup
+
+    $AgentKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $AgentKeyPath)))
+    $AgentCertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $AgentCertificatePath)))
+
+    Write-KubeConfig -CACertificate $global:CACertificate ` + "`" + `
+        -KubeDir $global:KubeDir ` + "`" + `
+        -MasterFQDNPrefix $MasterFQDNPrefix ` + "`" + `
+        -MasterIP $MasterIP ` + "`" + `
+        -AgentKey $AgentKey ` + "`" + `
+        -AgentCertificate $AgentCertificate
+}
+
+function Force-Kubelet-CertRotation {
+    Remove-Item "/var/lib/kubelet/pki/kubelet-client-current.pem" -Force -ErrorAction Ignore
+    Remove-Item "/var/lib/kubelet/pki/kubelet.crt" -Force -ErrorAction Ignore
+    Remove-Item "/var/lib/kubelet/pki/kubelet.key" -Force -ErrorAction Ignore
+
+    $err = Retry-Command -Command "c:\k\windowsnodereset.ps1" -Args @{Foo="Bar"} -Retries 3 -RetryDelaySeconds 10
+    if(!$err) {
+        Write-Error 'Error reseting Windows node'
+        throw $_
+    }
+}
+
+function Start-CertRotation {
+    try
+    {
+        $global:CACertificate = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $CACertificatePath)))
+
+        Prereqs
+        Update-CACertificate
+        Update-KubeConfig
+        Force-Kubelet-CertRotation
+    }
+    catch
+    {
+        Write-Error $_
+        throw $_
+    }
+}
+
+function Clean {
+    Remove-Item "c:\k\config.bak" -Force -ErrorAction Ignore
+    Remove-Item "c:\k\ca.crt.bak" -Force -ErrorAction Ignore
+    Remove-Item $global:AgentKeyPath -Force -ErrorAction Ignore
+    Remove-Item $global:AgentCertificatePath -Force -ErrorAction Ignore
+    Remove-Item $global:CACertificatePath -Force -ErrorAction Ignore
+}
+`)
+
+func k8sRotateCertsPs1Bytes() ([]byte, error) {
+	return _k8sRotateCertsPs1, nil
+}
+
+func k8sRotateCertsPs1() (*asset, error) {
+	bytes, err := k8sRotateCertsPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/rotate-certs.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sRotateCertsSh = []byte(`#!/bin/bash -ex
+
+export WD=/etc/kubernetes/rotate-certs
+export NEW_CERTS_DIR=${WD}/certs
+
+# copied from cse_helpers.sh, sourcing that file not always works
+systemctl_restart() {
+  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
+  for i in $(seq 1 $retries); do
+    timeout $timeout systemctl daemon-reload
+    timeout $timeout systemctl restart $svcname && break ||
+      if [ $i -eq $retries ]; then
+        return 1
+      else
+        sleep $wait_sleep
+      fi
+  done
+}
+
+backup() {
+  if [ ! -d /etc/kubernetes/certs.bak ]; then
+    cp -rp /etc/kubernetes/certs/ /etc/kubernetes/certs.bak
+  fi
+}
+
+cp_certs() {
+  cp -p ${NEW_CERTS_DIR}/etcdpeer* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/etcdclient* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/etcdserver* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/ca.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/client.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/apiserver.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/kubeconfig ~/.kube/config
+
+  rm -f /var/lib/kubelet/pki/kubelet-client-current.pem
+}
+
+cp_proxy() {
+  source /etc/environment
+  /etc/kubernetes/generate-proxy-certs.sh
+}
+
+agent_certs() {
+  cp -p ${NEW_CERTS_DIR}/ca.* /etc/kubernetes/certs/
+  cp -p ${NEW_CERTS_DIR}/client.* /etc/kubernetes/certs/
+
+  rm -f /var/lib/kubelet/pki/kubelet-client-current.pem
+  sync
+  sleep 5
+  systemctl_restart 10 5 10 kubelet
+}
+
+cleanup() {
+  rm -rf ${WD}
+  rm -rf /etc/kubernetes/certs.bak
+}
+
+"$@"
+`)
+
+func k8sRotateCertsShBytes() ([]byte, error) {
+	return _k8sRotateCertsSh, nil
+}
+
+func k8sRotateCertsSh() (*asset, error) {
+	bytes, err := k8sRotateCertsShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/rotate-certs.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -20104,6 +20304,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                 k8sManifestsKubernetesmasterKubeApiserverYaml,
 	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":        k8sManifestsKubernetesmasterKubeControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                 k8sManifestsKubernetesmasterKubeSchedulerYaml,
+	"k8s/rotate-certs.ps1":                                               k8sRotateCertsPs1,
+	"k8s/rotate-certs.sh":                                                k8sRotateCertsSh,
 	"k8s/windowsazurecnifunc.ps1":                                        k8sWindowsazurecnifuncPs1,
 	"k8s/windowsazurecnifunc.tests.ps1":                                  k8sWindowsazurecnifuncTestsPs1,
 	"k8s/windowscnifunc.ps1":                                             k8sWindowscnifuncPs1,
@@ -20260,6 +20462,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmaster-kube-controller-manager.yaml":  {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-scheduler.yaml":           {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
 		}},
+		"rotate-certs.ps1":                {k8sRotateCertsPs1, map[string]*bintree{}},
+		"rotate-certs.sh":                 {k8sRotateCertsSh, map[string]*bintree{}},
 		"windowsazurecnifunc.ps1":         {k8sWindowsazurecnifuncPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.tests.ps1":   {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":              {k8sWindowscnifuncPs1, map[string]*bintree{}},

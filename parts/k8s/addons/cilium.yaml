@@ -362,10 +362,9 @@ metadata:
   labels:
     io.cilium/app: operator
     name: cilium-operator
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-operator
   namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   selector:

@@ -31,7 +31,7 @@ const (
 
 const (
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.11"
+	KubernetesWindowsDockerVersion = "19.03.14"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
@@ -221,6 +221,8 @@ const (
 	VMSSVMType = "vmss"
 	// StandardVMType is the string const for the standard VM Type
 	StandardVMType = "standard"
+	// DefaultRunUnattendedUpgradesOnBootstrap sets the default configuration for running a blocking unattended-upgrade on Linux VMs as part of CSE
+	DefaultRunUnattendedUpgradesOnBootstrap = true
 )
 
 // Azure API Versions
@@ -321,9 +323,9 @@ const (
 	AzureCniPluginVerWindows = "v1.2.2"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.8.7"
+	CNIPluginVer = "v0.9.1"
 	// WindowsPauseImageVersion specifies version of Windows pause image
-	WindowsPauseImageVersion = "1.4.0"
+	WindowsPauseImageVersion = "1.4.1"
 	// DefaultAlwaysPullWindowsPauseImage is the default windowsProfile.AlwaysPullWindowsPauseImage value
 	DefaultAlwaysPullWindowsPauseImage = false
 )

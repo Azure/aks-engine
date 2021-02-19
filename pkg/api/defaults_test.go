@@ -231,7 +231,7 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
-	kubernetesVersion := "1.16.14"
+	kubernetesVersion := common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
 	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
@@ -1059,20 +1059,6 @@ func TestNetworkPluginDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != DefaultNetworkPlugin {
 		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, DefaultNetworkPlugin)
-	}
-
-	mockCS = getMockBaseContainerService("1.15.7")
-	properties = mockCS.Properties
-	properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
-		{
-			Name:    common.FlannelAddonName,
-			Enabled: to.BoolPtr(true),
-		},
-	}
-	mockCS.setOrchestratorDefaults(true, true)
-	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginFlannel {
-		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginFlannel)
 	}
 
 	mockCS = getMockBaseContainerService("1.19.2")
@@ -3175,15 +3161,8 @@ func TestEnableAggregatedAPIs(t *testing.T) {
 }
 
 func TestCloudControllerManagerEnabled(t *testing.T) {
-	// test that 1.16 defaults to false
-	cs := CreateMockContainerService("testcluster", "1.16.1", 3, 2, false)
-	cs.setOrchestratorDefaults(false, false)
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
-		t.Fatal("expected UseCloudControllerManager to default to false")
-	}
-
 	// test that 1.17 defaults to false
-	cs = CreateMockContainerService("testcluster", "1.17.0", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.17", "", false, false, false), 3, 2, false)
 	cs.setOrchestratorDefaults(false, false)
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
 		t.Fatal("expected UseCloudControllerManager to default to false")
@@ -4269,7 +4248,7 @@ func TestPreserveNodesProperties(t *testing.T) {
 
 func TestUbuntu1804Flags(t *testing.T) {
 	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
-	cs := CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].Distro = AKSUbuntu1804
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -4292,7 +4271,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = Ubuntu1804
 	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -4315,7 +4294,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 			ka["--resolv-conf"])
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].Distro = ""
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows
@@ -5660,6 +5639,85 @@ func TestCombineValues(t *testing.T) {
 			ret := combineValues(c.inputs...)
 			if ret != c.outputs {
 				t.Errorf("expected combineValues output to be %s, but got %s", c.outputs, ret)
+			}
+		})
+	}
+}
+
+func TestSetLinuxProfileDefaults(t *testing.T) {
+	cases := []struct {
+		name                                     string
+		p                                        *Properties
+		expectedRunUnattendedUpgradesOnBootstrap bool
+	}{
+		{
+			name: "default",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: true,
+		},
+		{
+			name: "explicit true",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: true,
+		},
+		{
+			name: "explicit false",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: false,
+		},
+		{
+			name: "custom cloud default",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{},
+				CustomCloudProfile: &CustomCloudProfile{
+					Environment: &azure.Environment{},
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: false,
+		},
+		{
+			name: "custom cloud explicit true",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				},
+				CustomCloudProfile: &CustomCloudProfile{
+					Environment: &azure.Environment{},
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: true,
+		},
+		{
+			name: "custom cloud explicit false",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				},
+				CustomCloudProfile: &CustomCloudProfile{
+					Environment: &azure.Environment{},
+				},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.p.setLinuxProfileDefaults()
+			if c.expectedRunUnattendedUpgradesOnBootstrap != to.Bool(c.p.LinuxProfile.RunUnattendedUpgradesOnBootstrap) {
+				t.Errorf("expected RunUnattendedUpgradesOnBootstrap to be %t, but got %t", c.expectedRunUnattendedUpgradesOnBootstrap, to.Bool(c.p.LinuxProfile.RunUnattendedUpgradesOnBootstrap))
 			}
 		})
 	}

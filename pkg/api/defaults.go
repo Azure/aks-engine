@@ -54,6 +54,11 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 		properties.setMasterProfileDefaults()
 	}
 
+	// Set Linux profile defaults if this cluster configuration includes Linux nodes
+	if cs.Properties.LinuxProfile != nil {
+		properties.setLinuxProfileDefaults()
+	}
+
 	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
 
 	properties.setStorageDefaults()
@@ -189,11 +194,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		} else {
 			if o.KubernetesConfig.NetworkPlugin == "" {
-				if o.KubernetesConfig.IsAddonEnabled(common.FlannelAddonName) {
-					o.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
-				} else {
-					o.KubernetesConfig.NetworkPlugin = DefaultNetworkPlugin
-				}
+				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPlugin
 			}
 		}
 
@@ -694,6 +695,12 @@ func (p *Properties) setMasterProfileDefaults() {
 
 	if p.MasterProfile.OSDiskCachingType == "" {
 		p.MasterProfile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+	}
+}
+
+func (p *Properties) setLinuxProfileDefaults() {
+	if !p.IsAzureStackCloud() && p.LinuxProfile.RunUnattendedUpgradesOnBootstrap == nil {
+		p.LinuxProfile.RunUnattendedUpgradesOnBootstrap = to.BoolPtr(DefaultRunUnattendedUpgradesOnBootstrap)
 	}
 }
 

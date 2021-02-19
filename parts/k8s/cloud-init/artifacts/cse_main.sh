@@ -276,6 +276,10 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
 fi
 {{end}}
 
+{{- if RunUnattendedUpgrades}}
+apt_get_update && unattended_upgrade
+{{- end}}
+
 if [ -f /var/run/reboot-required ]; then
   trace_info "RebootRequired" "reboot=true"
   /bin/bash -c "shutdown -r 1 &"

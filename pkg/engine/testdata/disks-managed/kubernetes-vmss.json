@@ -3,9 +3,6 @@
   "plan": {},
   "properties": {
     "provisioningState": "",
-    "orchestratorProfile": {
-      "orchestratorRelease": "1.16"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "masterdns1",

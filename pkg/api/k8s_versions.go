@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	pauseImageReference                               string = "oss/kubernetes/pause:1.4.0"
+	pauseImageReference                               string = "oss/kubernetes/pause:1.4.1"
 	blobfuseFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8"
 	smbFlexVolumeImageReference                       string = "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2"
 	keyvaultFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.16"
@@ -28,7 +28,7 @@ const (
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
-	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.2.1"
+	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.2.2_hotfix"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.6.1"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.6.1"
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20201023.1"
@@ -118,43 +118,43 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 		"1.21": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
-			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
+			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.3",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.20": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
-			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
+			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.3",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.19": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
-			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
+			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.3",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
-			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
+			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.3",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
-			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
+			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.3",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.1",
 		},
 		"1.16": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server/metrics-server:v0.4.1",
-			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
+			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.3",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.4",
 		},
 		"1.15": {
 			common.AddonResizerComponentName:           "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:              "metrics-server-amd64:v0.2.1",
-			common.AddonManagerComponentName:           "kube-addon-manager-amd64:v9.1.1",
+			common.AddonManagerComponentName:           "kube-addon-manager-amd64:v9.1.3",
 			common.ClusterAutoscalerAddonName:          "cluster-autoscaler:v1.15.5",
 			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64",
 		},
@@ -236,43 +236,43 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 		"1.21": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
-			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.19.1",
+			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.20.0",
 		},
 		"1.20": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
-			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.19.1",
+			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.20.0",
 		},
 		"1.19": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
-			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.19.1",
+			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.20.0",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
-			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.18.3",
+			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.20.0",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
-			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.17.4",
+			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.20.0",
 		},
 		"1.16": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.7",
-			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
+			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
 			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.7",
 		},
 		"1.15": {
 			common.AddonResizerComponentName:           "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:              "oss/kubernetes/metrics-server:v0.2.1",
-			common.AddonManagerComponentName:           "oss/kubernetes/kube-addon-manager:v9.1.1",
+			common.AddonManagerComponentName:           "oss/kubernetes/kube-addon-manager:v9.1.3",
 			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.7",
 			common.CloudControllerManagerComponentName: "oss/kubernetes/cloud-controller-manager",
 		},

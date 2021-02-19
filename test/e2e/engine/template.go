@@ -28,56 +28,60 @@ import (
 
 // Config represents the configuration values of a template stored as env vars
 type Config struct {
-	ClientID                       string `envconfig:"CLIENT_ID" required:"true"`
-	ClientSecret                   string `envconfig:"CLIENT_SECRET" required:"true"`
-	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID" default:""`
-	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY" default:""`
-	MasterDNSPrefix                string `envconfig:"DNS_PREFIX" default:""`
-	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX" default:""`
-	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
-	UseManagedIdentity             bool   `envconfig:"USE_MANAGED_IDENTITY" default:"true"`
-	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY" default:""`
-	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
-	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
-	WindowsNodeImageName           string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
-	WindowsNodeImageResourceGroup  string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
-	WindowsNodeImageSubscriptionID string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
-	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" default:""`
-	WindowsNodeVhdURL              string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
-	LinuxNodeImageGallery          string `envconfig:"LINUX_NODE_IMAGE_GALLERY" default:""`
-	LinuxNodeImageName             string `envconfig:"LINUX_NODE_IMAGE_NAME" default:""`
-	LinuxNodeImageResourceGroup    string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
-	LinuxNodeImageSubscriptionID   string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
-	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
-	OSDiskSizeGB                   string `envconfig:"OS_DISK_SIZE_GB" default:""`
-	ContainerRuntime               string `envconfig:"CONTAINER_RUNTIME" default:""`
-	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE" default:""`
-	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION" default:""`
-	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
-	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
-	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
-	Distro                         string `envconfig:"DISTRO" default:""`
-	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID" required:"true"`
-	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP" default:""`
-	Location                       string `envconfig:"LOCATION" default:""`
-	TenantID                       string `envconfig:"TENANT_ID" required:"true"`
-	ImageName                      string `envconfig:"IMAGE_NAME" default:""`
-	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP" default:""`
-	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
-	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE" default:""`
-	CustomKubeProxyImage           string `envconfig:"CUSTOM_KUBE_PROXY_IMAGE" default:""`
-	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
-	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
-	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
-	LinuxContainerdURL             string `envconfig:"LINUX_CONTAINERD_URL"`
-	WindowsContainerdURL           string `envconfig:"WINDOWS_CONTAINERD_URL"`
-	LinuxMobyURL                   string `envconfig:"LINUX_MOBY_URL"`
-	WindowsProvisioningScriptsURL  string `envconfig:"WINDOWS_PROVISIONING_SCRIPTS_URL" default:""`
-	ArcClientID                    string `envconfig:"ARC_CLIENT_ID" default:""`
-	ArcClientSecret                string `envconfig:"ARC_CLIENT_SECRET" default:""`
-	ArcSubscriptionID              string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
-	ArcLocation                    string `envconfig:"ARC_LOCATION" default:""`
-	ArcTenantID                    string `envconfig:"ARC_TENANT_ID" default:""`
+	ClientID                         string `envconfig:"CLIENT_ID" required:"true"`
+	ClientSecret                     string `envconfig:"CLIENT_SECRET" required:"true"`
+	ClientObjectID                   string `envconfig:"CLIENT_OBJECTID" default:""`
+	LogAnalyticsWorkspaceKey         string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY" default:""`
+	MasterDNSPrefix                  string `envconfig:"DNS_PREFIX" default:""`
+	AgentDNSPrefix                   string `envconfig:"DNS_PREFIX" default:""`
+	MSIUserAssignedID                string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
+	UseManagedIdentity               bool   `envconfig:"USE_MANAGED_IDENTITY" default:"true"`
+	PublicSSHKey                     string `envconfig:"PUBLIC_SSH_KEY" default:""`
+	WindowsAdminPasssword            string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
+	WindowsNodeImageGallery          string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
+	WindowsNodeImageName             string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
+	WindowsNodeImageResourceGroup    string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	WindowsNodeImageSubscriptionID   string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	WindowsNodeImageVersion          string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" default:""`
+	WindowsNodeVhdURL                string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
+	LinuxNodeImageGallery            string `envconfig:"LINUX_NODE_IMAGE_GALLERY" default:""`
+	LinuxNodeImageName               string `envconfig:"LINUX_NODE_IMAGE_NAME" default:""`
+	LinuxNodeImageResourceGroup      string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	LinuxNodeImageSubscriptionID     string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	LinuxNodeImageVersion            string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
+	OSDiskSizeGB                     string `envconfig:"OS_DISK_SIZE_GB" default:""`
+	ContainerRuntime                 string `envconfig:"CONTAINER_RUNTIME" default:""`
+	OrchestratorRelease              string `envconfig:"ORCHESTRATOR_RELEASE" default:""`
+	OrchestratorVersion              string `envconfig:"ORCHESTRATOR_VERSION" default:""`
+	OutputDirectory                  string `envconfig:"OUTPUT_DIR" default:"_output"`
+	CreateVNET                       bool   `envconfig:"CREATE_VNET" default:"false"`
+	EnableKMSEncryption              bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
+	Distro                           string `envconfig:"DISTRO" default:""`
+	SubscriptionID                   string `envconfig:"SUBSCRIPTION_ID" required:"true"`
+	InfraResourceGroup               string `envconfig:"INFRA_RESOURCE_GROUP" default:""`
+	Location                         string `envconfig:"LOCATION" default:""`
+	TenantID                         string `envconfig:"TENANT_ID" required:"true"`
+	ImageName                        string `envconfig:"IMAGE_NAME" default:""`
+	ImageResourceGroup               string `envconfig:"IMAGE_RESOURCE_GROUP" default:""`
+	DebugCrashingPods                bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
+	CustomHyperKubeImage             string `envconfig:"CUSTOM_HYPERKUBE_IMAGE" default:""`
+	CustomKubeProxyImage             string `envconfig:"CUSTOM_KUBE_PROXY_IMAGE" default:""`
+	CustomKubeAPIServerImage         string `envconfig:"CUSTOM_KUBE_APISERVER_IMAGE" default:""`
+	CustomKubeSchedulerImage         string `envconfig:"CUSTOM_KUBE_SCHEDULER_IMAGE" default:""`
+	CustomKubeControllerManagerImage string `envconfig:"CUSTOM_KUBE_CONTROLLER_MANAGER_IMAGE" default:""`
+	CustomWindowsPackageURL          string `envconfig:"CUSTOM_WINDOWS_PACKAGE_URL" default:""`
+	EnableTelemetry                  bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
+	KubernetesImageBase              string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
+	KubernetesImageBaseType          string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
+	LinuxContainerdURL               string `envconfig:"LINUX_CONTAINERD_URL"`
+	WindowsContainerdURL             string `envconfig:"WINDOWS_CONTAINERD_URL"`
+	LinuxMobyURL                     string `envconfig:"LINUX_MOBY_URL"`
+	WindowsProvisioningScriptsURL    string `envconfig:"WINDOWS_PROVISIONING_SCRIPTS_URL" default:""`
+	ArcClientID                      string `envconfig:"ARC_CLIENT_ID" default:""`
+	ArcClientSecret                  string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	ArcSubscriptionID                string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	ArcLocation                      string `envconfig:"ARC_LOCATION" default:""`
+	ArcTenantID                      string `envconfig:"ARC_TENANT_ID" default:""`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -243,7 +247,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.ContainerRuntime == "containerd" {
 		if prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
-			prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
+			prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://github.com/containerd/containerd/releases/download/v1.4.3/containerd-1.4.3-windows-amd64.tar.gz"
 		}
 		if prop.WindowsProfile != nil {
 			if prop.WindowsProfile.WindowsPublisher == "" &&
@@ -388,6 +392,22 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.CustomKubeProxyImage != "" {
 		prop.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = config.CustomKubeProxyImage
+	}
+
+	if config.CustomKubeAPIServerImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeAPIServerImage = config.CustomKubeAPIServerImage
+	}
+
+	if config.CustomKubeSchedulerImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = config.CustomKubeSchedulerImage
+	}
+
+	if config.CustomKubeControllerManagerImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = config.CustomKubeControllerManagerImage
+	}
+
+	if config.CustomWindowsPackageURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL = config.CustomWindowsPackageURL
 	}
 
 	if config.EnableTelemetry == true {

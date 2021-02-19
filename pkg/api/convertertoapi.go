@@ -169,6 +169,7 @@ func convertVLabsLinuxProfile(vlabs *vlabs.LinuxProfile, api *LinuxProfile) {
 		api.CustomNodesDNS = &CustomNodesDNS{}
 		api.CustomNodesDNS.DNSServer = vlabs.CustomNodesDNS.DNSServer
 	}
+	api.RunUnattendedUpgradesOnBootstrap = vlabs.RunUnattendedUpgradesOnBootstrap
 }
 
 func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile) {
@@ -315,6 +316,8 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.CloudProviderDisableOutboundSNAT = vlabs.CloudProviderDisableOutboundSNAT
 	api.KubeReservedCgroup = vlabs.KubeReservedCgroup
 	api.MicrosoftAptRepositoryURL = vlabs.MicrosoftAptRepositoryURL
+	api.EnableMultipleStandardLoadBalancers = vlabs.EnableMultipleStandardLoadBalancers
+	api.Tags = vlabs.Tags
 	convertComponentsToAPI(vlabs, api)
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
@@ -350,11 +353,7 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 		if vp.HasWindows() {
 			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPluginWindows
 		} else {
-			if vp.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.FlannelAddonName) {
-				api.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
-			} else {
-				api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPlugin
-			}
+			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPlugin
 		}
 	}
 }

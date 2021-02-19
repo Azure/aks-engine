@@ -119,7 +119,8 @@ func NewConnectionWithRetry(host, port, user, keyPath string, sleep, timeout tim
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- NewConnectionAsync(host, port, user, keyPath):
+			default:
+				ch <- NewConnectionAsync(host, port, user, keyPath)
 				time.Sleep(sleep)
 			}
 		}
@@ -241,7 +242,8 @@ func (c *Connection) CopyToRemoteWithRetry(hostname, path string, sleep, timeout
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- c.CopyToRemote(hostname, path):
+			default:
+				ch <- c.CopyToRemote(hostname, path)
 				time.Sleep(sleep)
 			}
 		}
@@ -285,7 +287,8 @@ func (c *Connection) ExecuteRemoteWithRetry(node, command string, printStdout bo
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- c.ExecuteRemote(node, command, printStdout):
+			default:
+				ch <- c.ExecuteRemote(node, command, printStdout)
 				time.Sleep(sleep)
 			}
 		}
