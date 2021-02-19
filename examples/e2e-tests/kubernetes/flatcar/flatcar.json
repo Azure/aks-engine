@@ -35,19 +35,6 @@
             ]
           },
           {
-            "name": "rescheduler",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "rescheduler",
-                "cpuRequests": "20m",
-                "memoryRequests": "200Mi",
-                "cpuLimits": "20m",
-                "memoryLimits": "200Mi"
-              }
-            ]
-          },
-          {
             "name": "keyvault-flexvolume",
             "enabled": false
           },

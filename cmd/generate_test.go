@@ -548,11 +548,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
 		},
 		{
-			name:         "rescheduler addon",
-			apiModelPath: "../examples/kubernetes-config/kubernetes-rescheduler.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "standard LB",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-standardlb.json",
 			setArgs:      defaultSet,

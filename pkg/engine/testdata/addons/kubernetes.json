@@ -64,19 +64,6 @@
             "enabled": true
           },
           {
-            "name": "rescheduler",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "rescheduler",
-                "cpuRequests": "10m",
-                "memoryRequests": "100Mi",
-                "cpuLimits": "10m",
-                "memoryLimits": "100Mi"
-              }
-            ]
-          },
-          {
             "name": "metrics-server",
             "enabled": true,
             "containers": [

@@ -943,6 +943,27 @@ func ExampleKubernetesConfig_validateNetworkPlugin() {
 	// level=warning msg="Windows + Kubenet is for development and testing only, not recommended for production"
 }
 
+func ExampleProperties_validateAddons() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{Name: common.ReschedulerAddonName,
+			Enabled: to.BoolPtr(true)},
+	}
+	if err := cs.Properties.validateAddons(true); err == nil {
+		fmt.Printf("error in ValidateNetworkPlugin: %s", err)
+	}
+
+	// Output:
+	// level=warning msg="The rescheduler addon has been deprecated and disabled, it will be removed during this update"
+}
+
 func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}
@@ -2224,6 +2245,22 @@ func TestValidateAddons(t *testing.T) {
 				},
 			},
 			expectedErr: errors.Errorf("Both %s and %s addons are enabled, only one of these may be enabled on a cluster", common.KeyVaultFlexVolumeAddonName, common.SecretsStoreCSIDriverAddonName),
+		},
+		{
+			name: "deprecated rescheduler addon enabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.ReschedulerAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("The rescheduler addon has been deprecated and disabled, please remove it from your cluster configuration before creating a new cluster"),
 		},
 	}
 

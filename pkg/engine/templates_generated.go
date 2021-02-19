@@ -27,7 +27,6 @@
 // ../../parts/k8s/addons/keyvault-flexvolume.yaml
 // ../../parts/k8s/addons/kube-dns.yaml
 // ../../parts/k8s/addons/kube-proxy.yaml
-// ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
 // ../../parts/k8s/addons/metrics-server.yaml
 // ../../parts/k8s/addons/node-problem-detector.yaml
@@ -9754,60 +9753,6 @@ func k8sAddonsKubeProxyYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kube-proxy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubeReschedulerYaml = []byte(`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rescheduler
-  namespace: kube-system
-  labels:
-    k8s-app: rescheduler
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: rescheduler
-  template:
-    metadata:
-      labels:
-        k8s-app: rescheduler
-    spec:
-      priorityClassName: system-node-critical
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-      - image: {{ContainerImage "rescheduler"}}
-        imagePullPolicy: IfNotPresent
-        name: rescheduler
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "rescheduler"}}
-            memory: {{ContainerMemReqs "rescheduler"}}
-          limits:
-            cpu: {{ContainerCPULimits "rescheduler"}}
-            memory: {{ContainerMemLimits "rescheduler"}}
-        command:
-        - sh
-        - -c
-        - '/rescheduler'
-`)
-
-func k8sAddonsKubeReschedulerYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubeReschedulerYaml, nil
-}
-
-func k8sAddonsKubeReschedulerYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubeReschedulerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kube-rescheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -20239,7 +20184,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/keyvault-flexvolume.yaml":                                k8sAddonsKeyvaultFlexvolumeYaml,
 	"k8s/addons/kube-dns.yaml":                                           k8sAddonsKubeDnsYaml,
 	"k8s/addons/kube-proxy.yaml":                                         k8sAddonsKubeProxyYaml,
-	"k8s/addons/kube-rescheduler.yaml":                                   k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                               k8sAddonsKubernetesDashboardYaml,
 	"k8s/addons/metrics-server.yaml":                                     k8sAddonsMetricsServerYaml,
 	"k8s/addons/node-problem-detector.yaml":                              k8sAddonsNodeProblemDetectorYaml,
@@ -20390,7 +20334,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"keyvault-flexvolume.yaml":              {k8sAddonsKeyvaultFlexvolumeYaml, map[string]*bintree{}},
 			"kube-dns.yaml":                         {k8sAddonsKubeDnsYaml, map[string]*bintree{}},
 			"kube-proxy.yaml":                       {k8sAddonsKubeProxyYaml, map[string]*bintree{}},
-			"kube-rescheduler.yaml":                 {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":             {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
 			"metrics-server.yaml":                   {k8sAddonsMetricsServerYaml, map[string]*bintree{}},
 			"node-problem-detector.yaml":            {k8sAddonsNodeProblemDetectorYaml, map[string]*bintree{}},

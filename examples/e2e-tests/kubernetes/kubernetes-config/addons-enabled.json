@@ -29,10 +29,6 @@
             "enabled": true
           },
           {
-            "name": "rescheduler",
-            "enabled": true
-          },
-          {
             "name": "nvidia-device-plugin",
             "enabled": true
           },

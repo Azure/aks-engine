@@ -89,8 +89,8 @@ const (
 	DashboardAddonName = "kubernetes-dashboard"
 	// DashboardMetricsScraperContainerName is the name of the metrics-scraper container in the kubernetes-dashboard addon
 	DashboardMetricsScraperContainerName = "kubernetes-dashboard-metrics-scraper"
-	// ReschedulerAddonName is the name of the rescheduler addon deployment
-	ReschedulerAddonName = "rescheduler"
+	// ReschedulerAddonName // Deprecated
+	ReschedulerAddonName = "rescheduler" // Deprecated
 	// ExecHealthZComponentName is the name of the exechealthz component
 	ExecHealthZComponentName = "exechealthz"
 	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment

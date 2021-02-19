@@ -73,7 +73,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.KubeDNSAddonName:                     "k8s-dns-kube-dns-amd64:1.15.4",
 		common.DNSMasqComponentName:                 "k8s-dns-dnsmasq-nanny-amd64:1.15.4",
 		common.DNSSidecarComponentName:              "k8s-dns-sidecar-amd64:1.14.10",
-		common.ReschedulerAddonName:                 "rescheduler:v0.4.0",
+		common.ReschedulerAddonName:                 "rescheduler:v0.4.0", // Deprecated
 		common.IPMASQAgentAddonName:                 "ip-masq-agent-amd64:v2.5.0",
 		common.KubeProxyAddonName:                   "kube-proxy",
 		common.ControllerManagerComponentName:       "kube-controller-manager",
@@ -89,7 +89,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.KubeDNSAddonName:                     "oss/kubernetes/k8s-dns-kube-dns:1.15.4",
 		common.DNSMasqComponentName:                 "oss/kubernetes/k8s-dns-dnsmasq-nanny:1.15.4",
 		common.DNSSidecarComponentName:              "oss/kubernetes/k8s-dns-sidecar:1.14.10",
-		common.ReschedulerAddonName:                 "oss/kubernetes/rescheduler:v0.4.0",
+		common.ReschedulerAddonName:                 "oss/kubernetes/rescheduler:v0.4.0", // Deprecated
 		common.IPMASQAgentAddonName:                 "oss/kubernetes/ip-masq-agent:v2.5.0",
 		common.KubeProxyAddonName:                   "oss/kubernetes/kube-proxy",
 		common.ControllerManagerComponentName:       "oss/kubernetes/kube-controller-manager",
