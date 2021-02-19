@@ -22,19 +22,6 @@
             ]
           },
           {
-            "name": "kubernetes-dashboard",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "kubernetes-dashboard",
-                "cpuRequests": "50m",
-                "memoryRequests": "512Mi",
-                "cpuLimits": "50m",
-                "memoryLimits": "512Mi"
-              }
-            ]
-          },
-          {
             "name": "keyvault-flexvolume",
             "enabled": false
           },

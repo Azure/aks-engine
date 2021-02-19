@@ -771,6 +771,8 @@ func (a *Properties) validateAddons(isUpdate bool) error {
 						log.Warnf("The rescheduler addon has been deprecated and disabled, it will be removed during this update")
 					}
 					return errors.Errorf("The rescheduler addon has been deprecated and disabled, please remove it from your cluster configuration before creating a new cluster")
+				case common.DashboardAddonName:
+					log.Warnf("The kube-dashboard addon is deprecated, we recommend you install the dashboard yourself, see https://github.com/kubernetes/dashboard")
 				}
 			} else {
 				// Validation for addons if they are disabled

@@ -399,7 +399,7 @@ ensureKubelet() {
 }
 
 ensureAddons() {
-{{- if IsDashboardAddonEnabled}}
+{{- if IsDashboardAddonEnabled}} {{/* Note: dashboard addon is deprecated */}}
   retrycmd 120 5 30 $KUBECTL get namespace kubernetes-dashboard || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
 {{- end}}
 {{- if IsAzurePolicyAddonEnabled}}

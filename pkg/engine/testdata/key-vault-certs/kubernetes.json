@@ -102,20 +102,6 @@
             ]
           },
           {
-            "name": "kubernetes-dashboard",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "kubernetes-dashboard",
-                "image": "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-                "cpuRequests": "300m",
-                "memoryRequests": "150Mi",
-                "cpuLimits": "300m",
-                "memoryLimits": "150Mi"
-              }
-            ]
-          },
-          {
             "name": "metrics-server",
             "enabled": true,
             "containers": [

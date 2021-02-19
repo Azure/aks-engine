@@ -48,10 +48,6 @@
 							}
 						},
 						{
-							"name": "kubernetes-dashboard",
-							"enabled": true
-						},
-						{
 							"name": "coredns",
 							"enabled": true,
 							"config": {
