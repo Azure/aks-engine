@@ -10,7 +10,6 @@ Introductions to all the key parts of AKS Engine you’ll need to know.
 - [Using GPUs with Kubernetes](gpu.md)
 - [Running Kubernetes in a hybrid environment](hybrid-environment.md)
 - [For Kubernetes Developers](kubernetes-developers.md)
-- [Kubernetes Walkthrough](kubernetes-walkthrough.md)
 - [Service Principals](service-principals.md)
 - [Use Key Vault as the Source of Cluster Configuration Secrets](keyvault-secrets.md)
 - [More on Windows and Kubernetes](windows-and-kubernetes.md)
