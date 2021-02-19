@@ -5,7 +5,6 @@
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/aad-pod-identity.yaml
-// ../../parts/k8s/addons/aci-connector.yaml
 // ../../parts/k8s/addons/antrea.yaml
 // ../../parts/k8s/addons/arc-onboarding.yaml
 // ../../parts/k8s/addons/audit-policy.yaml
@@ -777,148 +776,6 @@ func k8sAddonsAadPodIdentityYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/aad-pod-identity.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsAciConnectorYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: aci-connector
-  labels:
-    app: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - pods
-  - services
-  - endpoints
-  - events
-  - secrets
-  - nodes
-  - nodes/status
-  - pods/status
-  verbs:
-  - "*"
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aci-connector
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: aci-connector
-subjects:
-- kind: ServiceAccount
-  name: aci-connector
-  namespace: kube-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aci-connector-secret
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-type: Opaque
-data:
-  credentials.json: <creds>
-  cert.pem: <cert>
-  key.pem: <key>
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    app: aci-connector
-    name: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: aci-connector
-  template:
-    metadata:
-      labels:
-        app: aci-connector
-    spec:
-      serviceAccountName: aci-connector
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-      - name: aci-connector
-        image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: KUBELET_PORT
-          value: "10250"
-        - name: AZURE_AUTH_LOCATION
-          value: /etc/virtual-kubelet/credentials.json
-        - name: ACI_RESOURCE_GROUP
-          value: <rgName>
-        - name: ACI_REGION
-          value: {{ContainerConfig "region"}}
-        - name: APISERVER_CERT_LOCATION
-          value: /etc/virtual-kubelet/cert.pem
-        - name: APISERVER_KEY_LOCATION
-          value: /etc/virtual-kubelet/key.pem
-        - name: VKUBELET_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "aci-connector"}}
-            memory: {{ContainerMemReqs "aci-connector"}}
-          limits:
-            cpu: {{ContainerCPULimits "aci-connector"}}
-            memory: {{ContainerMemLimits "aci-connector"}}
-        volumeMounts:
-        - name: credentials
-          mountPath: "/etc/virtual-kubelet"
-          readOnly: true
-        command: ["virtual-kubelet"]
-        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
-      volumes:
-      - name: credentials
-        secret:
-          secretName: aci-connector-secret
-#EOF
-`)
-
-func k8sAddonsAciConnectorYamlBytes() ([]byte, error) {
-	return _k8sAddonsAciConnectorYaml, nil
-}
-
-func k8sAddonsAciConnectorYaml() (*asset, error) {
-	bytes, err := k8sAddonsAciConnectorYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/aci-connector.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12491,20 +12348,6 @@ configClusterAutoscalerAddon() {
   sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $f
 }
 {{end}}
-{{- if IsACIConnectorAddonEnabled}}
-configACIConnectorAddon() {
-  local creds key cert f=$ADDONS_DIR/aci-connector-deployment.yaml
-  creds=$(printf '{"clientId": "%s", "clientSecret": "%s", "tenantId": "%s", "subscriptionId": "%s", "activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/", "activeDirectoryGraphResourceId": "https://graph.windows.net/", "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/", "galleryEndpointUrl": "https://gallery.azure.com/", "managementEndpointUrl": "https://management.core.windows.net/"}' "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
-  openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -keyout /etc/kubernetes/certs/aci-connector-key.pem -out /etc/kubernetes/certs/aci-connector-cert.pem -subj "/C=US/ST=CA/L=virtualkubelet/O=virtualkubelet/OU=virtualkubelet/CN=virtualkubelet"
-  key=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
-  cert=$(base64 /etc/kubernetes/certs/aci-connector-cert.pem -w0)
-  wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|<creds>|$creds|g" $f
-  sed -i "s|<rgName>|$RESOURCE_GROUP|g" $f
-  sed -i "s|<cert>|$cert|g" $f
-  sed -i "s|<key>|$key|g" $f
-}
-{{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
   sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $ADDONS_DIR/azure-policy-deployment.yaml
@@ -12515,11 +12358,6 @@ configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
     configClusterAutoscalerAddon
-  fi
-  {{end}}
-  {{if IsACIConnectorAddonEnabled}}
-  if [[ ${ACI_CONNECTOR_ADDON} == True ]]; then
-    configACIConnectorAddon
   fi
   {{end}}
   {{if IsAzurePolicyAddonEnabled}}
@@ -16597,12 +16435,6 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
       "type": "bool"
     },
 {{end}}
-    "kubernetesACIConnectorEnabled": {
-      "metadata": {
-        "description": "ACI Connector Status"
-      },
-      "type": "bool"
-    },
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {
@@ -20162,7 +19994,6 @@ var _bindata = map[string]func() (*asset, error){
 	"iaasoutputs.t":  iaasoutputsT,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                       k8sAddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/aad-pod-identity.yaml":                                   k8sAddonsAadPodIdentityYaml,
-	"k8s/addons/aci-connector.yaml":                                      k8sAddonsAciConnectorYaml,
 	"k8s/addons/antrea.yaml":                                             k8sAddonsAntreaYaml,
 	"k8s/addons/arc-onboarding.yaml":                                     k8sAddonsArcOnboardingYaml,
 	"k8s/addons/audit-policy.yaml":                                       k8sAddonsAuditPolicyYaml,
@@ -20312,7 +20143,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"aad-default-admin-group-rbac.yaml":     {k8sAddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"aad-pod-identity.yaml":                 {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
-			"aci-connector.yaml":                    {k8sAddonsAciConnectorYaml, map[string]*bintree{}},
 			"antrea.yaml":                           {k8sAddonsAntreaYaml, map[string]*bintree{}},
 			"arc-onboarding.yaml":                   {k8sAddonsArcOnboardingYaml, map[string]*bintree{}},
 			"audit-policy.yaml":                     {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},

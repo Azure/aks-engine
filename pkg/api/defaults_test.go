@@ -237,7 +237,6 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
 		common.TillerAddonName:                 specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
-		common.ACIConnectorAddonName:           specConfig.ACIConnectorImageBase + k8sComponents[common.ACIConnectorAddonName],
 		common.ClusterAutoscalerAddonName:      specConfig.MCRKubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
 		common.BlobfuseFlexVolumeAddonName:     k8sComponents[common.BlobfuseFlexVolumeAddonName],
 		common.SMBFlexVolumeAddonName:          k8sComponents[common.SMBFlexVolumeAddonName],
@@ -3575,7 +3574,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			KubernetesImageBase:                  "KubernetesImageBase",
 			MCRKubernetesImageBase:               "MCRKubernetesImageBase",
 			TillerImageBase:                      "TillerImageBase",
-			ACIConnectorImageBase:                "ACIConnectorImageBase",
 			NVIDIAImageBase:                      "NVIDIAImageBase",
 			AzureCNIImageBase:                    "AzureCNIImageBase",
 			CalicoImageBase:                      "CalicoImageBase",
@@ -3673,9 +3671,6 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		t.Errorf("expected no error from SetPropertiesDefaults, instead got %s", err)
 	}
 
-	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase != DefaultKubernetesSpecConfig.ACIConnectorImageBase {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set ACIConnectorImageBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.ACIConnectorImageBase, DefaultKubernetesSpecConfig.ACIConnectorImageBase)
-	}
 	if mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase != DefaultKubernetesSpecConfig.KubeBinariesSASURLBase {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set KubeBinariesSASURLBase with default Value, got '%s', expected %s", mockCSCustomP.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase, DefaultKubernetesSpecConfig.KubeBinariesSASURLBase)
 	}

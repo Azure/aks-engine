@@ -90,11 +90,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.AADPodIdentityAddonName),
 			destinationFile: aadPodIdentityAddonDestinationFilename,
 		},
-		common.ACIConnectorAddonName: {
-			sourceFile:      aciConnectorAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.ACIConnectorAddonName),
-			destinationFile: aciConnectorAddonDestinationFilename,
-		},
 		common.AzureDiskCSIDriverAddonName: {
 			sourceFile:      azureDiskCSIAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.AzureDiskCSIDriverAddonName),

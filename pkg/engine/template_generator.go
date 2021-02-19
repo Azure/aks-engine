@@ -638,9 +638,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsAzurePolicyAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzurePolicyAddonName)
 		},
-		"IsACIConnectorAddonEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ACIConnectorAddonName)
-		},
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 		},

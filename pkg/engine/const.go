@@ -145,8 +145,6 @@ const (
 	tillerAddonDestinationFilename                 string = "tiller.yaml"
 	aadPodIdentityAddonSourceFilename              string = "aad-pod-identity.yaml"
 	aadPodIdentityAddonDestinationFilename         string = "aad-pod-identity.yaml"
-	aciConnectorAddonSourceFilename                string = "aci-connector.yaml"
-	aciConnectorAddonDestinationFilename           string = "aci-connector.yaml"
 	azureDiskCSIAddonSourceFilename                string = "azuredisk-csi-driver-deployment.yaml"
 	azureDiskCSIAddonDestinationFilename           string = "azuredisk-csi-driver-deployment.yaml"
 	azureFileCSIAddonSourceFilename                string = "azurefile-csi-driver-deployment.yaml"

@@ -75,8 +75,8 @@ const MinCloudProviderQPSToBucketFactor float64 = 0.1
 const (
 	// TillerAddonName is the name of the tiller addon deployment
 	TillerAddonName = "tiller"
-	// ACIConnectorAddonName is the name of the aci-connector addon deployment
-	ACIConnectorAddonName = "aci-connector"
+	// ACIConnectorAddonName // Deprecated
+	ACIConnectorAddonName = "aci-connector" // Deprecated
 	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
 	ClusterAutoscalerAddonName = "cluster-autoscaler"
 	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon

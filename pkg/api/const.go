@@ -116,8 +116,8 @@ const (
 	DefaultAzurePolicyAddonEnabled = false
 	// DefaultNodeProblemDetectorAddonEnabled determines the aks-engine provided default for enabling the node problem detector addon
 	DefaultNodeProblemDetectorAddonEnabled = false
-	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
-	DefaultACIConnectorAddonEnabled = false
+	// DefaultACIConnectorAddonEnabled // Deprecated
+	DefaultACIConnectorAddonEnabled = false // Deprecated
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
 	DefaultAppGwIngressAddonEnabled = false
 	// DefaultAzureDiskCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure Disk CSI Driver

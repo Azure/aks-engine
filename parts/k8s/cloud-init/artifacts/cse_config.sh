@@ -550,20 +550,6 @@ configClusterAutoscalerAddon() {
   sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $f
 }
 {{end}}
-{{- if IsACIConnectorAddonEnabled}}
-configACIConnectorAddon() {
-  local creds key cert f=$ADDONS_DIR/aci-connector-deployment.yaml
-  creds=$(printf '{"clientId": "%s", "clientSecret": "%s", "tenantId": "%s", "subscriptionId": "%s", "activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/", "activeDirectoryGraphResourceId": "https://graph.windows.net/", "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/", "galleryEndpointUrl": "https://gallery.azure.com/", "managementEndpointUrl": "https://management.core.windows.net/"}' "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
-  openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -keyout /etc/kubernetes/certs/aci-connector-key.pem -out /etc/kubernetes/certs/aci-connector-cert.pem -subj "/C=US/ST=CA/L=virtualkubelet/O=virtualkubelet/OU=virtualkubelet/CN=virtualkubelet"
-  key=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
-  cert=$(base64 /etc/kubernetes/certs/aci-connector-cert.pem -w0)
-  wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|<creds>|$creds|g" $f
-  sed -i "s|<rgName>|$RESOURCE_GROUP|g" $f
-  sed -i "s|<cert>|$cert|g" $f
-  sed -i "s|<key>|$key|g" $f
-}
-{{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
   sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $ADDONS_DIR/azure-policy-deployment.yaml
@@ -574,11 +560,6 @@ configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
     configClusterAutoscalerAddon
-  fi
-  {{end}}
-  {{if IsACIConnectorAddonEnabled}}
-  if [[ ${ACI_CONNECTOR_ADDON} == True ]]; then
-    configACIConnectorAddon
   fi
   {{end}}
   {{if IsAzurePolicyAddonEnabled}}

@@ -14,7 +14,6 @@ func TestURLForAzureChinaCloud(t *testing.T) {
 	g := NewGomegaWithT(t)
 
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.KubernetesImageBase).To(ContainSubstring(azureChinaCloudMirror))
-	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase).To(ContainSubstring(azureChinaCloudMirror))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.NVIDIAImageBase).To(ContainSubstring(azureChinaCloudMirror))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.AzureCNIImageBase).To(ContainSubstring(azureChinaCloudMirror))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.CalicoImageBase).To(ContainSubstring(azureChinaCloudMirror))
