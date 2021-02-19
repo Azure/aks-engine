@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -32,10 +34,20 @@ import (
 )
 
 const (
-	defaultK8sVersionForFakeVMs = "Kubernetes:1.17.5"
 	//DefaultFakeVMName is the default name assigned to VMs part of FakeListVirtualMachineScaleSetVMsResult and FakeListVirtualMachineResult
 	DefaultFakeVMName = "k8s-agentpool1-12345678-0"
 )
+
+var defaultK8sVersionForFakeVMs string
+
+func init() {
+	defaultVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
+	versionSplit := strings.Split(defaultVersion, ".")
+	minorVersion, _ := strconv.Atoi(versionSplit[1])
+	minorVersionLessOne := minorVersion - 1
+	priorVersion := versionSplit[0] + "." + strconv.Itoa(minorVersionLessOne) + "." + versionSplit[2]
+	defaultK8sVersionForFakeVMs = fmt.Sprintf("Kubernetes:%s", priorVersion)
+}
 
 //MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
 type MockAKSEngineClient struct {
