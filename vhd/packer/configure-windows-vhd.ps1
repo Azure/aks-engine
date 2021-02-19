@@ -55,7 +55,7 @@ function Get-ContainerImages {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:2004",
                 "mcr.microsoft.com/windows/nanoserver:2004",
-                "mcr.microsoft.com/oss/kubernetes/pause:1.4.1")
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0")
         }
         default {
             $imagesToPull = @()
@@ -170,7 +170,7 @@ function Install-ContainerD {
 }
 
 function Install-Docker {
-    $defaultDockerVersion = "19.03.14"
+    $defaultDockerVersion = "19.03.11"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
