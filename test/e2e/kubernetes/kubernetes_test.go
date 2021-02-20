@@ -2799,9 +2799,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					By("Installing kured with node annotations configuration")
-					cmd := exec.Command("k", "apply", "-f", filepath.Join(WorkloadDir, "kured-annotations.yaml"))
-					util.PrintCommand(cmd)
-					_, err := cmd.CombinedOutput()
+					_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "kured-annotations.yaml"), "kured", "kube-system", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2901,7 +2899,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						timeToLargeContainerDaemonsetRunningBaseline = time.Since(start)
 						log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
 					}
-					cmd = exec.Command("helm", "status", "vmss-prototype")
+					cmd := exec.Command("helm", "status", "vmss-prototype")
 					out, err := cmd.CombinedOutput()
 					if err == nil {
 						By("Found pre-existing 'vmss-prototype' helm release, deleting it...")
