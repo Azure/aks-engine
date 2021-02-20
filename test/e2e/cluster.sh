@@ -244,6 +244,7 @@ docker run --rm \
 -e CUSTOM_KUBE_SCHEDULER_IMAGE=${CUSTOM_KUBE_SCHEDULER_IMAGE} \
 -e CUSTOM_KUBE_CONTROLLER_MANAGER_IMAGE=${CUSTOM_KUBE_CONTROLLER_MANAGER_IMAGE} \
 -e CUSTOM_WINDOWS_PACKAGE_URL=${CUSTOM_WINDOWS_PACKAGE_URL} \
+-e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
 "${DEV_IMAGE}" make test-kubernetes || tryExit && renameResultsFile "deploy"
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ] || [ "${ROTATE_CERTS}" = "true" ]; then
@@ -360,6 +361,7 @@ if [ "${ROTATE_CERTS}" = "true" ]; then
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
     -e ARC_TENANT_ID=${ARC_TENANT_ID:-$AZURE_TENANT_ID} \
+    -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
     ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "rotate-certs"
 fi
 
@@ -440,6 +442,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
     -e ARC_TENANT_ID=${ARC_TENANT_ID:-$AZURE_TENANT_ID} \
+    -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
     ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "add-node-pool"
 fi
 
@@ -554,6 +557,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
     -e ARC_TENANT_ID=${ARC_TENANT_ID:-$AZURE_TENANT_ID} \
+    -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
     ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "scale-down"
 fi
 
@@ -643,6 +647,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
       -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
       -e ARC_TENANT_ID=${ARC_TENANT_ID:-$AZURE_TENANT_ID} \
+      -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
       ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "upgrade"
   done
 fi
@@ -721,5 +726,6 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ARC_SUBSCRIPTION_ID=${ARC_SUBSCRIPTION_ID:-$AZURE_SUBSCRIPTION_ID} \
     -e ARC_LOCATION=${ARC_LOCATION:-$LOCATION} \
     -e ARC_TENANT_ID=${ARC_TENANT_ID:-$AZURE_TENANT_ID} \
+    -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
     ${DEV_IMAGE} make test-kubernetes || tryExit && renameResultsFile "scale-up"
 fi

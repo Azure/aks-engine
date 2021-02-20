@@ -82,6 +82,7 @@ type Config struct {
 	ArcSubscriptionID                string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
 	ArcLocation                      string `envconfig:"ARC_LOCATION" default:""`
 	ArcTenantID                      string `envconfig:"ARC_TENANT_ID" default:""`
+	RunVMSSNodePrototype             bool   `envconfig:"RUN_VMSS_NODE_PROTOTYPE" default:"false"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -179,6 +180,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			if prop.OrchestratorProfile.KubernetesConfig != nil && prop.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil && prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile != nil {
 				prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.PublicKey = config.PublicSSHKey
 			}
+		}
+		if config.RunVMSSNodePrototype {
+			// In order to better determine the time it takes for nodes to come online let's eliminate any VM reboot considerations
+			prop.LinuxProfile.RunUnattendedUpgradesOnBootstrap = to.BoolPtr((false))
 		}
 	}
 

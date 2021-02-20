@@ -63,6 +63,7 @@ jobs:
       -e TENANT_ID=${TENANT_ID} \
       -e WINDOWS_PROVISIONING_SCRIPTS_URL=${SCRIPT_PACKAGE_URL} \
       -e USE_MANAGED_IDENTITY="false" \
+      -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
       ${DEIS_GO_DEV_IMAGE} make test-kubernetes
     displayName: Run e2e tests
     condition: succeeded()
