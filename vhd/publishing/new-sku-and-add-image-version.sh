@@ -43,7 +43,7 @@ echo "Checking if offer contains SKU: $sku_id"
 (set -x; hack/tools/bin/pub skus list -p $PUBLISHER -o $OFFER | jq ".[] | .planId" | tr -d '"' | tee skus.txt)
 echo ""
 
-if grep -q $sku_id skus.txt; then
+if grep -q "^$sku_id$" skus.txt; then
     echo "Offer already has SKU"
 else
     echo "Creating new SKU"
