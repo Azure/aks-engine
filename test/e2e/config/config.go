@@ -50,6 +50,7 @@ type Config struct {
 	GinkgoFocus                        string `envconfig:"GINKGO_FOCUS" default:""`
 	GinkgoSkip                         string `envconfig:"GINKGO_SKIP" default:""`
 	GinkgoFailFast                     bool   `envconfig:"GINKGO_FAIL_FAST" default:"false"`
+	GinkgoParallel                     bool   `envconfig:"GINKGO_PARALLEL" default:"false"`
 	DebugAfterSuite                    bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 	BlockSSHPort                       bool   `envconfig:"BLOCK_SSH" default:"false"`
 	RebootControlPlaneNodes            bool   `envconfig:"REBOOT_CONTROL_PLANE_NODES" default:"false"`

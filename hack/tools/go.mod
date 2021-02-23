@@ -13,9 +13,8 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/goveralls v0.0.7 // indirect
 	github.com/mitchellh/gox v1.0.1
-	github.com/onsi/ginkgo v1.12.2
+	github.com/onsi/ginkgo v1.15.0
 	github.com/uber/jaeger-client-go v2.21.1+incompatible // indirect
 	go.opencensus.io v0.22.2 // indirect
-	golang.org/x/crypto v0.0.0-20191227163750-53104e6ec876 // indirect
 	google.golang.org/api v0.15.0 // indirect
 )
