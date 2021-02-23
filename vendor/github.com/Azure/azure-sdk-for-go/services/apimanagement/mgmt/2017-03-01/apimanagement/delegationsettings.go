@@ -83,6 +83,7 @@ func (client DelegationSettingsClient) CreateOrUpdate(ctx context.Context, resou
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DelegationSettingsClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -122,7 +123,6 @@ func (client DelegationSettingsClient) CreateOrUpdateSender(req *http.Request) (
 func (client DelegationSettingsClient) CreateOrUpdateResponder(resp *http.Response) (result PortalDelegationSettings, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -169,6 +169,7 @@ func (client DelegationSettingsClient) Get(ctx context.Context, resourceGroupNam
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DelegationSettingsClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -206,7 +207,6 @@ func (client DelegationSettingsClient) GetSender(req *http.Request) (*http.Respo
 func (client DelegationSettingsClient) GetResponder(resp *http.Response) (result PortalDelegationSettings, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -253,6 +253,7 @@ func (client DelegationSettingsClient) Head(ctx context.Context, resourceGroupNa
 	result, err = client.HeadResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DelegationSettingsClient", "Head", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -290,7 +291,6 @@ func (client DelegationSettingsClient) HeadSender(req *http.Request) (*http.Resp
 func (client DelegationSettingsClient) HeadResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -339,6 +339,7 @@ func (client DelegationSettingsClient) Update(ctx context.Context, resourceGroup
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DelegationSettingsClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -379,7 +380,6 @@ func (client DelegationSettingsClient) UpdateSender(req *http.Request) (*http.Re
 func (client DelegationSettingsClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

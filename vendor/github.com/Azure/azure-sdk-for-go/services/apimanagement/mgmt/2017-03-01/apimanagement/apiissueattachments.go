@@ -105,6 +105,11 @@ func (client APIIssueAttachmentsClient) ListByService(ctx context.Context, resou
 	result.iac, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIIssueAttachmentsClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.iac.hasNextLink() && result.iac.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -153,7 +158,6 @@ func (client APIIssueAttachmentsClient) ListByServiceSender(req *http.Request) (
 func (client APIIssueAttachmentsClient) ListByServiceResponder(resp *http.Response) (result IssueAttachmentCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

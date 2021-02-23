@@ -86,6 +86,7 @@ func (client LinkedServicesClient) CreateOrUpdate(ctx context.Context, resourceG
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.LinkedServicesClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -126,7 +127,6 @@ func (client LinkedServicesClient) CreateOrUpdateSender(req *http.Request) (*htt
 func (client LinkedServicesClient) CreateOrUpdateResponder(resp *http.Response) (result LinkedService, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -174,6 +174,7 @@ func (client LinkedServicesClient) Delete(ctx context.Context, resourceGroupName
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.LinkedServicesClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -212,7 +213,6 @@ func (client LinkedServicesClient) DeleteSender(req *http.Request) (*http.Respon
 func (client LinkedServicesClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -259,6 +259,7 @@ func (client LinkedServicesClient) Get(ctx context.Context, resourceGroupName st
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.LinkedServicesClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -297,7 +298,6 @@ func (client LinkedServicesClient) GetSender(req *http.Request) (*http.Response,
 func (client LinkedServicesClient) GetResponder(resp *http.Response) (result LinkedService, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -344,6 +344,7 @@ func (client LinkedServicesClient) ListByWorkspace(ctx context.Context, resource
 	result, err = client.ListByWorkspaceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.LinkedServicesClient", "ListByWorkspace", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -381,7 +382,6 @@ func (client LinkedServicesClient) ListByWorkspaceSender(req *http.Request) (*ht
 func (client LinkedServicesClient) ListByWorkspaceResponder(resp *http.Response) (result LinkedServiceListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

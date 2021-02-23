@@ -44,7 +44,7 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/Azure/aks-engine/test/e2e/remote"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2020-12-01/compute"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

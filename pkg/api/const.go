@@ -229,7 +229,7 @@ const (
 const (
 	APIVersionAuthorizationUser   = "2018-09-01-preview"
 	APIVersionAuthorizationSystem = "2018-09-01-preview"
-	APIVersionCompute             = "2019-07-01"
+	APIVersionCompute             = "2020-12-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2019-09-01"
 	APIVersionManagedIdentity     = "2018-11-30"

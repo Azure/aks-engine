@@ -100,6 +100,11 @@ func (client APIIssuesClient) ListByService(ctx context.Context, resourceGroupNa
 	result.ic, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIIssuesClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.ic.hasNextLink() && result.ic.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -147,7 +152,6 @@ func (client APIIssuesClient) ListByServiceSender(req *http.Request) (*http.Resp
 func (client APIIssuesClient) ListByServiceResponder(resp *http.Response) (result IssueCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

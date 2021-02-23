@@ -81,6 +81,7 @@ func (client TenantAccessClient) Get(ctx context.Context, resourceGroupName stri
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.TenantAccessClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -119,7 +120,6 @@ func (client TenantAccessClient) GetSender(req *http.Request) (*http.Response, e
 func (client TenantAccessClient) GetResponder(resp *http.Response) (result AccessInformationContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -166,6 +166,7 @@ func (client TenantAccessClient) RegeneratePrimaryKey(ctx context.Context, resou
 	result, err = client.RegeneratePrimaryKeyResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.TenantAccessClient", "RegeneratePrimaryKey", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -204,7 +205,6 @@ func (client TenantAccessClient) RegeneratePrimaryKeySender(req *http.Request) (
 func (client TenantAccessClient) RegeneratePrimaryKeyResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -250,6 +250,7 @@ func (client TenantAccessClient) RegenerateSecondaryKey(ctx context.Context, res
 	result, err = client.RegenerateSecondaryKeyResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.TenantAccessClient", "RegenerateSecondaryKey", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -288,7 +289,6 @@ func (client TenantAccessClient) RegenerateSecondaryKeySender(req *http.Request)
 func (client TenantAccessClient) RegenerateSecondaryKeyResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -337,6 +337,7 @@ func (client TenantAccessClient) Update(ctx context.Context, resourceGroupName s
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.TenantAccessClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -378,7 +379,6 @@ func (client TenantAccessClient) UpdateSender(req *http.Request) (*http.Response
 func (client TenantAccessClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

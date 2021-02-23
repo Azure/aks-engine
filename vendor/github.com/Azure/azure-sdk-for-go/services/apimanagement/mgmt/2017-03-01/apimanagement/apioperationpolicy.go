@@ -100,6 +100,7 @@ func (client APIOperationPolicyClient) CreateOrUpdate(ctx context.Context, resou
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIOperationPolicyClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -143,7 +144,6 @@ func (client APIOperationPolicyClient) CreateOrUpdateSender(req *http.Request) (
 func (client APIOperationPolicyClient) CreateOrUpdateResponder(resp *http.Response) (result PolicyContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -203,6 +203,7 @@ func (client APIOperationPolicyClient) Delete(ctx context.Context, resourceGroup
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIOperationPolicyClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -244,7 +245,6 @@ func (client APIOperationPolicyClient) DeleteSender(req *http.Request) (*http.Re
 func (client APIOperationPolicyClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -302,6 +302,7 @@ func (client APIOperationPolicyClient) Get(ctx context.Context, resourceGroupNam
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIOperationPolicyClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -342,7 +343,6 @@ func (client APIOperationPolicyClient) GetSender(req *http.Request) (*http.Respo
 func (client APIOperationPolicyClient) GetResponder(resp *http.Response) (result PolicyContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -400,6 +400,7 @@ func (client APIOperationPolicyClient) GetEntityTag(ctx context.Context, resourc
 	result, err = client.GetEntityTagResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIOperationPolicyClient", "GetEntityTag", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -440,7 +441,6 @@ func (client APIOperationPolicyClient) GetEntityTagSender(req *http.Request) (*h
 func (client APIOperationPolicyClient) GetEntityTagResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -498,6 +498,7 @@ func (client APIOperationPolicyClient) ListByOperation(ctx context.Context, reso
 	result, err = client.ListByOperationResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIOperationPolicyClient", "ListByOperation", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -537,7 +538,6 @@ func (client APIOperationPolicyClient) ListByOperationSender(req *http.Request) 
 func (client APIOperationPolicyClient) ListByOperationResponder(resp *http.Response) (result PolicyCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

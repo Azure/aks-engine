@@ -81,6 +81,7 @@ func (client PrivateLinkResourcesClient) ListByVault(ctx context.Context, resour
 	result, err = client.ListByVaultResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "keyvault.PrivateLinkResourcesClient", "ListByVault", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -118,7 +119,6 @@ func (client PrivateLinkResourcesClient) ListByVaultSender(req *http.Request) (*
 func (client PrivateLinkResourcesClient) ListByVaultResponder(resp *http.Response) (result PrivateLinkResourceListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

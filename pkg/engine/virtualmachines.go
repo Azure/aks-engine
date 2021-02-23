@@ -11,7 +11,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2020-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -567,6 +567,15 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	storageProfile.OsDisk = &osDisk
 
 	virtualMachine.StorageProfile = &storageProfile
+
+	if profile.SecurityProfile != nil {
+		virtualMachine.SecurityProfile = &compute.SecurityProfile{
+			UefiSettings: &compute.UefiSettings{
+				SecureBootEnabled: &profile.SecurityProfile.SecureBootEnabled,
+				VTpmEnabled:       &profile.SecurityProfile.VTPMEnabled,
+			},
+		}
+	}
 
 	return VirtualMachineARM{
 		ARMResource:    armResource,

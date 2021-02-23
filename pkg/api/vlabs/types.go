@@ -492,6 +492,12 @@ type Extension struct {
 	Template    string `json:"template"`
 }
 
+// SecurityProfile represents security profile of a VM
+type SecurityProfile struct {
+	SecureBootEnabled bool `json:"secureBootEnabled,omitempty"`
+	VTPMEnabled       bool `json:"vTPMEnabled,omitempty"`
+}
+
 // AgentPoolProfile represents an agent pool definition
 type AgentPoolProfile struct {
 	Name                                string               `json:"name" validate:"required"`
@@ -521,6 +527,7 @@ type AgentPoolProfile struct {
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
 	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
+	SecurityProfile                     *SecurityProfile     `json:"securityProfile,omitempty"`
 	// subnet is internal
 	subnet string
 

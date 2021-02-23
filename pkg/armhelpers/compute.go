@@ -7,7 +7,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2020-12-01/compute"
 	"github.com/pkg/errors"
 )
 
@@ -39,7 +39,7 @@ func (az *AzureClient) RestartVirtualMachine(ctx context.Context, resourceGroup,
 
 // DeleteVirtualMachine handles deletion of a CRP/VMAS VM (aka, not a VMSS VM).
 func (az *AzureClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error {
-	future, err := az.virtualMachinesClient.Delete(ctx, resourceGroup, name)
+	future, err := az.virtualMachinesClient.Delete(ctx, resourceGroup, name, nil)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (az *AzureClient) ListVirtualMachineScaleSetVMs(ctx context.Context, resour
 
 // DeleteVirtualMachineScaleSetVM deletes a VM in a VMSS
 func (az *AzureClient) DeleteVirtualMachineScaleSetVM(ctx context.Context, resourceGroup, virtualMachineScaleSet, instanceID string) error {
-	future, err := az.virtualMachineScaleSetVMsClient.Delete(ctx, resourceGroup, virtualMachineScaleSet, instanceID)
+	future, err := az.virtualMachineScaleSetVMsClient.Delete(ctx, resourceGroup, virtualMachineScaleSet, instanceID, nil)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (az *AzureClient) DeleteVirtualMachineScaleSetVM(ctx context.Context, resou
 
 // DeleteVirtualMachineScaleSet deletes an entire VM Scale Set.
 func (az *AzureClient) DeleteVirtualMachineScaleSet(ctx context.Context, resourceGroup, vmssName string) error {
-	future, err := az.virtualMachineScaleSetsClient.Delete(ctx, resourceGroup, vmssName)
+	future, err := az.virtualMachineScaleSetsClient.Delete(ctx, resourceGroup, vmssName, nil)
 	if err != nil {
 		return err
 	}

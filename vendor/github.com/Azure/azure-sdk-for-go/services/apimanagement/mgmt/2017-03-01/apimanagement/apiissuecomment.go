@@ -104,6 +104,7 @@ func (client APIIssueCommentClient) CreateOrUpdate(ctx context.Context, resource
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIIssueCommentClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -150,7 +151,6 @@ func (client APIIssueCommentClient) CreateOrUpdateSender(req *http.Request) (*ht
 func (client APIIssueCommentClient) CreateOrUpdateResponder(resp *http.Response) (result IssueCommentContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -214,6 +214,7 @@ func (client APIIssueCommentClient) Delete(ctx context.Context, resourceGroupNam
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIIssueCommentClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -255,7 +256,6 @@ func (client APIIssueCommentClient) DeleteSender(req *http.Request) (*http.Respo
 func (client APIIssueCommentClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -316,6 +316,7 @@ func (client APIIssueCommentClient) Get(ctx context.Context, resourceGroupName s
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIIssueCommentClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -356,7 +357,6 @@ func (client APIIssueCommentClient) GetSender(req *http.Request) (*http.Response
 func (client APIIssueCommentClient) GetResponder(resp *http.Response) (result IssueCommentContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

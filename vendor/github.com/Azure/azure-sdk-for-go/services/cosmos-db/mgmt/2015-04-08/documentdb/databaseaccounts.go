@@ -82,6 +82,7 @@ func (client DatabaseAccountsClient) CheckNameExists(ctx context.Context, accoun
 	result, err = client.CheckNameExistsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CheckNameExists", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -117,7 +118,6 @@ func (client DatabaseAccountsClient) CheckNameExistsSender(req *http.Request) (*
 func (client DatabaseAccountsClient) CheckNameExistsResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNotFound),
 		autorest.ByClosing())
 	result.Response = resp
@@ -175,7 +175,7 @@ func (client DatabaseAccountsClient) CreateOrUpdate(ctx context.Context, resourc
 
 	result, err = client.CreateOrUpdateSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateOrUpdate", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateOrUpdate", nil, "Failure sending request")
 		return
 	}
 
@@ -213,7 +213,33 @@ func (client DatabaseAccountsClient) CreateOrUpdateSender(req *http.Request) (fu
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (da DatabaseAccount, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateOrUpdateFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateOrUpdateFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		da.Response.Response, err = future.GetResult(sender)
+		if da.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateOrUpdateFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && da.Response.Response.StatusCode != http.StatusNoContent {
+			da, err = client.CreateOrUpdateResponder(da.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateOrUpdateFuture", "Result", da.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -222,7 +248,6 @@ func (client DatabaseAccountsClient) CreateOrUpdateSender(req *http.Request) (fu
 func (client DatabaseAccountsClient) CreateOrUpdateResponder(resp *http.Response) (result DatabaseAccount, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -273,7 +298,7 @@ func (client DatabaseAccountsClient) CreateUpdateCassandraKeyspace(ctx context.C
 
 	result, err = client.CreateUpdateCassandraKeyspaceSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateCassandraKeyspace", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateCassandraKeyspace", nil, "Failure sending request")
 		return
 	}
 
@@ -312,7 +337,33 @@ func (client DatabaseAccountsClient) CreateUpdateCassandraKeyspaceSender(req *ht
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ck CassandraKeyspace, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateCassandraKeyspaceFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateCassandraKeyspaceFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		ck.Response.Response, err = future.GetResult(sender)
+		if ck.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateCassandraKeyspaceFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && ck.Response.Response.StatusCode != http.StatusNoContent {
+			ck, err = client.CreateUpdateCassandraKeyspaceResponder(ck.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateCassandraKeyspaceFuture", "Result", ck.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -321,7 +372,6 @@ func (client DatabaseAccountsClient) CreateUpdateCassandraKeyspaceSender(req *ht
 func (client DatabaseAccountsClient) CreateUpdateCassandraKeyspaceResponder(resp *http.Response) (result CassandraKeyspace, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -373,7 +423,7 @@ func (client DatabaseAccountsClient) CreateUpdateCassandraTable(ctx context.Cont
 
 	result, err = client.CreateUpdateCassandraTableSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateCassandraTable", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateCassandraTable", nil, "Failure sending request")
 		return
 	}
 
@@ -413,7 +463,33 @@ func (client DatabaseAccountsClient) CreateUpdateCassandraTableSender(req *http.
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ct CassandraTable, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateCassandraTableFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateCassandraTableFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		ct.Response.Response, err = future.GetResult(sender)
+		if ct.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateCassandraTableFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && ct.Response.Response.StatusCode != http.StatusNoContent {
+			ct, err = client.CreateUpdateCassandraTableResponder(ct.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateCassandraTableFuture", "Result", ct.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -422,7 +498,6 @@ func (client DatabaseAccountsClient) CreateUpdateCassandraTableSender(req *http.
 func (client DatabaseAccountsClient) CreateUpdateCassandraTableResponder(resp *http.Response) (result CassandraTable, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -473,7 +548,7 @@ func (client DatabaseAccountsClient) CreateUpdateGremlinDatabase(ctx context.Con
 
 	result, err = client.CreateUpdateGremlinDatabaseSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateGremlinDatabase", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateGremlinDatabase", nil, "Failure sending request")
 		return
 	}
 
@@ -512,7 +587,33 @@ func (client DatabaseAccountsClient) CreateUpdateGremlinDatabaseSender(req *http
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (gd GremlinDatabase, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateGremlinDatabaseFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateGremlinDatabaseFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		gd.Response.Response, err = future.GetResult(sender)
+		if gd.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateGremlinDatabaseFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && gd.Response.Response.StatusCode != http.StatusNoContent {
+			gd, err = client.CreateUpdateGremlinDatabaseResponder(gd.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateGremlinDatabaseFuture", "Result", gd.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -521,7 +622,6 @@ func (client DatabaseAccountsClient) CreateUpdateGremlinDatabaseSender(req *http
 func (client DatabaseAccountsClient) CreateUpdateGremlinDatabaseResponder(resp *http.Response) (result GremlinDatabase, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -573,7 +673,7 @@ func (client DatabaseAccountsClient) CreateUpdateGremlinGraph(ctx context.Contex
 
 	result, err = client.CreateUpdateGremlinGraphSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateGremlinGraph", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateGremlinGraph", nil, "Failure sending request")
 		return
 	}
 
@@ -613,7 +713,33 @@ func (client DatabaseAccountsClient) CreateUpdateGremlinGraphSender(req *http.Re
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (gg GremlinGraph, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateGremlinGraphFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateGremlinGraphFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		gg.Response.Response, err = future.GetResult(sender)
+		if gg.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateGremlinGraphFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && gg.Response.Response.StatusCode != http.StatusNoContent {
+			gg, err = client.CreateUpdateGremlinGraphResponder(gg.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateGremlinGraphFuture", "Result", gg.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -622,7 +748,6 @@ func (client DatabaseAccountsClient) CreateUpdateGremlinGraphSender(req *http.Re
 func (client DatabaseAccountsClient) CreateUpdateGremlinGraphResponder(resp *http.Response) (result GremlinGraph, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -674,7 +799,7 @@ func (client DatabaseAccountsClient) CreateUpdateMongoDBCollection(ctx context.C
 
 	result, err = client.CreateUpdateMongoDBCollectionSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateMongoDBCollection", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateMongoDBCollection", nil, "Failure sending request")
 		return
 	}
 
@@ -714,7 +839,33 @@ func (client DatabaseAccountsClient) CreateUpdateMongoDBCollectionSender(req *ht
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (mdc MongoDBCollection, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateMongoDBCollectionFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateMongoDBCollectionFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		mdc.Response.Response, err = future.GetResult(sender)
+		if mdc.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateMongoDBCollectionFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && mdc.Response.Response.StatusCode != http.StatusNoContent {
+			mdc, err = client.CreateUpdateMongoDBCollectionResponder(mdc.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateMongoDBCollectionFuture", "Result", mdc.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -723,7 +874,6 @@ func (client DatabaseAccountsClient) CreateUpdateMongoDBCollectionSender(req *ht
 func (client DatabaseAccountsClient) CreateUpdateMongoDBCollectionResponder(resp *http.Response) (result MongoDBCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -774,7 +924,7 @@ func (client DatabaseAccountsClient) CreateUpdateMongoDBDatabase(ctx context.Con
 
 	result, err = client.CreateUpdateMongoDBDatabaseSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateMongoDBDatabase", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateMongoDBDatabase", nil, "Failure sending request")
 		return
 	}
 
@@ -813,7 +963,33 @@ func (client DatabaseAccountsClient) CreateUpdateMongoDBDatabaseSender(req *http
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (mdd MongoDBDatabase, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateMongoDBDatabaseFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateMongoDBDatabaseFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		mdd.Response.Response, err = future.GetResult(sender)
+		if mdd.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateMongoDBDatabaseFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && mdd.Response.Response.StatusCode != http.StatusNoContent {
+			mdd, err = client.CreateUpdateMongoDBDatabaseResponder(mdd.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateMongoDBDatabaseFuture", "Result", mdd.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -822,7 +998,6 @@ func (client DatabaseAccountsClient) CreateUpdateMongoDBDatabaseSender(req *http
 func (client DatabaseAccountsClient) CreateUpdateMongoDBDatabaseResponder(resp *http.Response) (result MongoDBDatabase, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -874,7 +1049,7 @@ func (client DatabaseAccountsClient) CreateUpdateSQLContainer(ctx context.Contex
 
 	result, err = client.CreateUpdateSQLContainerSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateSQLContainer", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateSQLContainer", nil, "Failure sending request")
 		return
 	}
 
@@ -914,7 +1089,33 @@ func (client DatabaseAccountsClient) CreateUpdateSQLContainerSender(req *http.Re
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (sc SQLContainer, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateSQLContainerFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateSQLContainerFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		sc.Response.Response, err = future.GetResult(sender)
+		if sc.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateSQLContainerFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && sc.Response.Response.StatusCode != http.StatusNoContent {
+			sc, err = client.CreateUpdateSQLContainerResponder(sc.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateSQLContainerFuture", "Result", sc.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -923,7 +1124,6 @@ func (client DatabaseAccountsClient) CreateUpdateSQLContainerSender(req *http.Re
 func (client DatabaseAccountsClient) CreateUpdateSQLContainerResponder(resp *http.Response) (result SQLContainer, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -974,7 +1174,7 @@ func (client DatabaseAccountsClient) CreateUpdateSQLDatabase(ctx context.Context
 
 	result, err = client.CreateUpdateSQLDatabaseSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateSQLDatabase", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateSQLDatabase", nil, "Failure sending request")
 		return
 	}
 
@@ -1013,7 +1213,33 @@ func (client DatabaseAccountsClient) CreateUpdateSQLDatabaseSender(req *http.Req
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (sd SQLDatabase, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateSQLDatabaseFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateSQLDatabaseFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		sd.Response.Response, err = future.GetResult(sender)
+		if sd.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateSQLDatabaseFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && sd.Response.Response.StatusCode != http.StatusNoContent {
+			sd, err = client.CreateUpdateSQLDatabaseResponder(sd.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateSQLDatabaseFuture", "Result", sd.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -1022,7 +1248,6 @@ func (client DatabaseAccountsClient) CreateUpdateSQLDatabaseSender(req *http.Req
 func (client DatabaseAccountsClient) CreateUpdateSQLDatabaseResponder(resp *http.Response) (result SQLDatabase, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -1073,7 +1298,7 @@ func (client DatabaseAccountsClient) CreateUpdateTable(ctx context.Context, reso
 
 	result, err = client.CreateUpdateTableSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateTable", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "CreateUpdateTable", nil, "Failure sending request")
 		return
 	}
 
@@ -1112,7 +1337,33 @@ func (client DatabaseAccountsClient) CreateUpdateTableSender(req *http.Request) 
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Table, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateTableFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsCreateUpdateTableFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateTableFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.CreateUpdateTableResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsCreateUpdateTableFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -1121,7 +1372,6 @@ func (client DatabaseAccountsClient) CreateUpdateTableSender(req *http.Request) 
 func (client DatabaseAccountsClient) CreateUpdateTableResponder(resp *http.Response) (result Table, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -1164,7 +1414,7 @@ func (client DatabaseAccountsClient) Delete(ctx context.Context, resourceGroupNa
 
 	result, err = client.DeleteSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "Delete", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "Delete", nil, "Failure sending request")
 		return
 	}
 
@@ -1200,7 +1450,23 @@ func (client DatabaseAccountsClient) DeleteSender(req *http.Request) (future Dat
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1209,7 +1475,6 @@ func (client DatabaseAccountsClient) DeleteSender(req *http.Request) (future Dat
 func (client DatabaseAccountsClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1252,7 +1517,7 @@ func (client DatabaseAccountsClient) DeleteCassandraKeyspace(ctx context.Context
 
 	result, err = client.DeleteCassandraKeyspaceSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteCassandraKeyspace", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteCassandraKeyspace", nil, "Failure sending request")
 		return
 	}
 
@@ -1289,7 +1554,23 @@ func (client DatabaseAccountsClient) DeleteCassandraKeyspaceSender(req *http.Req
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteCassandraKeyspaceFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteCassandraKeyspaceFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1298,7 +1579,6 @@ func (client DatabaseAccountsClient) DeleteCassandraKeyspaceSender(req *http.Req
 func (client DatabaseAccountsClient) DeleteCassandraKeyspaceResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1342,7 +1622,7 @@ func (client DatabaseAccountsClient) DeleteCassandraTable(ctx context.Context, r
 
 	result, err = client.DeleteCassandraTableSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteCassandraTable", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteCassandraTable", nil, "Failure sending request")
 		return
 	}
 
@@ -1380,7 +1660,23 @@ func (client DatabaseAccountsClient) DeleteCassandraTableSender(req *http.Reques
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteCassandraTableFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteCassandraTableFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1389,7 +1685,6 @@ func (client DatabaseAccountsClient) DeleteCassandraTableSender(req *http.Reques
 func (client DatabaseAccountsClient) DeleteCassandraTableResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1432,7 +1727,7 @@ func (client DatabaseAccountsClient) DeleteGremlinDatabase(ctx context.Context, 
 
 	result, err = client.DeleteGremlinDatabaseSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteGremlinDatabase", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteGremlinDatabase", nil, "Failure sending request")
 		return
 	}
 
@@ -1469,7 +1764,23 @@ func (client DatabaseAccountsClient) DeleteGremlinDatabaseSender(req *http.Reque
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteGremlinDatabaseFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteGremlinDatabaseFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1478,7 +1789,6 @@ func (client DatabaseAccountsClient) DeleteGremlinDatabaseSender(req *http.Reque
 func (client DatabaseAccountsClient) DeleteGremlinDatabaseResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1522,7 +1832,7 @@ func (client DatabaseAccountsClient) DeleteGremlinGraph(ctx context.Context, res
 
 	result, err = client.DeleteGremlinGraphSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteGremlinGraph", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteGremlinGraph", nil, "Failure sending request")
 		return
 	}
 
@@ -1560,7 +1870,23 @@ func (client DatabaseAccountsClient) DeleteGremlinGraphSender(req *http.Request)
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteGremlinGraphFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteGremlinGraphFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1569,7 +1895,6 @@ func (client DatabaseAccountsClient) DeleteGremlinGraphSender(req *http.Request)
 func (client DatabaseAccountsClient) DeleteGremlinGraphResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1613,7 +1938,7 @@ func (client DatabaseAccountsClient) DeleteMongoDBCollection(ctx context.Context
 
 	result, err = client.DeleteMongoDBCollectionSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteMongoDBCollection", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteMongoDBCollection", nil, "Failure sending request")
 		return
 	}
 
@@ -1651,7 +1976,23 @@ func (client DatabaseAccountsClient) DeleteMongoDBCollectionSender(req *http.Req
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteMongoDBCollectionFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteMongoDBCollectionFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1660,7 +2001,6 @@ func (client DatabaseAccountsClient) DeleteMongoDBCollectionSender(req *http.Req
 func (client DatabaseAccountsClient) DeleteMongoDBCollectionResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1703,7 +2043,7 @@ func (client DatabaseAccountsClient) DeleteMongoDBDatabase(ctx context.Context, 
 
 	result, err = client.DeleteMongoDBDatabaseSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteMongoDBDatabase", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteMongoDBDatabase", nil, "Failure sending request")
 		return
 	}
 
@@ -1740,7 +2080,23 @@ func (client DatabaseAccountsClient) DeleteMongoDBDatabaseSender(req *http.Reque
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteMongoDBDatabaseFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteMongoDBDatabaseFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1749,7 +2105,6 @@ func (client DatabaseAccountsClient) DeleteMongoDBDatabaseSender(req *http.Reque
 func (client DatabaseAccountsClient) DeleteMongoDBDatabaseResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1793,7 +2148,7 @@ func (client DatabaseAccountsClient) DeleteSQLContainer(ctx context.Context, res
 
 	result, err = client.DeleteSQLContainerSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteSQLContainer", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteSQLContainer", nil, "Failure sending request")
 		return
 	}
 
@@ -1831,7 +2186,23 @@ func (client DatabaseAccountsClient) DeleteSQLContainerSender(req *http.Request)
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteSQLContainerFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteSQLContainerFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1840,7 +2211,6 @@ func (client DatabaseAccountsClient) DeleteSQLContainerSender(req *http.Request)
 func (client DatabaseAccountsClient) DeleteSQLContainerResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1883,7 +2253,7 @@ func (client DatabaseAccountsClient) DeleteSQLDatabase(ctx context.Context, reso
 
 	result, err = client.DeleteSQLDatabaseSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteSQLDatabase", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteSQLDatabase", nil, "Failure sending request")
 		return
 	}
 
@@ -1920,7 +2290,23 @@ func (client DatabaseAccountsClient) DeleteSQLDatabaseSender(req *http.Request) 
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteSQLDatabaseFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteSQLDatabaseFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -1929,7 +2315,6 @@ func (client DatabaseAccountsClient) DeleteSQLDatabaseSender(req *http.Request) 
 func (client DatabaseAccountsClient) DeleteSQLDatabaseResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -1972,7 +2357,7 @@ func (client DatabaseAccountsClient) DeleteTable(ctx context.Context, resourceGr
 
 	result, err = client.DeleteTableSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteTable", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "DeleteTable", nil, "Failure sending request")
 		return
 	}
 
@@ -2009,7 +2394,23 @@ func (client DatabaseAccountsClient) DeleteTableSender(req *http.Request) (futur
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsDeleteTableFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsDeleteTableFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -2018,7 +2419,6 @@ func (client DatabaseAccountsClient) DeleteTableSender(req *http.Request) (futur
 func (client DatabaseAccountsClient) DeleteTableResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -2065,7 +2465,7 @@ func (client DatabaseAccountsClient) FailoverPriorityChange(ctx context.Context,
 
 	result, err = client.FailoverPriorityChangeSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "FailoverPriorityChange", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "FailoverPriorityChange", nil, "Failure sending request")
 		return
 	}
 
@@ -2103,7 +2503,23 @@ func (client DatabaseAccountsClient) FailoverPriorityChangeSender(req *http.Requ
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsFailoverPriorityChangeFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsFailoverPriorityChangeFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -2112,7 +2528,6 @@ func (client DatabaseAccountsClient) FailoverPriorityChangeSender(req *http.Requ
 func (client DatabaseAccountsClient) FailoverPriorityChangeResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -2162,6 +2577,7 @@ func (client DatabaseAccountsClient) Get(ctx context.Context, resourceGroupName 
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2199,7 +2615,6 @@ func (client DatabaseAccountsClient) GetSender(req *http.Request) (*http.Respons
 func (client DatabaseAccountsClient) GetResponder(resp *http.Response) (result DatabaseAccount, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2252,6 +2667,7 @@ func (client DatabaseAccountsClient) GetCassandraKeyspace(ctx context.Context, r
 	result, err = client.GetCassandraKeyspaceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetCassandraKeyspace", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2290,7 +2706,6 @@ func (client DatabaseAccountsClient) GetCassandraKeyspaceSender(req *http.Reques
 func (client DatabaseAccountsClient) GetCassandraKeyspaceResponder(resp *http.Response) (result CassandraKeyspace, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2343,6 +2758,7 @@ func (client DatabaseAccountsClient) GetCassandraKeyspaceThroughput(ctx context.
 	result, err = client.GetCassandraKeyspaceThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetCassandraKeyspaceThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2381,7 +2797,6 @@ func (client DatabaseAccountsClient) GetCassandraKeyspaceThroughputSender(req *h
 func (client DatabaseAccountsClient) GetCassandraKeyspaceThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2434,6 +2849,7 @@ func (client DatabaseAccountsClient) GetCassandraTable(ctx context.Context, reso
 	result, err = client.GetCassandraTableResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetCassandraTable", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2473,7 +2889,6 @@ func (client DatabaseAccountsClient) GetCassandraTableSender(req *http.Request) 
 func (client DatabaseAccountsClient) GetCassandraTableResponder(resp *http.Response) (result CassandraTable, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2527,6 +2942,7 @@ func (client DatabaseAccountsClient) GetCassandraTableThroughput(ctx context.Con
 	result, err = client.GetCassandraTableThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetCassandraTableThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2566,7 +2982,6 @@ func (client DatabaseAccountsClient) GetCassandraTableThroughputSender(req *http
 func (client DatabaseAccountsClient) GetCassandraTableThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2619,6 +3034,7 @@ func (client DatabaseAccountsClient) GetGremlinDatabase(ctx context.Context, res
 	result, err = client.GetGremlinDatabaseResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetGremlinDatabase", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2657,7 +3073,6 @@ func (client DatabaseAccountsClient) GetGremlinDatabaseSender(req *http.Request)
 func (client DatabaseAccountsClient) GetGremlinDatabaseResponder(resp *http.Response) (result GremlinDatabase, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2710,6 +3125,7 @@ func (client DatabaseAccountsClient) GetGremlinDatabaseThroughput(ctx context.Co
 	result, err = client.GetGremlinDatabaseThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetGremlinDatabaseThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2748,7 +3164,6 @@ func (client DatabaseAccountsClient) GetGremlinDatabaseThroughputSender(req *htt
 func (client DatabaseAccountsClient) GetGremlinDatabaseThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2801,6 +3216,7 @@ func (client DatabaseAccountsClient) GetGremlinGraph(ctx context.Context, resour
 	result, err = client.GetGremlinGraphResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetGremlinGraph", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2840,7 +3256,6 @@ func (client DatabaseAccountsClient) GetGremlinGraphSender(req *http.Request) (*
 func (client DatabaseAccountsClient) GetGremlinGraphResponder(resp *http.Response) (result GremlinGraph, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2894,6 +3309,7 @@ func (client DatabaseAccountsClient) GetGremlinGraphThroughput(ctx context.Conte
 	result, err = client.GetGremlinGraphThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetGremlinGraphThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -2933,7 +3349,6 @@ func (client DatabaseAccountsClient) GetGremlinGraphThroughputSender(req *http.R
 func (client DatabaseAccountsClient) GetGremlinGraphThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -2986,6 +3401,7 @@ func (client DatabaseAccountsClient) GetMongoDBCollection(ctx context.Context, r
 	result, err = client.GetMongoDBCollectionResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetMongoDBCollection", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3025,7 +3441,6 @@ func (client DatabaseAccountsClient) GetMongoDBCollectionSender(req *http.Reques
 func (client DatabaseAccountsClient) GetMongoDBCollectionResponder(resp *http.Response) (result MongoDBCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3079,6 +3494,7 @@ func (client DatabaseAccountsClient) GetMongoDBCollectionThroughput(ctx context.
 	result, err = client.GetMongoDBCollectionThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetMongoDBCollectionThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3118,7 +3534,6 @@ func (client DatabaseAccountsClient) GetMongoDBCollectionThroughputSender(req *h
 func (client DatabaseAccountsClient) GetMongoDBCollectionThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3171,6 +3586,7 @@ func (client DatabaseAccountsClient) GetMongoDBDatabase(ctx context.Context, res
 	result, err = client.GetMongoDBDatabaseResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetMongoDBDatabase", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3209,7 +3625,6 @@ func (client DatabaseAccountsClient) GetMongoDBDatabaseSender(req *http.Request)
 func (client DatabaseAccountsClient) GetMongoDBDatabaseResponder(resp *http.Response) (result MongoDBDatabase, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3262,6 +3677,7 @@ func (client DatabaseAccountsClient) GetMongoDBDatabaseThroughput(ctx context.Co
 	result, err = client.GetMongoDBDatabaseThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetMongoDBDatabaseThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3300,7 +3716,6 @@ func (client DatabaseAccountsClient) GetMongoDBDatabaseThroughputSender(req *htt
 func (client DatabaseAccountsClient) GetMongoDBDatabaseThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3351,6 +3766,7 @@ func (client DatabaseAccountsClient) GetReadOnlyKeys(ctx context.Context, resour
 	result, err = client.GetReadOnlyKeysResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetReadOnlyKeys", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3388,7 +3804,6 @@ func (client DatabaseAccountsClient) GetReadOnlyKeysSender(req *http.Request) (*
 func (client DatabaseAccountsClient) GetReadOnlyKeysResponder(resp *http.Response) (result DatabaseAccountListReadOnlyKeysResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3441,6 +3856,7 @@ func (client DatabaseAccountsClient) GetSQLContainer(ctx context.Context, resour
 	result, err = client.GetSQLContainerResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetSQLContainer", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3480,7 +3896,6 @@ func (client DatabaseAccountsClient) GetSQLContainerSender(req *http.Request) (*
 func (client DatabaseAccountsClient) GetSQLContainerResponder(resp *http.Response) (result SQLContainer, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3534,6 +3949,7 @@ func (client DatabaseAccountsClient) GetSQLContainerThroughput(ctx context.Conte
 	result, err = client.GetSQLContainerThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetSQLContainerThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3573,7 +3989,6 @@ func (client DatabaseAccountsClient) GetSQLContainerThroughputSender(req *http.R
 func (client DatabaseAccountsClient) GetSQLContainerThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3625,6 +4040,7 @@ func (client DatabaseAccountsClient) GetSQLDatabase(ctx context.Context, resourc
 	result, err = client.GetSQLDatabaseResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetSQLDatabase", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3663,7 +4079,6 @@ func (client DatabaseAccountsClient) GetSQLDatabaseSender(req *http.Request) (*h
 func (client DatabaseAccountsClient) GetSQLDatabaseResponder(resp *http.Response) (result SQLDatabase, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3716,6 +4131,7 @@ func (client DatabaseAccountsClient) GetSQLDatabaseThroughput(ctx context.Contex
 	result, err = client.GetSQLDatabaseThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetSQLDatabaseThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3754,7 +4170,6 @@ func (client DatabaseAccountsClient) GetSQLDatabaseThroughputSender(req *http.Re
 func (client DatabaseAccountsClient) GetSQLDatabaseThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3806,6 +4221,7 @@ func (client DatabaseAccountsClient) GetTable(ctx context.Context, resourceGroup
 	result, err = client.GetTableResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetTable", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3844,7 +4260,6 @@ func (client DatabaseAccountsClient) GetTableSender(req *http.Request) (*http.Re
 func (client DatabaseAccountsClient) GetTableResponder(resp *http.Response) (result Table, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3897,6 +4312,7 @@ func (client DatabaseAccountsClient) GetTableThroughput(ctx context.Context, res
 	result, err = client.GetTableThroughputResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "GetTableThroughput", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -3935,7 +4351,6 @@ func (client DatabaseAccountsClient) GetTableThroughputSender(req *http.Request)
 func (client DatabaseAccountsClient) GetTableThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -3971,6 +4386,7 @@ func (client DatabaseAccountsClient) List(ctx context.Context) (result DatabaseA
 	result, err = client.ListResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "List", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4006,7 +4422,6 @@ func (client DatabaseAccountsClient) ListSender(req *http.Request) (*http.Respon
 func (client DatabaseAccountsClient) ListResponder(resp *http.Response) (result DatabaseAccountsListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4052,6 +4467,7 @@ func (client DatabaseAccountsClient) ListByResourceGroup(ctx context.Context, re
 	result, err = client.ListByResourceGroupResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListByResourceGroup", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4088,7 +4504,6 @@ func (client DatabaseAccountsClient) ListByResourceGroupSender(req *http.Request
 func (client DatabaseAccountsClient) ListByResourceGroupResponder(resp *http.Response) (result DatabaseAccountsListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4139,6 +4554,7 @@ func (client DatabaseAccountsClient) ListCassandraKeyspaces(ctx context.Context,
 	result, err = client.ListCassandraKeyspacesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListCassandraKeyspaces", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4176,7 +4592,6 @@ func (client DatabaseAccountsClient) ListCassandraKeyspacesSender(req *http.Requ
 func (client DatabaseAccountsClient) ListCassandraKeyspacesResponder(resp *http.Response) (result CassandraKeyspaceListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4228,6 +4643,7 @@ func (client DatabaseAccountsClient) ListCassandraTables(ctx context.Context, re
 	result, err = client.ListCassandraTablesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListCassandraTables", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4266,7 +4682,6 @@ func (client DatabaseAccountsClient) ListCassandraTablesSender(req *http.Request
 func (client DatabaseAccountsClient) ListCassandraTablesResponder(resp *http.Response) (result CassandraTableListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4317,6 +4732,7 @@ func (client DatabaseAccountsClient) ListConnectionStrings(ctx context.Context, 
 	result, err = client.ListConnectionStringsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListConnectionStrings", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4354,7 +4770,6 @@ func (client DatabaseAccountsClient) ListConnectionStringsSender(req *http.Reque
 func (client DatabaseAccountsClient) ListConnectionStringsResponder(resp *http.Response) (result DatabaseAccountListConnectionStringsResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4405,6 +4820,7 @@ func (client DatabaseAccountsClient) ListGremlinDatabases(ctx context.Context, r
 	result, err = client.ListGremlinDatabasesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListGremlinDatabases", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4442,7 +4858,6 @@ func (client DatabaseAccountsClient) ListGremlinDatabasesSender(req *http.Reques
 func (client DatabaseAccountsClient) ListGremlinDatabasesResponder(resp *http.Response) (result GremlinDatabaseListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4494,6 +4909,7 @@ func (client DatabaseAccountsClient) ListGremlinGraphs(ctx context.Context, reso
 	result, err = client.ListGremlinGraphsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListGremlinGraphs", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4532,7 +4948,6 @@ func (client DatabaseAccountsClient) ListGremlinGraphsSender(req *http.Request) 
 func (client DatabaseAccountsClient) ListGremlinGraphsResponder(resp *http.Response) (result GremlinGraphListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4583,6 +4998,7 @@ func (client DatabaseAccountsClient) ListKeys(ctx context.Context, resourceGroup
 	result, err = client.ListKeysResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListKeys", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4620,7 +5036,6 @@ func (client DatabaseAccountsClient) ListKeysSender(req *http.Request) (*http.Re
 func (client DatabaseAccountsClient) ListKeysResponder(resp *http.Response) (result DatabaseAccountListKeysResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4671,6 +5086,7 @@ func (client DatabaseAccountsClient) ListMetricDefinitions(ctx context.Context, 
 	result, err = client.ListMetricDefinitionsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListMetricDefinitions", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4708,7 +5124,6 @@ func (client DatabaseAccountsClient) ListMetricDefinitionsSender(req *http.Reque
 func (client DatabaseAccountsClient) ListMetricDefinitionsResponder(resp *http.Response) (result MetricDefinitionsListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4762,6 +5177,7 @@ func (client DatabaseAccountsClient) ListMetrics(ctx context.Context, resourceGr
 	result, err = client.ListMetricsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListMetrics", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4800,7 +5216,6 @@ func (client DatabaseAccountsClient) ListMetricsSender(req *http.Request) (*http
 func (client DatabaseAccountsClient) ListMetricsResponder(resp *http.Response) (result MetricListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4852,6 +5267,7 @@ func (client DatabaseAccountsClient) ListMongoDBCollections(ctx context.Context,
 	result, err = client.ListMongoDBCollectionsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListMongoDBCollections", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4890,7 +5306,6 @@ func (client DatabaseAccountsClient) ListMongoDBCollectionsSender(req *http.Requ
 func (client DatabaseAccountsClient) ListMongoDBCollectionsResponder(resp *http.Response) (result MongoDBCollectionListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -4941,6 +5356,7 @@ func (client DatabaseAccountsClient) ListMongoDBDatabases(ctx context.Context, r
 	result, err = client.ListMongoDBDatabasesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListMongoDBDatabases", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -4978,7 +5394,6 @@ func (client DatabaseAccountsClient) ListMongoDBDatabasesSender(req *http.Reques
 func (client DatabaseAccountsClient) ListMongoDBDatabasesResponder(resp *http.Response) (result MongoDBDatabaseListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5029,6 +5444,7 @@ func (client DatabaseAccountsClient) ListReadOnlyKeys(ctx context.Context, resou
 	result, err = client.ListReadOnlyKeysResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListReadOnlyKeys", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -5066,7 +5482,6 @@ func (client DatabaseAccountsClient) ListReadOnlyKeysSender(req *http.Request) (
 func (client DatabaseAccountsClient) ListReadOnlyKeysResponder(resp *http.Response) (result DatabaseAccountListReadOnlyKeysResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5118,6 +5533,7 @@ func (client DatabaseAccountsClient) ListSQLContainers(ctx context.Context, reso
 	result, err = client.ListSQLContainersResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListSQLContainers", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -5156,7 +5572,6 @@ func (client DatabaseAccountsClient) ListSQLContainersSender(req *http.Request) 
 func (client DatabaseAccountsClient) ListSQLContainersResponder(resp *http.Response) (result SQLContainerListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5207,6 +5622,7 @@ func (client DatabaseAccountsClient) ListSQLDatabases(ctx context.Context, resou
 	result, err = client.ListSQLDatabasesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListSQLDatabases", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -5244,7 +5660,6 @@ func (client DatabaseAccountsClient) ListSQLDatabasesSender(req *http.Request) (
 func (client DatabaseAccountsClient) ListSQLDatabasesResponder(resp *http.Response) (result SQLDatabaseListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5295,6 +5710,7 @@ func (client DatabaseAccountsClient) ListTables(ctx context.Context, resourceGro
 	result, err = client.ListTablesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListTables", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -5332,7 +5748,6 @@ func (client DatabaseAccountsClient) ListTablesSender(req *http.Request) (*http.
 func (client DatabaseAccountsClient) ListTablesResponder(resp *http.Response) (result TableListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5385,6 +5800,7 @@ func (client DatabaseAccountsClient) ListUsages(ctx context.Context, resourceGro
 	result, err = client.ListUsagesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "ListUsages", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -5425,7 +5841,6 @@ func (client DatabaseAccountsClient) ListUsagesSender(req *http.Request) (*http.
 func (client DatabaseAccountsClient) ListUsagesResponder(resp *http.Response) (result UsagesResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5471,7 +5886,7 @@ func (client DatabaseAccountsClient) OfflineRegion(ctx context.Context, resource
 
 	result, err = client.OfflineRegionSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "OfflineRegion", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "OfflineRegion", nil, "Failure sending request")
 		return
 	}
 
@@ -5509,7 +5924,23 @@ func (client DatabaseAccountsClient) OfflineRegionSender(req *http.Request) (fut
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsOfflineRegionFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsOfflineRegionFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -5518,7 +5949,6 @@ func (client DatabaseAccountsClient) OfflineRegionSender(req *http.Request) (fut
 func (client DatabaseAccountsClient) OfflineRegionResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByClosing())
 	result.Response = resp
@@ -5563,7 +5993,7 @@ func (client DatabaseAccountsClient) OnlineRegion(ctx context.Context, resourceG
 
 	result, err = client.OnlineRegionSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "OnlineRegion", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "OnlineRegion", nil, "Failure sending request")
 		return
 	}
 
@@ -5601,7 +6031,23 @@ func (client DatabaseAccountsClient) OnlineRegionSender(req *http.Request) (futu
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsOnlineRegionFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsOnlineRegionFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -5610,7 +6056,6 @@ func (client DatabaseAccountsClient) OnlineRegionSender(req *http.Request) (futu
 func (client DatabaseAccountsClient) OnlineRegionResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByClosing())
 	result.Response = resp
@@ -5653,7 +6098,7 @@ func (client DatabaseAccountsClient) Patch(ctx context.Context, resourceGroupNam
 
 	result, err = client.PatchSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "Patch", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "Patch", nil, "Failure sending request")
 		return
 	}
 
@@ -5691,7 +6136,33 @@ func (client DatabaseAccountsClient) PatchSender(req *http.Request) (future Data
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (da DatabaseAccount, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsPatchFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsPatchFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		da.Response.Response, err = future.GetResult(sender)
+		if da.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsPatchFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && da.Response.Response.StatusCode != http.StatusNoContent {
+			da, err = client.PatchResponder(da.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsPatchFuture", "Result", da.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -5700,7 +6171,6 @@ func (client DatabaseAccountsClient) PatchSender(req *http.Request) (future Data
 func (client DatabaseAccountsClient) PatchResponder(resp *http.Response) (result DatabaseAccount, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5744,7 +6214,7 @@ func (client DatabaseAccountsClient) RegenerateKey(ctx context.Context, resource
 
 	result, err = client.RegenerateKeySender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "RegenerateKey", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "RegenerateKey", nil, "Failure sending request")
 		return
 	}
 
@@ -5782,7 +6252,23 @@ func (client DatabaseAccountsClient) RegenerateKeySender(req *http.Request) (fut
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (ar autorest.Response, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsRegenerateKeyFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsRegenerateKeyFuture")
+			return
+		}
+		ar.Response = future.Response()
+		return
+	}
 	return
 }
 
@@ -5791,7 +6277,6 @@ func (client DatabaseAccountsClient) RegenerateKeySender(req *http.Request) (fut
 func (client DatabaseAccountsClient) RegenerateKeyResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByClosing())
 	result.Response = resp
@@ -5841,7 +6326,7 @@ func (client DatabaseAccountsClient) UpdateCassandraKeyspaceThroughput(ctx conte
 
 	result, err = client.UpdateCassandraKeyspaceThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateCassandraKeyspaceThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateCassandraKeyspaceThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -5880,7 +6365,33 @@ func (client DatabaseAccountsClient) UpdateCassandraKeyspaceThroughputSender(req
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateCassandraKeyspaceThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateCassandraKeyspaceThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateCassandraKeyspaceThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateCassandraKeyspaceThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateCassandraKeyspaceThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -5889,7 +6400,6 @@ func (client DatabaseAccountsClient) UpdateCassandraKeyspaceThroughputSender(req
 func (client DatabaseAccountsClient) UpdateCassandraKeyspaceThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -5941,7 +6451,7 @@ func (client DatabaseAccountsClient) UpdateCassandraTableThroughput(ctx context.
 
 	result, err = client.UpdateCassandraTableThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateCassandraTableThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateCassandraTableThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -5981,7 +6491,33 @@ func (client DatabaseAccountsClient) UpdateCassandraTableThroughputSender(req *h
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateCassandraTableThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateCassandraTableThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateCassandraTableThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateCassandraTableThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateCassandraTableThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -5990,7 +6526,6 @@ func (client DatabaseAccountsClient) UpdateCassandraTableThroughputSender(req *h
 func (client DatabaseAccountsClient) UpdateCassandraTableThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -6041,7 +6576,7 @@ func (client DatabaseAccountsClient) UpdateGremlinDatabaseThroughput(ctx context
 
 	result, err = client.UpdateGremlinDatabaseThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateGremlinDatabaseThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateGremlinDatabaseThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -6080,7 +6615,33 @@ func (client DatabaseAccountsClient) UpdateGremlinDatabaseThroughputSender(req *
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateGremlinDatabaseThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateGremlinDatabaseThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateGremlinDatabaseThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateGremlinDatabaseThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateGremlinDatabaseThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -6089,7 +6650,6 @@ func (client DatabaseAccountsClient) UpdateGremlinDatabaseThroughputSender(req *
 func (client DatabaseAccountsClient) UpdateGremlinDatabaseThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -6140,7 +6700,7 @@ func (client DatabaseAccountsClient) UpdateGremlinGraphThroughput(ctx context.Co
 
 	result, err = client.UpdateGremlinGraphThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateGremlinGraphThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateGremlinGraphThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -6180,7 +6740,33 @@ func (client DatabaseAccountsClient) UpdateGremlinGraphThroughputSender(req *htt
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateGremlinGraphThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateGremlinGraphThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateGremlinGraphThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateGremlinGraphThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateGremlinGraphThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -6189,7 +6775,6 @@ func (client DatabaseAccountsClient) UpdateGremlinGraphThroughputSender(req *htt
 func (client DatabaseAccountsClient) UpdateGremlinGraphThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -6241,7 +6826,7 @@ func (client DatabaseAccountsClient) UpdateMongoDBCollectionThroughput(ctx conte
 
 	result, err = client.UpdateMongoDBCollectionThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateMongoDBCollectionThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateMongoDBCollectionThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -6281,7 +6866,33 @@ func (client DatabaseAccountsClient) UpdateMongoDBCollectionThroughputSender(req
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateMongoDBCollectionThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateMongoDBCollectionThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateMongoDBCollectionThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateMongoDBCollectionThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateMongoDBCollectionThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -6290,7 +6901,6 @@ func (client DatabaseAccountsClient) UpdateMongoDBCollectionThroughputSender(req
 func (client DatabaseAccountsClient) UpdateMongoDBCollectionThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -6341,7 +6951,7 @@ func (client DatabaseAccountsClient) UpdateMongoDBDatabaseThroughput(ctx context
 
 	result, err = client.UpdateMongoDBDatabaseThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateMongoDBDatabaseThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateMongoDBDatabaseThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -6380,7 +6990,33 @@ func (client DatabaseAccountsClient) UpdateMongoDBDatabaseThroughputSender(req *
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateMongoDBDatabaseThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateMongoDBDatabaseThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateMongoDBDatabaseThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateMongoDBDatabaseThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateMongoDBDatabaseThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -6389,7 +7025,6 @@ func (client DatabaseAccountsClient) UpdateMongoDBDatabaseThroughputSender(req *
 func (client DatabaseAccountsClient) UpdateMongoDBDatabaseThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -6440,7 +7075,7 @@ func (client DatabaseAccountsClient) UpdateSQLContainerThroughput(ctx context.Co
 
 	result, err = client.UpdateSQLContainerThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateSQLContainerThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateSQLContainerThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -6480,7 +7115,33 @@ func (client DatabaseAccountsClient) UpdateSQLContainerThroughputSender(req *htt
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateSQLContainerThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateSQLContainerThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateSQLContainerThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateSQLContainerThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateSQLContainerThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -6489,7 +7150,6 @@ func (client DatabaseAccountsClient) UpdateSQLContainerThroughputSender(req *htt
 func (client DatabaseAccountsClient) UpdateSQLContainerThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -6539,7 +7199,7 @@ func (client DatabaseAccountsClient) UpdateSQLDatabaseThroughput(ctx context.Con
 
 	result, err = client.UpdateSQLDatabaseThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateSQLDatabaseThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateSQLDatabaseThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -6578,7 +7238,33 @@ func (client DatabaseAccountsClient) UpdateSQLDatabaseThroughputSender(req *http
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateSQLDatabaseThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateSQLDatabaseThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateSQLDatabaseThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateSQLDatabaseThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateSQLDatabaseThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -6587,7 +7273,6 @@ func (client DatabaseAccountsClient) UpdateSQLDatabaseThroughputSender(req *http
 func (client DatabaseAccountsClient) UpdateSQLDatabaseThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -6637,7 +7322,7 @@ func (client DatabaseAccountsClient) UpdateTableThroughput(ctx context.Context, 
 
 	result, err = client.UpdateTableThroughputSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateTableThroughput", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsClient", "UpdateTableThroughput", nil, "Failure sending request")
 		return
 	}
 
@@ -6676,7 +7361,33 @@ func (client DatabaseAccountsClient) UpdateTableThroughputSender(req *http.Reque
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client DatabaseAccountsClient) (t Throughput, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateTableThroughputFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("documentdb.DatabaseAccountsUpdateTableThroughputFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		t.Response.Response, err = future.GetResult(sender)
+		if t.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateTableThroughputFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && t.Response.Response.StatusCode != http.StatusNoContent {
+			t, err = client.UpdateTableThroughputResponder(t.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountsUpdateTableThroughputFuture", "Result", t.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -6685,7 +7396,6 @@ func (client DatabaseAccountsClient) UpdateTableThroughputSender(req *http.Reque
 func (client DatabaseAccountsClient) UpdateTableThroughputResponder(resp *http.Response) (result Throughput, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusAccepted),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

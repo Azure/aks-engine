@@ -613,6 +613,13 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.OSDiskCachingType = api.OSDiskCachingType
 	p.DataDiskCachingType = api.DataDiskCachingType
 	p.VMSSName = api.VMSSName
+
+	if api.SecurityProfile != nil {
+		p.SecurityProfile = &vlabs.SecurityProfile{
+			SecureBootEnabled: api.SecurityProfile.SecureBootEnabled,
+			VTPMEnabled:       api.SecurityProfile.VTPMEnabled,
+		}
+	}
 }
 
 func convertServicePrincipalProfileToVLabs(api *ServicePrincipalProfile, v *vlabs.ServicePrincipalProfile) {

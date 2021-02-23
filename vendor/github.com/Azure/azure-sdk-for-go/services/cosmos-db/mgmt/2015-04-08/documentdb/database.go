@@ -86,6 +86,7 @@ func (client DatabaseClient) ListMetricDefinitions(ctx context.Context, resource
 	result, err = client.ListMetricDefinitionsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseClient", "ListMetricDefinitions", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -124,7 +125,6 @@ func (client DatabaseClient) ListMetricDefinitionsSender(req *http.Request) (*ht
 func (client DatabaseClient) ListMetricDefinitionsResponder(resp *http.Response) (result MetricDefinitionsListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -179,6 +179,7 @@ func (client DatabaseClient) ListMetrics(ctx context.Context, resourceGroupName 
 	result, err = client.ListMetricsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseClient", "ListMetrics", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -218,7 +219,6 @@ func (client DatabaseClient) ListMetricsSender(req *http.Request) (*http.Respons
 func (client DatabaseClient) ListMetricsResponder(resp *http.Response) (result MetricListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -272,6 +272,7 @@ func (client DatabaseClient) ListUsages(ctx context.Context, resourceGroupName s
 	result, err = client.ListUsagesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseClient", "ListUsages", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -313,7 +314,6 @@ func (client DatabaseClient) ListUsagesSender(req *http.Request) (*http.Response
 func (client DatabaseClient) ListUsagesResponder(resp *http.Response) (result UsagesResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

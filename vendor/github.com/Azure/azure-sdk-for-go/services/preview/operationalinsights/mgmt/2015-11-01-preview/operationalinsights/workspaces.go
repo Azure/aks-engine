@@ -81,7 +81,7 @@ func (client WorkspacesClient) CreateOrUpdate(ctx context.Context, resourceGroup
 
 	result, err = client.CreateOrUpdateSender(req)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "CreateOrUpdate", result.Response(), "Failure sending request")
+		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "CreateOrUpdate", nil, "Failure sending request")
 		return
 	}
 
@@ -119,7 +119,33 @@ func (client WorkspacesClient) CreateOrUpdateSender(req *http.Request) (future W
 	if err != nil {
 		return
 	}
-	future.Future, err = azure.NewFutureFromResponse(resp)
+	var azf azure.Future
+	azf, err = azure.NewFutureFromResponse(resp)
+	future.FutureAPI = &azf
+	future.Result = func(client WorkspacesClient) (w Workspace, err error) {
+		var done bool
+		done, err = future.DoneWithContext(context.Background(), client)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesCreateOrUpdateFuture", "Result", future.Response(), "Polling failure")
+			return
+		}
+		if !done {
+			err = azure.NewAsyncOpIncompleteError("operationalinsights.WorkspacesCreateOrUpdateFuture")
+			return
+		}
+		sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+		w.Response.Response, err = future.GetResult(sender)
+		if w.Response.Response == nil && err == nil {
+			err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesCreateOrUpdateFuture", "Result", nil, "received nil response and error")
+		}
+		if err == nil && w.Response.Response.StatusCode != http.StatusNoContent {
+			w, err = client.CreateOrUpdateResponder(w.Response.Response)
+			if err != nil {
+				err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesCreateOrUpdateFuture", "Result", w.Response.Response, "Failure responding to request")
+			}
+		}
+		return
+	}
 	return
 }
 
@@ -128,7 +154,6 @@ func (client WorkspacesClient) CreateOrUpdateSender(req *http.Request) (future W
 func (client WorkspacesClient) CreateOrUpdateResponder(resp *http.Response) (result Workspace, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -167,6 +192,7 @@ func (client WorkspacesClient) Delete(ctx context.Context, resourceGroupName str
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -204,7 +230,6 @@ func (client WorkspacesClient) DeleteSender(req *http.Request) (*http.Response, 
 func (client WorkspacesClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -251,6 +276,7 @@ func (client WorkspacesClient) DisableIntelligencePack(ctx context.Context, reso
 	result, err = client.DisableIntelligencePackResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "DisableIntelligencePack", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -289,7 +315,6 @@ func (client WorkspacesClient) DisableIntelligencePackSender(req *http.Request) 
 func (client WorkspacesClient) DisableIntelligencePackResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -336,6 +361,7 @@ func (client WorkspacesClient) EnableIntelligencePack(ctx context.Context, resou
 	result, err = client.EnableIntelligencePackResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "EnableIntelligencePack", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -374,7 +400,6 @@ func (client WorkspacesClient) EnableIntelligencePackSender(req *http.Request) (
 func (client WorkspacesClient) EnableIntelligencePackResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -412,6 +437,7 @@ func (client WorkspacesClient) Get(ctx context.Context, resourceGroupName string
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -449,7 +475,6 @@ func (client WorkspacesClient) GetSender(req *http.Request) (*http.Response, err
 func (client WorkspacesClient) GetResponder(resp *http.Response) (result Workspace, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -496,6 +521,7 @@ func (client WorkspacesClient) GetSharedKeys(ctx context.Context, resourceGroupN
 	result, err = client.GetSharedKeysResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "GetSharedKeys", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -533,7 +559,6 @@ func (client WorkspacesClient) GetSharedKeysSender(req *http.Request) (*http.Res
 func (client WorkspacesClient) GetSharedKeysResponder(resp *http.Response) (result SharedKeys, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -569,6 +594,7 @@ func (client WorkspacesClient) List(ctx context.Context) (result WorkspaceListRe
 	result, err = client.ListResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "List", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -604,7 +630,6 @@ func (client WorkspacesClient) ListSender(req *http.Request) (*http.Response, er
 func (client WorkspacesClient) ListResponder(resp *http.Response) (result WorkspaceListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -650,6 +675,7 @@ func (client WorkspacesClient) ListByResourceGroup(ctx context.Context, resource
 	result, err = client.ListByResourceGroupResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "ListByResourceGroup", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -686,7 +712,6 @@ func (client WorkspacesClient) ListByResourceGroupSender(req *http.Request) (*ht
 func (client WorkspacesClient) ListByResourceGroupResponder(resp *http.Response) (result WorkspaceListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -734,6 +759,7 @@ func (client WorkspacesClient) ListIntelligencePacks(ctx context.Context, resour
 	result, err = client.ListIntelligencePacksResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "ListIntelligencePacks", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -771,7 +797,6 @@ func (client WorkspacesClient) ListIntelligencePacksSender(req *http.Request) (*
 func (client WorkspacesClient) ListIntelligencePacksResponder(resp *http.Response) (result ListIntelligencePack, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result.Value),
 		autorest.ByClosing())
@@ -818,6 +843,7 @@ func (client WorkspacesClient) ListManagementGroups(ctx context.Context, resourc
 	result, err = client.ListManagementGroupsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "ListManagementGroups", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -855,7 +881,6 @@ func (client WorkspacesClient) ListManagementGroupsSender(req *http.Request) (*h
 func (client WorkspacesClient) ListManagementGroupsResponder(resp *http.Response) (result WorkspaceListManagementGroupsResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -902,6 +927,7 @@ func (client WorkspacesClient) ListUsages(ctx context.Context, resourceGroupName
 	result, err = client.ListUsagesResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "ListUsages", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -939,7 +965,6 @@ func (client WorkspacesClient) ListUsagesSender(req *http.Request) (*http.Respon
 func (client WorkspacesClient) ListUsagesResponder(resp *http.Response) (result WorkspaceListUsagesResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -987,6 +1012,7 @@ func (client WorkspacesClient) Update(ctx context.Context, resourceGroupName str
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.WorkspacesClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -1026,7 +1052,6 @@ func (client WorkspacesClient) UpdateSender(req *http.Request) (*http.Response, 
 func (client WorkspacesClient) UpdateResponder(resp *http.Response) (result Workspace, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
