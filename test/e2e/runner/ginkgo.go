@@ -41,15 +41,18 @@ func (g *Ginkgo) Run() error {
 	testFile := fmt.Sprintf("test/e2e/%s/%s.test", g.Config.Orchestrator, g.Config.Orchestrator)
 
 	args := []string{"-slowSpecThreshold", "180", "-r", "-v"}
+	if g.Config.GinkgoParallel {
+		args = append(args, "-p")
+	}
 	if g.Config.GinkgoFailFast {
-		args = append(args, "--failFast")
+		args = append(args, "-failFast")
 	}
 	if g.Config.GinkgoFocus != "" {
-		args = append(args, "--focus")
+		args = append(args, "-focus")
 		args = append(args, g.Config.GinkgoFocus)
 	}
 	if g.Config.GinkgoSkip != "" {
-		args = append(args, "--skip")
+		args = append(args, "-skip")
 		args = append(args, g.Config.GinkgoSkip)
 	}
 	args = append(args, testFile)

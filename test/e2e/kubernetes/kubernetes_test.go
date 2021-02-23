@@ -940,7 +940,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(5*time.Second, 1*time.Minute)
 				if err != nil {
-					pod.PrintPodsLogs(hostPortTestName, hostPortTestNamespace, 5*time.Second, 1*time.Minute)
+					pod.PrintPodsLogs(hostPortTestName, hostPortTestNamespace, 5*time.Second, cfg.Timeout)
 				}
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ready).To(Equal(true))
@@ -970,30 +970,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pods).NotTo(BeEmpty())
 			}
-		})
-
-		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
-			By("Creating a php-apache deployment")
-			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "", 3*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Ensuring that php-apache pod is running")
-			running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(running).To(Equal(true))
-
-			By("Ensuring that the php-apache pod has outbound internet access")
-			pods, err := phpApacheDeploy.PodsRunning()
-			Expect(err).NotTo(HaveOccurred())
-			for _, p := range pods {
-				pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-				Expect(outboundErr).NotTo(HaveOccurred())
-				Expect(pass).To(BeTrue())
-			}
-
-			By("Exposing TCP 80 internally on the php-apache deployment")
-			err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
@@ -2680,25 +2656,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This flavor/version of Kubernetes doesn't support hpa autoscale")
-			}
-		})
-
-		It("should be able to cleanup the long running php-apache stuff", func() {
-			if cfg.SoakClusterName == "" {
-				phpApacheDeploy, err := deployment.GetWithRetry(longRunningApacheDeploymentName, "default", 3*time.Second, 1*time.Minute)
-				if err != nil {
-					fmt.Println(err)
-				}
-				Expect(err).NotTo(HaveOccurred())
-				s, err := service.Get(longRunningApacheDeploymentName, "default")
-				Expect(err).NotTo(HaveOccurred())
-
-				err = s.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = phpApacheDeploy.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("Keep long-running php-apache workloads running for soak clusters")
 			}
 		})
 

@@ -14,7 +14,7 @@ $(LOCALBIN)/gox:
 	GOBIN=$(LOCALBIN) $(GO) get github.com/mitchellh/gox/...@v1.0.1
 
 $(LOCALBIN)/ginkgo:
-	GOBIN=$(LOCALBIN) $(GO) get github.com/onsi/ginkgo/ginkgo/...@v1.12.2
+	GOBIN=$(LOCALBIN) $(GO) get github.com/onsi/ginkgo/ginkgo/...@v1.15.0
 
 $(LOCALBIN)/golangci-lint:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.31.0
