@@ -299,7 +299,7 @@ func GetMasterKubernetesLabels(rg string, deprecated bool) string {
 	return buf.String()
 }
 
-// GetStorageAccountType returns the support managed disk storage tier for a give VM size
+// GetStorageAccountType returns the managed disk storage tier for a given VM size.
 func GetStorageAccountType(sizeName string) (string, error) {
 	spl := strings.Split(sizeName, "_")
 	if len(spl) < 2 {
