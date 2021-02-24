@@ -276,8 +276,10 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
 fi
 {{end}}
 
-{{- if RunUnattendedUpgrades}}
+{{- if not HasBlockOutboundInternet}}
+    {{- if RunUnattendedUpgrades}}
 apt_get_update && unattended_upgrade
+    {{- end}}
 {{- end}}
 
 if [ -f /var/run/reboot-required ]; then
