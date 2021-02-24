@@ -197,7 +197,7 @@ function Install-WindowsPatches {
 
             # KB4598230 contains January 12, 2021 cumulative updates for Windows Server 2019
             # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4598230
-            $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2021/01/windows10.0-kb4598230-x64_f69498ce0cac1307eb0e6701ca334ff332364289.msu")
+            $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2021/02/windows10.0-kb4601345-x64_6dfee9d6f028678d7988eb35cd5c0867bf96e4c6.msu")
         }
         '2004' {
             # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932
