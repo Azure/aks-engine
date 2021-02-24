@@ -98,6 +98,7 @@ func (client PropertyClient) CreateOrUpdate(ctx context.Context, resourceGroupNa
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.PropertyClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -138,7 +139,6 @@ func (client PropertyClient) CreateOrUpdateSender(req *http.Request) (*http.Resp
 func (client PropertyClient) CreateOrUpdateResponder(resp *http.Response) (result PropertyContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -191,6 +191,7 @@ func (client PropertyClient) Delete(ctx context.Context, resourceGroupName strin
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.PropertyClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -230,7 +231,6 @@ func (client PropertyClient) DeleteSender(req *http.Request) (*http.Response, er
 func (client PropertyClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -280,6 +280,7 @@ func (client PropertyClient) Get(ctx context.Context, resourceGroupName string, 
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.PropertyClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -318,7 +319,6 @@ func (client PropertyClient) GetSender(req *http.Request) (*http.Response, error
 func (client PropertyClient) GetResponder(resp *http.Response) (result PropertyContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -369,6 +369,7 @@ func (client PropertyClient) GetEntityTag(ctx context.Context, resourceGroupName
 	result, err = client.GetEntityTagResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.PropertyClient", "GetEntityTag", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -407,7 +408,6 @@ func (client PropertyClient) GetEntityTagSender(req *http.Request) (*http.Respon
 func (client PropertyClient) GetEntityTagResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -466,6 +466,11 @@ func (client PropertyClient) ListByService(ctx context.Context, resourceGroupNam
 	result.pc, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.PropertyClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.pc.hasNextLink() && result.pc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -512,7 +517,6 @@ func (client PropertyClient) ListByServiceSender(req *http.Request) (*http.Respo
 func (client PropertyClient) ListByServiceResponder(resp *http.Response) (result PropertyCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -603,6 +607,7 @@ func (client PropertyClient) Update(ctx context.Context, resourceGroupName strin
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.PropertyClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -644,7 +649,6 @@ func (client PropertyClient) UpdateSender(req *http.Request) (*http.Response, er
 func (client PropertyClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

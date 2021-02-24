@@ -84,6 +84,7 @@ func (client NotificationRecipientEmailClient) CreateOrUpdate(ctx context.Contex
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.NotificationRecipientEmailClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -123,7 +124,6 @@ func (client NotificationRecipientEmailClient) CreateOrUpdateSender(req *http.Re
 func (client NotificationRecipientEmailClient) CreateOrUpdateResponder(resp *http.Response) (result RecipientEmailContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -172,6 +172,7 @@ func (client NotificationRecipientEmailClient) Delete(ctx context.Context, resou
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.NotificationRecipientEmailClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -211,7 +212,6 @@ func (client NotificationRecipientEmailClient) DeleteSender(req *http.Request) (
 func (client NotificationRecipientEmailClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -259,6 +259,7 @@ func (client NotificationRecipientEmailClient) Get(ctx context.Context, resource
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.NotificationRecipientEmailClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -298,7 +299,6 @@ func (client NotificationRecipientEmailClient) GetSender(req *http.Request) (*ht
 func (client NotificationRecipientEmailClient) GetResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -345,6 +345,7 @@ func (client NotificationRecipientEmailClient) ListByNotification(ctx context.Co
 	result, err = client.ListByNotificationResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.NotificationRecipientEmailClient", "ListByNotification", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -383,7 +384,6 @@ func (client NotificationRecipientEmailClient) ListByNotificationSender(req *htt
 func (client NotificationRecipientEmailClient) ListByNotificationResponder(resp *http.Response) (result RecipientEmailCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

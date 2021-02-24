@@ -86,6 +86,7 @@ func (client BaseClient) GetAsyncOperationsStatus(ctx context.Context, location 
 	result, err = client.GetAsyncOperationsStatusResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.BaseClient", "GetAsyncOperationsStatus", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -123,7 +124,6 @@ func (client BaseClient) GetAsyncOperationsStatusSender(req *http.Request) (*htt
 func (client BaseClient) GetAsyncOperationsStatusResponder(resp *http.Response) (result OperationStatus, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

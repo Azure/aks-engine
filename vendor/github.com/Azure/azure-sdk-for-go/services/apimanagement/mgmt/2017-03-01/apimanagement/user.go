@@ -102,6 +102,7 @@ func (client UserClient) CreateOrUpdate(ctx context.Context, resourceGroupName s
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -142,7 +143,6 @@ func (client UserClient) CreateOrUpdateSender(req *http.Request) (*http.Response
 func (client UserClient) CreateOrUpdateResponder(resp *http.Response) (result UserContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -197,6 +197,7 @@ func (client UserClient) Delete(ctx context.Context, resourceGroupName string, s
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -239,7 +240,6 @@ func (client UserClient) DeleteSender(req *http.Request) (*http.Response, error)
 func (client UserClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -291,6 +291,7 @@ func (client UserClient) GenerateSsoURL(ctx context.Context, resourceGroupName s
 	result, err = client.GenerateSsoURLResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "GenerateSsoURL", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -329,7 +330,6 @@ func (client UserClient) GenerateSsoURLSender(req *http.Request) (*http.Response
 func (client UserClient) GenerateSsoURLResponder(resp *http.Response) (result GenerateSsoURLResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -381,6 +381,7 @@ func (client UserClient) Get(ctx context.Context, resourceGroupName string, serv
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -419,7 +420,6 @@ func (client UserClient) GetSender(req *http.Request) (*http.Response, error) {
 func (client UserClient) GetResponder(resp *http.Response) (result UserContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -471,6 +471,7 @@ func (client UserClient) GetEntityTag(ctx context.Context, resourceGroupName str
 	result, err = client.GetEntityTagResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "GetEntityTag", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -509,7 +510,6 @@ func (client UserClient) GetEntityTagSender(req *http.Request) (*http.Response, 
 func (client UserClient) GetEntityTagResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -563,6 +563,7 @@ func (client UserClient) GetSharedAccessToken(ctx context.Context, resourceGroup
 	result, err = client.GetSharedAccessTokenResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "GetSharedAccessToken", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -603,7 +604,6 @@ func (client UserClient) GetSharedAccessTokenSender(req *http.Request) (*http.Re
 func (client UserClient) GetSharedAccessTokenResponder(resp *http.Response) (result UserTokenResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -668,6 +668,11 @@ func (client UserClient) ListByService(ctx context.Context, resourceGroupName st
 	result.uc, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.uc.hasNextLink() && result.uc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -714,7 +719,6 @@ func (client UserClient) ListByServiceSender(req *http.Request) (*http.Response,
 func (client UserClient) ListByServiceResponder(resp *http.Response) (result UserCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -806,6 +810,7 @@ func (client UserClient) Update(ctx context.Context, resourceGroupName string, s
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.UserClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -847,7 +852,6 @@ func (client UserClient) UpdateSender(req *http.Request) (*http.Response, error)
 func (client UserClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

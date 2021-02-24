@@ -93,6 +93,7 @@ func (client CollectionPartitionRegionClient) ListMetrics(ctx context.Context, r
 	result, err = client.ListMetricsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.CollectionPartitionRegionClient", "ListMetrics", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -134,7 +135,6 @@ func (client CollectionPartitionRegionClient) ListMetricsSender(req *http.Reques
 func (client CollectionPartitionRegionClient) ListMetricsResponder(resp *http.Response) (result PartitionMetricListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

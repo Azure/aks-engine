@@ -649,6 +649,13 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.OSDiskCachingType = vlabs.OSDiskCachingType
 	api.DataDiskCachingType = vlabs.DataDiskCachingType
 	api.VMSSName = vlabs.VMSSName
+
+	if vlabs.SecurityProfile != nil {
+		api.SecurityProfile = &SecurityProfile{
+			SecureBootEnabled: vlabs.SecurityProfile.SecureBootEnabled,
+			VTPMEnabled:       vlabs.SecurityProfile.VTPMEnabled,
+		}
+	}
 }
 
 func convertVLabsKeyVaultSecrets(vlabs *vlabs.KeyVaultSecrets, api *KeyVaultSecrets) {

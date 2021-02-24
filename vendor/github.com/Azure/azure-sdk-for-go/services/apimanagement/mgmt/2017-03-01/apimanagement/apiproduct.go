@@ -98,6 +98,11 @@ func (client APIProductClient) ListByApis(ctx context.Context, resourceGroupName
 	result.pc, err = client.ListByApisResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIProductClient", "ListByApis", resp, "Failure responding to request")
+		return
+	}
+	if result.pc.hasNextLink() && result.pc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -145,7 +150,6 @@ func (client APIProductClient) ListByApisSender(req *http.Request) (*http.Respon
 func (client APIProductClient) ListByApisResponder(resp *http.Response) (result ProductCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

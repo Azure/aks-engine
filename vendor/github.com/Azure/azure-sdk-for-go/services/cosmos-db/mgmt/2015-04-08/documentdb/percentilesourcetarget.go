@@ -94,6 +94,7 @@ func (client PercentileSourceTargetClient) ListMetrics(ctx context.Context, reso
 	result, err = client.ListMetricsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.PercentileSourceTargetClient", "ListMetrics", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -134,7 +135,6 @@ func (client PercentileSourceTargetClient) ListMetricsSender(req *http.Request) 
 func (client PercentileSourceTargetClient) ListMetricsResponder(resp *http.Response) (result PercentileMetricListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

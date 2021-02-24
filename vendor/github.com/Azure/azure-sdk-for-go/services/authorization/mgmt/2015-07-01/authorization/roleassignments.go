@@ -90,6 +90,7 @@ func (client RoleAssignmentsClient) Create(ctx context.Context, scope string, ro
 	result, err = client.CreateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "Create", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -128,7 +129,6 @@ func (client RoleAssignmentsClient) CreateSender(req *http.Request) (*http.Respo
 func (client RoleAssignmentsClient) CreateResponder(resp *http.Response) (result RoleAssignment, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -179,6 +179,7 @@ func (client RoleAssignmentsClient) CreateByID(ctx context.Context, roleAssignme
 	result, err = client.CreateByIDResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "CreateByID", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -216,7 +217,6 @@ func (client RoleAssignmentsClient) CreateByIDSender(req *http.Request) (*http.R
 func (client RoleAssignmentsClient) CreateByIDResponder(resp *http.Response) (result RoleAssignment, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -255,6 +255,7 @@ func (client RoleAssignmentsClient) Delete(ctx context.Context, scope string, ro
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -291,7 +292,6 @@ func (client RoleAssignmentsClient) DeleteSender(req *http.Request) (*http.Respo
 func (client RoleAssignmentsClient) DeleteResponder(resp *http.Response) (result RoleAssignment, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -332,6 +332,7 @@ func (client RoleAssignmentsClient) DeleteByID(ctx context.Context, roleAssignme
 	result, err = client.DeleteByIDResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "DeleteByID", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -367,7 +368,6 @@ func (client RoleAssignmentsClient) DeleteByIDSender(req *http.Request) (*http.R
 func (client RoleAssignmentsClient) DeleteByIDResponder(resp *http.Response) (result RoleAssignment, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -406,6 +406,7 @@ func (client RoleAssignmentsClient) Get(ctx context.Context, scope string, roleA
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -442,7 +443,6 @@ func (client RoleAssignmentsClient) GetSender(req *http.Request) (*http.Response
 func (client RoleAssignmentsClient) GetResponder(resp *http.Response) (result RoleAssignment, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -483,6 +483,7 @@ func (client RoleAssignmentsClient) GetByID(ctx context.Context, roleAssignmentI
 	result, err = client.GetByIDResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "GetByID", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -518,7 +519,6 @@ func (client RoleAssignmentsClient) GetByIDSender(req *http.Request) (*http.Resp
 func (client RoleAssignmentsClient) GetByIDResponder(resp *http.Response) (result RoleAssignment, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -559,6 +559,11 @@ func (client RoleAssignmentsClient) List(ctx context.Context, filter string) (re
 	result.ralr, err = client.ListResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "List", resp, "Failure responding to request")
+		return
+	}
+	if result.ralr.hasNextLink() && result.ralr.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -597,7 +602,6 @@ func (client RoleAssignmentsClient) ListSender(req *http.Request) (*http.Respons
 func (client RoleAssignmentsClient) ListResponder(resp *http.Response) (result RoleAssignmentListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -680,6 +684,11 @@ func (client RoleAssignmentsClient) ListForResource(ctx context.Context, resourc
 	result.ralr, err = client.ListForResourceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "ListForResource", resp, "Failure responding to request")
+		return
+	}
+	if result.ralr.hasNextLink() && result.ralr.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -723,7 +732,6 @@ func (client RoleAssignmentsClient) ListForResourceSender(req *http.Request) (*h
 func (client RoleAssignmentsClient) ListForResourceResponder(resp *http.Response) (result RoleAssignmentListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -802,6 +810,11 @@ func (client RoleAssignmentsClient) ListForResourceGroup(ctx context.Context, re
 	result.ralr, err = client.ListForResourceGroupResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "ListForResourceGroup", resp, "Failure responding to request")
+		return
+	}
+	if result.ralr.hasNextLink() && result.ralr.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -841,7 +854,6 @@ func (client RoleAssignmentsClient) ListForResourceGroupSender(req *http.Request
 func (client RoleAssignmentsClient) ListForResourceGroupResponder(resp *http.Response) (result RoleAssignmentListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -920,6 +932,11 @@ func (client RoleAssignmentsClient) ListForScope(ctx context.Context, scope stri
 	result.ralr, err = client.ListForScopeResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "authorization.RoleAssignmentsClient", "ListForScope", resp, "Failure responding to request")
+		return
+	}
+	if result.ralr.hasNextLink() && result.ralr.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -958,7 +975,6 @@ func (client RoleAssignmentsClient) ListForScopeSender(req *http.Request) (*http
 func (client RoleAssignmentsClient) ListForScopeResponder(resp *http.Response) (result RoleAssignmentListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

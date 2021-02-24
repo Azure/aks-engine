@@ -76,6 +76,7 @@ func (client UsageClient) List(ctx context.Context) (result UsageListResult, err
 	result, err = client.ListResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "storage.UsageClient", "List", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -111,7 +112,6 @@ func (client UsageClient) ListSender(req *http.Request) (*http.Response, error) 
 func (client UsageClient) ListResponder(resp *http.Response) (result UsageListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -155,6 +155,7 @@ func (client UsageClient) ListByLocation(ctx context.Context, location string) (
 	result, err = client.ListByLocationResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "storage.UsageClient", "ListByLocation", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -191,7 +192,6 @@ func (client UsageClient) ListByLocationSender(req *http.Request) (*http.Respons
 func (client UsageClient) ListByLocationResponder(resp *http.Response) (result UsageListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

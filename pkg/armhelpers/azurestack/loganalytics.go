@@ -184,7 +184,7 @@ func (az *AzureClient) AddContainerInsightsSolution(ctx context.Context, workspa
 		return false, err
 	}
 
-	err = status.Future.WaitForCompletionRef(ctx, solutionClient.Client)
+	err = status.FutureAPI.WaitForCompletionRef(ctx, solutionClient.Client)
 	if err != nil {
 		return false, err
 	}

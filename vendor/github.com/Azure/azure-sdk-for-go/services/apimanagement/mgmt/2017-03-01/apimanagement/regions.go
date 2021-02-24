@@ -81,6 +81,7 @@ func (client RegionsClient) ListByService(ctx context.Context, resourceGroupName
 	result, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.RegionsClient", "ListByService", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -118,7 +119,6 @@ func (client RegionsClient) ListByServiceSender(req *http.Request) (*http.Respon
 func (client RegionsClient) ListByServiceResponder(resp *http.Response) (result RegionListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

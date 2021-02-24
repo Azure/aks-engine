@@ -99,6 +99,11 @@ func (client APIRevisionsClient) List(ctx context.Context, resourceGroupName str
 	result.arc, err = client.ListResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIRevisionsClient", "List", resp, "Failure responding to request")
+		return
+	}
+	if result.arc.hasNextLink() && result.arc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -146,7 +151,6 @@ func (client APIRevisionsClient) ListSender(req *http.Request) (*http.Response, 
 func (client APIRevisionsClient) ListResponder(resp *http.Response) (result APIRevisionCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

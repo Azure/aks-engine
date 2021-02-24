@@ -556,6 +556,12 @@ type Extension struct {
 	Template    string `json:"template"`
 }
 
+// SecurityProfile represents security profile of a VM
+type SecurityProfile struct {
+	SecureBootEnabled bool `json:"secureBootEnabled,omitempty"`
+	VTPMEnabled       bool `json:"vTPMEnabled,omitempty"`
+}
+
 // AgentPoolProfile represents an agent pool definition
 type AgentPoolProfile struct {
 	Name                                string               `json:"name"`
@@ -608,6 +614,7 @@ type AgentPoolProfile struct {
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
 	OSDiskCachingType                   string               `json:"osDiskCachingType,omitempty"`
 	DataDiskCachingType                 string               `json:"dataDiskCachingType,omitempty"`
+	SecurityProfile                     *SecurityProfile     `json:"securityProfile,omitempty"`
 	// VMSSName is a read-only field; its value will be computed during template generation
 	VMSSName string `json:"vmssName,omitempty"`
 }

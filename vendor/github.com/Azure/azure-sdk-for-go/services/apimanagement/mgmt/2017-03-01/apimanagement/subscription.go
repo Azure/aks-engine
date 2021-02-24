@@ -104,6 +104,7 @@ func (client SubscriptionClient) CreateOrUpdate(ctx context.Context, resourceGro
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -144,7 +145,6 @@ func (client SubscriptionClient) CreateOrUpdateSender(req *http.Request) (*http.
 func (client SubscriptionClient) CreateOrUpdateResponder(resp *http.Response) (result SubscriptionContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -198,6 +198,7 @@ func (client SubscriptionClient) Delete(ctx context.Context, resourceGroupName s
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -237,7 +238,6 @@ func (client SubscriptionClient) DeleteSender(req *http.Request) (*http.Response
 func (client SubscriptionClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -288,6 +288,7 @@ func (client SubscriptionClient) Get(ctx context.Context, resourceGroupName stri
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -326,7 +327,6 @@ func (client SubscriptionClient) GetSender(req *http.Request) (*http.Response, e
 func (client SubscriptionClient) GetResponder(resp *http.Response) (result SubscriptionContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -378,6 +378,7 @@ func (client SubscriptionClient) GetEntityTag(ctx context.Context, resourceGroup
 	result, err = client.GetEntityTagResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "GetEntityTag", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -416,7 +417,6 @@ func (client SubscriptionClient) GetEntityTagSender(req *http.Request) (*http.Re
 func (client SubscriptionClient) GetEntityTagResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -479,6 +479,11 @@ func (client SubscriptionClient) List(ctx context.Context, resourceGroupName str
 	result.sc, err = client.ListResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "List", resp, "Failure responding to request")
+		return
+	}
+	if result.sc.hasNextLink() && result.sc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -525,7 +530,6 @@ func (client SubscriptionClient) ListSender(req *http.Request) (*http.Response, 
 func (client SubscriptionClient) ListResponder(resp *http.Response) (result SubscriptionCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -614,6 +618,7 @@ func (client SubscriptionClient) RegeneratePrimaryKey(ctx context.Context, resou
 	result, err = client.RegeneratePrimaryKeyResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "RegeneratePrimaryKey", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -652,7 +657,6 @@ func (client SubscriptionClient) RegeneratePrimaryKeySender(req *http.Request) (
 func (client SubscriptionClient) RegeneratePrimaryKeyResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -703,6 +707,7 @@ func (client SubscriptionClient) RegenerateSecondaryKey(ctx context.Context, res
 	result, err = client.RegenerateSecondaryKeyResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "RegenerateSecondaryKey", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -741,7 +746,6 @@ func (client SubscriptionClient) RegenerateSecondaryKeySender(req *http.Request)
 func (client SubscriptionClient) RegenerateSecondaryKeyResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -795,6 +799,7 @@ func (client SubscriptionClient) Update(ctx context.Context, resourceGroupName s
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.SubscriptionClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -836,7 +841,6 @@ func (client SubscriptionClient) UpdateSender(req *http.Request) (*http.Response
 func (client SubscriptionClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

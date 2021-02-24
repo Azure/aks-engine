@@ -98,6 +98,7 @@ func (client AuthorizationServerClient) CreateOrUpdate(ctx context.Context, reso
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.AuthorizationServerClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -138,7 +139,6 @@ func (client AuthorizationServerClient) CreateOrUpdateSender(req *http.Request) 
 func (client AuthorizationServerClient) CreateOrUpdateResponder(resp *http.Response) (result AuthorizationServerContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -191,6 +191,7 @@ func (client AuthorizationServerClient) Delete(ctx context.Context, resourceGrou
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.AuthorizationServerClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -230,7 +231,6 @@ func (client AuthorizationServerClient) DeleteSender(req *http.Request) (*http.R
 func (client AuthorizationServerClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -280,6 +280,7 @@ func (client AuthorizationServerClient) Get(ctx context.Context, resourceGroupNa
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.AuthorizationServerClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -318,7 +319,6 @@ func (client AuthorizationServerClient) GetSender(req *http.Request) (*http.Resp
 func (client AuthorizationServerClient) GetResponder(resp *http.Response) (result AuthorizationServerContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -369,6 +369,7 @@ func (client AuthorizationServerClient) GetEntityTag(ctx context.Context, resour
 	result, err = client.GetEntityTagResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.AuthorizationServerClient", "GetEntityTag", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -407,7 +408,6 @@ func (client AuthorizationServerClient) GetEntityTagSender(req *http.Request) (*
 func (client AuthorizationServerClient) GetEntityTagResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -466,6 +466,11 @@ func (client AuthorizationServerClient) ListByService(ctx context.Context, resou
 	result.asc, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.AuthorizationServerClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.asc.hasNextLink() && result.asc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -512,7 +517,6 @@ func (client AuthorizationServerClient) ListByServiceSender(req *http.Request) (
 func (client AuthorizationServerClient) ListByServiceResponder(resp *http.Response) (result AuthorizationServerCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -603,6 +607,7 @@ func (client AuthorizationServerClient) Update(ctx context.Context, resourceGrou
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.AuthorizationServerClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -644,7 +649,6 @@ func (client AuthorizationServerClient) UpdateSender(req *http.Request) (*http.R
 func (client AuthorizationServerClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

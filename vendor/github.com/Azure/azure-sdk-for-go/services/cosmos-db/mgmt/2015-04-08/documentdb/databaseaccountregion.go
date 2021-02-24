@@ -90,6 +90,7 @@ func (client DatabaseAccountRegionClient) ListMetrics(ctx context.Context, resou
 	result, err = client.ListMetricsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.DatabaseAccountRegionClient", "ListMetrics", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -129,7 +130,6 @@ func (client DatabaseAccountRegionClient) ListMetricsSender(req *http.Request) (
 func (client DatabaseAccountRegionClient) ListMetricsResponder(resp *http.Response) (result MetricListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

@@ -105,6 +105,11 @@ func (client APIIssueCommentsClient) ListByService(ctx context.Context, resource
 	result.icc, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIIssueCommentsClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.icc.hasNextLink() && result.icc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -153,7 +158,6 @@ func (client APIIssueCommentsClient) ListByServiceSender(req *http.Request) (*ht
 func (client APIIssueCommentsClient) ListByServiceResponder(resp *http.Response) (result IssueCommentCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

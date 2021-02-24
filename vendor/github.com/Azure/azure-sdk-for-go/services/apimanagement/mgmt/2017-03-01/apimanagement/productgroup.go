@@ -91,6 +91,7 @@ func (client ProductGroupClient) CheckEntityExists(ctx context.Context, resource
 	result, err = client.CheckEntityExistsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.ProductGroupClient", "CheckEntityExists", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -130,7 +131,6 @@ func (client ProductGroupClient) CheckEntityExistsSender(req *http.Request) (*ht
 func (client ProductGroupClient) CheckEntityExistsResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -186,6 +186,7 @@ func (client ProductGroupClient) CreateOrUpdate(ctx context.Context, resourceGro
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.ProductGroupClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -225,7 +226,6 @@ func (client ProductGroupClient) CreateOrUpdateSender(req *http.Request) (*http.
 func (client ProductGroupClient) CreateOrUpdateResponder(resp *http.Response) (result GroupContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -282,6 +282,7 @@ func (client ProductGroupClient) Delete(ctx context.Context, resourceGroupName s
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.ProductGroupClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -321,7 +322,6 @@ func (client ProductGroupClient) DeleteSender(req *http.Request) (*http.Response
 func (client ProductGroupClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -387,6 +387,11 @@ func (client ProductGroupClient) ListByProduct(ctx context.Context, resourceGrou
 	result.gc, err = client.ListByProductResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.ProductGroupClient", "ListByProduct", resp, "Failure responding to request")
+		return
+	}
+	if result.gc.hasNextLink() && result.gc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -434,7 +439,6 @@ func (client ProductGroupClient) ListByProductSender(req *http.Request) (*http.R
 func (client ProductGroupClient) ListByProductResponder(resp *http.Response) (result GroupCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

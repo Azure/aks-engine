@@ -85,6 +85,7 @@ func (client DataSourcesClient) CreateOrUpdate(ctx context.Context, resourceGrou
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.DataSourcesClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -125,7 +126,6 @@ func (client DataSourcesClient) CreateOrUpdateSender(req *http.Request) (*http.R
 func (client DataSourcesClient) CreateOrUpdateResponder(resp *http.Response) (result DataSource, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -173,6 +173,7 @@ func (client DataSourcesClient) Delete(ctx context.Context, resourceGroupName st
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.DataSourcesClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -211,7 +212,6 @@ func (client DataSourcesClient) DeleteSender(req *http.Request) (*http.Response,
 func (client DataSourcesClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -258,6 +258,7 @@ func (client DataSourcesClient) Get(ctx context.Context, resourceGroupName strin
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.DataSourcesClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -296,7 +297,6 @@ func (client DataSourcesClient) GetSender(req *http.Request) (*http.Response, er
 func (client DataSourcesClient) GetResponder(resp *http.Response) (result DataSource, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -346,6 +346,11 @@ func (client DataSourcesClient) ListByWorkspace(ctx context.Context, resourceGro
 	result.dslr, err = client.ListByWorkspaceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "operationalinsights.DataSourcesClient", "ListByWorkspace", resp, "Failure responding to request")
+		return
+	}
+	if result.dslr.hasNextLink() && result.dslr.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -387,7 +392,6 @@ func (client DataSourcesClient) ListByWorkspaceSender(req *http.Request) (*http.
 func (client DataSourcesClient) ListByWorkspaceResponder(resp *http.Response) (result DataSourceListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

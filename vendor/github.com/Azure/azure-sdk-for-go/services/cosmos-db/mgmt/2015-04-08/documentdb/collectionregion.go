@@ -93,6 +93,7 @@ func (client CollectionRegionClient) ListMetrics(ctx context.Context, resourceGr
 	result, err = client.ListMetricsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.CollectionRegionClient", "ListMetrics", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -134,7 +135,6 @@ func (client CollectionRegionClient) ListMetricsSender(req *http.Request) (*http
 func (client CollectionRegionClient) ListMetricsResponder(resp *http.Response) (result MetricListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

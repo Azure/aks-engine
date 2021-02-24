@@ -108,6 +108,7 @@ func (client LoggerClient) CreateOrUpdate(ctx context.Context, resourceGroupName
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.LoggerClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -148,7 +149,6 @@ func (client LoggerClient) CreateOrUpdateSender(req *http.Request) (*http.Respon
 func (client LoggerClient) CreateOrUpdateResponder(resp *http.Response) (result LoggerContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -201,6 +201,7 @@ func (client LoggerClient) Delete(ctx context.Context, resourceGroupName string,
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.LoggerClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -240,7 +241,6 @@ func (client LoggerClient) DeleteSender(req *http.Request) (*http.Response, erro
 func (client LoggerClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -290,6 +290,7 @@ func (client LoggerClient) Get(ctx context.Context, resourceGroupName string, se
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.LoggerClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -328,7 +329,6 @@ func (client LoggerClient) GetSender(req *http.Request) (*http.Response, error) 
 func (client LoggerClient) GetResponder(resp *http.Response) (result LoggerContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -379,6 +379,7 @@ func (client LoggerClient) GetEntityTag(ctx context.Context, resourceGroupName s
 	result, err = client.GetEntityTagResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.LoggerClient", "GetEntityTag", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -417,7 +418,6 @@ func (client LoggerClient) GetEntityTagSender(req *http.Request) (*http.Response
 func (client LoggerClient) GetEntityTagResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -476,6 +476,11 @@ func (client LoggerClient) ListByService(ctx context.Context, resourceGroupName 
 	result.lc, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.LoggerClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.lc.hasNextLink() && result.lc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -522,7 +527,6 @@ func (client LoggerClient) ListByServiceSender(req *http.Request) (*http.Respons
 func (client LoggerClient) ListByServiceResponder(resp *http.Response) (result LoggerCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -613,6 +617,7 @@ func (client LoggerClient) Update(ctx context.Context, resourceGroupName string,
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.LoggerClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -654,7 +659,6 @@ func (client LoggerClient) UpdateSender(req *http.Request) (*http.Response, erro
 func (client LoggerClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

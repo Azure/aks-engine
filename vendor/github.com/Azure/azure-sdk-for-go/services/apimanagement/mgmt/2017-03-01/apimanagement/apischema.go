@@ -97,6 +97,7 @@ func (client APISchemaClient) CreateOrUpdate(ctx context.Context, resourceGroupN
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APISchemaClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -142,7 +143,6 @@ func (client APISchemaClient) CreateOrUpdateSender(req *http.Request) (*http.Res
 func (client APISchemaClient) CreateOrUpdateResponder(resp *http.Response) (result SchemaContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -201,6 +201,7 @@ func (client APISchemaClient) Delete(ctx context.Context, resourceGroupName stri
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APISchemaClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -241,7 +242,6 @@ func (client APISchemaClient) DeleteSender(req *http.Request) (*http.Response, e
 func (client APISchemaClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -297,6 +297,7 @@ func (client APISchemaClient) Get(ctx context.Context, resourceGroupName string,
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APISchemaClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -336,7 +337,6 @@ func (client APISchemaClient) GetSender(req *http.Request) (*http.Response, erro
 func (client APISchemaClient) GetResponder(resp *http.Response) (result SchemaContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -393,6 +393,7 @@ func (client APISchemaClient) GetEntityTag(ctx context.Context, resourceGroupNam
 	result, err = client.GetEntityTagResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APISchemaClient", "GetEntityTag", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -432,7 +433,6 @@ func (client APISchemaClient) GetEntityTagSender(req *http.Request) (*http.Respo
 func (client APISchemaClient) GetEntityTagResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp
@@ -484,6 +484,11 @@ func (client APISchemaClient) ListByAPI(ctx context.Context, resourceGroupName s
 	result.sc, err = client.ListByAPIResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APISchemaClient", "ListByAPI", resp, "Failure responding to request")
+		return
+	}
+	if result.sc.hasNextLink() && result.sc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -522,7 +527,6 @@ func (client APISchemaClient) ListByAPISender(req *http.Request) (*http.Response
 func (client APISchemaClient) ListByAPIResponder(resp *http.Response) (result SchemaCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

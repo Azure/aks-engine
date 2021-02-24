@@ -97,6 +97,7 @@ func (client APIIssuAttachmentClient) Head(ctx context.Context, resourceGroupNam
 	result, err = client.HeadResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIIssuAttachmentClient", "Head", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -137,7 +138,6 @@ func (client APIIssuAttachmentClient) HeadSender(req *http.Request) (*http.Respo
 func (client APIIssuAttachmentClient) HeadResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByClosing())
 	result.Response = resp

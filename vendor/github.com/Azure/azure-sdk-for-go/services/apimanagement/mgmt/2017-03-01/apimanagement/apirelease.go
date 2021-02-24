@@ -92,6 +92,7 @@ func (client APIReleaseClient) Create(ctx context.Context, parameters APIRelease
 	result, err = client.CreateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIReleaseClient", "Create", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -133,7 +134,6 @@ func (client APIReleaseClient) CreateSender(req *http.Request) (*http.Response, 
 func (client APIReleaseClient) CreateResponder(resp *http.Response) (result APIReleaseContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -192,6 +192,7 @@ func (client APIReleaseClient) Delete(ctx context.Context, ifMatch string, resou
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIReleaseClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -232,7 +233,6 @@ func (client APIReleaseClient) DeleteSender(req *http.Request) (*http.Response, 
 func (client APIReleaseClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -288,6 +288,7 @@ func (client APIReleaseClient) Get(ctx context.Context, resourceGroupName string
 	result, err = client.GetResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIReleaseClient", "Get", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -327,7 +328,6 @@ func (client APIReleaseClient) GetSender(req *http.Request) (*http.Response, err
 func (client APIReleaseClient) GetResponder(resp *http.Response) (result APIReleaseContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -394,6 +394,11 @@ func (client APIReleaseClient) List(ctx context.Context, resourceGroupName strin
 	result.arc, err = client.ListResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIReleaseClient", "List", resp, "Failure responding to request")
+		return
+	}
+	if result.arc.hasNextLink() && result.arc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -441,7 +446,6 @@ func (client APIReleaseClient) ListSender(req *http.Request) (*http.Response, er
 func (client APIReleaseClient) ListResponder(resp *http.Response) (result APIReleaseCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -538,6 +542,7 @@ func (client APIReleaseClient) Update(ctx context.Context, parameters APIRelease
 	result, err = client.UpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.APIReleaseClient", "Update", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -580,7 +585,6 @@ func (client APIReleaseClient) UpdateSender(req *http.Request) (*http.Response, 
 func (client APIReleaseClient) UpdateResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp

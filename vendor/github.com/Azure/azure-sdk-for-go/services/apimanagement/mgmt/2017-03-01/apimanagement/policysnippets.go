@@ -82,6 +82,7 @@ func (client PolicySnippetsClient) ListByService(ctx context.Context, resourceGr
 	result, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.PolicySnippetsClient", "ListByService", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -122,7 +123,6 @@ func (client PolicySnippetsClient) ListByServiceSender(req *http.Request) (*http
 func (client PolicySnippetsClient) ListByServiceResponder(resp *http.Response) (result PolicySnippetsCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

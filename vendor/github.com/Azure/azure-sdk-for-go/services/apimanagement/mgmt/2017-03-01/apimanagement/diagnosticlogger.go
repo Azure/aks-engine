@@ -91,6 +91,7 @@ func (client DiagnosticLoggerClient) CheckEntityExists(ctx context.Context, reso
 	result, err = client.CheckEntityExistsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DiagnosticLoggerClient", "CheckEntityExists", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -130,7 +131,6 @@ func (client DiagnosticLoggerClient) CheckEntityExistsSender(req *http.Request) 
 func (client DiagnosticLoggerClient) CheckEntityExistsResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -185,6 +185,7 @@ func (client DiagnosticLoggerClient) CreateOrUpdate(ctx context.Context, resourc
 	result, err = client.CreateOrUpdateResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DiagnosticLoggerClient", "CreateOrUpdate", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -224,7 +225,6 @@ func (client DiagnosticLoggerClient) CreateOrUpdateSender(req *http.Request) (*h
 func (client DiagnosticLoggerClient) CreateOrUpdateResponder(resp *http.Response) (result LoggerContract, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusCreated),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
@@ -280,6 +280,7 @@ func (client DiagnosticLoggerClient) Delete(ctx context.Context, resourceGroupNa
 	result, err = client.DeleteResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DiagnosticLoggerClient", "Delete", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -319,7 +320,6 @@ func (client DiagnosticLoggerClient) DeleteSender(req *http.Request) (*http.Resp
 func (client DiagnosticLoggerClient) DeleteResponder(resp *http.Response) (result autorest.Response, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK, http.StatusNoContent),
 		autorest.ByClosing())
 	result.Response = resp
@@ -383,6 +383,11 @@ func (client DiagnosticLoggerClient) ListByService(ctx context.Context, resource
 	result.lc, err = client.ListByServiceResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "apimanagement.DiagnosticLoggerClient", "ListByService", resp, "Failure responding to request")
+		return
+	}
+	if result.lc.hasNextLink() && result.lc.IsEmpty() {
+		err = result.NextWithContext(ctx)
+		return
 	}
 
 	return
@@ -430,7 +435,6 @@ func (client DiagnosticLoggerClient) ListByServiceSender(req *http.Request) (*ht
 func (client DiagnosticLoggerClient) ListByServiceResponder(resp *http.Response) (result LoggerCollection, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())

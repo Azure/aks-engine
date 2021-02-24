@@ -92,6 +92,7 @@ func (client PartitionKeyRangeIDClient) ListMetrics(ctx context.Context, resourc
 	result, err = client.ListMetricsResponder(resp)
 	if err != nil {
 		err = autorest.NewErrorWithError(err, "documentdb.PartitionKeyRangeIDClient", "ListMetrics", resp, "Failure responding to request")
+		return
 	}
 
 	return
@@ -133,7 +134,6 @@ func (client PartitionKeyRangeIDClient) ListMetricsSender(req *http.Request) (*h
 func (client PartitionKeyRangeIDClient) ListMetricsResponder(resp *http.Response) (result PartitionMetricListResult, err error) {
 	err = autorest.Respond(
 		resp,
-		client.ByInspecting(),
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
 		autorest.ByUnmarshallingJSON(&result),
 		autorest.ByClosing())
