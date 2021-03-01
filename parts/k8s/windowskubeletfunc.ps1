@@ -320,9 +320,9 @@ New-NSSMService {
         $ContainerRuntime = "docker"
     )
 
-    $kubeletDependOnServices = ""
-    if ($ContainerRuntime -eq "docker") {
-        $kubeletDependOnServices = "docker"
+    $kubeletDependOnServices = "docker"
+    if ($ContainerRuntime -eq "containerd") {
+        $kubeletDependOnServices = "containerd"
     }
     if ($global:EnableCsiProxy) {
         $kubeletDependOnServices += " csi-proxy"
