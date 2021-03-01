@@ -4,18 +4,6 @@ If you created a Kubernetes cluster with one or multiple Ubuntu node pools whose
 
 The NVIDIA drivers are automatically installed on every GPU agent in your cluster, so you don't need to do that manually, unless you require a specific version of the drivers. Currently, the installed driver is version 418.40.04.
 
-On Azure Stack Hub, however, NVIDIA drivers are not automatically installed. In this case the nvidia-device-plugin addon need to be explicitly enabled in apimodel.json, as follows:
-```
-"addons": [
-            [...]
-            {
-                "name": "nvidia-device-plugin",
-                "enabled": true
-            }
-            [...]
-          ]
-```
-
 Note: You will get version 450.51.06 of the drivers if you are using Ubuntu 18.04-LTS, and version 418.40.04 drivers if you are using 16.04-LTS.
 
 To make sure everything is fine, run `kubectl describe node <name-of-a-gpu-node>`. You should see the correct number of GPU reported (in this example shows 2 GPU for a NC12 VM):
