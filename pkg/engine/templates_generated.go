@@ -19703,9 +19703,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760 | RemoveNulls
     # Do not use & when calling DependOnService since 'docker csi-proxy'
     # is parsed as a single string instead of two separate strings
-    if (-not [string]::IsNullOrEmpty($kubeletDependOnServices) {
-        Invoke-Expression "$KubeDir\nssm.exe set Kubelet DependOnService $kubeletDependOnServices | RemoveNulls"
-    }
+    Invoke-Expression "$KubeDir\nssm.exe set Kubelet DependOnService $kubeletDependOnServices | RemoveNulls"
 
     # setup kubeproxy
     & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
