@@ -11,7 +11,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7 // indirect
 	github.com/golang/mock v1.2.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/mattn/goveralls v0.0.7 // indirect
 	github.com/mitchellh/gox v1.0.1
 	github.com/onsi/ginkgo v1.15.0
 	github.com/uber/jaeger-client-go v2.21.1+incompatible // indirect
