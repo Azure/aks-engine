@@ -119,8 +119,6 @@ github.com/inconshreveable/mousetrap
 github.com/jarcoal/httpmock
 # github.com/json-iterator/go v1.1.7
 github.com/json-iterator/go
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
-github.com/konsorten/go-windows-terminal-sequences
 # github.com/kr/pretty v0.2.1
 ## explicit
 # github.com/leodido/go-urn v1.1.0
@@ -130,6 +128,9 @@ github.com/leodido/go-urn
 ## explicit
 github.com/leonelquinteros/gotext
 github.com/leonelquinteros/gotext/plurals
+# github.com/magefile/mage v1.10.0
+github.com/magefile/mage/mg
+github.com/magefile/mage/sh
 # github.com/mattn/go-colorable v0.0.9
 ## explicit
 github.com/mattn/go-colorable
@@ -195,7 +196,7 @@ github.com/pkg/errors
 # github.com/satori/go.uuid v1.2.0
 ## explicit
 github.com/satori/go.uuid
-# github.com/sirupsen/logrus v1.4.1
+# github.com/sirupsen/logrus v1.8.0
 ## explicit
 github.com/sirupsen/logrus
 github.com/sirupsen/logrus/hooks/test
