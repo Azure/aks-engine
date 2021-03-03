@@ -7,28 +7,26 @@ This walkthrough is to help you get start with Azure Active Directory(AAD) integ
 Please also refer to [Azure Active Directory plugin for client authentication](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/plugin/pkg/client/auth/azure/README.md) in Kubernetes repo for more details about OpenID Connect and AAD support in upstream.
 
 ## Azure Active Directory and Kubernetes
-AAD on Kubernetes allows administrators to give users access to the cluster by using the azure active directory. Users with access to the client group or client service principle will be able to login to the cluster using their Azure credentials and gain access to the cluster. Note however that the user privileges are assigned based on Kubernetes cluster roles. This feature works on clusters deployed on both Azure and Azure Stack Hub. 
+AAD on Kubernetes allows administrators to give users access to the cluster by using the Azure active directory. Users with access to the client group or client service principal will be able to login to the cluster using their Azure credentials and gain access to the cluster. Note however that the user privileges are assigned based on Kubernetes cluster roles. This feature works on clusters deployed on both Azure and Azure Stack Hub. 
 
 ## Prerequisites
 1. An Azure Active Directory tenant, referred to as `AAD Tenant`. You can use the tenant for your Azure subscription;
-2. Admin access to the Azure Tenant
+2. Admin access to the Azure Active Directory Tenant
 
 > [!NOTE]
-> This feature is currently only supported with Active Directories on Azure
+> This feature is not supported on ADFS
 
-## Create server application
+## Create the Server Application on AAD
 
-This servers as a resource identifier for the Kubernetes cluster. 
+An App Registration which serves as a resource identifier for the Kubernetes cluster. 
 
-1. Select **Azure Active Directory** > **App registrations** > **New registration**.
+1. On the Azure portal, select **Azure Active Directory** > **App registrations** > **New registration**.
 
     a. Give the application a name, such as *KubernetesApiserver*.
 
     b. For **Supported account types**, select **Accounts in this organizational directory only**.
 
-    c. Choose **Web** for the Redirect URI type, and then enter any URI-formatted value, such as `https://kubernetesapiserver`.
-
-    d. Select **Register** when you're finished.
+    c. Select **Register** when you're finished.
 
 
 2. Select **Manifest**, and then edit the **groupMembershipClaims:** value as **"All"**. When you're finished with the updates, select **Save**.
@@ -48,19 +46,17 @@ This servers as a resource identifier for the Kubernetes cluster.
 
 4. Return to the application **Overview** page and note the **Application (client) ID**. When you deploy an OpenID enabled Kubernetes cluster with AAD integration, this value is called the server application ID (serverAppID).
 
-## Create client application
+## Create the Client Application on AAD
 
-The second Azure AD application is used when you sign in with the Kubernetes CLI (kubectl).
+The second App Registration is used when you sign in with the Kubernetes CLI (kubectl).
 
-1. Select **Azure Active Directory** > **App registrations** > **New registration**.
+1. On the Azure portal, select **Azure Active Directory** > **App registrations** > **New registration**.
 
     a. Give the application a name, such as *KubernetesClient*.
 
     b. For **Supported account types**, select **Accounts in this organizational directory only**.
 
-    c. Select **Web** for the Redirect URI type, and then enter any URI-formatted value such as `https://kubernetesclient`.
-
-    d. Select **Register** when you're finished.
+    c. Select **Register** when you're finished.
 
 2. In the left pane of the Azure AD application, select **API permissions**, and then select **+ Add a permission**.
 
@@ -204,7 +200,7 @@ If you failed at the login page, you may see following error message
 Invalid resource. The client has requested access to a resource which is not listed in the requested permissions in the client's application registration. Client app ID: {UUID} Resource value from request: {UUID}. Resource app ID: {UUID}. List of valid resources from app registration: {UUID}.
 ```
 This could be caused by `Client Application` not being authorized.
-See step 2 in Creating client Application on how to authorize client application. 
+For more information on how to do this, [click here](#Create the Client Application on AAD)
 
 ### ClientError
 If you see the following message returned from the server via `kubectl`
@@ -230,4 +226,4 @@ If you managed to login but the cluster fails to retrieve the token with an erro
 ```
 Failed to acquire new token: acquiring new fresh token:waiting for device code authentication to complete: autorest/adal/devicetoken: Error while retrieving OAuth token: Unknown Error
 ```
-This indicates that the client Id used to login may not have device login flow enabled. To fix this, log on to your azure portal. Select the client service principle, select **Authentication**. Under **Default client type**, select **Yes** to **Treat the client as a public client**. Click on **Save**.
+This indicates that the client Id used to login may not have device login flow enabled. To fix this, log on to your Azure portal. Select the client service principal, select **Authentication**. Under **Default client type**, select **Yes** to **Treat the client as a public client**. Click on **Save**.
