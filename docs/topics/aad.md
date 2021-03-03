@@ -6,15 +6,19 @@ This walkthrough is to help you get start with Azure Active Directory(AAD) integ
 
 Please also refer to [Azure Active Directory plugin for client authentication](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/plugin/pkg/client/auth/azure/README.md) in Kubernetes repo for more details about OpenID Connect and AAD support in upstream.
 
-Note: This feature is not supported on Azure Stack Hub. 
+## Azure Active Directory and Kubernetes
+AAD on Kubernetes allows administrators to give users access to the cluster by using the azure active directory. Users with access to the client group or client service principle will be able to login to the cluster using their Azure credentials and gain access to the cluster. Note however that the user privileges are assigned based on Kubernetes cluster roles. This feature works on clusters deployed on both Azure and Azure Stack Hub. 
 
 ## Prerequisites
 1. An Azure Active Directory tenant, referred to as `AAD Tenant`. You can use the tenant for your Azure subscription;
 2. Admin access to the Azure Tenant
 
+> [!NOTE]
+> This feature is currently only supported with Active Directories on Azure
+
 ## Create server application
 
-The first Azure AD application is applied to get a user's Azure AD group membership. To create this application in the Azure portal:
+This servers as a resource identifier for the Kubernetes cluster. 
 
 1. Select **Azure Active Directory** > **App registrations** > **New registration**.
 
@@ -26,10 +30,11 @@ The first Azure AD application is applied to get a user's Azure AD group members
 
     d. Select **Register** when you're finished.
 
+
 2. Select **Manifest**, and then edit the **groupMembershipClaims:** value as **"All"**. When you're finished with the updates, select **Save**.
 
 
-4. In the left pane of the Azure AD application, select **Expose an API**, and then select **+ Add a scope**.
+3. In the left pane of the Azure AD application, select **Expose an API**, and then select **+ Add a scope**.
 
     a. Enter a **Scope name**, an **Admin consent display name**, **Admin consent description**, **User consent display name** and **User consent description**.
 
@@ -41,7 +46,7 @@ The first Azure AD application is applied to get a user's Azure AD group members
 
     d. Select **Add scope**.    
 
-5. Return to the application **Overview** page and note the **Application (client) ID**. When you deploy an OpenID enabled Kubernetes cluster with AAD integration, this value is called the server application ID.
+4. Return to the application **Overview** page and note the **Application (client) ID**. When you deploy an OpenID enabled Kubernetes cluster with AAD integration, this value is called the server application ID (serverAppID).
 
 ## Create client application
 
@@ -67,7 +72,16 @@ The second Azure AD application is used when you sign in with the Kubernetes CLI
 
 3. In the left pane of the Azure AD application, select **Authentication**. Under **Default client type**, select **Yes** to **Treat the client as a public client**. Click on **Save**.
 
-4. Return to the application **Overview** page and note the **Application (client) ID** and **Directory (tenant) ID**.
+4. Return to the application **Overview** page and note the **Application (client) ID** and **Directory (tenant) ID**. This id will also be as the client application ID (clientAppID)
+
+## aadProfile
+|Parameter|Required|Description|
+|-----------------|---|---|
+|serverAppID|yes|The application identifier for which all tokens are issued for|
+|clientAppID|yes|The client identifier used to request access. Used to create a kubeconfig to access the cluster post deployment|
+|tenantID|yes|The Azure tenant on for which the server application can be found|
+|adminGroupID|no|The Azure group Id which will be assigned Admin roles at deployment time|
+
 
 ## Deployment
 Follow the [deployment steps](../tutorials/quickstart.md#deploy). In step #4, add the following under 'properties' section:
@@ -190,10 +204,7 @@ If you failed at the login page, you may see following error message
 Invalid resource. The client has requested access to a resource which is not listed in the requested permissions in the client's application registration. Client app ID: {UUID} Resource value from request: {UUID}. Resource app ID: {UUID}. List of valid resources from app registration: {UUID}.
 ```
 This could be caused by `Client Application` not being authorized.
-
-1. Go to Azure Portal, navigate to `Azure Active Directory` -> `App registrations`.
-2. Select the `Client Application`, Navigate to `Settings` -> `Required permissions`
-3. Choose `Add`, select the `Server Application`. In permissions tab, select `Delegated permissions` -> `Access {Server Application}`
+See step 2 in Creating client Application on how to authorize client application. 
 
 ### ClientError
 If you see the following message returned from the server via `kubectl`
@@ -206,10 +217,17 @@ It is usually caused by an incorrect configuration. You could find more debug in
 docker logs -f $(docker ps|grep 'hyperkube apiserver'|cut -d' ' -f1) 2>&1 |grep -a auth
 ```
 
-You might see s message like this:
+You might see a message like this:
 ```
 Unable to authenticate the request due to an error: [invalid bearer token, [crypto/rsa: verification error, oidc: JWT claims invalid: invalid claims, 'aud' claim and 'client_id' do not match, aud=UUID1, client_id=spn:UUID2]]
 ```
 This indicates server and client is using different `Server Application` ID, which usually happens when the configurations are being updated manually.
 
 For other auth issues, you may also find some useful information from the log.
+
+### DeviceLoginError
+If you managed to login but the cluster fails to retrieve the token with an error such as
+```
+Failed to acquire new token: acquiring new fresh token:waiting for device code authentication to complete: autorest/adal/devicetoken: Error while retrieving OAuth token: Unknown Error
+```
+This indicates that the client Id used to login may not have device login flow enabled. To fix this, log on to your azure portal. Select the client service principle, select **Authentication**. Under **Default client type**, select **Yes** to **Treat the client as a public client**. Click on **Save**.
