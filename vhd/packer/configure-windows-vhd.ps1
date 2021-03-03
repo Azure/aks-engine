@@ -113,7 +113,7 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.17/windowszip/v1.17.17-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.16/windowszip/v1.18.16-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.9/windowszip/v1.19.9-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.4/windowszip/v1.20.4-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.5/windowszip/v1.20.5-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.0-beta.1/windowszip/v1.21.0-beta.1-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
@@ -295,7 +295,7 @@ function Update-WindowsFeatures {
 
 function Update-Registry {
     # if multple LB policies are included for same endpoint then HNS hangs.
-    # this fix forces an error  
+    # this fix forces an error
     Write-Host "Enable a HNS fix in 2021-2C+"
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
 }
