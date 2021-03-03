@@ -289,6 +289,13 @@ function Update-WindowsFeatures {
     }
 }
 
+function Update-Registry {
+    # if multple LB policies are included for same endpoint then HNS hangs.
+    # this fix forces an error  
+    Write-Host "Enable a HNS fix in 2021-2C+"
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
+}
+
 # Disable progress writers for this session to greatly speed up operations such as Invoke-WebRequest
 $ProgressPreference = 'SilentlyContinue'
 
@@ -325,6 +332,7 @@ switch ($env:ProvisioningPhase) {
         if ($containerRuntime -eq 'containerd') {
             Install-ContainerD
         }
+        Update-Registry
         Get-ContainerImages -containerRuntime $containerRuntime -WindowsServerVersion $windowsServerVersion
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
