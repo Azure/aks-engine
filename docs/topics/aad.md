@@ -48,7 +48,7 @@ An App Registration which serves as a resource identifier for the Kubernetes clu
 
 ## Create the Client Application on AAD
 
-The second App Registration is used when you sign in with the Kubernetes CLI (kubectl).
+The second App Registration is used when you sign in with the Kubernetes CLI (kubectl).This credential is used to trigger the AAD device authentication process. To learn more about device login, [click here](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-device-code)
 
 1. On the Azure portal, select **Azure Active Directory** > **App registrations** > **New registration**.
 
@@ -74,7 +74,7 @@ The second App Registration is used when you sign in with the Kubernetes CLI (ku
 |Parameter|Required|Description|
 |-----------------|---|---|
 |serverAppID|yes|The application identifier for which all tokens are issued for|
-|clientAppID|yes|The client identifier used to request access. Used to create a kubeconfig to access the cluster post deployment|
+|clientAppID|yes|The client identifier used to request access to cluster and trigger device login. Also used to create a kubeconfig to access the cluster post deployment|
 |tenantID|yes|The Azure tenant on for which the server application can be found|
 |adminGroupID|no|The Azure group Id which will be assigned Admin roles at deployment time|
 
@@ -200,7 +200,7 @@ If you failed at the login page, you may see following error message
 Invalid resource. The client has requested access to a resource which is not listed in the requested permissions in the client's application registration. Client app ID: {UUID} Resource value from request: {UUID}. Resource app ID: {UUID}. List of valid resources from app registration: {UUID}.
 ```
 This could be caused by `Client Application` not being authorized.
-For more information on how to do this, [click here](#Create the Client Application on AAD)
+For more information on how to do this, [click here](#create-the-client-application-on-aad)
 
 ### ClientError
 If you see the following message returned from the server via `kubectl`
