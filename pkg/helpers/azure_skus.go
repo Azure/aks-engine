@@ -6,6 +6,8 @@ package helpers
 import (
 	"fmt"
 	"strings"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 // GetKubernetesAllowedVMSKUs returns the allowed sizes for Kubernetes agent
@@ -28,8 +30,12 @@ func GetSizeMap() string {
 	var b strings.Builder
 	b.WriteString("    \"vmSizesMap\": {\n")
 	for i, sku := range VMSkus {
+		storageType, err := common.GetStorageAccountType(sku.Name)
+		if err != nil {
+			storageType = err.Error()
+		}
 		fmt.Fprintf(&b, "    \"%s\": {\n      \"storageAccountType\": \"%s\"\n    }",
-			sku.Name, sku.StorageAccountType)
+			sku.Name, storageType)
 		if i < len(VMSkus)-1 {
 			b.WriteByte(',')
 		}
