@@ -178,13 +178,3 @@ var VMSkus = []VMSku{
 
 	return err
 }
-
-func storageAccountType(skuName string) string {
-	parts := strings.Split(skuName, "_")
-	if len(parts) > 1 {
-		if strings.Contains(strings.ToUpper(parts[1]), "S") {
-			return "Premium_LRS"
-		}
-	}
-	return "Standard_LRS"
-}
