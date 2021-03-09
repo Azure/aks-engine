@@ -156,6 +156,11 @@ func (cs *ContainerService) setAPIServerConfig() {
 			delete(o.KubernetesConfig.APIServerConfig, key)
 		}
 	}
+
+	// Manual override of "--service-account-issuer" starting with 1.20
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.1") && o.KubernetesConfig.APIServerConfig["--service-account-issuer"] == "kubernetes.default.svc" {
+		o.KubernetesConfig.APIServerConfig["--service-account-issuer"] = "https://kubernetes.default.svc.cluster.local"
+	}
 }
 
 func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
