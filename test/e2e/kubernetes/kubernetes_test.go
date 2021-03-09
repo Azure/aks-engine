@@ -7,11 +7,14 @@ package kubernetes
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"math"
 	"math/rand"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1511,6 +1514,57 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 			}
+		})
+
+		It("should have the correct service account issuer when consuming a projected service account token", func() {
+			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") {
+				Skip("Service account token volume projection is not available prior to Kubernetes 1.20")
+			}
+
+			By("Launching a pod with a projected service account token")
+			p, err := pod.CreatePodFromFileWithRetry(filepath.Join(WorkloadDir, "pod-projected-svc-token.yaml"), "nginx", "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+
+			ready, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+
+			By("Obtaining the projected service account token")
+			tokenPath := "/var/run/secrets/tokens/token"
+			nodeList, err := node.Get()
+			for _, n := range nodeList.Nodes {
+				if n.Metadata.Name == p.Spec.NodeName && n.IsWindows() {
+					tokenPath = "C:\\var\\run\\secrets\\tokens\\token"
+					break
+				}
+			}
+			out, err := p.Exec("--", "cat", tokenPath)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Decoding the service account token")
+			// out is a JWT token, which has 3 parts joined by "."
+			s := strings.Split(string(out), ".")
+			Expect(s).To(HaveLen(3))
+			// the payload is the second element
+			data, err := base64.StdEncoding.WithPadding(base64.NoPadding).DecodeString(s[1])
+			Expect(err).NotTo(HaveOccurred())
+
+			var payload struct {
+				Issuer string `json:"iss"`
+			}
+			err = json.Unmarshal(data, &payload)
+			Expect(err).NotTo(HaveOccurred())
+
+			svcIssuer := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig["--service-account-issuer"]
+			By("Ensuring that the service account issuer matches the token issuer")
+			Expect(payload.Issuer).To(Equal(svcIssuer))
+
+			By("Ensuring that the service account issuer has a https scheme")
+			u, err := url.Parse(svcIssuer)
+			Expect(err).NotTo(HaveOccurred())
+			// Service account issuer for OIDC requires https scheme to work.
+			// See https://github.com/Azure/aks-engine/pull/4262 for more detail.
+			Expect(u.Scheme).To(Equal("https"))
 		})
 	})
 

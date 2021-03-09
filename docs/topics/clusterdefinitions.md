@@ -607,7 +607,7 @@ Below is a list of apiserver options that AKS Engine will configure by default:
 | "--oidc-groups-claim"           | "groups" (_if has AADProfile_)                                                                                                                                                                                                  |
 | "--oidc-client-id"              | _calculated value that represents OID client ID_ (_if has AADProfile_)                                                                                                                                                          |
 | "--oidc-issuer-url"             | _calculated value that represents OID issuer URL_ (_if has AADProfile_)                                                                                                                                                         |
-| "--service-account-issuer"             | "kubernetes.default.svc" (Kubernetes v1.20.0 and greater only) |
+| "--service-account-issuer"             | "https://kubernetes.default.svc.cluster.local" (Kubernetes v1.20.0 and greater only) |
 | "--service-account-signing-key-file"             | "/etc/kubernetes/certs/apiserver.key" (Kubernetes v1.20.0 and greater only) |
 
 `*` In Kubernetes versions 1.10.0 and later the `--admission-control` flag is deprecated and `--enable-admission-plugins` is used instead.

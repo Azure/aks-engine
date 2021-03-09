@@ -288,7 +288,7 @@ func TestAPIServerServiceAccountFlags(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--service-account-issuer"] != "kubernetes.default.svc" {
+	if a["--service-account-issuer"] != "https://kubernetes.default.svc.cluster.local" {
 		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.20: %s",
 			a["--service-account-issuer"])
 	}
