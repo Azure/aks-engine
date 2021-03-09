@@ -1,3 +1,7 @@
+## v0.0.11
+
+- [feat: allow creation of dualstack Windows clusters #4176](https://github.com/Azure/aks-engine/pull/4176)
+
 ## v0.0.10
 
 - [chore: Add windowsnodelabelsync.ps1 #4163](https://github.com/Azure/aks-engine/pull/4163)
