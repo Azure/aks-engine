@@ -14,7 +14,7 @@ spec:
     - while true; do sleep 600; done
     livenessProbe:
       exec:
-        command: ['sh', '-c', 'time', 'nslookup www.bing.com || nslookup google.com']
+        command: ['sh', '-c', 'time nslookup www.bing.com || time nslookup google.com']
       initialDelaySeconds: 5
       periodSeconds: 5
   nodeSelector:
