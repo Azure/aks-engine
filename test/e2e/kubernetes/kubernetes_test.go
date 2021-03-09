@@ -2463,6 +2463,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if !cfg.RebootControlPlaneNodes {
 				pod, err := pod.Get("dns-liveness", "default", podLookupRetries)
 				Expect(err).NotTo(HaveOccurred())
+				err = pod.Describe()
+				Expect(err).NotTo(HaveOccurred())
+				err = pod.Logs()
+				Expect(err).NotTo(HaveOccurred())
 				running, err := pod.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, 3*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
