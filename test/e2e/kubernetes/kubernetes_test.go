@@ -973,6 +973,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			p, err := pod.Get("exec-liveness", "default", podLookupRetries)
 			restarts := p.Status.ContainerStatuses[0].RestartCount
 			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
+			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
 			err = p.Delete(util.DefaultDeleteRetries)
 			Expect(err).NotTo(HaveOccurred())
@@ -981,6 +982,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-timeout", "default", podLookupRetries)
 			restarts = p.Status.ContainerStatuses[0].RestartCount
+			p.Describe()
 			if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false") ||
 				!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") {
 				By("Validating that the exec livenessProbe timeout was not enforced and no restarts occured due to a < 1.20.0 or ExecProbeTimeout=false configuration")
@@ -997,6 +999,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			p, err = pod.Get("exec-liveness-always-fail", "default", podLookupRetries)
 			restarts = p.Status.ContainerStatuses[0].RestartCount
 			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
+			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
 			err = p.Delete(util.DefaultDeleteRetries)
 			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
@@ -1005,6 +1008,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
 			restarts = p.Status.ContainerStatuses[0].RestartCount
 			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
+			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
 			err = p.Delete(util.DefaultDeleteRetries)
 		})
