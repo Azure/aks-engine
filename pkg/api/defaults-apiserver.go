@@ -101,7 +101,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.1") {
-		defaultAPIServerConfig["--service-account-issuer"] = "kubernetes.default.svc"
+		defaultAPIServerConfig["--service-account-issuer"] = "https://kubernetes.default.svc.cluster.local"
 		defaultAPIServerConfig["--service-account-signing-key-file"] = "/etc/kubernetes/certs/apiserver.key"
 	}
 
@@ -155,6 +155,11 @@ func (cs *ContainerService) setAPIServerConfig() {
 		for _, key := range []string{"--advertise-address"} {
 			delete(o.KubernetesConfig.APIServerConfig, key)
 		}
+	}
+
+	// Manual override of "--service-account-issuer" starting with 1.20
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.1") && o.KubernetesConfig.APIServerConfig["--service-account-issuer"] == "kubernetes.default.svc" {
+		o.KubernetesConfig.APIServerConfig["--service-account-issuer"] = "https://kubernetes.default.svc.cluster.local"
 	}
 }
 
