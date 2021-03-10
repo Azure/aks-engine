@@ -5,6 +5,7 @@ metadata:
     test: liveness
   name: exec-liveness-timeout-always-fail
 spec:
+  terminationGracePeriodSeconds: 0
   containers:
   - name: exec-liveness-timeout-always-fail
     image: k8s.gcr.io/busybox
