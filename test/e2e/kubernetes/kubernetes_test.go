@@ -966,6 +966,48 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(running).To(Equal(true))
 		})
 
+		It("should be able to restart a pod due to an exec livenessProbe failure", func() {
+			_, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness.yaml"), "exec-liveness", "default", 1*time.Second, 2*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(60 * time.Second) // Wait for probe to take effect
+			p, err := pod.Get("exec-liveness", "default", podLookupRetries)
+			restarts := p.Status.ContainerStatuses[0].RestartCount
+			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
+			Expect(restarts > 0).To(BeTrue())
+			err = p.Delete(util.DefaultDeleteRetries)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout.yaml"), "exec-liveness-timeout", "default", 1*time.Second, 2*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(60 * time.Second) // Wait for probe to take effect
+			p, err = pod.Get("exec-liveness-timeout", "default", podLookupRetries)
+			restarts = p.Status.ContainerStatuses[0].RestartCount
+			if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=true") {
+				By("Validating that the exec livenessProbe caused at least one pod restart due to probe command timeout")
+				Expect(restarts > 0).To(BeTrue())
+			} else {
+				By("Validating that the exec livenessProbe timeout was not enforced and no restarts occured due to a ExecProbeTimeout=false configuration")
+				Expect(restarts).To(Equal(0))
+			}
+			err = p.Delete(util.DefaultDeleteRetries)
+			Expect(err).NotTo(HaveOccurred())
+			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 2*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(60 * time.Second) // Wait for probe to take effect
+			p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
+			restarts = p.Status.ContainerStatuses[0].RestartCount
+			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
+			Expect(restarts > 0).To(BeTrue())
+			err = p.Delete(util.DefaultDeleteRetries)
+			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(60 * time.Second) // Wait for probe to take effect
+			p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
+			restarts = p.Status.ContainerStatuses[0].RestartCount
+			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
+			Expect(restarts > 0).To(BeTrue())
+			err = p.Delete(util.DefaultDeleteRetries)
+		})
+
 		It("should be able to run a node reboot daemonset", func() {
 			if cfg.RebootControlPlaneNodes {
 				_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "reboot-control-plane-node.yaml"), "reboot-test", "default", 5*time.Second, cfg.Timeout)

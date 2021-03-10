@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: exec-liveness-always-fail
+spec:
+  containers:
+  - name: exec-liveness-always-fail
+    image: k8s.gcr.io/busybox
+    args:
+    - /bin/sh
+    - -c
+    - while true; do rm -f /tmp/healthy; sleep 5; done
+    livenessProbe:
+      exec:
+        command: ['sh', '-c', 'test -f /tmp/healthy']
+      initialDelaySeconds: 1
+      periodSeconds: 1
+      failureThreshold: 1
+      timeoutSeconds: 1
