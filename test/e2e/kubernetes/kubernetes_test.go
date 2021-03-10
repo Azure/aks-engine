@@ -981,8 +981,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-timeout", "default", podLookupRetries)
 			restarts = p.Status.ContainerStatuses[0].RestartCount
-			if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false") {
-				By("Validating that the exec livenessProbe timeout was not enforced and no restarts occured due to a ExecProbeTimeout=false configuration")
+			if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false") ||
+				!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") {
+				By("Validating that the exec livenessProbe timeout was not enforced and no restarts occured due to a < 1.20.0 or ExecProbeTimeout=false configuration")
 				Expect(restarts).To(Equal(0))
 			} else {
 				By("Validating that the exec livenessProbe caused at least one pod restart due to probe command timeout")
