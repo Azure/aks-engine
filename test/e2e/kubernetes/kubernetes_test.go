@@ -1002,20 +1002,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
 			err = p.Delete(util.DefaultDeleteRetries)
-			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
-			Expect(err).NotTo(HaveOccurred())
-			time.Sleep(30 * time.Second) // Wait for probe to take effect
-			p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
-			restarts = p.Status.ContainerStatuses[0].RestartCount
-			if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false") ||
-				!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") {
-				By("Validating that the exec livenessProbe caused at least one pod restart due to command failure, even if timeout is not respected")
-			} else {
-				By("Validating that the exec livenessProbe caused at least one pod restart due to timeout")
+			// If we're running containerd prior to 1.20.0 we can't run the below test because we know it will fail due to https://github.com/kubernetes/kubernetes/pull/94115
+			if !(!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == "containerd") {
+				_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
+				Expect(err).NotTo(HaveOccurred())
+				time.Sleep(30 * time.Second) // Wait for probe to take effect
+				p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
+				restarts = p.Status.ContainerStatuses[0].RestartCount
+				if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false") ||
+					!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") {
+					By("Validating that the exec livenessProbe caused at least one pod restart due to command failure, even if timeout is not respected")
+				} else {
+					By("Validating that the exec livenessProbe caused at least one pod restart due to timeout")
+				}
+				p.Describe()
+				Expect(restarts > 0).To(BeTrue())
+				err = p.Delete(util.DefaultDeleteRetries)
 			}
-			p.Describe()
-			Expect(restarts > 0).To(BeTrue())
-			err = p.Delete(util.DefaultDeleteRetries)
 		})
 
 		It("should be able to run a node reboot daemonset", func() {
