@@ -3,11 +3,11 @@ kind: Pod
 metadata:
   labels:
     test: liveness
-  name: exec-liveness-timeout
+  name: exec-liveness-assume-1-second-default-timeout
 spec:
   terminationGracePeriodSeconds: 0
   containers:
-  - name: exec-liveness-timeout
+  - name: exec-liveness-assume-1-second-default-timeout
     image: busybox:1.31.1
     args:
     - /bin/sh
