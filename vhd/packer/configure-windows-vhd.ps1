@@ -138,7 +138,10 @@ function Get-FilesToCacheOnVHD {
             $dest = [IO.Path]::Combine($dir, $fileName)
 
             Write-Log "Downloading $URL to $dest"
-            curl.exe --retry 5 --retry-delay 0 -L $URL -o $dest
+            curl.exe -f --retry 5 --retry-delay 0 -L $URL -o $dest
+            if ($LASTEXITCODE) {
+                throw "Curl exited with '$LASTEXITCODE' while attemping to downlaod '$URL'"
+            }
         }
     }
 }
