@@ -12,6 +12,7 @@
   * [agentPoolProfiles](#agentPoolProfiles)
 * [Azure Stack Hub Instances Registered with Azure's China cloud](#azure-stack-hub-instances-registered-with-azures-china-cloud)
 * [Disconnected Azure Stack Hub Instances](#disconnected-azure-stack-hub-instances)
+* [Volume Provisioner: Container Storage Interface Drivers (preview)](#volume-provisioner-container-storage-interface-drivers-preview)
 * [AKS Engine Versions](#aks-engine-versions)
 * [Azure Monitor for containers](#azure-Monitor-for-containers)
 * [Known Issues and Limitations](#known-issues-and-limitations)
@@ -145,6 +146,126 @@ Each AKS Engine release is validated and tied to a specific version of the AKS B
 ## Azure Monitor for containers
 
 Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Azure Stack Hub Cloud Environments. Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details on how to onboard and monitor clusters, nodes, pods, containers inventory, performance metrics and logs.
+
+## Volume Provisioner: Container Storage Interface Drivers (preview)
+As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are avaiable on Azure Stack Hub. Please find details in the following table.
+
+|                       | Azure Disk CSI Driver                                                                                                        | Azure Blob CSI Driver                                                                                                   | NFS CSI Driver                                                           |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| Stage on Azure Stack  | Public Preview                                                                                                               | Private Preview                                                                                                         | Public Preview                                                           |
+| Project Repository    | [azuredisk-csi-driver](https://github.com/kubernetes-sigs/azuredisk-csi-driver)                                              | [blob-csi-driver](https://github.com/kubernetes-sigs/blob-csi-driver)                                                   | [csi-driver-nfs](https://github.com/kubernetes-csi/csi-driver-nfs)       |
+| CSI Driver Version    | v1.0.0+                                                                                                                      | v1.0.0+                                                                                                                 | v3.0.0+                                                                  |
+| Access Mode           | ReadWriteOnce                                                                                                                | ReadWriteOnce<br/>ReadOnlyMany<br/>ReadWriteMany                                                                        | ReadWriteOnce<br/>ReadOnlyMany<br/>ReadWriteMany                         |
+| Windows Agent Node    | Support                                                                                                                      | Not support and no plans                                                                                                | Not support and no plans                                                 |
+| Dynamic Provisioning  | Support                                                                                                                      | Support                                                                                                                 | Support                                                                  |
+| Considerations        | [Azure Disk CSI Driver Limitations](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/limitations.md) | [Azure Blob CSI Driver Limitations](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/docs/limitations.md) | Users will be responsible for setting up and maintaining the NFS server. |
+| Slack Support Channel | [#provider-azure](https://kubernetes.slack.com/archives/C5HJXTT9Q)                                                           | [#provider-azure](https://kubernetes.slack.com/archives/C5HJXTT9Q)                                                      | [#sig-storage](https://kubernetes.slack.com/archives/C09QZFCE5)          |
+
+> Currently, disconnected environments do not support CSI Drivers.
+
+### Requirements
+
+- Azure Stack build 2011 and later.
+- AKS Engine version v0.60.1 and later.
+- Kubernetes version 1.18 and later.
+- Since the Controller server of CSI Drivers requires 2 replicas, a single node master pool is not recommended.
+- [Helm 3](https://helm.sh/docs/intro/install/)
+
+### Install and Uninstall CSI Drivers
+In this section, please follow the example commands to deploy a StatefulSet application consuming CSI Driver.
+
+#### Azure Disk CSI Driver
+
+``` powershell
+# Install CSI Driver
+helm repo add azuredisk-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/charts
+helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.0.0
+
+# Deploy Storage Class
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/storageclass-azuredisk-csi-azurestack.yaml
+
+# Deploy example StatefulSet application
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/statefulset.yaml
+
+# Validate volumes and applications
+# You should see a sequence of timestamps are persisted in the volume.
+kubectl exec statefulset-azuredisk-0 -- tail /mnt/azuredisk/outfile
+
+# Delete example StatefulSet application
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/statefulset.yaml
+
+# Delete Storage Class
+# Before delete the Storage Class, please make sure Pods that consume the Storage Class have been terminated.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/storageclass-azuredisk-csi-azurestack.yaml
+
+# Uninstall CSI Driver
+helm uninstall azuredisk-csi-driver --namespace kube-system
+helm repo remove azuredisk-csi-driver
+```
+
+#### Azure Blob CSI Driver
+
+``` powershell
+# Install CSI Driver
+helm repo add blob-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/charts
+helm install blob-csi-driver blob-csi-driver/blob-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.0.0
+
+# Deploy Storage Class
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/storageclass-blobfuse.yaml
+
+# Deploy example StatefulSet application
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/statefulset.yaml
+
+# Validate volumes and applications
+# You should see a sequence of timestamps are persisted in the volume.
+kubectl exec statefulset-blob-0 -- tail /mnt/blob/outfile
+
+# Delete example StatefulSet application
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/statefulset.yaml
+
+# Delete Storage Class
+# Before delete the Storage Class, please make sure Pods that consume the Storage Class have been terminated.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/storageclass-blobfuse.yaml
+
+# Uninstall CSI Driver
+helm uninstall blob-csi-driver --namespace kube-system
+helm repo remove blob-csi-driver
+```
+
+#### NFS CSI Driver
+
+``` powershell
+# Install CSI Driver
+helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+helm install csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system --set controller.runOnMaster=true --version v3.0.0
+
+# Deploy NFS Server. Please note that this NFS Server is just for validation, please set up and maintain your NFS Server properly for production.
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/nfs-provisioner/nfs-server.yaml
+
+# Deploy Storage Class
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/storageclass-nfs.yaml
+
+# Deploy example StatefulSet application
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/statefulset.yaml
+
+# Validate volumes and applications
+# You should see a sequence of timestamps are persisted in the volume.
+kubectl exec statefulset-nfs-0 -- tail /mnt/nfs/outfile
+
+# Delete example StatefulSet application
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/statefulset.yaml
+
+# Delete Storage Class
+# Before delete the Storage Class, please make sure Pods that consume the Storage Class have been terminated.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/storageclass-nfs.yaml
+
+# Delete example NFS Server.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/nfs-provisioner/nfs-server.yaml
+
+# Uninstall CSI Driver
+helm uninstall csi-driver-nfs --namespace kube-system
+helm repo remove csi-driver-nfs
+```
 
 ## Known Issues and Limitations
 
