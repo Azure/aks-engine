@@ -6,6 +6,6 @@
   "resource_group_name": "aksimages",
   "managed_image_resource_group_name": "aksimages",
   "storage_account_name": "",
-  "location": "West US 2",
+  "location": "East US",
   "vm_size": "Standard_D2_v2"
 }
