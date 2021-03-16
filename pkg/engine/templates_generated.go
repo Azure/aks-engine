@@ -19666,15 +19666,12 @@ New-NSSMService {
         $KubeletStartFile,
         [string]
         [Parameter(Mandatory = $true)]
-        $KubeProxyStartFile
+        $KubeProxyStartFile,
         [Parameter(Mandatory = $false)][string]
         $ContainerRuntime = "docker"
     )
 
-    $kubeletDependOnServices = "docker"
-    if ($ContainerRuntime -eq "containerd") {
-        $kubeletDependOnServices = "containerd"
-    }
+    $kubeletDependOnServices = $ContainerRuntime
     if ($global:EnableCsiProxy) {
         $kubeletDependOnServices += " csi-proxy"
     }
@@ -19729,7 +19726,7 @@ function
 Install-KubernetesServices {
     param(
         [Parameter(Mandatory = $true)][string]
-        $KubeDir
+        $KubeDir,
         [Parameter(Mandatory = $false)][string]
         $ContainerRuntime = "docker"
     )
