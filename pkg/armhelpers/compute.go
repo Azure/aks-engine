@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
+	"github.com/pkg/errors"
 )
 
 // ListVirtualMachines returns (the first page of) the machines in the specified resource group.
@@ -149,4 +150,32 @@ func (az *AzureClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, r
 		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
 	}
 	return count, nil
+}
+
+// GetVirtualMachinePowerState returns the virtual machine's PowerState status code
+func (az *AzureClient) GetVirtualMachinePowerState(ctx context.Context, resourceGroup, name string) (string, error) {
+	vm, err := az.virtualMachinesClient.Get(ctx, resourceGroup, name, compute.InstanceView)
+	if err != nil {
+		return "", errors.Wrapf(err, "fetching virtual machine resource")
+	}
+	for _, status := range *vm.VirtualMachineProperties.InstanceView.Statuses {
+		if strings.HasPrefix(*status.Code, "PowerState") {
+			return *status.Code, nil
+		}
+	}
+	return "", nil
+}
+
+// GetVirtualMachineScaleSetInstancePowerState returns the virtual machine's PowerState status code
+func (az *AzureClient) GetVirtualMachineScaleSetInstancePowerState(ctx context.Context, resourceGroup, name, instanceID string) (string, error) {
+	vm, err := az.virtualMachineScaleSetVMsClient.Get(ctx, resourceGroup, name, instanceID, compute.InstanceView)
+	if err != nil {
+		return "", errors.Wrapf(err, "fetching virtual machine resource")
+	}
+	for _, status := range *vm.VirtualMachineScaleSetVMProperties.InstanceView.Statuses {
+		if strings.HasPrefix(*status.Code, "PowerState") {
+			return *status.Code, nil
+		}
+	}
+	return "", nil
 }

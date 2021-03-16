@@ -72,7 +72,7 @@ $ aks-engine get-versions
 | kubernetesImageBase               | no                        | Specifies the default image base URL (everything preceding the actual image filename) to be used for all kubernetes-related containers such as hyperkube, cloud-controller-manager, kube-addon-manager, etc. e.g., `k8s.gcr.io/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | loadBalancerSku                   | no                        | Sku of Load Balancer and Public IP. Candidate values are: `basic` and `standard`. If not set, it will be default to "standard". NOTE: Because VMs behind standard SKU load balancer will not be able to access the internet without an outbound rule configured with at least one frontend IP, AKS Engine creates a Load Balancer with an outbound rule and with agent nodes added to the backend pool during cluster creation, as described in the [Outbound NAT for internal Standard Load Balancer scenarios doc](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview#outbound-nat-for-internal-standard-load-balancer-scenarios)                                                                                                                          |
 | loadBalancerOutboundIPs           | no                        | Number of outbound IP addresses (e.g., 3) to use in Standard LoadBalancer configuration. If not set, AKS Engine will configure a single outbound IP address. You may want more than one outbound IP address if you are running a large cluster that is processing lots of connections. See [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#multifesnat) for more documentation about how adding more outbound IP addresses can increase the number of SNAT ports available for use by the Standard Load Balancer in your cluster. Note: this value is only configurable at cluster creation time, it can not be changed using `aks-engine upgrade`.|
-| networkPlugin                     | no                        | Specifies the network plugin implementation for the cluster. Valid values are:<br>`"azure"` (default), which provides an Azure native networking experience <br>`"kubenet"` for k8s software networking implementation. <br> `"flannel"` for using CoreOS Flannel <br> `"cilium"` for using the default Cilium CNI IPAM (requires the `"cilium"` networkPolicy as well)<br> `"antrea"` for using the Antrea network plugin (requires the `"antrea"` networkPolicy as well)                                                                                                                                                                                                                                                                                                                           |
+| networkPlugin                     | no                        | Specifies the network plugin implementation for the cluster. Valid values are:<br>`"azure"` (default), which provides an Azure native networking experience <br>`"kubenet"` for k8s software networking implementation. <br> `"cilium"` for using the default Cilium CNI IPAM (requires the `"cilium"` networkPolicy as well)<br> `"antrea"` for using the Antrea network plugin (requires the `"antrea"` networkPolicy as well)                                                                                                                                                                                                                                                                                                                           |
 | networkPolicy                     | no                        | Specifies the network policy enforcement tool for the cluster (currently Linux-only). Valid values are:<br>`"calico"` for Calico network policy.<br>`"cilium"` for cilium network policy (uses the `"cilium"` networkPlugin exclusively).<br> `"antrea"` for Antrea network policy (uses the `"antrea"` networkPlugin exclusively).<br> `"azure"` (experimental) for Azure CNI-compliant network policy (note: Azure CNI-compliant network policy requires explicit `"networkPlugin": "azure"` configuration as well).<br>See [network policy examples](../../examples/networkpolicy) for more information.                                                                                                                                                                                          |
 | privateCluster                    | no                        | Build a cluster without public addresses assigned. See `privateClusters` [below](#feat-private-cluster).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | schedulerConfig                   | no                        | Configure various runtime configuration for scheduler. See `schedulerConfig` [below](#feat-scheduler-config)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -98,6 +98,8 @@ $ aks-engine get-versions
 | cloudProviderRateLimitQPSWrite    | no                        | QPS for Azure cloudprovider write request rate limiter enforcement. Follows the same defaults calculation as cloudProviderRateLimitQPS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | cloudProviderDisableOutboundSNAT  | no                        | For clusters w/ Standard LB only: enforces the disabling of outbound NAT for that load balancing rule. See [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview#disablesnat) for more details. Defaults to `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | microsoftAptRepositoryURL         | no                        | You may configure certain Microsoft-curated apt packages to be sourced from a custom repository so long as it acts as a mirror to the data at "https://packages.microsoft.com/" (the default value).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| enableMultipleStandardLoadBalancers | no                      | Using multiple standard load balancers per cluster. The `loadBalancerSku` must be `standard`. Default to false.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| tags                                | no                      | Specify the tags which will be applied to all of the resources managed by the cloud provider, with the format `a=b,c=d`.                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 #### addons
 
@@ -106,8 +108,8 @@ $ aks-engine get-versions
 | Name of addon                                                                                             | Enabled by default?                                                                                                                                                                                        | How many pods                   | Description                                                                                                                                                                                                                                                              |
 | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | tiller                                                                                                    | false                                                                                                                                                                                                      | 1                               | Delivers the Helm server-side component: tiller. See https://github.com/kubernetes/helm for more info                                                                                                                                                                    |
-| kubernetes-dashboard                                                                                      | true                                                                                                                                                                                                       | 1                               | Delivers the Kubernetes Dashboard component. See https://github.com/kubernetes/dashboard for more info                                                                                                                                                                   |
-| rescheduler                                                                                               | false                                                                                                                                                                                                      | 1                               | Delivers the Kubernetes rescheduler component                                                                                                                                                                                                                            |
+| kubernetes-dashboard                                                                                      | false                                                                                                                                                                                                       | 1                               | Deprecated. We recommend installing dashboard manually, see: https://github.com/kubernetes/dashboard for more info.                                                                                                                                                                   |
+| rescheduler                                                                                               | false                                                                                                                                                                                                      | 1                               | Deprecated, no longer available after aks-engine v0.60.0.                                                                                                                                                                                                                            |
 | [cluster-autoscaler](../../examples/addons/cluster-autoscaler/README.md)                                  | false                                                                                                                                                                                                      | 1                               | Delivers the Kubernetes cluster autoscaler component. See https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure for more info; only supported for VMSS clusters on the first agent pool.                                           |
 | [nvidia-device-plugin](../../examples/addons/nvidia-device-plugin/README.md)                              | true if using a Kubernetes cluster with an N-series agent pool                                                                                                                                             | 1                               | Delivers the Kubernetes NVIDIA device plugin component. See https://github.com/NVIDIA/k8s-device-plugin for more info                                                                                                                                                    |
 | container-monitoring                                                                                      | false                                                                                                                                                                                                      | 1                               | Delivers the Kubernetes container monitoring component                                                                                                                                                                                                                   |
@@ -129,7 +131,6 @@ $ aks-engine get-versions
 | aad                                                                                                       | true if adminGroupID is specified in the aadProfile configuration                                                                                                                                          | 0                               | ClusterRoleBinding specification that adds an admin group matching the adminGroupID                                                                                                                                                                                      |
 | [calico](https://docs.projectcalico.org/archive/v3.8/introduction/)                                       | true if networkPolicy is "calico";                                                                                                                                                                         | 6                               | A NetworkPolicy implementation by the Calico project (currently supports v3.8)                                                                                                                                                                                           |
 | [cilium](https://docs.cilium.io/en/v1.4/kubernetes/policy/#ciliumnetworkpolicy)                           | true if networkPolicy is "cilium"; currently validated against Kubernetes v1.13, v1.14, and v1.15                                                                                                          | 0                               | A NetworkPolicy CRD implementation by the Cilium project (currently supports v1.4)                                                                                                                                                                                       |
-| [flannel](https://coreos.com/flannel/docs/0.8.0/index.html)                                               | false                                                                                                                                                                                                      | 0                               | An addon that delivers flannel: a virtual network that gives a subnet to each host for use with container runtimes. The current implementation is v0.8.0. If `networkPlugin` is set to `"flannel"` this addon will be enabled automatically. Not compatible with any other `networkPlugin` or `networkPolicy`. This addon **requires** containerd (`"containerRuntime": "containerd"`)|
 | [csi-secrets-store](../../examples/addons/csi-secrets-store/README.md)                                    | true (for 1.16+ clusters)                                                                                                                                                                                  | as many as linux agent nodes    | Integrates secrets stores (Azure keyvault) via a [Container Storage Interface (CSI)](https://kubernetes-csi.github.io/docs/) volume.                                                                                                                                     |
 | [azure-arc-onboarding](../../examples/addons/azure-arc-onboarding/README.md)                              | false                                                                                                                                                                                                      | 7                               | Attaches the cluster to Azure Arc enabled Kubernetes.                                                                                                                                                                                                                    |
 
@@ -148,72 +149,35 @@ To enable an addon (using "tiller" as an example):
 }
 ```
 
-As you can see above, `addons` is an array child property of `kubernetesConfig`. Each addon that you want to add custom configuration to would be represented as an object item in the array. For example, to disable both tiller and dashboard:
+As you can see above, `addons` is an array child property of `kubernetesConfig`. Each addon that you want to add custom configuration to would be represented as an object item in the array. For example, to disable the "azuredisk-csi-driver" addon:
 
 ```json
 "kubernetesConfig": {
     "addons": [
         {
-            "name": "tiller",
-            "enabled" : false
-        },
-        {
-            "name": "kubernetes-dashboard",
+            "name": "azuredisk-csi-driver",
             "enabled" : false
         }
     ]
 }
 ```
 
-More usefully, let's add some custom configuration to the above addons:
+More usefully, let's add some custom configuration to an addon. The example below customizes the "cluster-autoscaler" addon:
 
 ```json
 "kubernetesConfig": {
     "addons": [
-        {
-            "name": "tiller",
-            "enabled": true,
-            "containers": [
-                {
-                  "name": "tiller",
-                  "image": "myDockerHubUser/tiller:v3.0.0-alpha",
-                  "cpuRequests": "1",
-                  "memoryRequests": "1024Mi",
-                  "cpuLimits": "1",
-                  "memoryLimits": "1024Mi"
-                }
-              ]
-        },
-        {
-            "name": "kubernetes-dashboard",
-            "enabled": true,
-            "containers": [
-                {
-                  "name": "kubernetes-dashboard",
-                  "cpuRequests": "50m",
-                  "memoryRequests": "512Mi",
-                  "cpuLimits": "50m",
-                  "memoryLimits": "512Mi"
-                },
-                {
-                  "name": "kubernetes-dashboard-metrics-scraper",
-                  "cpuRequests": "50m",
-                  "memoryRequests": "512Mi",
-                  "cpuLimits": "50m",
-                  "memoryLimits": "512Mi"
-                }
-              ]
-        },
         {
             "name": "cluster-autoscaler",
             "enabled": true,
             "containers": [
               {
                 "name": "cluster-autoscaler",
-                "cpuRequests": "100m",
-                "memoryRequests": "300Mi",
-                "cpuLimits": "100m",
-                "memoryLimits": "300Mi"
+                "image": "myDockerHubUser/cluster-autoscaler:v1.20.1-alpha",
+                "cpuRequests": "500m",
+                "memoryRequests": "800Mi",
+                "cpuLimits": "500m",
+                "memoryLimits": "800Mi"
               }
             ],
             "config": {
@@ -226,7 +190,7 @@ More usefully, let's add some custom configuration to the above addons:
 }
 ```
 
-Above you see custom configuration for both tiller and kubernetes-dashboard. Both include specific resource limit values across the following dimensions:
+The above example includes specific resource limit values across the following dimensions:
 
 - cpuRequests
 - memoryRequests
@@ -235,7 +199,7 @@ Above you see custom configuration for both tiller and kubernetes-dashboard. Bot
 
 See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for more on Kubernetes resource limits.
 
-Additionally above, we specified a custom docker image for tiller, let's say we want to build a cluster and test an alpha version of tiller in it. **Important note!** customizing the image is not sticky across upgrade/scale, to ensure that AKS Engine always delivers a version-curated, known-working addon when moving a cluster to a new version. Considering all that, providing a custom image reference for an addon configuration should be considered for testing/development, but not for a production cluster. If you'd like to entirely customize one of the addons available, including across scale/upgrade operations, you may include in an addon's spec a base64-encoded string of a Kubernetes yaml manifest. E.g.,
+Additionally above, we specified a custom docker image to use, let's say we want to build a cluster and test an alpha version of cluster-autoscaler in it. **Important note!** customizing the image is not sticky across upgrade/scale, to ensure that AKS Engine always delivers a version-curated, known-working addon when moving a cluster to a new version. Considering all that, providing a custom image reference for an addon configuration should be considered for testing/development, but not for a production cluster. If you'd like to entirely customize one of the addons available, including across scale/upgrade operations, you may include in an addon's spec a base64-encoded string of a Kubernetes yaml manifest. E.g.,
 
 ```json
 "kubernetesConfig": {
@@ -606,7 +570,7 @@ Below is a list of apiserver options that AKS Engine will configure by default:
 | "--oidc-groups-claim"           | "groups" (_if has AADProfile_)                                                                                                                                                                                                  |
 | "--oidc-client-id"              | _calculated value that represents OID client ID_ (_if has AADProfile_)                                                                                                                                                          |
 | "--oidc-issuer-url"             | _calculated value that represents OID issuer URL_ (_if has AADProfile_)                                                                                                                                                         |
-| "--service-account-issuer"             | "kubernetes.default.svc" (Kubernetes v1.20.0 and greater only) |
+| "--service-account-issuer"             | "https://kubernetes.default.svc.cluster.local" (Kubernetes v1.20.0 and greater only) |
 | "--service-account-signing-key-file"             | "/etc/kubernetes/certs/apiserver.key" (Kubernetes v1.20.0 and greater only) |
 
 `*` In Kubernetes versions 1.10.0 and later the `--admission-control` flag is deprecated and `--enable-admission-plugins` is used instead.
@@ -857,6 +821,7 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | adminUsername                    | yes      | Describes the username to be used on all linux clusters                                  |
 | ssh.publicKeys[].keyData         | yes      | The public SSH key used for authenticating access to all Linux nodes in the cluster      |
 | secrets                          | no       | Specifies an array of key vaults to pull secrets from and what secrets to pull from each |
+| runUnattendedUpgradesOnBootstrap | no       | Invoke an unattended-upgrade when each Linux node VM comes online for the first time. In practice this is accomplished by performing an `apt-get update`, followed by a manual invocation of `/usr/bin/unattended-upgrade`, to fetch updated apt configuration, and install all package updates provided by the unattended-upgrade facility, respectively. Defaults to true for public Azure clouds, and to false for Azure Stack Hub and other non-public, custom cloud environments. |
 | customSearchDomain.name          | no       | describes the search domain to be used on all linux clusters                             |
 | customSearchDomain.realmUser     | no       | describes the realm user with permissions to update dns registries on Windows Server DNS |
 | customSearchDomain.realmPassword | no       | describes the realm user password to update dns registries on Windows Server DNS         |
@@ -934,7 +899,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | enableAutomaticUpdates        | no       | If set to `true` Windows Update will be configured to automatically apply updates on Windows nodes. Default: `false`                                                                                                                                                                                                  |
 | enableCSIProxy                | no       | If set to `true` the csi-proxy specified by `windowsProfile.csiProxyURL` will get installed during node provisioning. See [Windows Csi Proxy](csi-proxy-windows.md) for more details.                                                                                                                                 |
 | provisioningScriptsPackageURL | no       | Path to a package containing provisioning scripts found in [/staging/provisioning/windows](/staging/provisioning/windows). Default values will be maintained by aks-engine team and contain script content signed by Microsoft.                                                                                       |
-| windowsPauseImageURL          | no       | Path to a Windows pause image. Default values will be maintained by aks-engine team. e.g. "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"                                                                                                                                                                              |
+| windowsPauseImageURL          | no       | Path to a Windows pause image. Default values will be maintained by aks-engine team. e.g. "mcr.microsoft.com/oss/kubernetes/pause:1.4.1"                                                                                                                                                                              |
 | alwaysPullWindowsPauseImage   | no       | If set to `true`, it will always pull the Windows pause image from the repo specified. Default: `false`.                                                                                                                                                                                                              |
 | windowsPublisher              | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `microsoft-aks`                                                                                                                                                                                                                                |
 | windowsOffer                  | no       | Offer used to find Windows VM to deploy from marketplace. Default: `aks-windows`                                                                                                                                                                                                                                      |

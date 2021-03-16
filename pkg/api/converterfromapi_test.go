@@ -187,7 +187,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 						AzureTelemetryPID:                    "AzureTelemetryPID",
 						KubernetesImageBase:                  "KubernetesImageBase",
 						TillerImageBase:                      "TillerImageBase",
-						ACIConnectorImageBase:                "ACIConnectorImageBase",
 						NVIDIAImageBase:                      "NVIDIAImageBase",
 						AzureCNIImageBase:                    "AzureCNIImageBase",
 						CalicoImageBase:                      "CalicoImageBase",
@@ -242,9 +241,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 	if vlabscsSpec.KubernetesSpecConfig.TillerImageBase != csSpec.KubernetesSpecConfig.TillerImageBase {
 		t.Errorf("incorrect TillerImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.TillerImageBase, vlabscsSpec.KubernetesSpecConfig.TillerImageBase)
-	}
-	if vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase != csSpec.KubernetesSpecConfig.ACIConnectorImageBase {
-		t.Errorf("incorrect ACIConnectorImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.ACIConnectorImageBase, vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase)
 	}
 	if vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase != csSpec.KubernetesSpecConfig.NVIDIAImageBase {
 		t.Errorf("incorrect NVIDIAImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.NVIDIAImageBase, vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase)

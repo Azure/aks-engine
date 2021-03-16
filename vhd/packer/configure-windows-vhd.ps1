@@ -47,7 +47,7 @@ function Get-ContainerImages {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:ltsc2019",
                 "mcr.microsoft.com/windows/nanoserver:1809",
-                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
                 "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64",
                 "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64")
         }
@@ -55,7 +55,7 @@ function Get-ContainerImages {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:2004",
                 "mcr.microsoft.com/windows/nanoserver:2004",
-                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0")
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.1")
         }
         default {
             $imagesToPull = @()
@@ -95,7 +95,9 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.3.zip",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.4.zip",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.8.zip",
-            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.9.zip"
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.9.zip",
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.10.zip",
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.11.zip"
         );
         "c:\akse-cache\containerd\"   = @(
             $global:containerdPackageUrl
@@ -104,32 +106,19 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.2.2/binaries/csi-proxy-v0.2.2.tar.gz"
         );
         "c:\akse-cache\win-k8s\"      = @(
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-azs/windowszip/v1.16.13-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.14-azs/windowszip/v1.16.14-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.11-azs/windowszip/v1.17.11-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.10-azs/windowszip/v1.18.10-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13/windowszip/v1.16.13-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-hotfix.20200714/windowszip/v1.16.13-hotfix.20200714-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.13-hotfix.20200817/windowszip/v1.16.13-hotfix.20200817-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.14/windowszip/v1.16.14-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.15/windowszip/v1.16.15-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.13/windowszip/v1.17.13-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.16/windowszip/v1.17.16-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.17-azs/windowszip/v1.17.17-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.15-azs/windowszip/v1.18.15-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.17/windowszip/v1.17.17-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.12/windowszip/v1.18.12-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.13/windowszip/v1.18.13-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.14/windowszip/v1.18.14-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.5/windowszip/v1.19.5-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.6/windowszip/v1.19.6-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.7/windowszip/v1.19.7-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.0/windowszip/v1.20.0-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.1/windowszip/v1.20.1-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.16/windowszip/v1.18.16-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.8/windowszip/v1.19.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.4/windowszip/v1.20.4-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.0-beta.0/windowszip/v1.21.0-beta.0-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.6/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.6.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.8/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.8.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.0/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.0.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.0_hotfix/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.0_hotfix.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.2/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.2.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.7/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.7.zip"
+
+
         )
     }
 
@@ -141,7 +130,7 @@ function Get-FilesToCacheOnVHD {
             $dest = [IO.Path]::Combine($dir, $fileName)
 
             Write-Log "Downloading $URL to $dest"
-            Invoke-WebRequest -UseBasicParsing -Uri $URL -OutFile $dest
+            curl.exe --retry 5 --retry-delay 0 -L $URL -o $dest
         }
     }
 }
@@ -184,7 +173,7 @@ function Install-ContainerD {
 }
 
 function Install-Docker {
-    $defaultDockerVersion = "19.03.11"
+    $defaultDockerVersion = "19.03.14"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
@@ -209,9 +198,9 @@ function Install-WindowsPatches {
             # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-            # KB4598230 contains January 12, 2021 cumulative updates for Windows Server 2019
-            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB4598230
-            $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2021/01/windows10.0-kb4598230-x64_f69498ce0cac1307eb0e6701ca334ff332364289.msu")
+            # KB4598230 contains March 9, 2021 cumulative updates for Windows Server 2019
+            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB5000822
+            $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/secu/2021/03/windows10.0-kb5000822-x64_567b66c719842beeaaf49e6332aa6f3477c225a7.msu")
         }
         '2004' {
             # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932

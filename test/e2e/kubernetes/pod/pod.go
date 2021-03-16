@@ -575,16 +575,16 @@ func PrintPodsLogs(podPrefix, namespace string, sleep, timeout time.Duration) {
 	}
 }
 
-// GetAllByPrefixResult is the result type for GetAllByPrefixAsync
-type GetAllByPrefixResult struct {
+// GetPodsResult is the result type for GetAllByPrefixAsync
+type GetPodsResult struct {
 	Pods []Pod
 	Err  error
 }
 
 // GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
-func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+func GetAllByPrefixAsync(prefix, namespace string) GetPodsResult {
 	pods, err := GetAllByPrefix(prefix, namespace)
-	return GetAllByPrefixResult{
+	return GetPodsResult{
 		Pods: pods,
 		Err:  err,
 	}
@@ -594,7 +594,7 @@ func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan GetAllByPrefixResult)
+	ch := make(chan GetPodsResult)
 	var mostRecentGetAllByPrefixWithRetryError error
 	var pods []Pod
 	go func() {
@@ -643,9 +643,9 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 }
 
 // GetAllRunningByLabelAsync wraps GetAllRunningByLabel with a struct response for goroutine + channel usage
-func GetAllRunningByLabelAsync(labelKey, labelVal, namespace string) GetAllByPrefixResult {
+func GetAllRunningByLabelAsync(labelKey, labelVal, namespace string) GetPodsResult {
 	pods, err := GetAllRunningByLabel(labelKey, labelVal, namespace)
-	return GetAllByPrefixResult{
+	return GetPodsResult{
 		Pods: pods,
 		Err:  err,
 	}
@@ -655,7 +655,7 @@ func GetAllRunningByLabelAsync(labelKey, labelVal, namespace string) GetAllByPre
 func WaitForMinRunningByLabelWithRetry(min int, labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan GetAllByPrefixResult)
+	ch := make(chan GetPodsResult)
 	var mostRecentWaitForMinRunningByLabelWithRetry error
 	var pods []Pod
 	go func() {
@@ -687,7 +687,7 @@ func WaitForMinRunningByLabelWithRetry(min int, labelKey, labelVal, namespace st
 func WaitForMaxRunningByLabelWithRetry(max int, labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan GetAllByPrefixResult)
+	ch := make(chan GetPodsResult)
 	var mostRecentWaitForMaxRunningByLabelWithRetry error
 	var pods []Pod
 	go func() {
@@ -719,7 +719,7 @@ func WaitForMaxRunningByLabelWithRetry(max int, labelKey, labelVal, namespace st
 func GetAllRunningByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan GetAllByPrefixResult)
+	ch := make(chan GetPodsResult)
 	var mostRecentGetAllByLabelWithRetryError error
 	var pods []Pod
 	go func() {
@@ -772,9 +772,9 @@ func GetAllRunningByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
 }
 
 // GetAllSucceededByLabelAsync wraps GetAllSucceededByLabel with a struct response for goroutine + channel usage
-func GetAllSucceededByLabelAsync(labelKey, labelVal, namespace string) GetAllByPrefixResult {
+func GetAllSucceededByLabelAsync(labelKey, labelVal, namespace string) GetPodsResult {
 	pods, err := GetAllSucceededByLabel(labelKey, labelVal, namespace)
-	return GetAllByPrefixResult{
+	return GetPodsResult{
 		Pods: pods,
 		Err:  err,
 	}
@@ -784,7 +784,7 @@ func GetAllSucceededByLabelAsync(labelKey, labelVal, namespace string) GetAllByP
 func GetAllSucceededByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan GetAllByPrefixResult)
+	ch := make(chan GetPodsResult)
 	var mostRecentGetAllSucceededByLabelWithRetryError error
 	var pods []Pod
 	go func() {
@@ -836,10 +836,69 @@ func GetAllSucceededByLabel(labelKey, labelVal, namespace string) ([]Pod, error)
 	return pods, nil
 }
 
+// GetAllByLabelAsync wraps GetAllByLabel with a struct response for goroutine + channel usage
+func GetAllByLabelAsync(labelKey, labelVal, namespace string) GetPodsResult {
+	pods, err := GetAllByLabel(labelKey, labelVal, namespace)
+	return GetPodsResult{
+		Pods: pods,
+		Err:  err,
+	}
+}
+
+// GetAllByLabel will return all pods in a given namespace that match a label
+func GetAllByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
+	cmd := exec.Command("k", "get", "pods", "-n", namespace, "-l", fmt.Sprintf("%s=%s", labelKey, labelVal), "-o", "json")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error getting pod:\n")
+		util.PrintCommand(cmd)
+		return nil, err
+	}
+	pl := List{}
+	err = json.Unmarshal(out, &pl)
+	if err != nil {
+		log.Printf("Error unmarshalling pods json:%s\n", err)
+		return nil, err
+	}
+	return pl.Pods, nil
+}
+
+// GetAllByLabelWithRetry will return all pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetPodsResult)
+	var mostRecentGetAllByLabelWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetAllByLabelAsync(labelKey, labelVal, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllByLabelWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllByLabelWithRetryError == nil && len(pods) > 0 {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllSucceededByLabelWithRetry timed out: %s\n", mostRecentGetAllByLabelWithRetryError)
+		}
+	}
+}
+
 // GetAllRunningByPrefixAsync wraps GetAllRunningByPrefix with a struct response for goroutine + channel usage
-func GetAllRunningByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+func GetAllRunningByPrefixAsync(prefix, namespace string) GetPodsResult {
 	pods, err := GetAllRunningByPrefix(prefix, namespace)
-	return GetAllByPrefixResult{
+	return GetPodsResult{
 		Pods: pods,
 		Err:  err,
 	}
@@ -871,7 +930,7 @@ func GetAllRunningByPrefix(prefix, namespace string) ([]Pod, error) {
 func GetAllRunningByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan GetAllByPrefixResult)
+	ch := make(chan GetPodsResult)
 	var mostRecentGetAllRunningByPrefixWithRetryError error
 	var pods []Pod
 	go func() {
@@ -1030,7 +1089,7 @@ func GetPodAsync(name, namespace string, timeout time.Duration) GetPodResult {
 
 // WaitOnSuccesses returns true if all pods matching a prefix substring are in a succeeded state within a period of time
 // successesNeeded is used to make sure we return the correct value even if the pod is in a CrashLoop
-func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
+func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, printLogs bool, sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan AreAllPodsRunningResult)
@@ -1188,8 +1247,8 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 	}
 }
 
-func EnsureContainersRunningInAllPods(containers []string, podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) error {
-	running, err := WaitOnSuccesses(podPrefix, namespace, successesNeeded, sleep, timeout)
+func EnsureContainersRunningInAllPods(containers []string, podPrefix, namespace string, successesNeeded int, printLogs bool, sleep, timeout time.Duration) error {
+	running, err := WaitOnSuccesses(podPrefix, namespace, successesNeeded, printLogs, sleep, timeout)
 	if err != nil {
 		return err
 	}
@@ -1214,8 +1273,8 @@ func EnsureContainersRunningInAllPods(containers []string, podPrefix, namespace 
 }
 
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
-func (p *Pod) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
-	return WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
+func (p *Pod) WaitOnReady(printLogs bool, sleep, timeout time.Duration) (bool, error) {
+	return WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, printLogs, sleep, timeout)
 }
 
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
@@ -1686,7 +1745,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 func (p *Pod) Logs() error {
 	var commandTimeout time.Duration
 	for _, container := range p.Spec.Containers {
-		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
+		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace, "--timestamps")
 		out, err := util.RunAndLogCommand(cmd, commandTimeout)
 		log.Printf("\n%s\n", string(out))
 		if err != nil {
@@ -1790,11 +1849,7 @@ func (p *Pod) ValidateLogsRotate(sleep, timeout time.Duration) (bool, error) {
 				return true, nil
 			}
 
-			err := p.Logs()
-			if err != nil {
-				log.Printf("Unable to print pod logs:\n %s", err)
-			}
-			err = p.Describe()
+			err := p.Describe()
 			if err != nil {
 				log.Printf("Unable to describe pod:\n %s", err)
 			}

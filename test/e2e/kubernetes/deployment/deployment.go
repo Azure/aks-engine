@@ -342,7 +342,7 @@ func RunDeploymentMultipleTimes(deployRunnerCmd deployRunnerCmd, image, name, co
 		}
 		var podsSucceeded int
 		for _, p := range pods {
-			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, podTimeout)
+			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, true, sleep, podTimeout)
 			if err != nil {
 				log.Printf("pod %s did not succeed in time\n", p.Metadata.Name)
 				return successfulAttempts, err
@@ -886,7 +886,7 @@ func GetAsync(name, namespace string) GetResult {
 func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration) ([]pod.Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan pod.GetAllByPrefixResult)
+	ch := make(chan pod.GetPodsResult)
 	var mostRecentWaitForReplicasError error
 	var pods []pod.Pod
 	go func() {
@@ -934,7 +934,7 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 func (d *Deployment) WaitForReplicasWithAction(min, max int, sleep, timeout time.Duration, action func() error) ([]pod.Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan pod.GetAllByPrefixResult)
+	ch := make(chan pod.GetPodsResult)
 	var mostRecentWaitForReplicasError error
 	var pods []pod.Pod
 	go func() {

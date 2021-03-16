@@ -174,6 +174,7 @@ func convertLinuxProfileToVLabs(obj *LinuxProfile, vlabsProfile *vlabs.LinuxProf
 		vlabsProfile.CustomNodesDNS = &vlabs.CustomNodesDNS{}
 		vlabsProfile.CustomNodesDNS.DNSServer = obj.CustomNodesDNS.DNSServer
 	}
+	vlabsProfile.RunUnattendedUpgradesOnBootstrap = obj.RunUnattendedUpgradesOnBootstrap
 }
 
 func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.WindowsProfile) {
@@ -308,6 +309,8 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.CloudProviderDisableOutboundSNAT = apiCfg.CloudProviderDisableOutboundSNAT
 	vlabsCfg.KubeReservedCgroup = apiCfg.KubeReservedCgroup
 	vlabsCfg.MicrosoftAptRepositoryURL = apiCfg.MicrosoftAptRepositoryURL
+	vlabsCfg.EnableMultipleStandardLoadBalancers = apiCfg.EnableMultipleStandardLoadBalancers
+	vlabsCfg.Tags = apiCfg.Tags
 	convertComponentsToVlabs(apiCfg, vlabsCfg)
 	convertAddonsToVlabs(apiCfg, vlabsCfg)
 	convertKubeletConfigToVlabs(apiCfg, vlabsCfg)
@@ -717,7 +720,6 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		KubernetesImageBase:                  api.KubernetesSpecConfig.KubernetesImageBase,
 		MCRKubernetesImageBase:               api.KubernetesSpecConfig.MCRKubernetesImageBase,
 		TillerImageBase:                      api.KubernetesSpecConfig.TillerImageBase,
-		ACIConnectorImageBase:                api.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                      api.KubernetesSpecConfig.NVIDIAImageBase,
 		AzureCNIImageBase:                    api.KubernetesSpecConfig.AzureCNIImageBase,
 		CalicoImageBase:                      api.KubernetesSpecConfig.CalicoImageBase,

@@ -219,6 +219,13 @@ time_metric "EnsureContainerd" ensureContainerd
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
+{{/* configure and enable kms plugin */}}
+{{- if EnableEncryptionWithExternalKms}}
+if [[ -n ${MASTER_NODE} ]]; then
+  time_metric "EnsureKMSKeyvaultKey" ensureKMSKeyvaultKey
+fi
+{{end}}
+
 time_metric "EnsureKubelet" ensureKubelet
 {{if IsAzurePolicyAddonEnabled}}
 if [[ -n ${MASTER_NODE} ]]; then
@@ -268,6 +275,12 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
   time_metric "PurgeApt" apt_get_purge apache2-utils &
 fi
 {{end}}
+
+{{- if not HasBlockOutboundInternet}}
+    {{- if RunUnattendedUpgrades}}
+apt_get_update && unattended_upgrade
+    {{- end}}
+{{- end}}
 
 if [ -f /var/run/reboot-required ]; then
   trace_info "RebootRequired" "reboot=true"

@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -145,4 +146,30 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 	keyVaultMap["properties"] = keyVaultProps
 
 	return keyVaultMap
+}
+
+func CreateKeyVaultKey(cs *api.ContainerService) map[string]interface{} {
+	keyMap := map[string]interface{}{
+		"type":       "Microsoft.KeyVault/vaults/keys",
+		"name":       "[concat(variables('clusterKeyVaultName'), '/', 'k8s')]",
+		"apiVersion": "[variables('apiVersionKeyVault')]",
+		"location":   "[variables('location')]",
+		"dependsOn": []string{
+			"[resourceId('Microsoft.KeyVault/vaults', variables('clusterKeyVaultName'))]",
+		},
+	}
+	keyType := "RSA"
+	if strings.EqualFold(cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultSku, "premium") {
+		keyType = "RSA-HSM"
+	}
+	keyProps := map[string]interface{}{
+		"kty": keyType,
+		"keyOps": []string{
+			"encrypt",
+			"decrypt",
+		},
+		"keySize": 2048,
+	}
+	keyMap["properties"] = keyProps
+	return keyMap
 }

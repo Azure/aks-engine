@@ -655,7 +655,7 @@ func TestTemplateGenerator_GetKubernetesLinuxNodeCustomDataJSONObject(t *testing
 		{
 			Name: "VMSSWithNoAgentPool",
 			CSFactory: func() api.ContainerService {
-				cs := api.CreateMockContainerService("VMSSWithNoAgentPool", "1.10.13", 3, 0, false)
+				cs := api.CreateMockContainerService("VMSSWithNoAgentPool", "", 3, 0, false)
 				cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
 					{
 						Name:                "pool1",
@@ -672,7 +672,7 @@ func TestTemplateGenerator_GetKubernetesLinuxNodeCustomDataJSONObject(t *testing
 		{
 			Name: "VMSSWithNoLinuxProfile",
 			CSFactory: func() api.ContainerService {
-				cs := api.CreateMockContainerService("VMSSWithNoLinuxProfile", "1.10.13", 3, 0, false)
+				cs := api.CreateMockContainerService("VMSSWithNoLinuxProfile", "", 3, 0, false)
 				cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
 					{
 						Name:                "pool1",

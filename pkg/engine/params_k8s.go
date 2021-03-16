@@ -34,11 +34,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesAADPodIdentityEnabled", to.Bool(aadPodIdentityAddon.Enabled))
 			}
 		}
-		if kubernetesConfig.IsAddonEnabled(common.ACIConnectorAddonName) {
-			addValue(parametersMap, "kubernetesACIConnectorEnabled", true)
-		} else {
-			addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
-		}
 		addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 			CloudProviderBackoffMode:          kubernetesConfig.CloudProviderBackoffMode,
 			CloudProviderBackoff:              kubernetesConfig.CloudProviderBackoff,
@@ -119,15 +114,18 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "servicePrincipalClientSecret", servicePrincipalProfile.Secret)
 			}
+		}
+	}
 
-			if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) {
-				if kubernetesConfig.KeyVaultSku != "" {
-					addValue(parametersMap, "clusterKeyVaultSku", kubernetesConfig.KeyVaultSku)
-				}
-				if !to.Bool(kubernetesConfig.UseManagedIdentity) && servicePrincipalProfile.ObjectID != "" {
-					addValue(parametersMap, "servicePrincipalObjectId", servicePrincipalProfile.ObjectID)
-				}
-			}
+	// configure params required for external kms
+	if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) {
+		servicePrincipalProfile := properties.ServicePrincipalProfile
+
+		if kubernetesConfig.KeyVaultSku != "" {
+			addValue(parametersMap, "clusterKeyVaultSku", kubernetesConfig.KeyVaultSku)
+		}
+		if !to.Bool(kubernetesConfig.UseManagedIdentity) && servicePrincipalProfile.ObjectID != "" {
+			addValue(parametersMap, "servicePrincipalObjectId", servicePrincipalProfile.ObjectID)
 		}
 	}
 

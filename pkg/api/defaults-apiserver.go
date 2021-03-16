@@ -97,27 +97,17 @@ func (cs *ContainerService) setAPIServerConfig() {
 
 	// RBAC configuration
 	if to.Bool(o.KubernetesConfig.EnableRbac) {
-		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.7.0") {
-			defaultAPIServerConfig["--authorization-mode"] = "Node,RBAC"
-		} else {
-			defaultAPIServerConfig["--authorization-mode"] = "RBAC"
-		}
+		defaultAPIServerConfig["--authorization-mode"] = "Node,RBAC"
 	}
 
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.1") {
-		defaultAPIServerConfig["--service-account-issuer"] = "kubernetes.default.svc"
+		defaultAPIServerConfig["--service-account-issuer"] = "https://kubernetes.default.svc.cluster.local"
 		defaultAPIServerConfig["--service-account-signing-key-file"] = "/etc/kubernetes/certs/apiserver.key"
 	}
 
 	// Set default admission controllers
 	admissionControlKey, admissionControlValues := getDefaultAdmissionControls(cs)
 	defaultAPIServerConfig[admissionControlKey] = admissionControlValues
-
-	// Enable VolumeSnapshotDataSource feature gate for Azure Disk CSI Driver
-	// which is disabled from 1.13 to 1.16 by default
-	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0") {
-		addDefaultFeatureGates(defaultAPIServerConfig, o.OrchestratorVersion, "1.13.0", "VolumeSnapshotDataSource=true")
-	}
 
 	// If no user-configurable apiserver config values exists, use the defaults
 	if o.KubernetesConfig.APIServerConfig == nil {
@@ -165,6 +155,11 @@ func (cs *ContainerService) setAPIServerConfig() {
 		for _, key := range []string{"--advertise-address"} {
 			delete(o.KubernetesConfig.APIServerConfig, key)
 		}
+	}
+
+	// Manual override of "--service-account-issuer" starting with 1.20
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.1") && o.KubernetesConfig.APIServerConfig["--service-account-issuer"] == "kubernetes.default.svc" {
+		o.KubernetesConfig.APIServerConfig["--service-account-issuer"] = "https://kubernetes.default.svc.cluster.local"
 	}
 }
 

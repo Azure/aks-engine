@@ -1,4 +1,4 @@
-
+{{- /* Note: dashboard addon is deprecated */}}
 apiVersion: v1
 kind: Namespace
 metadata:

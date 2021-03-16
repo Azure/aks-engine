@@ -16,6 +16,7 @@ func GetAzureLocations() []string {
 		"australiaeast",
 		"australiasoutheast",
 		"brazilsouth",
+		"brazilsoutheast",
 		"canadacentral",
 		"canadaeast",
 		"centralindia",
@@ -65,5 +66,6 @@ func GetAzureLocations() []string {
 		"westindia",
 		"westus",
 		"westus2",
+		"westus3",
 	}
 }

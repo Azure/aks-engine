@@ -4,7 +4,6 @@ There are 5 different Network Plugin options :
 
 - Azure Container Networking (default)
 - Kubenet
-- Flannel (docs are //TODO)
 - Cilium (CNI IPAM implementation that pairs w/ cilium NetworkPolicy addon; only works w/ `"networkPolicy": "cilium"`)
 - Antrea (CNI IPAM implementation that pairs w/ antrea NetworkPolicy addon; only works w/ `"networkPolicy": "antrea"`)
 

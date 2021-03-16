@@ -188,7 +188,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			KubernetesImageBase:              "KubernetesImageBase",
 			MCRKubernetesImageBase:           "MCRKubernetesImageBase",
 			TillerImageBase:                  "TillerImageBase",
-			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",
 			AzureCNIImageBase:                "AzureCNIImageBase",
 			CalicoImageBase:                  "CalicoImageBase",
@@ -323,55 +322,6 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 					Config: map[string]string{
 						"max-history": strconv.Itoa(0),
-					},
-				},
-			}, "1.15.4"),
-		},
-		{
-			name: "ACI Connector addon enabled",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
-							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-							Addons: []KubernetesAddon{
-								{
-									Name:    common.ACIConnectorAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.ACIConnectorAddonName,
-					Enabled: to.BoolPtr(true),
-					Config: map[string]string{
-						"region":   "westus",
-						"nodeName": "aci-connector",
-						"os":       "Linux",
-						"taint":    "azure.com/aci",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.ACIConnectorAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.ACIConnectorImageBase + k8sComponentsByVersionMap["1.15.4"][common.ACIConnectorAddonName],
-						},
 					},
 				},
 			}, "1.15.4"),
@@ -1442,49 +1392,6 @@ func TestSetAddonsConfig(t *testing.T) {
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
 							Image:          k8sComponentsByVersionMap["1.15.4"][common.SMBFlexVolumeAddonName],
-						},
-					},
-				},
-			}, "1.15.4"),
-		},
-		{
-			name: "rescheduler addon enabled",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
-							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-							Addons: []KubernetesAddon{
-								{
-									Name:    common.ReschedulerAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.ReschedulerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.ReschedulerAddonName,
-							CPURequests:    "10m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "10m",
-							MemoryLimits:   "100Mi",
-							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
 						},
 					},
 				},
@@ -4572,13 +4479,11 @@ func TestSetAddonsConfig(t *testing.T) {
 			test.cs.setAddonsConfig(test.isUpgrade)
 			for _, addonName := range []string{
 				common.TillerAddonName,
-				common.ACIConnectorAddonName,
 				common.ClusterAutoscalerAddonName,
 				common.BlobfuseFlexVolumeAddonName,
 				common.SMBFlexVolumeAddonName,
 				common.KeyVaultFlexVolumeAddonName,
 				common.DashboardAddonName,
-				common.ReschedulerAddonName,
 				common.MetricsServerAddonName,
 				common.NVIDIADevicePluginAddonName,
 				common.ContainerMonitoringAddonName,

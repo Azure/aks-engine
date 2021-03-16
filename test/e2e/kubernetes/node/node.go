@@ -384,17 +384,12 @@ func AreMaxNodesReady(nodeCount int) bool {
 	var ready int
 	if list != nil {
 		for _, node := range list.Nodes {
-			nodeReady := node.IsReady()
-			if !nodeReady {
-				return false
+			if node.IsReady() {
+				ready++
 			}
-			ready++
 		}
 	}
-	if ready <= nodeCount {
-		return true
-	}
-	return false
+	return ready <= nodeCount
 }
 
 // WaitOnReady will block until all nodes are in ready state
@@ -480,6 +475,40 @@ func WaitOnReadyMax(nodeCount int, sleep, timeout time.Duration) bool {
 		case <-ctx.Done():
 			DescribeNodes()
 			return false
+		}
+	}
+}
+
+// WaitForNodesWithAnnotation will wait until the desired number of nodes have a particular annotation
+func WaitForNodesWithAnnotation(nodeCount int, key, val string, sleep, timeout time.Duration) ([]Node, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetNodesResult)
+	var mostRecentWaitForNodesWithAnnotationError error
+	var nodes []Node
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetByAnnotationsAsync(key, val)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentWaitForNodesWithAnnotationError = result.Err
+			nodes = result.Nodes
+			if mostRecentWaitForNodesWithAnnotationError == nil {
+				if len(nodes) == nodeCount {
+					return nodes, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("WaitForNodesWithAnnotation timed out: %s\n", mostRecentWaitForNodesWithAnnotationError)
 		}
 	}
 }
@@ -724,6 +753,15 @@ func GetByLabel(label string) ([]Node, error) {
 	return nodes, nil
 }
 
+// GetByAnnotationsAsync wraps GetByAnnotations with a struct response for goroutine + channel usage
+func GetByAnnotationsAsync(key, value string) GetNodesResult {
+	nodes, err := GetByAnnotations(key, value)
+	return GetNodesResult{
+		Nodes: nodes,
+		Err:   err,
+	}
+}
+
 // GetByAnnotations will return a []Node of all nodes that have a matching annotation
 func GetByAnnotations(key, value string) ([]Node, error) {
 	list, err := Get()
@@ -733,8 +771,14 @@ func GetByAnnotations(key, value string) ([]Node, error) {
 
 	nodes := make([]Node, 0)
 	for _, n := range list.Nodes {
-		if n.Metadata.Annotations[key] == value {
-			nodes = append(nodes, n)
+		if value != "" {
+			if n.Metadata.Annotations[key] == value {
+				nodes = append(nodes, n)
+			}
+		} else {
+			if _, ok := n.Metadata.Annotations[key]; ok {
+				nodes = append(nodes, n)
+			}
 		}
 	}
 	return nodes, nil

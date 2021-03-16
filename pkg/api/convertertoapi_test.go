@@ -6,7 +6,6 @@ package api
 import (
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/davecgh/go-spew/spew"
@@ -294,7 +293,6 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 						KubernetesImageBase:                  "KubernetesImageBase",
 						MCRKubernetesImageBase:               "MCRKubernetesImageBase",
 						TillerImageBase:                      "TillerImageBase",
-						ACIConnectorImageBase:                "ACIConnectorImageBase",
 						NVIDIAImageBase:                      "NVIDIAImageBase",
 						AzureCNIImageBase:                    "AzureCNIImageBase",
 						CalicoImageBase:                      "CalicoImageBase",
@@ -353,9 +351,6 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 	}
 	if csSpec.KubernetesSpecConfig.TillerImageBase != vlabscsSpec.KubernetesSpecConfig.TillerImageBase {
 		t.Errorf("incorrect TillerImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.TillerImageBase, csSpec.KubernetesSpecConfig.TillerImageBase)
-	}
-	if csSpec.KubernetesSpecConfig.ACIConnectorImageBase != vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase {
-		t.Errorf("incorrect ACIConnectorImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase, csSpec.KubernetesSpecConfig.ACIConnectorImageBase)
 	}
 	if csSpec.KubernetesSpecConfig.NVIDIAImageBase != vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase {
 		t.Errorf("incorrect NVIDIAImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase, csSpec.KubernetesSpecConfig.NVIDIAImageBase)
@@ -1001,24 +996,6 @@ func TestSetVlabsKubernetesDefaults(t *testing.T) {
 			},
 			expectedNetworkPlugin: "",
 			expectedNetworkPolicy: "antrea",
-		},
-		{
-			name: "flannel addon",
-			p: &vlabs.Properties{
-				OrchestratorProfile: &vlabs.OrchestratorProfile{
-					KubernetesConfig: &vlabs.KubernetesConfig{
-						NetworkPlugin: "",
-						Addons: []vlabs.KubernetesAddon{
-							{
-								Name:    common.FlannelAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-						},
-					},
-				},
-			},
-			expectedNetworkPlugin: NetworkPluginFlannel,
-			expectedNetworkPolicy: "",
 		},
 	}
 

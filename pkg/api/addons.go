@@ -68,27 +68,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
-	defaultACIConnectorAddonsConfig := KubernetesAddon{
-		Name:    common.ACIConnectorAddonName,
-		Enabled: to.BoolPtr(DefaultACIConnectorAddonEnabled && !cs.Properties.IsAzureStackCloud()),
-		Config: map[string]string{
-			"region":   "westus",
-			"nodeName": "aci-connector",
-			"os":       "Linux",
-			"taint":    "azure.com/aci",
-		},
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.ACIConnectorAddonName,
-				CPURequests:    "50m",
-				MemoryRequests: "150Mi",
-				CPULimits:      "50m",
-				MemoryLimits:   "150Mi",
-				Image:          specConfig.ACIConnectorImageBase + k8sComponents[common.ACIConnectorAddonName],
-			},
-		},
-	}
-
 	defaultClusterAutoscalerAddonsConfig := KubernetesAddon{
 		Name:    common.ClusterAutoscalerAddonName,
 		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
@@ -208,21 +187,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				CPULimits:      "300m",
 				MemoryLimits:   "150Mi",
 				Image:          k8sComponents[common.DashboardMetricsScraperContainerName],
-			},
-		},
-	}
-
-	defaultReschedulerAddonsConfig := KubernetesAddon{
-		Name:    common.ReschedulerAddonName,
-		Enabled: to.BoolPtr(DefaultReschedulerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.ReschedulerAddonName,
-				CPURequests:    "10m",
-				MemoryRequests: "100Mi",
-				CPULimits:      "10m",
-				MemoryLimits:   "100Mi",
-				Image:          kubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
 			},
 		},
 	}
@@ -820,7 +784,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultFlannelAddonsConfig := KubernetesAddon{
 		Name:    common.FlannelAddonName,
-		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel),
+		Enabled: to.BoolPtr(false),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.KubeFlannelContainerName,
@@ -911,13 +875,11 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultAddons := []KubernetesAddon{
 		defaultTillerAddonsConfig,
-		defaultACIConnectorAddonsConfig,
 		defaultClusterAutoscalerAddonsConfig,
 		defaultBlobfuseFlexVolumeAddonsConfig,
 		defaultSMBFlexVolumeAddonsConfig,
 		defaultKeyVaultFlexVolumeAddonsConfig,
 		defaultDashboardAddonsConfig,
-		defaultReschedulerAddonsConfig,
 		defaultMetricsServerAddonsConfig,
 		defaultNVIDIADevicePluginAddonsConfig,
 		defaultContainerMonitoringAddonsConfig,

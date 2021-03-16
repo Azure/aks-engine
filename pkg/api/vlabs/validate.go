@@ -145,7 +145,7 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateLinuxProfile(); e != nil {
 		return e
 	}
-	if e := a.validateAddons(); e != nil {
+	if e := a.validateAddons(isUpdate); e != nil {
 		return e
 	}
 	if e := a.validateExtensions(); e != nil {
@@ -225,13 +225,9 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 		}
 
 		if o.KubernetesConfig != nil {
-			err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled(), a.FeatureFlags.IsIPv6OnlyEnabled())
+			err := o.KubernetesConfig.Validate(version, a.HasWindows(), a.FeatureFlags.IsIPv6DualStackEnabled(), a.FeatureFlags.IsIPv6OnlyEnabled(), isUpdate)
 			if err != nil {
 				return err
-			}
-			minVersion, err := semver.Make("1.7.0")
-			if err != nil {
-				return errors.New("could not validate version")
 			}
 
 			if o.KubernetesConfig.EnableAggregatedAPIs {
@@ -241,10 +237,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) {
-				if sv.LT(minVersion) {
-					return errors.Errorf("enableDataEncryptionAtRest is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-						minVersion.String(), o.OrchestratorVersion)
-				}
 				if o.KubernetesConfig.EtcdEncryptionKey != "" {
 					_, err = base64.StdEncoding.DecodeString(o.KubernetesConfig.EtcdEncryptionKey)
 					if err != nil {
@@ -254,27 +246,8 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
-				minVersion, err := semver.Make("1.10.0")
-				if err != nil {
-					return errors.Errorf("could not validate version")
-				}
-				if sv.LT(minVersion) {
-					return errors.Errorf("enableEncryptionWithExternalKms is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-						minVersion.String(), o.OrchestratorVersion)
-				}
 				if to.Bool(a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) && a.OrchestratorProfile.KubernetesConfig.UserAssignedID == "" {
 					log.Warnf("Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable! You will not be able to upgrade your cluster using `aks-engine upgrade`")
-				}
-			}
-
-			if o.KubernetesConfig.EnableRbac != nil && !o.KubernetesConfig.IsRBACEnabled() {
-				minVersionNotAllowed, err := semver.Make("1.15.0")
-				if err != nil {
-					return errors.Errorf("could not validate version")
-				}
-				if !sv.LT(minVersionNotAllowed) {
-					return errors.Errorf("RBAC support is required for Kubernetes version %s or greater; unable to build Kubernetes v%s cluster with enableRbac=false",
-						minVersionNotAllowed.String(), o.OrchestratorVersion)
 				}
 			}
 
@@ -295,14 +268,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
-				minVersion, err := semver.Make("1.11.0")
-				if err != nil {
-					return errors.Errorf("could not validate version")
-				}
-				if sv.LT(minVersion) {
-					return errors.Errorf("loadBalancerSku is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-						minVersion.String(), o.OrchestratorVersion)
-				}
 				if !to.Bool(a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB) {
 					return errors.Errorf("standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"")
 				}
@@ -470,7 +435,12 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		// validate os type is linux if dual stack feature is enabled
 		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
 			if agentPoolProfile.OSType == Windows {
-				return errors.Errorf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+				if a.FeatureFlags.IsIPv6DualStackEnabled() && !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.19.0") {
+					return errors.Errorf("Dual stack IPv6 feature is supported on Windows only from Kubernetes version 1.19, but OrchestratorProfile.OrchestratorVersion is '%s'", a.OrchestratorProfile.OrchestratorVersion)
+				}
+				if a.FeatureFlags.IsIPv6OnlyEnabled() {
+					return errors.Errorf("Single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+				}
 			}
 			if agentPoolProfile.Distro == Flatcar {
 				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
@@ -660,10 +630,9 @@ func (a *Properties) validateLinuxProfile() error {
 	return validateKeyVaultSecrets(a.LinuxProfile.Secrets, false)
 }
 
-func (a *Properties) validateAddons() error {
+func (a *Properties) validateAddons(isUpdate bool) error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
-		var hasNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
 		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
@@ -671,10 +640,6 @@ func (a *Properties) validateAddons() error {
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
 				isAvailabilitySets = true
-			}
-
-			if agentPool.IsNSeriesSKU() {
-				hasNSeriesSKU = true
 			}
 		}
 		for _, addon := range a.OrchestratorProfile.KubernetesConfig.Addons {
@@ -727,14 +692,6 @@ func (a *Properties) validateAddons() error {
 							}
 						}
 					}
-				case "nvidia-device-plugin":
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
-					if err != nil {
-						return err
-					}
-					if hasNSeriesSKU && !isValidVersion {
-						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
-					}
 				case "aad":
 					if !a.HasAADAdminGroupID() {
 						return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
@@ -785,25 +742,21 @@ func (a *Properties) validateAddons() error {
 						return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea)
 					}
 				case common.FlannelAddonName:
-					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
-						return errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, a.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
-					}
-					networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
-					if networkPlugin != "" {
-						if networkPlugin != NetworkPluginFlannel {
-							return errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, networkPlugin, NetworkPluginFlannel)
+					if isUpdate {
+						if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
+							return errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, a.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
 						}
-					}
-					if a.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
-						return errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd)
-					}
-				case "azure-policy":
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.14.0")
-					if err != nil {
-						return err
-					}
-					if !isValidVersion {
-						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.14 and above. Please specify a compatible version")
+						networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
+						if networkPlugin != "" {
+							if networkPlugin != NetworkPluginFlannel {
+								return errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, networkPlugin, NetworkPluginFlannel)
+							}
+						}
+						if a.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
+							return errors.Errorf("%s addon is only supported with containerRuntime=%s", common.FlannelAddonName, Containerd)
+						}
+					} else {
+						return errors.Errorf("%s addon is deprecated for new clusters", common.FlannelAddonName)
 					}
 				case common.KubeDNSAddonName:
 					kubeDNSEnabled = true
@@ -818,6 +771,13 @@ func (a *Properties) validateAddons() error {
 					if err := addon.validateArcAddonConfig(); err != nil {
 						return err
 					}
+				case common.ReschedulerAddonName:
+					if isUpdate {
+						log.Warnf("The rescheduler addon has been deprecated and disabled, it will be removed during this update")
+					}
+					return errors.Errorf("The rescheduler addon has been deprecated and disabled, please remove it from your cluster configuration before creating a new cluster")
+				case common.DashboardAddonName:
+					log.Warnf("The kube-dashboard addon is deprecated, we recommend you install the dashboard yourself, see https://github.com/kubernetes/dashboard")
 				}
 			} else {
 				// Validation for addons if they are disabled
@@ -1264,7 +1224,7 @@ func validatePasswordComplexity(name string, password string) (out bool) {
 }
 
 // Validate validates the KubernetesConfig
-func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStackEnabled, isIPv6 bool) error {
+func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStackEnabled, isIPv6, isUpdate bool) error {
 	// number of minimum retries allowed for kubelet to post node status
 	const minKubeletRetries = 4
 
@@ -1501,7 +1461,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 	}
 
-	if e := k.validateNetworkPlugin(hasWindows); e != nil {
+	if e := k.validateNetworkPlugin(hasWindows, isUpdate); e != nil {
 		return e
 	}
 	if e := k.validateNetworkPolicy(k8sVersion, hasWindows); e != nil {
@@ -1515,6 +1475,13 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	}
 	if e := k.validateKubernetesImageBaseType(); e != nil {
 		return e
+	}
+
+	if to.Bool(k.EnableMultipleStandardLoadBalancers) && !common.IsKubernetesVersionGe(k8sVersion, "1.20.0-beta.1") {
+		return errors.Errorf("OrchestratorProfile.KubernetesConfig.EnableMultipleStandardLoadBalancers is available since kubernetes version v1.20.0-beta.1, current version is %s", k8sVersion)
+	}
+	if k.Tags != "" && !common.IsKubernetesVersionGe(k8sVersion, "1.20.0-beta.1") {
+		return errors.Errorf("OrchestratorProfile.KubernetesConfig.Tags is available since kubernetes version v1.20.0-beta.1, current version is %s", k8sVersion)
 	}
 	return k.validateContainerRuntimeConfig()
 }
@@ -1545,7 +1512,7 @@ func (k *KubernetesConfig) validateContainerRuntimeConfig() error {
 	return nil
 }
 
-func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
+func (k *KubernetesConfig) validateNetworkPlugin(hasWindows, isUpdate bool) error {
 
 	networkPlugin := k.NetworkPlugin
 
@@ -1553,11 +1520,20 @@ func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
 	valid := false
 	for _, plugin := range NetworkPluginValues {
 		if networkPlugin == plugin {
-			valid = true
+			if plugin == NetworkPluginFlannel {
+				if isUpdate {
+					valid = true
+				}
+			} else {
+				valid = true
+			}
 			break
 		}
 	}
 	if !valid {
+		if networkPlugin == NetworkPluginFlannel {
+			return errors.Errorf("networkPlugin '%s' has been deprecated and is no longer supported for new cluster creation", networkPlugin)
+		}
 		return errors.Errorf("unknown networkPlugin '%s' specified", networkPlugin)
 	}
 

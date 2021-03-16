@@ -47,14 +47,13 @@ The kubernetes-cilium deployment template enables Cilium networking and policies
       }
 ```
 
-> Note:  To execute the `cilium` command that is running inside of the pods, you will need remove the `DenyEscalatingExec` when specifying the Admission Control Values.  If running Kubernetes with the `orchestratorRelease` newer than 1.9 use `--enable-admission-plugins` instead of `--admission-control` as illustrated below:
+> Note:  To execute the `cilium` command that is running inside of the pods, you will need remove the `DenyEscalatingExec` when specifying the Admission Control Values.  In addition, use `--enable-admission-plugins` instead of `--admission-control` as illustrated below:
 
 ```json
 {
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorRelease": "1.10",
       "kubernetesConfig": {
         "networkPlugin": "cilium",
         "networkPolicy": "cilium",

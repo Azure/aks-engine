@@ -12,6 +12,7 @@
   * [agentPoolProfiles](#agentPoolProfiles)
 * [Azure Stack Hub Instances Registered with Azure's China cloud](#azure-stack-hub-instances-registered-with-azures-china-cloud)
 * [Disconnected Azure Stack Hub Instances](#disconnected-azure-stack-hub-instances)
+* [Volume Provisioner: Container Storage Interface Drivers (preview)](#volume-provisioner-container-storage-interface-drivers-preview)
 * [AKS Engine Versions](#aks-engine-versions)
 * [Azure Monitor for containers](#azure-Monitor-for-containers)
 * [Known Issues and Limitations](#known-issues-and-limitations)
@@ -96,12 +97,12 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 
 ### masterProfile
 
-`masterProfile` describes the settings for master configuration.
+`masterProfile` describes the settings for control plane configuration.
 
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Specifies a valid [Azure Stack Hub VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
-| distro                          | yes      | Specifies the masters' Linux distribution. The supported value is `"aks-ubuntu-16.04"`. This is a custom image based on UbuntuServer 16.04 that comes with pre-installed software necessary for Kubernetes deployments. |
+| distro                          | yes      | Specifies the control plane's Linux distribution. The supported values are `"aks-ubuntu-16.04"` and `"aks-ubuntu-18.04"`. These are custom images based on UbuntuServer that come with pre-installed software necessary for Kubernetes deployments. |
 
 ### agentPoolProfiles
 
@@ -111,7 +112,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Describes a valid [Azure Stack Hub VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
 | osType                          | no       | Specifies the agent pool's Operating System. Supported values are `"Windows"` and `"Linux"`. Defaults to `"Linux"`. |
-| distro                          | yes      | Specifies the masters' Linux distribution. The supported value is `"aks-ubuntu-16.04"`. This is a custom image based on UbuntuServer 16.04 that comes with pre-installed software necessary for Kubernetes deployments. |
+| distro                          | yes      | Specifies the control plane's Linux distribution. The supported values are `"aks-ubuntu-16.04"` and `"aks-ubuntu-18.04"`. These are custom images based on UbuntuServer that come with pre-installed software necessary for Kubernetes deployments. |
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"false"`. |
 
@@ -125,7 +126,7 @@ By default, the AKS Engine provisioning process relies on an internet connection
 
 If your Azure Stack Hub instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
 
-To overcome these issues, you should set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"`. This will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won't be required during the provisioning process.
+To overcome these issues, you should set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"` or `"aks-ubuntu-18.04"`. This will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won't be required during the provisioning process.
 
 The `AKS Base Image` marketplace item has to be available in your Azure Stack Hub's Marketplace before it could be used by AKS Engine. Your Azure Stack Hub administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
 
@@ -140,10 +141,131 @@ Each AKS Engine release is validated and tied to a specific version of the AKS B
 | [v0.51.0](https://github.com/Azure/aks-engine/releases/tag/v0.51.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2020 (2020.05.13)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202005_2020.05.13.txt), [AKS Base Windows Image (17763.1217.200513)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1217.200513.txt)  | 1.15.12, 1.16.8, 1.16.9 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.51.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.51.0/examples/azure-stack/kubernetes-windows.json)) |
 | [v0.55.0](https://github.com/Azure/aks-engine/releases/tag/v0.55.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2020 (2020.08.24)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202007_2020.08.24.txt), [AKS Base Windows Image (17763.1397.200820)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1397.200820.txt)  | 1.15.12, 1.16.14, 1.17.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-windows.json)) |
 | [v0.55.4](https://github.com/Azure/aks-engine/releases/tag/v0.55.4)   | [AKS Base Ubuntu 16.04-LTS Image Distro, September 2020 (2020.09.14)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202007_2020.08.24.txt), [AKS Base Windows Image (17763.1397.200820)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1397.200820.txt)  | 1.15.12, 1.16.14, 1.17.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-windows.json)) |
+| [v0.60.1](https://github.com/Azure/aks-engine/releases/tag/v0.60.1)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q1 (2021.01.28)](https://github.com/Azure/aks-engine/blob/v0.60.1/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.01.28.txt), [AKS Base Ubuntu 16.04-LTS Image Distro, January 2021 (2021.01.28)](https://github.com/Azure/aks-engine/blob/v0.60.1/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202007_2021.01.28.txt), [AKS Base Windows Image (17763.1697.210129)](https://github.com/Azure/aks-engine/blob/v0.60.1/vhd/release-notes/aks-windows/2109-datacenter-core-smalldisk-17763.1697.210129.txt)  | 1.16.14, 1.16.15, 1.17.17, 1.18.15 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.60.1/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.60.1/examples/azure-stack/kubernetes-windows.json)) |
 
 ## Azure Monitor for containers
 
 Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Azure Stack Hub Cloud Environments. Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details on how to onboard and monitor clusters, nodes, pods, containers inventory, performance metrics and logs.
+
+## Volume Provisioner: Container Storage Interface Drivers (preview)
+As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are avaiable on Azure Stack Hub. Please find details in the following table.
+
+|                       | Azure Disk CSI Driver                                                                                                        | Azure Blob CSI Driver                                                                                                   | NFS CSI Driver                                                           |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| Stage on Azure Stack  | Public Preview                                                                                                               | Private Preview                                                                                                         | Public Preview                                                           |
+| Project Repository    | [azuredisk-csi-driver](https://github.com/kubernetes-sigs/azuredisk-csi-driver)                                              | [blob-csi-driver](https://github.com/kubernetes-sigs/blob-csi-driver)                                                   | [csi-driver-nfs](https://github.com/kubernetes-csi/csi-driver-nfs)       |
+| CSI Driver Version    | v1.0.0+                                                                                                                      | v1.0.0+                                                                                                                 | v3.0.0+                                                                  |
+| Access Mode           | ReadWriteOnce                                                                                                                | ReadWriteOnce<br/>ReadOnlyMany<br/>ReadWriteMany                                                                        | ReadWriteOnce<br/>ReadOnlyMany<br/>ReadWriteMany                         |
+| Windows Agent Node    | Support                                                                                                                      | Not support and no plans                                                                                                | Not support and no plans                                                 |
+| Dynamic Provisioning  | Support                                                                                                                      | Support                                                                                                                 | Support                                                                  |
+| Considerations        | [Azure Disk CSI Driver Limitations](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/limitations.md) | [Azure Blob CSI Driver Limitations](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/docs/limitations.md) | Users will be responsible for setting up and maintaining the NFS server. |
+| Slack Support Channel | [#provider-azure](https://kubernetes.slack.com/archives/C5HJXTT9Q)                                                           | [#provider-azure](https://kubernetes.slack.com/archives/C5HJXTT9Q)                                                      | [#sig-storage](https://kubernetes.slack.com/archives/C09QZFCE5)          |
+
+> Currently, disconnected environments do not support CSI Drivers.
+
+### Requirements
+
+- Azure Stack build 2011 and later.
+- AKS Engine version v0.60.1 and later.
+- Kubernetes version 1.18 and later.
+- Since the Controller server of CSI Drivers requires 2 replicas, a single node master pool is not recommended.
+- [Helm 3](https://helm.sh/docs/intro/install/)
+
+### Install and Uninstall CSI Drivers
+In this section, please follow the example commands to deploy a StatefulSet application consuming CSI Driver.
+
+#### Azure Disk CSI Driver
+
+``` powershell
+# Install CSI Driver
+helm repo add azuredisk-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/charts
+helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.0.0
+
+# Deploy Storage Class
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/storageclass-azuredisk-csi-azurestack.yaml
+
+# Deploy example StatefulSet application
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/statefulset.yaml
+
+# Validate volumes and applications
+# You should see a sequence of timestamps are persisted in the volume.
+kubectl exec statefulset-azuredisk-0 -- tail /mnt/azuredisk/outfile
+
+# Delete example StatefulSet application
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/statefulset.yaml
+
+# Delete Storage Class
+# Before delete the Storage Class, please make sure Pods that consume the Storage Class have been terminated.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/storageclass-azuredisk-csi-azurestack.yaml
+
+# Uninstall CSI Driver
+helm uninstall azuredisk-csi-driver --namespace kube-system
+helm repo remove azuredisk-csi-driver
+```
+
+#### Azure Blob CSI Driver
+
+``` powershell
+# Install CSI Driver
+helm repo add blob-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/charts
+helm install blob-csi-driver blob-csi-driver/blob-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.0.0
+
+# Deploy Storage Class
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/storageclass-blobfuse.yaml
+
+# Deploy example StatefulSet application
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/statefulset.yaml
+
+# Validate volumes and applications
+# You should see a sequence of timestamps are persisted in the volume.
+kubectl exec statefulset-blob-0 -- tail /mnt/blob/outfile
+
+# Delete example StatefulSet application
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/statefulset.yaml
+
+# Delete Storage Class
+# Before delete the Storage Class, please make sure Pods that consume the Storage Class have been terminated.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/deploy/example/storageclass-blobfuse.yaml
+
+# Uninstall CSI Driver
+helm uninstall blob-csi-driver --namespace kube-system
+helm repo remove blob-csi-driver
+```
+
+#### NFS CSI Driver
+
+``` powershell
+# Install CSI Driver
+helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+helm install csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system --set controller.runOnMaster=true --version v3.0.0
+
+# Deploy NFS Server. Please note that this NFS Server is just for validation, please set up and maintain your NFS Server properly for production.
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/nfs-provisioner/nfs-server.yaml
+
+# Deploy Storage Class
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/storageclass-nfs.yaml
+
+# Deploy example StatefulSet application
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/statefulset.yaml
+
+# Validate volumes and applications
+# You should see a sequence of timestamps are persisted in the volume.
+kubectl exec statefulset-nfs-0 -- tail /mnt/nfs/outfile
+
+# Delete example StatefulSet application
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/statefulset.yaml
+
+# Delete Storage Class
+# Before delete the Storage Class, please make sure Pods that consume the Storage Class have been terminated.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/storageclass-nfs.yaml
+
+# Delete example NFS Server.
+kubectl delete -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/example/nfs-provisioner/nfs-server.yaml
+
+# Uninstall CSI Driver
+helm uninstall csi-driver-nfs --namespace kube-system
+helm repo remove csi-driver-nfs
+```
 
 ## Known Issues and Limitations
 
@@ -156,12 +278,9 @@ AKS Engine includes a number of optional [addons](../topics/clusterdefinitions.m
 The list below includes the addons currently unsupported on Azure Stack Hub:
 
 * AAD Pod Identity
-* ACI Connector
 * Blobfuse Flex Volume
 * Cluster Autoscaler
 * KeyVault Flex Volume
-* NVIDIA Device Plugin
-* Rescheduler
 * SMB Flex Volume
 
 ### Limited Number of Frontend Public IPs
@@ -172,7 +291,7 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 ### get-versions command
 
-The output of the `get-versions` command only pertains to Azure and not Azure Stack Hub clouds. The different upgrade paths can be found [here](https://docs.microsoft.com/en-us/azure-stack/user/kubernetes-aks-engine-release-notes?view=azs-2005#kubernetes-version-upgrade-path-in-aks-engine-0510).
+By default, `aks-engine get-versions` shows which Kubernetes versions are supported by each AKS Engine release on Azure's public cloud. Include flag `--azure-env` to get the list of supported Kubernetes versions on a custom cloud such as an Azure Stack Hub cloud (`aks-engine get-versions --azure-env AzureStackCloud`). Upgrade paths for Azure Stack Hub can also be found [here](https://docs.microsoft.com/azure-stack/user/kubernetes-aks-engine-release-notes).
 
 ### Upgrade from private-preview Kubernetes cluster with Windows nodes
 

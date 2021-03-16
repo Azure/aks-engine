@@ -42,7 +42,7 @@ func DeleteNetworkPolicy(name, namespace string) {
 }
 
 func EnsureRunningPodExists(deploymentName string, namespace string, successesNeeded int, sleepTime time.Duration, timeout time.Duration) {
-	running, err := pod.WaitOnSuccesses(deploymentName, namespace, 4, sleepTime, timeout)
+	running, err := pod.WaitOnSuccesses(deploymentName, namespace, 4, false, sleepTime, timeout)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(running).To(Equal(true))
 }

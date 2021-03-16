@@ -2,8 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorRelease": "1.16",
-      "orchestratorVersion": "1.16.14",
       "kubernetesConfig": {
         "kubernetesImageBase": "k8s.gcr.io/",
         "clusterSubnet": "10.240.0.0/12",
@@ -40,26 +38,6 @@
             ],
             "config": {
               "max-history": "0"
-            }
-          },
-          {
-            "name": "aci-connector",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "aci-connector",
-                "image": "mcr.microsoft.com/oss/virtual-kubelet/virtual-kubelet:1.2.1.2",
-                "cpuRequests": "50m",
-                "memoryRequests": "150Mi",
-                "cpuLimits": "50m",
-                "memoryLimits": "150Mi"
-              }
-            ],
-            "config": {
-              "nodeName": "aci-connector",
-              "os": "Linux",
-              "region": "westus",
-              "taint": "azure.com/aci"
             }
           },
           {
@@ -120,34 +98,6 @@
                 "memoryRequests": "10Mi",
                 "cpuLimits": "50m",
                 "memoryLimits": "10Mi"
-              }
-            ]
-          },
-          {
-            "name": "kubernetes-dashboard",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "kubernetes-dashboard",
-                "image": "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-                "cpuRequests": "300m",
-                "memoryRequests": "150Mi",
-                "cpuLimits": "300m",
-                "memoryLimits": "150Mi"
-              }
-            ]
-          },
-          {
-            "name": "rescheduler",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "rescheduler",
-                "image": "k8s.gcr.io/rescheduler:v0.4.0",
-                "cpuRequests": "10m",
-                "memoryRequests": "100Mi",
-                "cpuLimits": "10m",
-                "memoryLimits": "100Mi"
               }
             ]
           },

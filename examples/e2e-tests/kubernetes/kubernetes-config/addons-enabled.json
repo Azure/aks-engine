@@ -2,15 +2,10 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorRelease": "1.16",
       "kubernetesConfig": {
         "addons": [
           {
             "name": "tiller",
-            "enabled": true
-          },
-          {
-            "name": "aci-connector",
             "enabled": true
           },
           {
@@ -23,14 +18,6 @@
           },
           {
             "name": "keyvault-flexvolume",
-            "enabled": true
-          },
-          {
-            "name": "kubernetes-dashboard",
-            "enabled": true
-          },
-          {
-            "name": "rescheduler",
             "enabled": true
           },
           {

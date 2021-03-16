@@ -14,6 +14,15 @@ type RemoteFile struct {
 	Content     []byte
 }
 
+func NewRemoteFile(path, permissions, owner string, content []byte) *RemoteFile {
+	return &RemoteFile{
+		Path:        path,
+		Permissions: permissions,
+		Owner:       owner,
+		Content:     content,
+	}
+}
+
 type AuthConfig struct {
 	User           string
 	Password       string

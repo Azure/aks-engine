@@ -638,9 +638,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsAzurePolicyAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzurePolicyAddonName)
 		},
-		"IsACIConnectorAddonEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ACIConnectorAddonName)
-		},
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 		},
@@ -702,6 +699,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"GetDHCPv6ConfigCSEScriptFilepath": func() string {
 			return dhcpV6ConfigCSEScriptFilepath
+		},
+		"GetKMSKeyvaultKeyServiceCSEScriptFilepath": func() string {
+			return kmsKeyvaultKeyServiceCSEScriptFilepath
+		},
+		"GetKMSKeyvaultKeyCSEScriptFilepath": func() string {
+			return kmsKeyvaultKeyCSEScriptFilepath
 		},
 		"HasPrivateAzureRegistryServer": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer != ""
@@ -768,6 +771,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"GetLinuxCSELogPath": func() string {
 			return linuxCSELogPath
+		},
+		"RunUnattendedUpgrades": func() bool {
+			if cs.Properties.LinuxProfile != nil {
+				return to.Bool(cs.Properties.LinuxProfile.RunUnattendedUpgradesOnBootstrap)
+			}
+			return false
 		},
 		"OpenBraces": func() string {
 			return "{{"

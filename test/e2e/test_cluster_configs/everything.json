@@ -16,7 +16,6 @@
 				"kubernetesConfig": {
 					"networkPlugin": "azure",
 					"networkMode": "bridge",
-					"enableEncryptionWithExternalKms": true,
 					"useManagedIdentity": false,
 					"containerRuntimeConfig": {
 						"dataDir": "/mnt/docker"
@@ -47,10 +46,6 @@
 								"scale-down-delay-after-add": "1m0s",
 								"scale-down-unneeded-time": "2m0s"
 							}
-						},
-						{
-							"name": "kubernetes-dashboard",
-							"enabled": true
 						},
 						{
 							"name": "coredns",
@@ -94,7 +89,6 @@
 				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 				"firstConsecutiveStaticIP": "10.239.255.239",
 				"vnetCidr": "10.239.0.0/16",
-				"auditDEnabled": true,
 				"availabilityZones": [
 					"1",
 					"2"
@@ -113,7 +107,6 @@
 					],
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot",
-					"auditDEnabled": true,
 					"availabilityZones": [
 						"1",
 						"2"
@@ -147,6 +140,7 @@
 				}
 			],
 			"linuxProfile": {
+				"runUnattendedUpgradesOnBootstrap": true,
 				"adminUsername": "azureuser",
 				"ssh": {
 					"publicKeys": [

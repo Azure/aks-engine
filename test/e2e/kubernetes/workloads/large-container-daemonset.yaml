@@ -25,7 +25,7 @@ spec:
                 - linux
       containers:
       - name: large-container
-        image: quay.io/deis/go-dev:v1.27.3
+        image: mcr.microsoft.com/oss/azcu/go-dev:v1.29.2
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh"]
         args: ["-c", "while true; do sleep 1000; done"]

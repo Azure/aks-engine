@@ -53,7 +53,11 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 
 	cs.Properties.OrchestratorProfile = &OrchestratorProfile{}
 	cs.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	cs.Properties.OrchestratorProfile.OrchestratorVersion = orchestratorVersion
+	if orchestratorVersion == "" {
+		cs.Properties.OrchestratorProfile.OrchestratorVersion = common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
+	} else {
+		cs.Properties.OrchestratorProfile.OrchestratorVersion = orchestratorVersion
+	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		EnableSecureKubelet:       to.BoolPtr(DefaultSecureKubeletEnabled),
 		EnableRbac:                to.BoolPtr(DefaultRBACEnabled),

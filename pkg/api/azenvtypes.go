@@ -17,7 +17,7 @@ type KubernetesSpecConfig struct {
 	// KubernetesImageBase defines a base image URL substring to source images that originate from upstream k8s.gcr.io
 	KubernetesImageBase   string `json:"kubernetesImageBase,omitempty"`
 	TillerImageBase       string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase string `json:"aciConnectorImageBase,omitempty"`
+	ACIConnectorImageBase string `json:"aciConnectorImageBase,omitempty"` // Deprecated
 	// MCRKubernetesImageBase defines a base image URL substring to source MS-curated images that originate from MCR
 	MCRKubernetesImageBase               string `json:"mcrKubernetesImageBase,omitempty"`
 	NVIDIAImageBase                      string `json:"nvidiaImageBase,omitempty"`
@@ -68,7 +68,6 @@ var (
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
 		KubernetesImageBase:                  "k8s.gcr.io/",
 		TillerImageBase:                      "mcr.microsoft.com/",
-		ACIConnectorImageBase:                "mcr.microsoft.com/oss/virtual-kubelet/",
 		NVIDIAImageBase:                      "mcr.microsoft.com/",
 		CalicoImageBase:                      "mcr.microsoft.com/oss/calico/",
 		AzureCNIImageBase:                    "mcr.microsoft.com/containernetworking/",
@@ -123,7 +122,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1604-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2021.01.08",
+		ImageVersion:   "2021.02.22",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -131,15 +130,15 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2021.01.08",
+		ImageVersion:   "2021.02.22",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk-2101",
+		ImageSku:       "2019-datacenter-core-smalldisk-2102",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.1637.210111",
+		ImageVersion:   "17763.1697.210223",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -147,7 +146,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.1637.2012040632",
+		ImageVersion:   "17763.1757.2102060435",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -226,7 +225,6 @@ var (
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:    "gcr.azk8s.cn/google_containers/",
 			TillerImageBase:        "mcr.microsoft.com/",
-			ACIConnectorImageBase:  "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:        "dockerhub.azk8s.cn/nvidia/",
 			AzureCNIImageBase:      "mcr.azk8s.cn/containernetworking/",
 			MCRKubernetesImageBase: "mcr.microsoft.com/",

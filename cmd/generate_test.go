@@ -343,11 +343,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "ACI connector",
-			apiModelPath: "../examples/addons/aci-connector/kubernetes-aci-connector.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "App gateway ingress",
 			apiModelPath: "../examples/addons/appgw-ingress/kubernetes-appgw-ingress.json",
 			setArgs:      defaultSet,
@@ -533,11 +528,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "dashboard disabled",
-			apiModelPath: "../examples/kubernetes-config/kubernetes-no-dashboard.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "private cluster single master",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-private-cluster-single-master.json",
 			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
@@ -546,11 +536,6 @@ func TestExampleAPIModels(t *testing.T) {
 			name:         "private cluster",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-private-cluster.json",
 			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
-		},
-		{
-			name:         "rescheduler addon",
-			apiModelPath: "../examples/kubernetes-config/kubernetes-rescheduler.json",
-			setArgs:      defaultSet,
 		},
 		{
 			name:         "standard LB",
@@ -578,11 +563,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "1.16 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.16.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "1.17 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.17.json",
 			setArgs:      defaultSet,
@@ -600,6 +580,11 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "1.20 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.20.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.21 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.21.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -790,11 +775,6 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "custom shared image",
 			apiModelPath: "../examples/custom-shared-image.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "containerd",
-			apiModelPath: "../examples/kubernetes-containerd.json",
 			setArgs:      defaultSet,
 		},
 		{

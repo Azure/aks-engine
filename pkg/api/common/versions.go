@@ -16,7 +16,7 @@ import (
 // The bool value indicates if creating new clusters with this version is allowed
 var AllKubernetesSupportedVersions = map[string]bool{
 	"1.6.6":          false,
-	"1.6.9":          true, // need to keep 1.6.9 version support for v20160930
+	"1.6.9":          false,
 	"1.6.11":         false,
 	"1.6.12":         false,
 	"1.6.13":         false,
@@ -172,8 +172,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.11":        false,
 	"1.16.12":        false,
 	"1.16.13":        false,
-	"1.16.14":        true,
-	"1.16.15":        true,
+	"1.16.14":        false,
+	"1.16.15":        false,
 	"1.17.0-alpha.1": false,
 	"1.17.0-alpha.2": false,
 	"1.17.0-alpha.3": false,
@@ -197,7 +197,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.13":        false,
 	"1.17.14":        false, // disabled, see https://github.com/kubernetes/kubernetes/pull/96623
 	"1.17.15":        false, // replaced by 1.17.16 due to k8s release engineering issues
-	"1.17.16":        true,
+	"1.17.16":        false,
 	"1.17.17":        true,
 	"1.18.0-alpha.1": false,
 	"1.18.0-alpha.2": false,
@@ -217,8 +217,10 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.18.10":        false,
 	"1.18.11":        false, // replaced by 1.18.12 due to k8s release engineering issues
 	"1.18.12":        false,
-	"1.18.13":        true,
-	"1.18.14":        true,
+	"1.18.13":        false,
+	"1.18.14":        false,
+	"1.18.15":        false,
+	"1.18.16":        true,
 	"1.19.0-alpha.1": false,
 	"1.19.0-alpha.2": false,
 	"1.19.0-alpha.3": false,
@@ -233,8 +235,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.19.3":         false,
 	"1.19.4":         false,
 	"1.19.5":         false,
-	"1.19.6":         true,
-	"1.19.7":         true,
+	"1.19.6":         false,
+	"1.19.7":         false,
+	"1.19.8":         true,
 	"1.20.0-alpha.1": false,
 	"1.20.0-alpha.2": false,
 	"1.20.0-alpha.3": false,
@@ -242,8 +245,15 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.20.0-beta.1":  false,
 	"1.20.0-beta.2":  false,
 	"1.20.0-rc.0":    false,
-	"1.20.0":         true,
-	"1.20.1":         true,
+	"1.20.0":         false,
+	"1.20.1":         false,
+	"1.20.2":         false,
+	"1.20.3":         false,
+	"1.20.4":         true,
+	"1.21.0-alpha.1": false,
+	"1.21.0-alpha.2": false, // disabled, see https://github.com/kubernetes/kubernetes/issues/98419
+	"1.21.0-alpha.3": false,
+	"1.21.0-beta.0":  true,
 }
 
 // AllKubernetesSupportedVersionsAzureStack is a hash table of all supported Kubernetes version strings on Azure Stack
@@ -259,15 +269,18 @@ var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.16.9":  false,
 	"1.16.10": false,
 	"1.16.11": false,
-	"1.16.13": true,
-	"1.16.14": true,
+	"1.16.13": false,
+	"1.16.14": false,
+	"1.16.15": false,
 	"1.17.4":  false,
 	"1.17.5":  false,
 	"1.17.6":  false,
 	"1.17.7":  false,
-	"1.17.9":  true,
-	"1.17.11": true,
-	"1.18.10": true,
+	"1.17.9":  false,
+	"1.17.11": false,
+	"1.17.17": true,
+	"1.18.10": false,
+	"1.18.15": true,
 }
 
 // AllKubernetesWindowsSupportedVersionsAzureStack maintain a set of available k8s Windows versions in aks-engine on Azure Stack
@@ -278,15 +291,18 @@ var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
 	"1.16.9":  false,
 	"1.16.10": false,
 	"1.16.11": false,
-	"1.16.13": true,
-	"1.16.14": true,
+	"1.16.13": false,
+	"1.16.14": false,
+	"1.16.15": false,
 	"1.17.4":  false,
 	"1.17.5":  false,
 	"1.17.6":  false,
 	"1.17.7":  false,
-	"1.17.9":  true,
-	"1.17.11": true,
-	"1.18.10": true,
+	"1.17.9":  false,
+	"1.17.11": false,
+	"1.17.17": true,
+	"1.18.10": false,
+	"1.18.15": true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release

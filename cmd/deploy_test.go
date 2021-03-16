@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -1159,5 +1160,16 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 				t.Fatalf("expected workspaceDomain : %s but got : %s", c.expectedResponse.WorkspaceDomain, addon.Config["workspaceDomain"])
 			}
 		})
+	}
+}
+
+func makeTmpFile(t *testing.T, name string) (string, func()) {
+	tmpF, err := ioutil.TempFile(os.TempDir(), name)
+	if err != nil {
+		t.Fatalf("unable to create file: %s", err.Error())
+	}
+
+	return tmpF.Name(), func() {
+		defer os.Remove(tmpF.Name())
 	}
 }

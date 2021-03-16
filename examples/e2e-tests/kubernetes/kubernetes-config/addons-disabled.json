@@ -9,10 +9,6 @@
             "enabled": false
           },
           {
-            "name": "aci-connector",
-            "enabled": false
-          },
-          {
             "name": "blobfuse-flexvolume",
             "enabled": false
           },
@@ -22,14 +18,6 @@
           },
           {
             "name": "keyvault-flexvolume",
-            "enabled": false
-          },
-          {
-            "name": "kubernetes-dashboard",
-            "enabled": false
-          },
-          {
-            "name": "rescheduler",
             "enabled": false
           },
           {

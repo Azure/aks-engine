@@ -212,7 +212,9 @@ configureK8s() {
     "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
     "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},
     "providerKeyName": "k8s",
-    "providerKeyVersion": ""
+    "providerKeyVersion": "",
+    "enableMultipleStandardLoadBalancers": ${ENABLE_MULTIPLE_STANDARD_LOAD_BALANCERS},
+    "tags": "${TAGS}"
 }
 EOF
   set -x
@@ -302,9 +304,10 @@ enableCRISystemdMonitor() {
 }
 {{- if NeedsContainerd}}
 installContainerd() {
+  removeMoby
   local v
   v=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-  if [[ $v != "${CONTAINERD_VERSION}" ]]; then
+  if [[ $v != "${CONTAINERD_VERSION}"* ]]; then
     os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
     if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
       url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
@@ -313,12 +316,7 @@ installContainerd() {
     else
       exit 25
     fi
-    removeMoby
     removeContainerd
-    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
-    retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_no_stats 120 5 25 curl ${MS_APT_REPO}/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
-    retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 moby-runc moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
   fi
@@ -368,6 +366,13 @@ ensureDHCPv6() {
   fi
 }
 {{end}}
+{{- if EnableEncryptionWithExternalKms}}
+ensureKMSKeyvaultKey() {
+    wait_for_file 3600 1 {{GetKMSKeyvaultKeyServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    wait_for_file 3600 1 {{GetKMSKeyvaultKeyCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+    systemctlEnableAndStart kms-keyvault-key || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+}
+{{end}}
 ensureKubelet() {
   wait_for_file 1200 1 /etc/sysctl.d/11-aks-engine.conf || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sysctl_reload 10 5 120 || exit {{GetCSEErrorCode "ERR_SYSCTL_RELOAD"}}
@@ -394,7 +399,7 @@ ensureKubelet() {
 }
 
 ensureAddons() {
-{{- if IsDashboardAddonEnabled}}
+{{- if IsDashboardAddonEnabled}} {{/* Note: dashboard addon is deprecated */}}
   retrycmd 120 5 30 $KUBECTL get namespace kubernetes-dashboard || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
 {{- end}}
 {{- if IsAzurePolicyAddonEnabled}}
@@ -545,34 +550,16 @@ configClusterAutoscalerAddon() {
   sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $f
 }
 {{end}}
-{{- if IsACIConnectorAddonEnabled}}
-configACIConnectorAddon() {
-  local creds key cert f=$ADDONS_DIR/aci-connector-deployment.yaml
-  creds=$(printf '{"clientId": "%s", "clientSecret": "%s", "tenantId": "%s", "subscriptionId": "%s", "activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/", "activeDirectoryGraphResourceId": "https://graph.windows.net/", "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/", "galleryEndpointUrl": "https://gallery.azure.com/", "managementEndpointUrl": "https://management.core.windows.net/"}' "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
-  openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -keyout /etc/kubernetes/certs/aci-connector-key.pem -out /etc/kubernetes/certs/aci-connector-cert.pem -subj "/C=US/ST=CA/L=virtualkubelet/O=virtualkubelet/OU=virtualkubelet/CN=virtualkubelet"
-  key=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
-  cert=$(base64 /etc/kubernetes/certs/aci-connector-cert.pem -w0)
-  wait_for_file 1200 1 $f || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|<creds>|$creds|g" $f
-  sed -i "s|<rgName>|$RESOURCE_GROUP|g" $f
-  sed -i "s|<cert>|$cert|g" $f
-  sed -i "s|<key>|$key|g" $f
-}
-{{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
   sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $ADDONS_DIR/azure-policy-deployment.yaml
 }
 {{end}}
+
 configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
     configClusterAutoscalerAddon
-  fi
-  {{end}}
-  {{if IsACIConnectorAddonEnabled}}
-  if [[ ${ACI_CONNECTOR_ADDON} == True ]]; then
-    configACIConnectorAddon
   fi
   {{end}}
   {{if IsAzurePolicyAddonEnabled}}
@@ -666,14 +653,17 @@ installSGXDrivers() {
 {{end}}
 {{- if HasVHDDistroNodes}}
 cleanUpContainerImages() {
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager') &
+  {{- if NeedsContainerd}}
+  docker rmi -f $(docker images -a -q) &
+  {{else}}
   docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
-  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
-
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-proxy') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-controller-manager') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-apiserver') &
+  docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'kube-scheduler') &
   docker rmi registry:2.7.1 &
+  ctr -n=k8s.io image rm $(ctr -n=k8s.io images ls -q) &
+  {{- end}}
 }
 cleanUpGPUDrivers() {
   rm -Rf $GPU_DEST

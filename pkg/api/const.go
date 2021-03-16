@@ -31,7 +31,7 @@ const (
 
 const (
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.11"
+	KubernetesWindowsDockerVersion = "19.03.14"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
@@ -116,8 +116,8 @@ const (
 	DefaultAzurePolicyAddonEnabled = false
 	// DefaultNodeProblemDetectorAddonEnabled determines the aks-engine provided default for enabling the node problem detector addon
 	DefaultNodeProblemDetectorAddonEnabled = false
-	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
-	DefaultACIConnectorAddonEnabled = false
+	// DefaultACIConnectorAddonEnabled // Deprecated
+	DefaultACIConnectorAddonEnabled = false // Deprecated
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
 	DefaultAppGwIngressAddonEnabled = false
 	// DefaultAzureDiskCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure Disk CSI Driver
@@ -132,10 +132,10 @@ const (
 	DefaultSMBFlexVolumeAddonEnabled = false
 	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
 	DefaultKeyVaultFlexVolumeAddonEnabled = true
-	// DefaultDashboardAddonEnabled determines the aks-engine provided default for enabling kubernetes-dashboard addon
-	DefaultDashboardAddonEnabled = false
-	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
-	DefaultReschedulerAddonEnabled = false
+	// DefaultDashboardAddonEnabled // Deprecated
+	DefaultDashboardAddonEnabled = false // Deprecated
+	// DefaultReschedulerAddonEnabled // Deprecated
+	DefaultReschedulerAddonEnabled = false // Deprecated
 	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
 	DefaultAzureCNIMonitoringAddonEnabled = true
 	// DefaultKubeDNSAddonEnabled determines the aks-engine provided default for enabling coredns addon
@@ -221,6 +221,8 @@ const (
 	VMSSVMType = "vmss"
 	// StandardVMType is the string const for the standard VM Type
 	StandardVMType = "standard"
+	// DefaultRunUnattendedUpgradesOnBootstrap sets the default configuration for running a blocking unattended-upgrade on Linux VMs as part of CSE
+	DefaultRunUnattendedUpgradesOnBootstrap = true
 )
 
 // Azure API Versions
@@ -229,7 +231,7 @@ const (
 	APIVersionAuthorizationSystem = "2018-09-01-preview"
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
-	APIVersionKeyVault            = "2018-02-14"
+	APIVersionKeyVault            = "2019-09-01"
 	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
@@ -314,16 +316,16 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.2.0_hotfix"
+	AzureCniPluginVerLinux = "v1.2.7"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.2.0_hotfix"
+	AzureCniPluginVerWindows = "v1.2.7"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.8.7"
+	CNIPluginVer = "v0.9.1"
 	// WindowsPauseImageVersion specifies version of Windows pause image
-	WindowsPauseImageVersion = "1.4.0"
+	WindowsPauseImageVersion = "1.4.1"
 	// DefaultAlwaysPullWindowsPauseImage is the default windowsProfile.AlwaysPullWindowsPauseImage value
 	DefaultAlwaysPullWindowsPauseImage = false
 )
@@ -467,7 +469,7 @@ const (
 // TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
 const (
 	DefaultWindowsCsiProxyVersion                   = "v0.2.2"
-	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.9"
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.11"
 )
 
 const (

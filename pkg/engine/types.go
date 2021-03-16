@@ -21,7 +21,7 @@ type VlabsContainerService struct {
 type KubernetesSpecConfig struct {
 	KubernetesImageBase              string
 	TillerImageBase                  string
-	ACIConnectorImageBase            string
+	ACIConnectorImageBase            string // Deprecated
 	NVIDIAImageBase                  string
 	AzureCNIImageBase                string
 	EtcdDownloadURLBase              string

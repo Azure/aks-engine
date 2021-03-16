@@ -138,11 +138,6 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/auditd-rules",
-            "destination": "/home/packer/auditd-rules"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/label-nodes.sh",
             "destination": "/home/packer/label-nodes.sh"
         },

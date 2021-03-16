@@ -38,15 +38,13 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{- if not .MasterProfile.IsVHDDistro}}
-  {{- if .MasterProfile.IsAuditDEnabled}}
+{{- if .MasterProfile.IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
-  {{end}}
 {{end}}
 
 {{- if .MasterProfile.IsUbuntu1804}}
@@ -290,6 +288,11 @@ write_files:
                 "subnet": "{{`{{.PodCIDR}}`}}",
                 "routes": [{ "dst": "0.0.0.0/0" }]
             }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {"portMappings": true},
+            "snat": false
           }]
       }
     {{end}}
@@ -380,6 +383,20 @@ write_files:
             endpoint: unix:///opt/azurekms.socket
             cachesize: 1000
         - identity: {}
+
+- path: {{GetKMSKeyvaultKeyServiceCSEScriptFilepath}}
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsKeyvaultKeySystemdService"}}
+
+- path: {{GetKMSKeyvaultKeyCSEScriptFilepath}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsKeyvaultKeyScript"}}
 {{end}}
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
@@ -388,7 +405,7 @@ MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
 
-{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}}
+{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}} {{/* Note: dashboard addon is deprecated */}}
 - path: /etc/kubernetes/addons/init/namespaces.yaml
   permissions: "0644"
   owner: root
@@ -442,6 +459,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
+    {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
+    iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
     #EOF
 
 {{- if not HasCosmosEtcd  }}
