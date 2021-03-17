@@ -696,7 +696,7 @@ func TestHasStorageProfile(t *testing.T) {
 		expectedPrivateJB        bool
 		expectedHasDisks         bool
 		expectedDesID            string
-                expectedEncryptionAtHost bool
+		expectedEncryptionAtHost bool
 	}{
 		{
 			name: "Storage Account",

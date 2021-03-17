@@ -463,7 +463,7 @@ type KubernetesConfig struct {
 	ServiceCIDR                       string            `json:"serviceCidr,omitempty"`
 	UseManagedIdentity                bool              `json:"useManagedIdentity,omitempty"`
 	UserAssignedID                    string            `json:"userAssignedID,omitempty"`
-	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
+	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` // Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage              string            `json:"customHyperkubeImage,omitempty"`
 	CustomKubeAPIServerImage          string            `json:"customKubeAPIServerImage,omitempty"`
 	CustomKubeControllerManagerImage  string            `json:"customKubeControllerManagerImage,omitempty"`
@@ -688,7 +688,17 @@ type AgentPoolProfile struct {
 	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
+	OSDiskCaching                       *DiskCachingType     `json:"osDiskCaching,omitempty"`
 }
+
+// DiskCachingType determines the HostCache mode for an Azure VM Disk. Read more here:
+// https://docs.microsoft.com/en-us/azure/virtual-machines/premium-storage-performance#disk-caching
+type DiskCachingType string
+
+const (
+	DiskCachingTypesReadOnly  DiskCachingType = "ReadOnly"
+	DiskCachingTypesReadWrite DiskCachingType = "ReadWrite"
+)
 
 // AgentPoolProfileRole represents an agent role
 type AgentPoolProfileRole string
@@ -1041,7 +1051,6 @@ func (p *Properties) GetResourcePrefix() string {
 		return p.K8sOrchestratorName() + "-agentpool-" + p.GetClusterID() + "-"
 	}
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
-
 }
 
 // GetRouteTableName returns the route table name of the cluster.
@@ -2332,8 +2341,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 }
 
 // GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
-//for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
-//if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
+// for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
+// if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	targetEnv := helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 	return AzureCloudSpecEnvMap[targetEnv]

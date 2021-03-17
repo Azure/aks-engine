@@ -609,6 +609,10 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.UltraSSDEnabled = vlabs.UltraSSDEnabled
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
 	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
+	if vlabs.OSDiskCaching != nil {
+		caching := DiskCachingType(*vlabs.OSDiskCaching)
+		api.OSDiskCaching = &caching
+	}
 
 	api.CustomNodeLabels = map[string]string{}
 	for k, v := range vlabs.CustomNodeLabels {

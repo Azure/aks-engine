@@ -321,7 +321,7 @@ type KubernetesConfig struct {
 	DockerBridgeSubnet                string            `json:"dockerBridgeSubnet,omitempty"`
 	UseManagedIdentity                bool              `json:"useManagedIdentity,omitempty"`
 	UserAssignedID                    string            `json:"userAssignedID,omitempty"`
-	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
+	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` // Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage              string            `json:"customHyperkubeImage,omitempty"`
 	CustomKubeAPIServerImage          string            `json:"customKubeAPIServerImage,omitempty"`
 	CustomKubeControllerManagerImage  string            `json:"customKubeControllerManagerImage,omitempty"`
@@ -531,7 +531,17 @@ type AgentPoolProfile struct {
 	SysctlDConfig                     map[string]string `json:"sysctldConfig,omitempty"`
 	UltraSSDEnabled                   *bool             `json:"ultraSSDEnabled,omitempty"`
 	ProximityPlacementGroupID         string            `json:"proximityPlacementGroupID,omitempty"`
+	OSDiskCaching                     *DiskCachingType  `json:"osDiskCaching,omitempty"`
 }
+
+// DiskCachingType determines the HostCache mode for an Azure VM Disk. Read more here:
+// https://docs.microsoft.com/en-us/azure/virtual-machines/premium-storage-performance#disk-caching
+type DiskCachingType string
+
+const (
+	DiskCachingTypesReadOnly  DiskCachingType = "ReadOnly"
+	DiskCachingTypesReadWrite DiskCachingType = "ReadWrite"
+)
 
 // AgentPoolProfileRole represents an agent role
 type AgentPoolProfileRole string
