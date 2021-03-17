@@ -564,7 +564,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.EncryptionAtHost = api.EncryptionAtHost
 	p.ProximityPlacementGroupID = api.ProximityPlacementGroupID
 	if api.OSDiskCaching != nil {
-		caching := vlabs.CachingType(*api.OSDiskCaching)
+		caching := vlabs.DiskCachingType(*api.OSDiskCaching)
 		p.OSDiskCaching = &caching
 	}
 

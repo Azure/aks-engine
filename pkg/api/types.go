@@ -463,7 +463,7 @@ type KubernetesConfig struct {
 	ServiceCIDR                       string            `json:"serviceCidr,omitempty"`
 	UseManagedIdentity                bool              `json:"useManagedIdentity,omitempty"`
 	UserAssignedID                    string            `json:"userAssignedID,omitempty"`
-	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
+	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` // Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage              string            `json:"customHyperkubeImage,omitempty"`
 	CustomKubeAPIServerImage          string            `json:"customKubeAPIServerImage,omitempty"`
 	CustomKubeControllerManagerImage  string            `json:"customKubeControllerManagerImage,omitempty"`
@@ -688,16 +688,16 @@ type AgentPoolProfile struct {
 	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
-	OSDiskCaching                       *CachingType         `json:"osDiskCaching,omitempty"`
+	OSDiskCaching                       *DiskCachingType     `json:"osDiskCaching,omitempty"`
 }
 
-// CachingType determines the HostCache mode for an Azure VM Disk. Read more here:
+// DiskCachingType determines the HostCache mode for an Azure VM Disk. Read more here:
 // https://docs.microsoft.com/en-us/azure/virtual-machines/premium-storage-performance#disk-caching
-type CachingType string
+type DiskCachingType string
 
 const (
-	CachingTypesReadOnly  CachingType = "ReadOnly"
-	CachingTypesReadWrite CachingType = "ReadWrite"
+	DiskCachingTypesReadOnly  DiskCachingType = "ReadOnly"
+	DiskCachingTypesReadWrite DiskCachingType = "ReadWrite"
 )
 
 // AgentPoolProfileRole represents an agent role
@@ -1051,7 +1051,6 @@ func (p *Properties) GetResourcePrefix() string {
 		return p.K8sOrchestratorName() + "-agentpool-" + p.GetClusterID() + "-"
 	}
 	return p.K8sOrchestratorName() + "-master-" + p.GetClusterID() + "-"
-
 }
 
 // GetRouteTableName returns the route table name of the cluster.
@@ -1180,7 +1179,7 @@ func (p *Properties) AreAgentProfilesCustomVNET() bool {
 
 // GetClusterID creates a unique 8 string cluster ID.
 func (p *Properties) GetClusterID() string {
-	var mutex = &sync.Mutex{}
+	mutex := &sync.Mutex{}
 	if p.ClusterID == "" {
 		uniqueNameSuffixSize := 8
 		// the name suffix uniquely identifies the cluster and is generated off a hash
@@ -2231,7 +2230,7 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		agentPoolProfilesCount := len(p.AgentPoolProfiles)
 		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 		} else {
@@ -2246,7 +2245,7 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
-		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
+		agentPoolProfilesCount := len(p.AgentPoolProfiles)
 		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucketWrite
 		} else {
@@ -2342,8 +2341,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 }
 
 // GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
-//for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
-//if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
+// for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
+// if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	targetEnv := helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 	return AzureCloudSpecEnvMap[targetEnv]
