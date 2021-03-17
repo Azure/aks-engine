@@ -688,7 +688,17 @@ type AgentPoolProfile struct {
 	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
+	OSDiskCaching                       *CachingType         `json:"osDiskCaching,omitempty"`
 }
+
+// CachingType determines the HostCache mode for an Azure VM Disk. Read more here:
+// https://docs.microsoft.com/en-us/azure/virtual-machines/premium-storage-performance#disk-caching
+type CachingType string
+
+const (
+	CachingTypesReadOnly  CachingType = "ReadOnly"
+	CachingTypesReadWrite CachingType = "ReadWrite"
+)
 
 // AgentPoolProfileRole represents an agent role
 type AgentPoolProfileRole string

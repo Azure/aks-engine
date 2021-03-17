@@ -165,8 +165,12 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != ManagedDisks after unmarshal")
 	}
 
+	if ap.OSDiskCaching != nil {
+		t.Fatalf("AgentPoolProfile.OSDiskCaching should be nil after unmarshal")
+	}
+
 	// With osType Windows and Ephemeral disks
-	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2", "osDiskCaching": "ReadOnly",
 "availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID", "encryptionAtHost": true }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
@@ -196,9 +200,15 @@ func TestAgentPoolProfile(t *testing.T) {
 	if !to.Bool(ap.EncryptionAtHost) {
 		t.Fatalf("AgentPoolProfile.EncryptionAtHost should be true after unmarshal")
 	}
+
+	if ap.OSDiskCaching == nil || *ap.OSDiskCaching != CachingTypesReadOnly {
+		t.Fatalf("AgentPoolProfile.OSDiskCaching should be ReadOnly after unmarshal")
+	}
+
 	// With osType Linux and RHEL distro
-	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "rhel", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "rhel", "count": 1, "vmSize": "Standard_D2_v2", 
+"availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID",
+"osDiskCaching": "ReadWrite", }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -226,6 +236,10 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if ap.DiskEncryptionSetID == "" {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
+	}
+
+	if ap.OSDiskCaching == nil || *ap.OSDiskCaching != CachingTypesReadWrite {
+		t.Fatalf("AgentPoolProfile.OSDiskCaching should be ReadWrite after unmarshal")
 	}
 
 	// With VMSS and Spot VMs

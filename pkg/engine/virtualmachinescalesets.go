@@ -738,6 +738,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		Caching:      compute.CachingTypesReadWrite,
 	}
 
+	if profile.OSDiskCaching != nil {
+		if *profile.OSDiskCaching == api.CachingTypesReadOnly {
+			osDisk.Caching = compute.CachingTypesReadOnly
+		}
+	}
+
 	if profile.OSDiskSizeGB > 0 {
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(profile.OSDiskSizeGB))
 	}

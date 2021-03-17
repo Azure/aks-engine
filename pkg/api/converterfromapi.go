@@ -563,6 +563,10 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.DiskEncryptionSetID = api.DiskEncryptionSetID
 	p.EncryptionAtHost = api.EncryptionAtHost
 	p.ProximityPlacementGroupID = api.ProximityPlacementGroupID
+	if api.OSDiskCaching != nil {
+		caching := vlabs.CachingType(*api.OSDiskCaching)
+		p.OSDiskCaching = &caching
+	}
 
 	for k, v := range api.CustomNodeLabels {
 		p.CustomNodeLabels[k] = v
