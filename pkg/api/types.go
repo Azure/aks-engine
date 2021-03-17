@@ -1179,7 +1179,7 @@ func (p *Properties) AreAgentProfilesCustomVNET() bool {
 
 // GetClusterID creates a unique 8 string cluster ID.
 func (p *Properties) GetClusterID() string {
-	mutex := &sync.Mutex{}
+	var mutex = &sync.Mutex{}
 	if p.ClusterID == "" {
 		uniqueNameSuffixSize := 8
 		// the name suffix uniquely identifies the cluster and is generated off a hash
@@ -2230,7 +2230,7 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {
-		agentPoolProfilesCount := len(p.AgentPoolProfiles)
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
 		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultKubernetesCloudProviderRateLimitBucket
 		} else {
@@ -2245,7 +2245,7 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
-		agentPoolProfilesCount := len(p.AgentPoolProfiles)
+		var agentPoolProfilesCount = len(p.AgentPoolProfiles)
 		if agentPoolProfilesCount == 0 {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucketWrite
 		} else {
