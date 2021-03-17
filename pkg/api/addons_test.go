@@ -5307,25 +5307,13 @@ func TestKubeProxyImageSuffix(t *testing.T) {
 	}{
 		{
 			name:       "return empty string if target cloud is NOT Azure Stack",
-			cs:         getMockBaseContainerService("1.15.0"),
+			cs:         getMockBaseContainerService("1.19.0"),
 			azurestack: false,
 			expected:   "",
 		},
 		{
-			name:       "return empty string if target cloud is NOT Azure Stack",
-			cs:         getMockBaseContainerService("1.16.0"),
-			azurestack: false,
-			expected:   "",
-		},
-		{
-			name:       "return empty string if target version is v1.16 or greater",
-			cs:         getMockBaseContainerService("1.16.0"),
-			azurestack: true,
-			expected:   "",
-		},
-		{
-			name:       "return '-azs' if target cloud is Azure Stack and K8s version lower than v1.16",
-			cs:         getMockBaseContainerService("1.15.0"),
+			name:       "return '-azs' if target cloud is Azure Stack",
+			cs:         getMockBaseContainerService("1.19.0"),
 			azurestack: true,
 			expected:   common.AzureStackSuffix,
 		},

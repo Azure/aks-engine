@@ -1187,9 +1187,7 @@ func getCSISidecarComponent(csiDriverName, csiSidecarName string, k8sComponents 
 // Azure Stack needs the '-azs' suffix so kube-proxy's manifests uses the custom hyperkube image present in the VHD
 func kubeProxyImageSuffix(cs ContainerService) string {
 	if cs.Properties.IsAzureStackCloud() {
-		if !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-			return common.AzureStackSuffix
-		}
+		return common.AzureStackSuffix
 	}
 	return ""
 }
