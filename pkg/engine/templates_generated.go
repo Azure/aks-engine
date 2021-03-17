@@ -16992,7 +16992,7 @@ function Write-KubeClusterConfig {
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
         Images = @{
-            # e.g. "mcr.microsoft.com/oss/kubernetes/pause:1.4.1"
+            # e.g. "mcr.microsoft.com/oss/kubernetes/pause:3.4.1"
             "Pause" = $global:WindowsPauseImageURL
         }
     }
@@ -19372,7 +19372,7 @@ New-InfraContainer {
     $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
     $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
-    $pauseImageVersions = @("1809", "1903", "1909", "2004")
+    $pauseImageVersions = @("1809", "1903", "1909", "2004", "2009", "20h2")
 
     if ($pauseImageVersions -icontains $windowsVersion) {
         if ($ContainerRuntime -eq "docker") {
