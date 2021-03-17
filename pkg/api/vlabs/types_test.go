@@ -33,7 +33,6 @@ func TestOrchestratorProfile(t *testing.T) {
 
 	if !op.IsSwarmMode() {
 		t.Fatalf("unexpectedly detected OrchestratorProfile.Type != DockerCE after unmarshal")
-
 	}
 
 	OrchestratorProfileText = `{ "orchestratorType": "DCOS" }`
@@ -46,7 +45,6 @@ func TestOrchestratorProfile(t *testing.T) {
 	op = &OrchestratorProfile{}
 	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
-
 	}
 }
 
@@ -201,7 +199,7 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("AgentPoolProfile.EncryptionAtHost should be true after unmarshal")
 	}
 
-	if ap.OSDiskCaching == nil || *ap.OSDiskCaching != CachingTypesReadOnly {
+	if ap.OSDiskCaching == nil || *ap.OSDiskCaching != DiskCachingTypesReadOnly {
 		t.Fatalf("AgentPoolProfile.OSDiskCaching should be ReadOnly after unmarshal")
 	}
 
@@ -238,7 +236,7 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
 	}
 
-	if ap.OSDiskCaching == nil || *ap.OSDiskCaching != CachingTypesReadWrite {
+	if ap.OSDiskCaching == nil || *ap.OSDiskCaching != DiskCachingTypesReadWrite {
 		t.Fatalf("AgentPoolProfile.OSDiskCaching should be ReadWrite after unmarshal")
 	}
 
@@ -766,7 +764,7 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 			}
 		}
 		if hasAzureEnvironmentSpecConfig {
-			//azureStackCloudSpec is the default configurations for azure stack with public Azure.
+			// azureStackCloudSpec is the default configurations for azure stack with public Azure.
 			azureStackCloudSpec := AzureEnvironmentSpecConfig{
 				CloudName: AzureStackCloud,
 			}

@@ -15,7 +15,6 @@ import (
 )
 
 func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
-
 	masterProfile := cs.Properties.MasterProfile
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
@@ -592,7 +591,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	vmssVMProfile.NetworkProfile = &vmssNetworkProfile
 
 	t, err := InitializeTemplateGenerator(Context{})
-
 	if err != nil {
 		panic(err)
 	}
@@ -739,7 +737,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	if profile.OSDiskCaching != nil {
-		if *profile.OSDiskCaching == api.CachingTypesReadOnly {
+		if *profile.OSDiskCaching == api.DiskCachingTypesReadOnly {
 			osDisk.Caching = compute.CachingTypesReadOnly
 		}
 	}
