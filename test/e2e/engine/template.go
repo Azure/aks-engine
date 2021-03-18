@@ -69,6 +69,7 @@ type Config struct {
 	CustomKubeAPIServerImage         string `envconfig:"CUSTOM_KUBE_APISERVER_IMAGE" default:""`
 	CustomKubeSchedulerImage         string `envconfig:"CUSTOM_KUBE_SCHEDULER_IMAGE" default:""`
 	CustomKubeControllerManagerImage string `envconfig:"CUSTOM_KUBE_CONTROLLER_MANAGER_IMAGE" default:""`
+	CustomKubeBinaryURL              string `envconfig:"CUSTOM_KUBE_BINARY_URL" default:""`
 	CustomWindowsPackageURL          string `envconfig:"CUSTOM_WINDOWS_PACKAGE_URL" default:""`
 	EnableTelemetry                  bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
 	KubernetesImageBase              string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
@@ -409,6 +410,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.CustomKubeControllerManagerImage != "" {
 		prop.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = config.CustomKubeControllerManagerImage
+	}
+
+	if config.CustomKubeBinaryURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeBinaryURL = config.CustomKubeBinaryURL
 	}
 
 	if config.CustomWindowsPackageURL != "" {
