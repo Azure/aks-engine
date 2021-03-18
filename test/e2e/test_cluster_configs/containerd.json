@@ -51,7 +51,7 @@
                 "sshEnabled": true,
                 "windowsPublisher": "microsoft-aks",
                 "windowsOffer": "aks-windows",
-                "windowsSku": "2019-datacenter-core-smalldisk-containerd-2103",
+                "windowsSku": "2019-datacenter-core-ctrd-2103",
                 "imageVersion": "latest"
             }
         }
