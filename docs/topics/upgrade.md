@@ -60,7 +60,7 @@ In summary, using `aks-engine upgrade` means you will freshen and re-pave the en
 |--kubeconfig|no|Path to kubeconfig; if not provided, it will be generated on the fly from the API model data.|
 |--upgrade-version|yes|Version of Kubernetes to upgrade to.|
 |--force|no|Force upgrading the cluster to desired version, regardless of version support. Allows same-version upgrades and downgrades.|
-|--control-plane-only|no|Upgrade control plane VMs only, do not upgrade node pools.|
+|--control-plane-only|no|Upgrade control plane VMs only, do not upgrade node pools (unsupported on air-gapped clouds).|
 |--cordon-drain-timeout|no|How long to wait for each vm to be cordoned in minutes (default -1, i.e., no timeout).|
 |--vm-timeout|no|How long to wait for each vm to be upgraded in minutes (default -1, i.e., no timeout).|
 |--upgrade-windows-vhd|no|Upgrade image reference of all Windows nodes to a new AKS Engine-validated image, if available (default is true).|
@@ -180,6 +180,7 @@ We actually recommend that you *only* use `aks-engine upgrade --control-plane-on
 - `aks-engine upgrade` does its best to minimize operational cluster downtime, but there will be some amount of interruption due to the fact that VMs are in fact deleted, then added, behind a distributed control plane (we're assuming you're running 3 or 5 control plane VMs). Given that a small amount of disruption is unavoidable given the architectural constraints of `aks-engine upgrade`, it is more suitable to absorb that disruption in the control plane, which is probably not user-impacting (unless your users are Kubernetes cluster administrators!). You may be able to afford a small maintenance window to update your control plane, while your existing production workloads continue to serve traffic reliably. Of course production traffic is not static, and any temporary control plane unavailability will disrupt the dynamic attributes of your cluster that ultimately serve user traffic. We do recommend upgrading the control plane during an appropriate time when it is more preferable for your cluster to be put into a "static" mode.
 - A Kubernetes cluster is likely to run a variety of production workloads, each with its own requirements for downtime maintenance. Running a cluster-wide operation like `aks-engine upgrade` has the result of forcing you to schedule a maintenance window for your control plane, and all production environments simultaneously.
 - More flexible node pool-specific tooling is available to upgrade various parts of your production-serving nodes. See the [addpool](addpool.md), [update](update.md), and [scale](scale.md) documentation to help you develop cluster workflows for managing node pools distinct from the control plane.
+- `aks-engine upgrade --control-plane-only` is **not** expected to work as intended on air-gapped clouds. Unless you are forcing an upgrade to the current orchestrator version, `aks-engine upgrade --control-plane-only` on air-gapped clouds is expected to break the `kube-proxy` daemonset as agents will be required to pull the newer `kube-proxy` container image. A cluster can be recovered from this bad state by running a full cluster upgrade (control plane and agents).
 
 ### What should I upgrade first, my control plane nodes, or my worker nodes?
 
