@@ -92,7 +92,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: kured
-          image: docker.io/jackfrancis/kured:node-annotations-chart-e9de81b
+          image: docker.io/jackfrancis/kured:master-de2e0bb
                  # If you find yourself here wondering why there is no
                  # :latest tag on Docker Hub,see the FAQ in the README
           imagePullPolicy: IfNotPresent
