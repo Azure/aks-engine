@@ -485,7 +485,7 @@ func TestGetContainerdConfig(t *testing.T) {
 			want: containerdImageConfigString,
 			fail: false,
 			overrides: []func(*ContainerdConfig) error{
-				ContainerdSandboxImageOverrider("foo/oss/kubernetes/pause:1.4.1"),
+				ContainerdSandboxImageOverrider("foo/oss/kubernetes/pause:3.4.1"),
 			},
 		},
 		{
