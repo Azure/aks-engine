@@ -262,7 +262,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				prop.WindowsProfile.ImageVersion == "" {
 				prop.WindowsProfile.WindowsPublisher = "microsoft-aks"
 				prop.WindowsProfile.WindowsOffer = "aks-windows"
-				prop.WindowsProfile.WindowsSku = "2019-datacenter-core-smalldisk-containerd-2005"
+				prop.WindowsProfile.WindowsSku = "2019-datacenter-core-ctrd-2103"
 				prop.WindowsProfile.ImageVersion = "latest"
 			}
 		}
