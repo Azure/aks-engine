@@ -2082,12 +2082,12 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:	   common.NVIDIADevicePluginAddonName,
+							Name:           common.NVIDIADevicePluginAddonName,
 							CPURequests:    "50m",
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:	  "NVIDIAImageBase" + k8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
+							Image:          "NVIDIAImageBase" + k8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
 						},
 					},
 				},
