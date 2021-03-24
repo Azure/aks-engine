@@ -406,7 +406,8 @@ try
         New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
 
         Install-KubernetesServices `
-            -KubeDir $global:KubeDir
+            -KubeDir $global:KubeDir `
+            -ContainerRuntime $global:ContainerRuntime
 
         Get-LogCollectionScripts
 

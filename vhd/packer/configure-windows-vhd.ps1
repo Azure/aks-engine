@@ -331,10 +331,10 @@ switch ($env:ProvisioningPhase) {
     "2" {
         Write-Log "Performing actions for provisioning phase 2 for container runtime '$containerRuntime'"
         Set-WinRmServiceAutoStart
-        # TODO: make decision on if we want to install docker along with containerd (will need to update CSE too,)
-        Install-Docker
         if ($containerRuntime -eq 'containerd') {
             Install-ContainerD
+        } else {
+            Install-Docker
         }
         Update-Registry
         Get-ContainerImages -containerRuntime $containerRuntime -WindowsServerVersion $windowsServerVersion
