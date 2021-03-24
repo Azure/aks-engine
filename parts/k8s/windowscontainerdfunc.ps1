@@ -80,6 +80,7 @@ function Select-Windows-Version {
     "18362" { return "1903" }
     "18363" { return "1909" }
     "19041" { return "2004" }
+    "19042" { return "20H2" }
     Default { return "" } 
   }
 }
@@ -143,7 +144,13 @@ function Install-Containerd {
   $formatedbin = $(($CNIBinDir).Replace("\", "/"))
   $formatedconf = $(($CNIConfDir).Replace("\", "/"))
   $sandboxIsolation = 0
-  $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  # Starting with 20H2 tags used to publish contianer images may not match the 'ReleaseId'
+  switch ($windowsReleaseId)
+  {
+    "2009" { $windowsVersion = "20H2"}
+    default  { $windowsVersion = $windowsReleaseId}
+  }
   $hypervRuntimes = ""
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
