@@ -66,9 +66,14 @@ function Get-ContainerImages {
 
 
     if ($containerRuntime -eq 'containerd') {
+        # start containerd to pre-pull the images to disk on VHD
+        # CSE will configure and register containerd as a service at deployment time
+        Start-Job -Name containerd -ScriptBlock { containerd.exe }
         foreach ($image in $imagesToPull) {
             & ctr.exe -n k8s.io images pull $image
         }
+        Stop-Job  -Name containerd
+        Remove-Job -Name containerd
     }
     else {
         foreach ($image in $imagesToPull) {

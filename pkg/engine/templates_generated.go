@@ -17376,7 +17376,6 @@ try
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
 
-        # this overwrite the binaries that are download from the custom packge with binaries
         # The custom package has a few files that are nessary for future steps (nssm.exe)
         # this is a temporary work around to get the binaries until we depreciate
         # custom package and nssm.exe as defined in #3851.
@@ -18881,8 +18880,8 @@ function RegisterContainerDService {
   & "$KubeDir\nssm.exe" set containerd ObjectName LocalSystem | RemoveNulls
   & "$KubeDir\nssm.exe" set containerd Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
   & "$KubeDir\nssm.exe" set containerd AppThrottle 1500 | RemoveNulls
-  & "$KubeDir\nssm.exe" set containerd AppStdout C:\k\containerd.log | RemoveNulls
-  & "$KubeDir\nssm.exe" set containerd AppStderr C:\k\containerd.err.log | RemoveNulls
+  & "$KubeDir\nssm.exe" set containerd AppStdout "$KubeDir\containerd.log" | RemoveNulls
+  & "$KubeDir\nssm.exe" set containerd AppStderr "$KubeDir\containerd.err.log" | RemoveNulls
   & "$KubeDir\nssm.exe" set containerd AppRotateFiles 1 | RemoveNulls
   & "$KubeDir\nssm.exe" set containerd AppRotateOnline 1 | RemoveNulls
   & "$KubeDir\nssm.exe" set containerd AppRotateSeconds 86400 | RemoveNulls
@@ -18965,9 +18964,6 @@ function Enable-Logging {
     mkdir -Force $logs
     # !ContainerPlatformPersistent profile is made to work with long term and boot tracing
     & $diag -Start -ProfilePath "$global:ContainerdInstallLocation\ContainerPlatform.wprp!ContainerPlatformPersistent" -TempPath $logs
-  }
-  else {
-    DownloadFileOverHttp -Url 'https://raw.githubusercontent.com/jsturtevant/aks-engine/log-containerd-containers-running/scripts/containerd.wprp' -DestinationPath "$global:ContainerdInstallLocation\containerd.wprp"
   }
 }
 
