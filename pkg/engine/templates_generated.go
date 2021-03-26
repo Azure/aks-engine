@@ -16845,7 +16845,10 @@ function DownloadFileOverHttp {
         $ProgressPreference = 'SilentlyContinue'
 
         $downloadTimer = [System.Diagnostics.Stopwatch]::StartNew()
-        curl.exe --retry 5 --retry-delay 0 -L $Url -o $DestinationPath
+        curl.exe -f --retry 5 --retry-delay 0 -L $Url -o $DestinationPath
+        if ($LASTEXITCODE) {
+            throw "Curl exited with '$LASTEXITCODE' while attemping to downlaod '$Url'"
+        }
         $downloadTimer.Stop()
 
         if ($global:AppInsightsClient -ne $null) {

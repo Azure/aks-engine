@@ -88,7 +88,6 @@ function Get-FilesToCacheOnVHD {
     $map = @{
         "c:\akse-cache\"              = @(
             "https://github.com/Azure/aks-engine/raw/master/scripts/collect-windows-logs.ps1",
-            "https://github.com/Azure/aks-engine/raw/master/scripts/containerd.wprp",
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/flannel/l2bridge/cni/win-bridge.exe",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/collectlogs.ps1",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/dumpVfpPolicies.ps1",
@@ -138,7 +137,10 @@ function Get-FilesToCacheOnVHD {
             $dest = [IO.Path]::Combine($dir, $fileName)
 
             Write-Log "Downloading $URL to $dest"
-            curl.exe --retry 5 --retry-delay 0 -L $URL -o $dest
+            curl.exe -f --retry 5 --retry-delay 0 -L $URL -o $dest
+            if ($LASTEXITCODE) {
+                throw "Curl exited with '$LASTEXITCODE' while attemping to downlaod '$URL'"
+            }
         }
     }
 }
