@@ -469,7 +469,7 @@ const (
 // TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
 const (
 	DefaultWindowsCsiProxyVersion                   = "v0.2.2"
-	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.11"
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.12"
 )
 
 const (

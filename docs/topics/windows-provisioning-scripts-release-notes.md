@@ -1,3 +1,7 @@
+## v0.0.12
+
+- [feat: Use NSSM for containerd and collect containerd logs #4219](https://github.com/Azure/aks-engine/pull/4219)
+
 ## v0.0.11
 
 - [feat: allow creation of dualstack Windows clusters #4176](https://github.com/Azure/aks-engine/pull/4176)
