@@ -1192,7 +1192,7 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		NetworkPlugin: NetworkPluginKubenet,
 	}
-	expectedMsg = fmt.Sprintf("Custom linuxProfile eth0MTU value not allowed when using Kubenet")
+	expectedMsg = "Custom linuxProfile eth0MTU value not allowed when using Kubenet"
 	err = cs.Validate(false)
 
 	if err.Error() != expectedMsg {
