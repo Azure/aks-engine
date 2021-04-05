@@ -2435,6 +2435,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("No windows agent was provisioned for this Cluster Definition")
 			}
 
+			if !eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
+				Skip("Skip docker validations on non-docker-backed clusters")
+			}
+
 			windowsImages, err := eng.GetWindowsTestImages()
 			loggingPodFile, err := pod.ReplaceContainerImageFromFile(filepath.Join(WorkloadDir, "validate-windows-logging.yaml"), windowsImages.ServerCore)
 			Expect(err).NotTo(HaveOccurred())
