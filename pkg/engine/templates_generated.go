@@ -15578,7 +15578,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     fi
     mount --make-shared $MOUNT_DIR
 {{- if IsAzureCNI}}
-    ifconfig eth0 mtu 3900 up
+    ifconfig eth0 mtu {{GetEth0MTU}} up
 {{- end}}
 {{- if gt .MasterProfile.Count 1}}
     {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
@@ -16066,7 +16066,7 @@ write_files:
     fi
     mount --make-shared $MOUNT_DIR
 {{- if IsAzureCNI}}
-    ifconfig eth0 mtu 3900 up
+    ifconfig eth0 mtu {{GetEth0MTU}} up
 {{- end}}
 {{- if and (IsVirtualMachineScaleSets .) IsAADPodIdentityAddonEnabled UseManagedIdentity}}
     {{- /* Disable TCP access to IMDS endpoint, aad-pod-identity nmi component will provide a complementary iptables rule to re-route this traffic */}}

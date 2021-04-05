@@ -140,6 +140,7 @@ type LinuxProfile struct {
 	CustomSearchDomain               *CustomSearchDomain `json:"customSearchDomain,omitempty"`
 	CustomNodesDNS                   *CustomNodesDNS     `json:"customNodesDNS,omitempty"`
 	RunUnattendedUpgradesOnBootstrap *bool               `json:"runUnattendedUpgradesOnBootstrap,omitempty"`
+	Eth0MTU                          int                 `json:"eth0MTU,omitempty"`
 }
 
 // PublicKey represents an SSH key for LinuxProfile

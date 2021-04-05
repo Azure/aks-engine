@@ -778,6 +778,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return false
 		},
+		"GetEth0MTU": func() int {
+			if cs.Properties.LinuxProfile != nil {
+				return cs.Properties.LinuxProfile.Eth0MTU
+			}
+			return 0
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},

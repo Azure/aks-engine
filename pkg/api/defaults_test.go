@@ -5643,13 +5643,16 @@ func TestSetLinuxProfileDefaults(t *testing.T) {
 		name                                     string
 		p                                        *Properties
 		expectedRunUnattendedUpgradesOnBootstrap bool
+		expectedEth0MTU                          int
 	}{
 		{
 			name: "default",
 			p: &Properties{
-				LinuxProfile: &LinuxProfile{},
+				LinuxProfile:        &LinuxProfile{},
+				OrchestratorProfile: &OrchestratorProfile{},
 			},
 			expectedRunUnattendedUpgradesOnBootstrap: true,
+			expectedEth0MTU:                          1500,
 		},
 		{
 			name: "explicit true",
@@ -5657,8 +5660,10 @@ func TestSetLinuxProfileDefaults(t *testing.T) {
 				LinuxProfile: &LinuxProfile{
 					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
 				},
+				OrchestratorProfile: &OrchestratorProfile{},
 			},
 			expectedRunUnattendedUpgradesOnBootstrap: true,
+			expectedEth0MTU:                          1500,
 		},
 		{
 			name: "explicit false",
@@ -5666,18 +5671,22 @@ func TestSetLinuxProfileDefaults(t *testing.T) {
 				LinuxProfile: &LinuxProfile{
 					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
 				},
+				OrchestratorProfile: &OrchestratorProfile{},
 			},
 			expectedRunUnattendedUpgradesOnBootstrap: false,
+			expectedEth0MTU:                          1500,
 		},
 		{
 			name: "custom cloud default",
 			p: &Properties{
-				LinuxProfile: &LinuxProfile{},
+				LinuxProfile:        &LinuxProfile{},
+				OrchestratorProfile: &OrchestratorProfile{},
 				CustomCloudProfile: &CustomCloudProfile{
 					Environment: &azure.Environment{},
 				},
 			},
 			expectedRunUnattendedUpgradesOnBootstrap: false,
+			expectedEth0MTU:                          1500,
 		},
 		{
 			name: "custom cloud explicit true",
@@ -5685,11 +5694,13 @@ func TestSetLinuxProfileDefaults(t *testing.T) {
 				LinuxProfile: &LinuxProfile{
 					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
 				},
+				OrchestratorProfile: &OrchestratorProfile{},
 				CustomCloudProfile: &CustomCloudProfile{
 					Environment: &azure.Environment{},
 				},
 			},
 			expectedRunUnattendedUpgradesOnBootstrap: true,
+			expectedEth0MTU:                          1500,
 		},
 		{
 			name: "custom cloud explicit false",
@@ -5697,11 +5708,24 @@ func TestSetLinuxProfileDefaults(t *testing.T) {
 				LinuxProfile: &LinuxProfile{
 					RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
 				},
+				OrchestratorProfile: &OrchestratorProfile{},
 				CustomCloudProfile: &CustomCloudProfile{
 					Environment: &azure.Environment{},
 				},
 			},
 			expectedRunUnattendedUpgradesOnBootstrap: false,
+			expectedEth0MTU:                          1500,
+		},
+		{
+			name: "custom eth0 MTU",
+			p: &Properties{
+				LinuxProfile: &LinuxProfile{
+					Eth0MTU: 3900,
+				},
+				OrchestratorProfile: &OrchestratorProfile{},
+			},
+			expectedRunUnattendedUpgradesOnBootstrap: true,
+			expectedEth0MTU:                          3900,
 		},
 	}
 

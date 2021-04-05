@@ -41,6 +41,7 @@ var (
 	containerdValidVersions              = [...]string{"1.3.2", "1.3.3", "1.3.4", "1.3.5", "1.3.6", "1.3.7", "1.3.8", "1.3.9"}
 	kubernetesImageBaseTypeValidVersions = [...]string{"", common.KubernetesImageBaseTypeGCR, common.KubernetesImageBaseTypeMCR}
 	cachingTypesValidValues              = [...]string{"", string(compute.CachingTypesNone), string(compute.CachingTypesReadWrite), string(compute.CachingTypesReadOnly)}
+	linuxEth0MTUAllowedValues            = [...]int{1500, 3900}
 	networkPluginPlusPolicyAllowed       = []k8sNetworkConfig{
 		{
 			networkPlugin: "",
@@ -622,6 +623,27 @@ func (a *Properties) validateZones() error {
 }
 
 func (a *Properties) validateLinuxProfile() error {
+	var validEth0MTU bool
+	if a.LinuxProfile.Eth0MTU != 0 {
+		if a.OrchestratorProfile != nil &&
+			a.OrchestratorProfile.KubernetesConfig != nil &&
+			a.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginKubenet {
+			return errors.Errorf("Custom linuxProfile eth0MTU value not allowed when using Kubenet")
+		}
+		for _, valid := range linuxEth0MTUAllowedValues {
+			if valid == a.LinuxProfile.Eth0MTU {
+				validEth0MTU = true
+			}
+		}
+		if !validEth0MTU {
+			allowedMTUs := ""
+			for _, mtu := range linuxEth0MTUAllowedValues {
+				allowedMTUs += strconv.Itoa(mtu) + ", "
+			}
+			allowedMTUs = strings.TrimRight(allowedMTUs, ", ")
+			return errors.Errorf("Invalid linuxProfile eth0MTU value \"%d\", please use one of the following versions: %s", a.LinuxProfile.Eth0MTU, allowedMTUs)
+		}
+	}
 	for _, publicKey := range a.LinuxProfile.SSH.PublicKeys {
 		if e := validate.Var(publicKey.KeyData, "required"); e != nil {
 			return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")

@@ -223,6 +223,8 @@ const (
 	StandardVMType = "standard"
 	// DefaultRunUnattendedUpgradesOnBootstrap sets the default configuration for running a blocking unattended-upgrade on Linux VMs as part of CSE
 	DefaultRunUnattendedUpgradesOnBootstrap = true
+	// DefaultEth0MTU is the default MTU configuration for eth0 Linux interfaces
+	DefaultEth0MTU = 1500
 )
 
 // Azure API Versions

@@ -49,3 +49,8 @@ grep $MESSAGE_BURST /proc/sys/net/core/message_burst || exit 1
 grep $IPV4_NEIGH_GC_THRESH1 /proc/sys/net/ipv4/neigh/default/gc_thresh1 || exit 1
 grep $IPV4_NEIGH_GC_THRESH2 /proc/sys/net/ipv4/neigh/default/gc_thresh2 || exit 1
 grep $IPV4_NEIGH_GC_THRESH3 /proc/sys/net/ipv4/neigh/default/gc_thresh3 || exit 1
+
+# validate eth0 MTU
+if [ "$ETH0_MTU" != "" ]; then
+  grep $ETH0_MTU /sys/class/net/eth0/mtu || exit 1
+fi
