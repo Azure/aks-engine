@@ -1158,7 +1158,7 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 			},
 		},
 	}
-	expectedMsg = fmt.Sprintf("Invalid linuxProfile eth0MTU value \"%d\", please use one of the following versions: %s", 1202, "1500, 3900")
+	expectedMsg = fmt.Sprintf("Invalid linuxProfile eth0MTU value \"%d\", please use one of the following values: %s", 1202, "1500, 3900")
 	err = cs.Validate(false)
 
 	if err.Error() != expectedMsg {

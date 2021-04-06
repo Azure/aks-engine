@@ -633,6 +633,7 @@ func (a *Properties) validateLinuxProfile() error {
 		for _, valid := range linuxEth0MTUAllowedValues {
 			if valid == a.LinuxProfile.Eth0MTU {
 				validEth0MTU = true
+				break
 			}
 		}
 		if !validEth0MTU {
@@ -641,7 +642,7 @@ func (a *Properties) validateLinuxProfile() error {
 				allowedMTUs += strconv.Itoa(mtu) + ", "
 			}
 			allowedMTUs = strings.TrimRight(allowedMTUs, ", ")
-			return errors.Errorf("Invalid linuxProfile eth0MTU value \"%d\", please use one of the following versions: %s", a.LinuxProfile.Eth0MTU, allowedMTUs)
+			return errors.Errorf("Invalid linuxProfile eth0MTU value \"%d\", please use one of the following values: %s", a.LinuxProfile.Eth0MTU, allowedMTUs)
 		}
 	}
 	for _, publicKey := range a.LinuxProfile.SSH.PublicKeys {
