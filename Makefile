@@ -27,7 +27,7 @@ ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-DEV_ENV_IMAGE := mcr.microsoft.com/oss/azcu/go-dev:v1.29.2
+DEV_ENV_IMAGE := mcr.microsoft.com/oss/azcu/go-dev:v1.30.0
 DEV_ENV_WORK_DIR := /aks-engine
 DEV_ENV_OPTS := --rm -v $(GOPATH)/pkg/mod:/go/pkg/mod -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
