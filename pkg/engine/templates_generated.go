@@ -12405,7 +12405,7 @@ configAddons() {
   mkdir -p $ADDONS_DIR/init && cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/ || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{- end}}
 }
-{{- if HasNSeriesSKU}}
+{{- if and HasNSeriesSKU IsNvidiaDevicePluginAddonEnabled}}
 {{- /* installNvidiaDrivers is idempotent, it will uninstall itself if it is already installed, and then install anew */}}
 installNvidiaDrivers() {
   local d="/var/lib/dkms/nvidia/${GPU_DV}" k log_file="/var/log/nvidia-installer-$(date +%s).log"
@@ -13456,7 +13456,7 @@ fi
 {{/* this will capture the amount of time to install of the network plugin during cse */}}
 time_metric "InstallNetworkPlugin" installNetworkPlugin
 
-{{- if HasNSeriesSKU}}
+{{- if and HasNSeriesSKU IsNvidiaDevicePluginAddonEnabled}}
 if [[ ${GPU_NODE} == true ]]; then
   if $FULL_INSTALL_REQUIRED; then
     time_metric "DownloadGPUDrivers" downloadGPUDrivers
