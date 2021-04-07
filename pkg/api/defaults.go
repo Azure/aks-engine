@@ -54,15 +54,16 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 		properties.setMasterProfileDefaults()
 	}
 
+	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
+
+	properties.setStorageDefaults()
+	cs.setOrchestratorDefaults(params.IsUpgrade, params.IsScale)
+
 	// Set Linux profile defaults if this cluster configuration includes Linux nodes
 	if cs.Properties.LinuxProfile != nil {
 		properties.setLinuxProfileDefaults()
 	}
 
-	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
-
-	properties.setStorageDefaults()
-	cs.setOrchestratorDefaults(params.IsUpgrade, params.IsScale)
 	properties.setExtensionDefaults()
 
 	if cs.Properties.WindowsProfile != nil {
@@ -701,6 +702,9 @@ func (p *Properties) setMasterProfileDefaults() {
 func (p *Properties) setLinuxProfileDefaults() {
 	if !p.IsAzureStackCloud() && p.LinuxProfile.RunUnattendedUpgradesOnBootstrap == nil {
 		p.LinuxProfile.RunUnattendedUpgradesOnBootstrap = to.BoolPtr(DefaultRunUnattendedUpgradesOnBootstrap)
+	}
+	if p.OrchestratorProfile.IsAzureCNI() && p.LinuxProfile.Eth0MTU == 0 {
+		p.LinuxProfile.Eth0MTU = DefaultEth0MTU
 	}
 }
 

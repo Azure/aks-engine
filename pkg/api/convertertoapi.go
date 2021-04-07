@@ -170,6 +170,7 @@ func convertVLabsLinuxProfile(vlabs *vlabs.LinuxProfile, api *LinuxProfile) {
 		api.CustomNodesDNS.DNSServer = vlabs.CustomNodesDNS.DNSServer
 	}
 	api.RunUnattendedUpgradesOnBootstrap = vlabs.RunUnattendedUpgradesOnBootstrap
+	api.Eth0MTU = vlabs.Eth0MTU
 }
 
 func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile) {

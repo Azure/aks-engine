@@ -1147,6 +1147,57 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
 	}
+
+	cs.Properties.LinuxProfile.Eth0MTU = 1202
+	cs.Properties.LinuxProfile.SSH = struct {
+		PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
+	}{
+		PublicKeys: []PublicKey{
+			{
+				KeyData: "not empty",
+			},
+		},
+	}
+	expectedMsg = fmt.Sprintf("Invalid linuxProfile eth0MTU value \"%d\", please use one of the following values: %s", 1202, "1500, 3900")
+	err = cs.Validate(false)
+
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+
+	// Default (zero value) is permitted
+	cs.Properties.LinuxProfile.Eth0MTU = 0
+	err = cs.Validate(false)
+
+	if err != nil {
+		t.Errorf("expected no error message to be thrown, but got : %s", err.Error())
+	}
+
+	// 1500 is permitted
+	cs.Properties.LinuxProfile.Eth0MTU = 1500
+	err = cs.Validate(false)
+
+	if err != nil {
+		t.Errorf("expected no error message to be thrown, but got : %s", err.Error())
+	}
+
+	// 3900 is permitted
+	cs.Properties.LinuxProfile.Eth0MTU = 3900
+	err = cs.Validate(false)
+
+	if err != nil {
+		t.Errorf("expected no error message to be thrown, but got : %s", err.Error())
+	}
+
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		NetworkPlugin: NetworkPluginKubenet,
+	}
+	expectedMsg = "Custom linuxProfile eth0MTU value not allowed when using Kubenet"
+	err = cs.Validate(false)
+
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
 }
 
 func TestProperties_ValidateWindowsProfile(t *testing.T) {

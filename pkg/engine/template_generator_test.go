@@ -215,6 +215,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedGetKubeletHealthZPort           string
 		expectedHasKubeletHealthZPort           bool
 		expectedGetContainerRuntime             string
+		expectedGetEth0MTU                      int
 	}{
 		{
 			name: "1.15 release",
@@ -1171,6 +1172,46 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetKubeletHealthZPort:        "12345",
 			expectedHasKubeletHealthZPort:        true,
 		},
+		{
+			name: "eth0 MTU 3900",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+					LinuxProfile: &api.LinuxProfile{
+						Eth0MTU: 3900,
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedGetLinuxCSELogPath:           linuxCSELogPath,
+			expectedGetContainerRuntime:          api.Docker,
+			expectedHasKubeletHealthZPort:        false,
+			expectedGetEth0MTU:                   3900,
+		},
 	}
 
 	for _, c := range cases {
@@ -1362,6 +1403,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetContainerRuntime {
 				t.Errorf("expected funcMap invocation of GetContainerRuntime to return %s, instead got %s", c.expectedGetContainerRuntime, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetEth0MTU"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetEth0MTU {
+				t.Errorf("expected funcMap invocation of GetEth0MTU to return %d, instead got %d", c.expectedGetEth0MTU, ret[0].Interface())
 			}
 		})
 	}

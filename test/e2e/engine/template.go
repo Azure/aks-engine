@@ -84,6 +84,7 @@ type Config struct {
 	ArcLocation                      string `envconfig:"ARC_LOCATION" default:""`
 	ArcTenantID                      string `envconfig:"ARC_TENANT_ID" default:""`
 	RunVMSSNodePrototype             bool   `envconfig:"RUN_VMSS_NODE_PROTOTYPE" default:"false"`
+	Eth0MTU                          int    `envconfig:"ETH0_MTU"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -459,6 +460,13 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.LinuxMobyURL != "" {
 		prop.OrchestratorProfile.KubernetesConfig.LinuxMobyURL = config.LinuxMobyURL
+	}
+
+	if config.Eth0MTU != 0 {
+		if prop.LinuxProfile == nil {
+			prop.LinuxProfile = &vlabs.LinuxProfile{}
+		}
+		prop.LinuxProfile.Eth0MTU = config.Eth0MTU
 	}
 
 	return &Engine{
