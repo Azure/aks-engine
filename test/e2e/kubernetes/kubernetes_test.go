@@ -1756,7 +1756,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
 						commandArgsSlice = append(commandArgsSlice, []string{"--set", "operator.defaultRuntime=containerd"}...)
 					}
-					cmd := exec.Command("helm", commandArgsSlice...)
+					ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel()
+					cmd := exec.CommandContext(ctx, "helm", commandArgsSlice...)
 					out, err := cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
