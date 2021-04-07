@@ -45,7 +45,7 @@ func init() {
 	versionSplit := strings.Split(defaultVersion, ".")
 	minorVersion, _ := strconv.Atoi(versionSplit[1])
 	minorVersionLessOne := minorVersion - 1
-	priorVersion := versionSplit[0] + "." + strconv.Itoa(minorVersionLessOne) + "." + versionSplit[2]
+	priorVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, versionSplit[0]+"."+strconv.Itoa(minorVersionLessOne), "", false, false, false)
 	defaultK8sVersionForFakeVMs = fmt.Sprintf("Kubernetes:%s", priorVersion)
 }
 
