@@ -7,7 +7,7 @@ defaultEnv = [
 	] + params
 
 def k8sVersions = ["1.17", "1.18", "1.19", "1.20", "1.21"]
-def latestReleasedVersion = "1.20"
+def latestReleasedVersion = "1.21"
 def tasks = [:]
 def testConfigs = []
 
