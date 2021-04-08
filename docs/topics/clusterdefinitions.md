@@ -111,7 +111,7 @@ $ aks-engine get-versions
 | kubernetes-dashboard                                                                                      | false                                                                                                                                                                                                       | 1                               | Deprecated. We recommend installing dashboard manually, see: https://github.com/kubernetes/dashboard for more info.                                                                                                                                                                   |
 | rescheduler                                                                                               | false                                                                                                                                                                                                      | 1                               | Deprecated, no longer available after aks-engine v0.60.0.                                                                                                                                                                                                                            |
 | [cluster-autoscaler](../../examples/addons/cluster-autoscaler/README.md)                                  | false                                                                                                                                                                                                      | 1                               | Delivers the Kubernetes cluster autoscaler component. See https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure for more info; only supported for VMSS clusters on the first agent pool.                                           |
-| [nvidia-device-plugin](../../examples/addons/nvidia-device-plugin/README.md)                              | true if using a Kubernetes cluster with an N-series agent pool                                                                                                                                             | 1                               | Delivers the Kubernetes NVIDIA device plugin component. See https://github.com/NVIDIA/k8s-device-plugin for more info                                                                                                                                                    |
+| [nvidia-device-plugin](../../examples/addons/nvidia-device-plugin/README.md)                              | Enabled by default if you're using the docker container runtime and have at least one N-series VM node pool. You may explicitly disable this addon if you want to manage your own GPU driver implementation, for example [using the nvidia gpu-operator solution](https://developer.nvidia.com/blog/announcing-containerd-support-for-the-nvidia-gpu-operator/). If you're using the containerd container runtime then this addon will be disabled, as this solution required docker.                                                                                                                                             | 1                               | Delivers the Kubernetes NVIDIA device plugin component. See https://github.com/NVIDIA/k8s-device-plugin for more info.                                                                                                                                                    |
 | container-monitoring                                                                                      | false                                                                                                                                                                                                      | 1                               | Delivers the Kubernetes container monitoring component                                                                                                                                                                                                                   |
 | [blobfuse-flexvolume](https://github.com/Azure/kubernetes-volume-drivers/tree/master/flexvolume/blobfuse) | true                                                                                                                                                                                                       | as many as linux agent nodes    | Access virtual filesystem backed by the Azure Blob storage                                                                                                                                                                                                               |
 | [smb-flexvolume](https://github.com/Azure/kubernetes-volume-drivers/tree/master/flexvolume/smb)           | false                                                                                                                                                                                                      | as many as linux agent nodes    | Access SMB server by using CIFS/SMB protocol                                                                                                                                                                                                                             |
@@ -252,6 +252,48 @@ The `calico` addon includes configurable verbosity via the `logSeverityScreen` c
           "config": {
             "logSeverityScreen": "error"
           }
+        }
+        ...
+    ]
+}
+...
+```
+
+Available options for `logSeverityScreen` are documented [here](https://docs.projectcalico.org/reference/resources/felixconfig).
+
+#### nvidia-device-plugin
+
+The `nvidia-device-plugin` addon installs a nvidia driver listener via a daemonset for nodes backed by the docker container runtime. The daemonset will install itself as a pod container on each node that has GPU support (i.e., nodes backed by N-series VMs). For example a pod running on a GPU-enabled node:
+
+```sh
+$ kubectl logs nvidia-device-plugin-w8vnt -n kube-system
+2021/04/08 18:38:05 Loading NVML
+2021/04/08 18:38:05 Starting FS watcher.
+2021/04/08 18:38:05 Starting OS watcher.
+2021/04/08 18:38:05 Retreiving plugins.
+2021/04/08 18:38:05 Starting GRPC server for 'nvidia.com/gpu'
+2021/04/08 18:38:05 Starting to serve 'nvidia.com/gpu' on /var/lib/kubelet/device-plugins/nvidia.sock
+2021/04/08 18:38:05 Registered device plugin for 'nvidia.com/gpu' with Kubelet
+```
+
+This addon will be enabled automatically if the cluster is configured for docker, and has at least one N-series VM-configured node pool.
+
+If you're using one or more N-series node pools and using containerd, then this addon *will not* be installed, as containerd-backed clusters require the user to bring his or her own GPU drivers solution. The AKS Engine project recommends the official nvidia gpu-operator solution for containerd GPU solutions. See here:
+
+- https://developer.nvidia.com/blog/announcing-containerd-support-for-the-nvidia-gpu-operator/
+
+The gpu-operator solution is regularly tested against N-series node pool clusters backed by containerd.
+
+If you're using docker and would like to provide your own GPU drivers solution, you may disable the `nvidia-device-plugin` addon manually:
+
+```
+...
+"kubernetesConfig": {
+    "addons": [
+        ...
+        {
+          "name": "nvidia-device-plugin",
+          "enabled": false
         }
         ...
     ]
