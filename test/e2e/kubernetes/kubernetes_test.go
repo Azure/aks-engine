@@ -697,12 +697,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cfg.AddNodePoolInput == "" && !cfg.RebootControlPlaneNodes {
 				totalNodeCount := eng.NodeCount()
 				nodes := totalNodeCount - len(masterNodes)
-				nodeList, err := node.GetByLabel("foo")
+				_, err := node.WaitForNodesWithAnnotation(nodes, "foo", "bar", 5*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(len(nodeList)).To(Equal(nodes))
-				nodeList, err = node.GetByAnnotations("foo", "bar")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(nodeList)).To(Equal(nodes))
 			} else {
 				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
