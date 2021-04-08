@@ -60,7 +60,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	versionSplit := strings.Split(defaultVersion, ".")
 	minorVersion, _ := strconv.Atoi(versionSplit[1])
 	minorVersionLessOne := minorVersion - 1
-	priorVersion := versionSplit[0] + "." + strconv.Itoa(minorVersionLessOne) + "." + versionSplit[2]
+	priorVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, versionSplit[0]+"."+strconv.Itoa(minorVersionLessOne), "", false, false, false)
 	mockK8sVersionOneLessThanDefault := fmt.Sprintf("Kubernetes:%s", priorVersion)
 	AfterEach(func() {
 		// delete temp template directory
