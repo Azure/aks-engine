@@ -112,10 +112,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Data: base64Data,
 							},
 							{
-								Name: common.AzureCNINetworkMonitorAddonName,
-								Data: base64Data,
-							},
-							{
 								Name: common.CalicoAddonName,
 								Data: base64Data,
 							},
@@ -247,11 +243,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      ipMasqAgentAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: ipMasqAgentAddonDestinationFilename,
-			},
-			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
-				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
@@ -382,9 +373,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.IPMASQAgentAddonName,
 							},
 							{
-								Name: common.AzureCNINetworkMonitorAddonName,
-							},
-							{
 								Name: common.CalicoAddonName,
 							},
 							{
@@ -500,11 +488,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      ipMasqAgentAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: ipMasqAgentAddonDestinationFilename,
-			},
-			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
-				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
@@ -654,11 +637,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      ipMasqAgentAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: ipMasqAgentAddonDestinationFilename,
-			},
-			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
-				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
@@ -879,16 +857,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedIPMasqAgent.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedIPMasqAgent.destinationFile)
-					}
-				case common.AzureCNINetworkMonitorAddonName:
-					if c.expectedAzureCNINetworkMonitor.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureCNINetworkMonitor.sourceFile)
-					}
-					if c.expectedAzureCNINetworkMonitor.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzureCNINetworkMonitor.base64Data)
-					}
-					if c.expectedAzureCNINetworkMonitor.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureCNINetworkMonitor.destinationFile)
 					}
 				case common.CalicoAddonName:
 					if c.expectedCalico.sourceFile != componentFileSpec[addon].sourceFile {

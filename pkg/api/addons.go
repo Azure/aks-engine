@@ -285,23 +285,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
-	defaultAzureCNINetworkMonitorAddonsConfig := KubernetesAddon{
-		Name: common.AzureCNINetworkMonitorAddonName,
-		Enabled: to.BoolPtr(o.IsAzureCNI() &&
-			o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico &&
-			o.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea),
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.AzureCNINetworkMonitorAddonName,
-				Image:          specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
-				CPURequests:    "30m",
-				MemoryRequests: "25Mi",
-				CPULimits:      "200m",
-				MemoryLimits:   "256Mi",
-			},
-		},
-	}
-
 	defaultAzureNetworkPolicyAddonsConfig := KubernetesAddon{
 		Name:    common.AzureNetworkPolicyAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
@@ -883,7 +866,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultMetricsServerAddonsConfig,
 		defaultNVIDIADevicePluginAddonsConfig,
 		defaultContainerMonitoringAddonsConfig,
-		defaultAzureCNINetworkMonitorAddonsConfig,
 		defaultAzureNetworkPolicyAddonsConfig,
 		defaultCloudNodeManagerAddonsConfig,
 		defaultIPMasqAgentAddonsConfig,

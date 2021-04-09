@@ -236,27 +236,26 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
-		common.TillerAddonName:                 specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
-		common.ClusterAutoscalerAddonName:      specConfig.MCRKubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
-		common.BlobfuseFlexVolumeAddonName:     k8sComponents[common.BlobfuseFlexVolumeAddonName],
-		common.SMBFlexVolumeAddonName:          k8sComponents[common.SMBFlexVolumeAddonName],
-		common.KeyVaultFlexVolumeAddonName:     k8sComponents[common.KeyVaultFlexVolumeAddonName],
-		common.DashboardAddonName:              k8sComponents[common.DashboardAddonName],
-		common.MetricsServerAddonName:          specConfig.MCRKubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
-		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
-		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02232021",
-		common.IPMASQAgentAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
-		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
-		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
-		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
-		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
-		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
-		common.NodeProblemDetectorAddonName:    k8sComponents[common.NodeProblemDetectorAddonName],
-		common.KubeDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
-		common.CoreDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
-		common.KubeProxyAddonName:              specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
-		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
-		common.FlannelAddonName:                k8sComponents[common.KubeFlannelContainerName],
+		common.TillerAddonName:              specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
+		common.ClusterAutoscalerAddonName:   specConfig.MCRKubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
+		common.BlobfuseFlexVolumeAddonName:  k8sComponents[common.BlobfuseFlexVolumeAddonName],
+		common.SMBFlexVolumeAddonName:       k8sComponents[common.SMBFlexVolumeAddonName],
+		common.KeyVaultFlexVolumeAddonName:  k8sComponents[common.KeyVaultFlexVolumeAddonName],
+		common.DashboardAddonName:           k8sComponents[common.DashboardAddonName],
+		common.MetricsServerAddonName:       specConfig.MCRKubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
+		common.NVIDIADevicePluginAddonName:  specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
+		common.ContainerMonitoringAddonName: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02232021",
+		common.IPMASQAgentAddonName:         specConfig.MCRKubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
+		common.CalicoAddonName:              specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
+		common.AzureNetworkPolicyAddonName:  k8sComponents[common.AzureNetworkPolicyAddonName],
+		common.AADPodIdentityAddonName:      k8sComponents[common.NMIContainerName],
+		common.AzurePolicyAddonName:         k8sComponents[common.AzurePolicyAddonName],
+		common.NodeProblemDetectorAddonName: k8sComponents[common.NodeProblemDetectorAddonName],
+		common.KubeDNSAddonName:             specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+		common.CoreDNSAddonName:             specConfig.MCRKubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+		common.KubeProxyAddonName:           specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+		common.AntreaAddonName:              k8sComponents[common.AntreaControllerContainerName],
+		common.FlannelAddonName:             k8sComponents[common.KubeFlannelContainerName],
 	}
 
 	customAddonImages := make(map[string]string)
@@ -2910,44 +2909,6 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				t.Errorf("unexpected diff while comparing WindowsProfile: %s", diff)
 			}
 		})
-	}
-}
-
-func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
-	mockCS := getMockBaseContainerService("1.10.3")
-	properties := mockCS.Properties
-	properties.MasterProfile.Count = 1
-	properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
-		{
-			Name: common.AzureCNINetworkMonitorAddonName,
-			Containers: []KubernetesContainerSpec{
-				{
-					Name:           common.AzureCNINetworkMonitorAddonName,
-					CPURequests:    "50m",
-					MemoryRequests: "150Mi",
-					CPULimits:      "50m",
-					MemoryLimits:   "150Mi",
-				},
-			},
-			Enabled: to.BoolPtr(true),
-		},
-	}
-	mockCS.setOrchestratorDefaults(true, true)
-
-	i := getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, common.AzureCNINetworkMonitorAddonName)
-	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
-		t.Fatalf("Azure CNI networkmonitor addon should be present")
-	}
-
-	mockCS = getMockBaseContainerService("1.10.3")
-	properties = mockCS.Properties
-	properties.MasterProfile.Count = 1
-	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
-	mockCS.setOrchestratorDefaults(true, true)
-
-	i = getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, common.AzureCNINetworkMonitorAddonName)
-	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
-		t.Fatalf("Azure CNI networkmonitor addon should be present by default if Azure CNI is set")
 	}
 }
 

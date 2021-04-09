@@ -103,8 +103,6 @@ const (
 	ContainerMonitoringAddonName = "container-monitoring"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
-	// AzureCNINetworkMonitorAddonName is the name of the Azure CNI networkmonitor addon
-	AzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
 	// AzureNetworkPolicyAddonName is the name of the Azure network policy manager addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
 	// AzureVnetTelemetryContainerName is the name of the deprecated Azure vnet telemetry container in the azure-npm-daemonset addon

@@ -1061,7 +1061,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName, common.CloudNodeManagerAddonName, common.ClusterAutoscalerAddonName,
 				common.BlobfuseFlexVolumeAddonName, common.SMBFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName, common.DashboardAddonName,
 				common.MetricsServerAddonName, common.NVIDIADevicePluginAddonName, common.ContainerMonitoringAddonName,
-				common.AzureCNINetworkMonitorAddonName, common.CalicoAddonName, common.AzureNetworkPolicyAddonName, common.IPMASQAgentAddonName,
+				common.CalicoAddonName, common.AzureNetworkPolicyAddonName, common.IPMASQAgentAddonName,
 				common.AzurePolicyAddonName, common.NodeProblemDetectorAddonName, common.AntreaAddonName, common.FlannelAddonName,
 				common.ScheduledMaintenanceAddonName, common.SecretsStoreCSIDriverAddonName} {
 				var addonPods = []string{addonName}
