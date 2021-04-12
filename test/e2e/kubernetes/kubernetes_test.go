@@ -1750,6 +1750,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with a GPU-enabled agent pool", func() {
 		It("should be able to run a nvidia-gpu job", func() {
 			if eng.ExpandedDefinition.Properties.HasNSeriesSKU() {
+				if hasAddon, _ := eng.HasAddon("nvidia-device-plugin"); !hasAddon {
+					By("Installing nvidia gpu-operator helm chart")
+					commandArgsSlice := []string{"upgrade", "--install", "--wait", "gpu-operator", "--repo", "https://nvidia.github.io/gpu-operator", "gpu-operator"}
+					if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", "operator.defaultRuntime=containerd"}...)
+					}
+					ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel()
+					cmd := exec.CommandContext(ctx, "helm", commandArgsSlice...)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+				}
+				By("Running a CUDA vector job")
 				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)

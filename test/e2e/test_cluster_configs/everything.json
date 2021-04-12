@@ -113,13 +113,6 @@
 					]
 				},
 				{
-					"name": "poolgpu",
-					"count": 1,
-					"availabilityProfile": "VirtualMachineScaleSets",
-					"vmSize": "Standard_NC6",
-					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
-				},
-				{
 					"name": "poolbigsku",
 					"count": 1,
 					"availabilityProfile": "VirtualMachineScaleSets",
