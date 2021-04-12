@@ -969,6 +969,14 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Deal with legacy Azure CNI networkmonitor addon configuration
+	if isUpgrade {
+		// Force disabling of the deprecated Azure CNI networkmonitor addon
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.AzureCNINetworkMonitorAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(false)
+		}
+	}
+
 	// Honor customKubeProxyImage field
 	if o.KubernetesConfig.CustomKubeProxyImage != "" {
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeProxyAddonName); i > -1 {

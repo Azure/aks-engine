@@ -3738,6 +3738,34 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.18.1"),
 		},
 		{
+			name: "upgrade w/ Azure CNI networkmonitor enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.1",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AzureCNINetworkMonitorAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.18.1", "", common.KubernetesImageBaseTypeMCR),
+		},
+		{
 			name: "kube-proxy w/ user configuration",
 			cs: &ContainerService{
 				Properties: &Properties{

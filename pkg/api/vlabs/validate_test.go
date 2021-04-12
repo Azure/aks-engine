@@ -969,9 +969,19 @@ func ExampleProperties_validateAddons() {
 		fmt.Printf("error in validateAddons: %s", err)
 	}
 
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{Name: common.AzureCNINetworkMonitorAddonName,
+			Enabled: to.BoolPtr(true)},
+	}
+	if err := cs.Properties.validateAddons(true); err != nil {
+		fmt.Printf("error in validateAddons: %s", err)
+	}
+
 	// Output:
 	// level=warning msg="The rescheduler addon has been deprecated and disabled, it will be removed during this update"
 	// level=warning msg="The kube-dashboard addon is deprecated, we recommend you install the dashboard yourself, see https://github.com/kubernetes/dashboard"
+	// level=warning msg="The Azure CNI networkmonitor addon has been deprecated, it will be marked as disabled"
 }
 
 func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
