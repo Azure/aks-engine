@@ -126,7 +126,7 @@ fi
 {{/* this will capture the amount of time to install of the network plugin during cse */}}
 time_metric "InstallNetworkPlugin" installNetworkPlugin
 
-{{- if HasNSeriesSKU}}
+{{- if and HasNSeriesSKU IsNvidiaDevicePluginAddonEnabled}}
 if [[ ${GPU_NODE} == true ]]; then
   if $FULL_INSTALL_REQUIRED; then
     time_metric "DownloadGPUDrivers" downloadGPUDrivers

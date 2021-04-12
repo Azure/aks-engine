@@ -158,6 +158,12 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
+	if prop.OrchestratorProfile == nil {
+		prop.OrchestratorProfile = &vlabs.OrchestratorProfile{
+			OrchestratorType: common.Kubernetes,
+		}
+	}
+
 	if prop.OrchestratorProfile.KubernetesConfig == nil {
 		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 	}

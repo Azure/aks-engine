@@ -245,7 +245,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
 		Name:    common.NVIDIADevicePluginAddonName,
-		Enabled: to.BoolPtr(cs.Properties.IsNvidiaDevicePluginCapable() && !cs.Properties.IsAzureStackCloud()),
+		Enabled: to.BoolPtr(cs.Properties.IsNvidiaDevicePluginCapable() && !cs.Properties.IsAzureStackCloud() && !cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name: common.NVIDIADevicePluginAddonName,
