@@ -114,7 +114,7 @@ time_metric "installMoby" installMoby
   if [[ -n "${LINUX_MOBY_URL:-}" ]]; then
     DEB="${LINUX_MOBY_URL##*/}"
     retrycmd_no_stats 120 5 25 curl -fsSL ${LINUX_MOBY_URL} >/tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_DOWNLOAD_TIMEOUT"}}
-    retrycmd 20 30 120 dpkg -i /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
+    dpkg_install 20 30 /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
   fi
 {{end}}
 {{- if HasLinuxContainerdURL}}
@@ -122,7 +122,7 @@ time_metric "installMoby" installMoby
   if [[ -n "${LINUX_CONTAINERD_URL:-}" ]]; then
     DEB="${LINUX_CONTAINERD_URL##*/}"
     retrycmd_no_stats 120 5 25 curl -fsSL ${LINUX_CONTAINERD_URL} >/tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_DOWNLOAD_TIMEOUT"}}
-    retrycmd 20 30 120 dpkg -i /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
+    dpkg_install 20 30 /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
   fi
 {{end}}
 fi
