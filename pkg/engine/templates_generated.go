@@ -16669,15 +16669,6 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
        }
      }
  {{end}}
- {{if IsAzureCNI}}
-    ,"AzureCNINetworkMonitorImageURL": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Azure CNI networkmonitor Image URL"
-      },
-      "type": "string"
-    }
- {{end}}
  {{if .OrchestratorProfile.KubernetesConfig.IsAppGWIngressEnabled}}
     ,"appGwSubnet": {
       "metadata": {
