@@ -139,13 +139,21 @@ apt_get_update() {
   done
   echo Executed apt-get update $i times
 }
+dpkg_install() {
+  retries=$1; wait_sleep=$2; shift && shift;
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks; dpkg -i "${1}" && break; apt-get update --fix-missing; do_apt_get_install -f && break
+    if [ $i -eq $retries ]; then return 1; fi; sleep $wait_sleep
+  done
+}
+do_apt_get_install() {
+  dpkg --configure -a --force-confdef; DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@}
+}
 apt_get_install() {
   retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
-    export DEBIAN_FRONTEND=noninteractive
-    dpkg --configure -a --force-confdef
-    apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break ||
+    do_apt_get_install ${@} && break ||
       if [ $i -eq $retries ]; then
         return 1
       else
