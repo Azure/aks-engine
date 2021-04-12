@@ -140,11 +140,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.IPMASQAgentAddonName),
 			destinationFile: ipMasqAgentAddonDestinationFilename,
 		},
-		common.AzureCNINetworkMonitorAddonName: {
-			sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.AzureCNINetworkMonitorAddonName),
-			destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
-		},
 		common.CalicoAddonName: {
 			sourceFile:      calicoAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.CalicoAddonName),

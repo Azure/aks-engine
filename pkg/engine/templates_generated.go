@@ -9,7 +9,6 @@
 // ../../parts/k8s/addons/arc-onboarding.yaml
 // ../../parts/k8s/addons/audit-policy.yaml
 // ../../parts/k8s/addons/azure-cloud-provider.yaml
-// ../../parts/k8s/addons/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/azure-network-policy.yaml
 // ../../parts/k8s/addons/azure-policy-deployment.yaml
 // ../../parts/k8s/addons/azuredisk-csi-driver-deployment.yaml
@@ -1985,102 +1984,6 @@ func k8sAddonsAzureCloudProviderYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/azure-cloud-provider.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsAzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-cni-networkmonitor
-  namespace: kube-system
-  labels:
-    app: azure-cnms
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-cnms
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-cnms
-{{- if IsKubernetesVersionGe "1.17.0"}}
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-{{- end}}
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-        - name: azure-cnms
-          image: {{ContainerImage "azure-cni-networkmonitor"}}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: ebtables-rule-repo
-            mountPath: /var/run
-          - name: log
-            mountPath: /var/log
-          - name: telemetry
-            mountPath: /opt/cni/bin
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: ebtables-rule-repo
-        hostPath:
-          path: /var/run/
-          type: Directory
-      - name: telemetry
-        hostPath:
-          path: /opt/cni/bin
-          type: Directory
-`)
-
-func k8sAddonsAzureCniNetworkmonitorYamlBytes() ([]byte, error) {
-	return _k8sAddonsAzureCniNetworkmonitorYaml, nil
-}
-
-func k8sAddonsAzureCniNetworkmonitorYaml() (*asset, error) {
-	bytes, err := k8sAddonsAzureCniNetworkmonitorYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/azure-cni-networkmonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16774,15 +16677,6 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
        }
      }
  {{end}}
- {{if IsAzureCNI}}
-    ,"AzureCNINetworkMonitorImageURL": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Azure CNI networkmonitor Image URL"
-      },
-      "type": "string"
-    }
- {{end}}
  {{if .OrchestratorProfile.KubernetesConfig.IsAppGWIngressEnabled}}
     ,"appGwSubnet": {
       "metadata": {
@@ -20126,7 +20020,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/arc-onboarding.yaml":                                     k8sAddonsArcOnboardingYaml,
 	"k8s/addons/audit-policy.yaml":                                       k8sAddonsAuditPolicyYaml,
 	"k8s/addons/azure-cloud-provider.yaml":                               k8sAddonsAzureCloudProviderYaml,
-	"k8s/addons/azure-cni-networkmonitor.yaml":                           k8sAddonsAzureCniNetworkmonitorYaml,
 	"k8s/addons/azure-network-policy.yaml":                               k8sAddonsAzureNetworkPolicyYaml,
 	"k8s/addons/azure-policy-deployment.yaml":                            k8sAddonsAzurePolicyDeploymentYaml,
 	"k8s/addons/azuredisk-csi-driver-deployment.yaml":                    k8sAddonsAzurediskCsiDriverDeploymentYaml,
@@ -20275,7 +20168,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"arc-onboarding.yaml":                   {k8sAddonsArcOnboardingYaml, map[string]*bintree{}},
 			"audit-policy.yaml":                     {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
 			"azure-cloud-provider.yaml":             {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
-			"azure-cni-networkmonitor.yaml":         {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
 			"azure-network-policy.yaml":             {k8sAddonsAzureNetworkPolicyYaml, map[string]*bintree{}},
 			"azure-policy-deployment.yaml":          {k8sAddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
 			"azuredisk-csi-driver-deployment.yaml":  {k8sAddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},

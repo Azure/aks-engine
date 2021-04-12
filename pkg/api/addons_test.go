@@ -1644,7 +1644,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
@@ -1675,7 +1675,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4")),
+			}, "1.15.4"),
 		},
 		{
 			name: "calico addon enabled with user configuration",
@@ -1708,7 +1708,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
@@ -1739,7 +1739,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4")),
+			}, "1.15.4"),
 		},
 		{
 			name: "calico addon back-compat",
@@ -1794,7 +1794,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
@@ -1825,7 +1825,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4")),
+			}, "1.15.4"),
 		},
 		{
 			name: "aad-pod-identity enabled",
@@ -1957,7 +1957,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.CiliumAddonName,
 					Enabled: to.BoolPtr(true),
@@ -2054,20 +2054,6 @@ func TestSetAddonsConfig(t *testing.T) {
 						"non-masquerade-cidr": DefaultVNETCIDR,
 						"non-masq-cni-cidr":   DefaultCNICIDR,
 						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.AzureCNINetworkMonitorAddonName,
-							Image:          "AzureCNIImageBase" + k8sComponentsByVersionMap["1.15.12"][common.AzureCNINetworkMonitorAddonName],
-							CPURequests:    "30m",
-							MemoryRequests: "25Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "256Mi",
-						},
 					},
 				},
 				{
@@ -3780,6 +3766,34 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.18.1"),
 		},
 		{
+			name: "upgrade w/ Azure CNI networkmonitor enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.1",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AzureCNINetworkMonitorAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.18.1", "", common.KubernetesImageBaseTypeMCR),
+		},
+		{
 			name: "kube-proxy w/ user configuration",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -4081,7 +4095,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AntreaAddonName,
 					Enabled: to.BoolPtr(true),
@@ -4123,7 +4137,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AntreaAddonName,
 					Enabled: to.BoolPtr(true),
@@ -4133,7 +4147,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"serviceCidr":      DefaultKubernetesServiceCIDR,
 					},
 				},
-			}, "1.15.4")),
+			}, "1.15.4"),
 		},
 		{
 			name: "addons with IPv6 single stack",
@@ -4168,7 +4182,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, overwriteDefaultAddons([]KubernetesAddon{
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.CoreDNSAddonName,
 					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
@@ -4229,7 +4243,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.18.0")),
+			}, "1.18.0"),
 		},
 		{
 			name: "addons with dual stack",
@@ -4262,7 +4276,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, overwriteDefaultAddons([]KubernetesAddon{
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.IPMASQAgentAddonName,
 					Enabled: to.BoolPtr(true),
@@ -4298,7 +4312,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.18.0")),
+			}, "1.18.0"),
 		},
 		{
 			name: "kube proxy w/ customKubeProxyImage",
@@ -4516,7 +4530,6 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.NVIDIADevicePluginAddonName,
 				common.ContainerMonitoringAddonName,
 				common.IPMASQAgentAddonName,
-				common.AzureCNINetworkMonitorAddonName,
 				common.AzureNetworkPolicyAddonName,
 				common.CalicoAddonName,
 				common.AADPodIdentityAddonName,
@@ -5057,20 +5070,6 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 				"non-masquerade-cidr": DefaultVNETCIDR,
 				"non-masq-cni-cidr":   DefaultCNICIDR,
 				"enable-ipv6":         "false",
-			},
-		},
-		{
-			Name:    common.AzureCNINetworkMonitorAddonName,
-			Enabled: to.BoolPtr(true),
-			Containers: []KubernetesContainerSpec{
-				{
-					Name:           common.AzureCNINetworkMonitorAddonName,
-					Image:          specConfig.AzureCNIImageBase + k8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
-					CPURequests:    "30m",
-					MemoryRequests: "25Mi",
-					CPULimits:      "200m",
-					MemoryLimits:   "256Mi",
-				},
 			},
 		},
 		{
