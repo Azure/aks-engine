@@ -192,10 +192,13 @@ func (uc *upgradeCmd) loadCluster() error {
 	// Use the Windows VHD associated with the aks-engine version if upgradeWindowsVHD is set to "true"
 	if uc.upgradeWindowsVHD && uc.containerService.Properties.WindowsProfile != nil {
 		windowsProfile := uc.containerService.Properties.WindowsProfile
-		if windowsProfile.WindowsPublisher == api.AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == api.AKSWindowsServer2019OSImageConfig.ImageOffer {
+		if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019ContainerDOSImageConfig) {
+			windowsProfile.ImageVersion = api.AKSWindowsServer2019ContainerDOSImageConfig.ImageVersion
+			windowsProfile.WindowsSku = api.AKSWindowsServer2019ContainerDOSImageConfig.ImageSku
+		} else if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019OSImageConfig) {
 			windowsProfile.ImageVersion = api.AKSWindowsServer2019OSImageConfig.ImageVersion
 			windowsProfile.WindowsSku = api.AKSWindowsServer2019OSImageConfig.ImageSku
-		} else if windowsProfile.WindowsPublisher == api.WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == api.WindowsServer2019OSImageConfig.ImageOffer {
+		} else if api.ImagePublisherAndOfferMatch(windowsProfile, api.WindowsServer2019OSImageConfig) {
 			windowsProfile.ImageVersion = api.WindowsServer2019OSImageConfig.ImageVersion
 			windowsProfile.WindowsSku = api.WindowsServer2019OSImageConfig.ImageSku
 		}

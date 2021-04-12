@@ -48,11 +48,7 @@
                 "adminUsername": "azureuser",
                 "adminPassword": "replacepassword1234$",
                 "enableAutomaticUpdates": false,
-                "sshEnabled": true,
-                "windowsPublisher": "microsoft-aks",
-                "windowsOffer": "aks-windows",
-                "windowsSku": "2019-datacenter-core-ctrd-2103",
-                "imageVersion": "latest"
+                "sshEnabled": true
             }
         }
     }

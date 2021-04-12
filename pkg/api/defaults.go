@@ -788,6 +788,11 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 	}
 }
 
+// ImagePublisherAndOfferMatch returns true if image publisher and offer match for specified WindowsProfile and AzureOSImageConfig objects
+func ImagePublisherAndOfferMatch(wp *WindowsProfile, imageConfig AzureOSImageConfig) bool {
+	return wp.WindowsPublisher == imageConfig.ImagePublisher && wp.WindowsOffer == imageConfig.ImageOffer
+}
+
 // setWindowsProfileDefaults sets default WindowsProfile values
 func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
@@ -807,46 +812,51 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
 		}
 
+		// Default to aks-engine WIndows Server 2019 docker image
+		defaultImageConfig := AKSWindowsServer2019OSImageConfig
+		if ImagePublisherAndOfferMatch(windowsProfile, WindowsServer2019OSImageConfig) {
+			// Use 'vanilla' Windows Server 2019 images
+			defaultImageConfig = WindowsServer2019OSImageConfig
+		} else if cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
+			// Use to using aks-engine Windows Server 2019 conatinerD VHD
+			defaultImageConfig = AKSWindowsServer2019ContainerDOSImageConfig
+		}
+
 		// This allows caller to use the latest ImageVersion and WindowsSku for adding a new Windows pool to an existing cluster.
 		// We must assure that same WindowsPublisher and WindowsOffer are used in an existing cluster.
-		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
+		if ImagePublisherAndOfferMatch(windowsProfile, defaultImageConfig) {
 			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+				windowsProfile.WindowsSku = defaultImageConfig.ImageSku
 			}
 			if windowsProfile.ImageVersion == "" {
-				if windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
-					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
-				} else {
-					windowsProfile.ImageVersion = "latest"
-				}
-			}
-		} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
-			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = WindowsServer2019OSImageConfig.ImageSku
-			}
-			if windowsProfile.ImageVersion == "" {
-				if windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
-					windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+				if windowsProfile.WindowsSku == defaultImageConfig.ImageSku {
+					windowsProfile.ImageVersion = defaultImageConfig.ImageVersion
 				} else {
 					windowsProfile.ImageVersion = "latest"
 				}
 			}
 		} else {
 			if windowsProfile.WindowsPublisher == "" {
-				windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
+				windowsProfile.WindowsPublisher = defaultImageConfig.ImagePublisher
 			}
 			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
+				windowsProfile.WindowsOffer = defaultImageConfig.ImageOffer
 			}
 			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+				windowsProfile.WindowsSku = defaultImageConfig.ImageSku
 			}
 
 			if windowsProfile.ImageVersion == "" {
-				// default versions are specific to a publisher/offer/sku
-				if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
-					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
-				} else {
+				// default versions are specific to a publisher/offer/sku for aks-engine VHDs
+				aksEngineImageConfigs := []AzureOSImageConfig{AKSWindowsServer2019ContainerDOSImageConfig, AKSWindowsServer2019OSImageConfig}
+				for _, imageConfig := range aksEngineImageConfigs {
+					if ImagePublisherAndOfferMatch(windowsProfile, imageConfig) && windowsProfile.WindowsSku == imageConfig.ImageSku {
+						windowsProfile.ImageVersion = imageConfig.ImageVersion
+						break
+					}
+				}
+				// set imageVersion to 'latest' if still unset
+				if windowsProfile.ImageVersion == "" {
 					windowsProfile.ImageVersion = "latest"
 				}
 			}
@@ -864,19 +874,19 @@ func (cs *ContainerService) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
 		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
-		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
-			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
-			}
-			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
-			}
-		} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
-			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
-			}
-			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = WindowsServer2019OSImageConfig.ImageSku
+		windowsImageConfigs := []AzureOSImageConfig{AKSWindowsServer2019OSImageConfig, WindowsServer2019OSImageConfig}
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
+			windowsImageConfigs = []AzureOSImageConfig{AKSWindowsServer2019ContainerDOSImageConfig, WindowsServer2019OSImageConfig}
+		}
+		for _, imageConfig := range windowsImageConfigs {
+			if ImagePublisherAndOfferMatch(windowsProfile, imageConfig) {
+				if windowsProfile.ImageVersion == "" {
+					windowsProfile.ImageVersion = imageConfig.ImageVersion
+				}
+				if windowsProfile.WindowsSku == "" {
+					windowsProfile.WindowsSku = imageConfig.ImageSku
+				}
+				break
 			}
 		}
 	}
