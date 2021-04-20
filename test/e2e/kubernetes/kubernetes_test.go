@@ -60,7 +60,6 @@ const (
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
 	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
-	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	podLookupRetries                          = 5
 	sigPublishingTimeout                      = 8 * time.Hour // :(
@@ -80,6 +79,7 @@ var (
 	clusterAutoscalerAddon          api.KubernetesAddon
 	deploymentReplicasCount         int
 	dnsAddonName                    string
+	singleCommandTimeout            time.Duration
 	stabilityCommandTimeout         time.Duration
 	env                             azure.Environment
 	azureClient                     *armhelpers.AzureClient
@@ -174,6 +174,7 @@ var _ = BeforeSuite(func() {
 	}
 	Expect(dnsAddonName).NotTo(Equal(""))
 
+	singleCommandTimeout = time.Duration(cfg.SingleCommandTimeoutMinutes) * time.Minute
 	stabilityCommandTimeout = time.Duration(cfg.StabilityTimeoutSeconds) * time.Second
 
 	if !cfg.IsCustomCloudProfile() {
