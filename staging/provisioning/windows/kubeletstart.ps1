@@ -195,7 +195,7 @@ if ($global:NetworkPlugin -eq "azure") {
 
     # Restart Kubeproxy, which would wait, until the network is created
     # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
-    Restart-Service Kubeproxy
+    Restart-Service Kubeproxy -Force
 
     # Set env file for Azure Stack
     $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"

@@ -107,7 +107,6 @@ if ($global:CsiProxyEnabled) {
 Write-Log "Starting kubelet service"
 Start-Service kubelet
 
-Write-Log "Starting kubeproxy service"
-Start-Service kubeproxy
+Write-Log "Do not start kubeproxy service since kubelet will restart kubeproxy"
 
 Write-Log "Exiting windowsnodereset.ps1"
