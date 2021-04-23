@@ -54,6 +54,8 @@ jobs:
   - script: make validate-dependencies
     displayName: Check if go mod is up-to-date
   - script: |
+        echo "printing REGIONS"
+        echo $REGIONS
         export CODECOV_TOKEN=$(CODECOV_TOKEN)
         make coverage
     displayName: Run unit tests and calculate coverage
