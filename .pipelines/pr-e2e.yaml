@@ -34,6 +34,13 @@ jobs:
     GOBIN:  '$(GOPATH)/bin' # Go binaries path
     GOROOT: '/usr/local/go' # Go installation path
     GOPATH: '$(Agent.TempDirectory)/go' # Go workspace path
+    MSI_USER_ASSIGNED_ID_AKS_ENGINE_E2E: ''
+    REGIONS: ''
+    SUBSCRIPTION_ID_E2E_KUBERNETES: ''
+    TENANT_ID: ''
+    SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES: ''
+    SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES: ''
+
 
   steps:
   - script: |
@@ -55,6 +62,8 @@ jobs:
     displayName: Check if go mod is up-to-date
   - script: |
         export CODECOV_TOKEN=$(CODECOV_TOKEN)
+        echo print REGIONS
+        echo $REGIONS
         make coverage
     displayName: Run unit tests and calculate coverage
 
