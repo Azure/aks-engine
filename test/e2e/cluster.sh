@@ -80,6 +80,8 @@ function rotateCertificates {
     --client-id ${AZURE_CLIENT_ID} \
     --client-secret ${AZURE_CLIENT_SECRET} \
     --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+    --azure-env ${AZURE_ENV} \
+    --identity-system ${IDENTITY_SYSTEM} \
     --debug
 
   # Retry if it fails the first time (validate --certificate-profile instead of regenerating a new set of certs)
@@ -109,6 +111,8 @@ function rotateCertificates {
       --client-secret ${AZURE_CLIENT_SECRET} \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
       --certificate-profile _output/${RESOURCE_GROUP}/certificateProfile.json --force \
+      --azure-env ${AZURE_ENV} \
+      --identity-system ${IDENTITY_SYSTEM} \
       --debug
 
     exit $?
@@ -119,7 +123,7 @@ echo "Running E2E tests against a cluster built with the following API model:"
 cat ${TMP_DIR}/apimodel-input.json
 
 CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
-if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${ROTATE_CERTS}" = "true" ]; then
   CLEANUP_AFTER_DEPLOYMENT="false"
 fi
 
@@ -311,6 +315,10 @@ if [ "${ROTATE_CERTS}" = "true" ]; then
   SKIP_AFTER_ROTATE_CERTS="should be able to autoscale"
   SKIP_AFTER_SCALE_DOWN="${SKIP_AFTER_SCALE_DOWN}|should be able to autoscale"
   SKIP_AFTER_SCALE_UP="${SKIP_AFTER_SCALE_DOWN}|should be able to autoscale"
+  CLEANUP_AFTER_ROTATE_CERTS=${CLEANUP_ON_EXIT}
+  if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
+    CLEANUP_AFTER_ROTATE_CERTS="false"
+  fi
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
@@ -328,7 +336,7 @@ if [ "${ROTATE_CERTS}" = "true" ]; then
     -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
     -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
     -e KUBERNETES_IMAGE_BASE_TYPE=$KUBERNETES_IMAGE_BASE_TYPE \
-    -e CLEANUP_ON_EXIT=false \
+    -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_ROTATE_CERTS} \
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=true \
