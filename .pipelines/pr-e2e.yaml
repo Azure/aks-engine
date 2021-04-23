@@ -62,8 +62,6 @@ jobs:
     displayName: Check if go mod is up-to-date
   - script: |
         export CODECOV_TOKEN=$(CODECOV_TOKEN)
-        echo print REGIONS
-        echo $REGIONS
         make coverage
     displayName: Run unit tests and calculate coverage
 
