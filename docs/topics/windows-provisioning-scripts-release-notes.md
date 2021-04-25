@@ -1,6 +1,6 @@
 ## v0.0.13
 
-- [fix: Force restart kubeproxy to avoid stucking #4375](https://github.com/Azure/aks-engine/pull/4375)
+- [fix: Force restart kubeproxy to avoid getting stuck #4375](https://github.com/Azure/aks-engine/pull/4375)
 
 ## v0.0.12
 
