@@ -4,7 +4,6 @@ parameters:
   apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
   createVNET: false
   skipTests: ''
-  stabilityIterations: '0'
 
 jobs:
 - job: ${{ parameters.name }}
@@ -29,7 +28,7 @@ jobs:
     CLEANUP_ON_EXIT: true
     CLEANUP_IF_FAIL: true
     GINKGO_SKIP: ${{ parameters.skipTests }}
-    STABILITY_ITERATIONS: ${{ parameters.stabilityIterations }}
+    STABILITY_ITERATIONS: '$(STABILITY_ITERATIONS)'
     RETAIN_SSH: false
     ENABLE_KMS_ENCRYPTION: ${{ parameters.enableKMSEncryption }}
     SUBSCRIPTION_ID: '$(SUBSCRIPTION_ID_E2E_KUBERNETES)'
