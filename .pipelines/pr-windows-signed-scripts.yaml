@@ -74,6 +74,7 @@ jobs:
       az storage account delete -y -n ${SA_NAME} -g ${RESOURCE_GROUP_NAME}
     displayName: Delete storage account
     condition: always()
+    continueOnError: true
 
   - script: |
       sudo chown -R $USER:$USER .
