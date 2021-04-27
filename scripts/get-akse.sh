@@ -79,7 +79,7 @@ checkDesiredVersion() {
   elif type "wget" > /dev/null; then
     TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
   fi
-  if [ "x$TAG" == "x" ]; then
+  if [ "$TAG" == "" ]; then
     echo "Cannot determine ${DESIRED_VERSION} tag."
     exit 1
   fi
