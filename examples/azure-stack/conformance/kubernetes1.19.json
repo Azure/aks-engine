@@ -1,0 +1,47 @@
+{
+    "apiVersion": "vlabs",
+    "location": "",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorRelease": "1.19",
+            "kubernetesConfig": {
+                "useInstanceMetadata": false,
+                "networkPlugin": "kubenet"
+            }
+        },
+        "customCloudProfile": {
+            "portalURL": "",
+            "identitySystem": ""
+        },
+        "masterProfile": {
+            "dnsPrefix": "",
+            "distro": "ubuntu",
+            "count": 3,
+            "vmSize": "Standard_D2_v2"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "linuxpool",
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "distro": "ubuntu",
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        },
+        "servicePrincipalProfile": {
+            "clientId": "",
+            "secret": ""
+        }
+    }
+}
