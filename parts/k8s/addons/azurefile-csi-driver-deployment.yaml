@@ -337,6 +337,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azurefile-node-windows
@@ -484,6 +488,10 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: csi-azurefile-node
@@ -507,7 +515,7 @@ spec:
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29613
             - --v=5
           resources:
@@ -713,7 +721,6 @@ spec:
               cpu: {{ContainerCPUReqs "csi-snapshotter"}}
               memory: {{ContainerMemReqs "csi-snapshotter"}}
         {{end}}
-        {{if IsKubernetesVersionGe "1.16.0"}}
         - name: csi-resizer
           image: {{ContainerImage "csi-resizer"}}
           args:
@@ -733,12 +740,11 @@ spec:
             requests:
               cpu: {{ContainerCPUReqs "csi-resizer"}}
               memory: {{ContainerMemReqs "csi-resizer"}}
-        {{end}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
             - --csi-address=/csi/csi.sock
-            - --connection-timeout=3s
+            - --probe-timeout=3s
             - --health-port=29612
             - --v=5
           volumeMounts:

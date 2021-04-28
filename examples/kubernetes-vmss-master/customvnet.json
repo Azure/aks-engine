@@ -2,7 +2,6 @@
     "apiVersion": "vlabs",
     "properties": {
       "orchestratorProfile": {
-        "orchestratorType": "Kubernetes",
         "kubernetesConfig": {
           "clusterSubnet": "10.239.0.0/16",
           "addons": [
@@ -19,32 +18,6 @@
                   "memoryRequests": "1Gi",
                   "cpuLimits": "1",
                   "memoryLimits": "1Gi"
-                }
-              ]
-            },
-            {
-              "name": "kubernetes-dashboard",
-              "enabled": true,
-              "containers": [
-                {
-                  "name": "kubernetes-dashboard",
-                  "cpuRequests": "50m",
-                  "memoryRequests": "512Mi",
-                  "cpuLimits": "50m",
-                  "memoryLimits": "512Mi"
-                }
-              ]
-            },
-            {
-              "name": "rescheduler",
-              "enabled": true,
-              "containers": [
-                {
-                  "name": "rescheduler",
-                  "cpuRequests": "20m",
-                  "memoryRequests": "200Mi",
-                  "cpuLimits": "20m",
-                  "memoryLimits": "200Mi"
                 }
               ]
             }
@@ -99,10 +72,6 @@
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
   }

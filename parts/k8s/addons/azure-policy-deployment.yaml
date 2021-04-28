@@ -13,7 +13,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.2.4
+    controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
   labels:
     gatekeeper.sh/system: "yes"
@@ -33,26 +33,41 @@ spec:
       description: Config is the Schema for the configs API
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         spec:
           description: ConfigSpec defines the desired state of Config
           properties:
+            match:
+              description: Configuration for namespace exclusion
+              items:
+                properties:
+                  excludedNamespaces:
+                    items:
+                      type: string
+                    type: array
+                  processes:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              type: array
+            readiness:
+              description: Configuration for readiness tracker
+              properties:
+                statsEnabled:
+                  type: boolean
+              type: object
             sync:
               description: Configuration for syncing k8s objects
               properties:
                 syncOnly:
-                  description: If non-empty, only entries on this list will be replicated
-                    into OPA
+                  description: If non-empty, only entries on this list will be replicated into OPA
                   items:
                     properties:
                       group:
@@ -68,13 +83,11 @@ spec:
               description: Configuration for validation
               properties:
                 traces:
-                  description: List of requests to trace. Both "user" and "kinds"
-                    must be specified
+                  description: List of requests to trace. Both "user" and "kinds" must be specified
                   items:
                     properties:
                       dump:
-                        description: Also dump the state of OPA with the trace. Set
-                          to `All` to dump everything.
+                        description: Also dump the state of OPA with the trace. Set to `All` to dump everything.
                         type: string
                       kind:
                         description: Only trace requests of the following GroupVersionKind
@@ -109,345 +122,158 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: v1
-kind: ServiceAccount
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
 metadata:
-  labels:
-    gatekeeper.sh/system: "yes"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-admin
-  namespace: gatekeeper-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
   labels:
     gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-manager-role
-  namespace: gatekeeper-system
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  creationTimestamp: null
-  labels:
-    gatekeeper.sh/system: "yes"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-manager-role
-rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - config.gatekeeper.sh
-  resources:
-  - configs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - config.gatekeeper.sh
-  resources:
-  - configs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - constraints.gatekeeper.sh
-  resources:
-  - '*'
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - templates.gatekeeper.sh
-  resources:
-  - constrainttemplates
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - templates.gatekeeper.sh
-  resources:
-  - constrainttemplates/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - admissionregistration.k8s.io
-  resourceNames:
-  - gatekeeper-validating-webhook-configuration
-  resources:
-  - validatingwebhookconfigurations
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    gatekeeper.sh/system: "yes"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-manager-rolebinding
-  namespace: gatekeeper-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: gatekeeper-manager-role
-subjects:
-- kind: ServiceAccount
-  name: gatekeeper-admin
-  namespace: gatekeeper-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    gatekeeper.sh/system: "yes"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-manager-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: gatekeeper-manager-role
-subjects:
-- kind: ServiceAccount
-  name: gatekeeper-admin
-  namespace: gatekeeper-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  labels:
-    gatekeeper.sh/system: "yes"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-  name: gatekeeper-webhook-server-cert
-  namespace: gatekeeper-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    gatekeeper.sh/system: "yes"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-webhook-service
-  namespace: gatekeeper-system
+  name: constraintpodstatuses.status.gatekeeper.sh
 spec:
-  ports:
-  - port: 443
-    targetPort: 8443
-  selector:
-    control-plane: controller-manager
-    gatekeeper.sh/system: "yes"
+  group: status.gatekeeper.sh
+  names:
+    kind: ConstraintPodStatus
+    listKind: ConstraintPodStatusList
+    plural: constraintpodstatuses
+    singular: constraintpodstatus
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: ConstraintPodStatus is the Schema for the constraintpodstatuses API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        status:
+          description: ConstraintPodStatusStatus defines the observed state of ConstraintPodStatus
+          properties:
+            constraintUID:
+              description: Storing the constraint UID allows us to detect drift, such as when a constraint has been recreated after its CRD was deleted out from under it, interrupting the watch
+              type: string
+            enforced:
+              type: boolean
+            errors:
+              items:
+                description: Error represents a single error caught while adding a constraint to OPA
+                properties:
+                  code:
+                    type: string
+                  location:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+                type: object
+              type: array
+            id:
+              type: string
+            observedGeneration:
+              format: int64
+              type: integer
+            operations:
+              items:
+                type: string
+              type: array
+          type: object
+      type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
 metadata:
-  labels:
-    control-plane: controller-manager
-    gatekeeper.sh/system: "yes"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-controller-manager
-  namespace: gatekeeper-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      control-plane: controller-manager
-      gatekeeper.sh/system: "yes"
-  template:
-    metadata:
-      annotations:
-        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
-      labels:
-        control-plane: controller-manager
-        gatekeeper.sh/system: "yes"
-    spec:
-      containers:
-      - args:
-        - --port=8443
-        - --logtostderr
-        - --exempt-namespace=gatekeeper-system
-        - --log-denies
-        command:
-        - /manager
-        env:
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        image: {{ContainerImage "gatekeeper"}}
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "gatekeeper"}}
-            memory: {{ContainerMemReqs "gatekeeper"}}
-          limits:
-            cpu: {{ContainerCPULimits "gatekeeper"}}
-            memory: {{ContainerMemLimits "gatekeeper"}}
-        imagePullPolicy: Always
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 9090
-        name: manager
-        ports:
-        - containerPort: 8443
-          name: webhook-server
-          protocol: TCP
-        - containerPort: 8888
-          name: metrics
-          protocol: TCP
-        - containerPort: 9090
-          name: healthz
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 9090
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - all
-          runAsGroup: 999
-          runAsNonRoot: true
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /certs
-          name: cert
-          readOnly: true
-      serviceAccountName: gatekeeper-admin
-      terminationGracePeriodSeconds: 60
-      volumes:
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: gatekeeper-webhook-server-cert
----
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: ValidatingWebhookConfiguration
-metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
   labels:
     gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-  name: gatekeeper-validating-webhook-configuration
-webhooks:
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: gatekeeper-webhook-service
-      namespace: gatekeeper-system
-      path: /v1/admit
-  failurePolicy: Ignore
-  name: validation.gatekeeper.sh
-  namespaceSelector:
-    matchExpressions:
-    - key: control-plane
-      operator: DoesNotExist
-    - key: admission.gatekeeper.sh/ignore
-      operator: DoesNotExist
-  rules:
-  - apiGroups:
-    - '*'
-    apiVersions:
-    - '*'
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - '*'
-  sideEffects: None
-  timeoutSeconds: 5
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: gatekeeper-webhook-service
-      namespace: gatekeeper-system
-      path: /v1/admitlabel
-  failurePolicy: Fail
-  name: check-ignore-label.gatekeeper.sh
-  rules:
-  - apiGroups:
-    - ""
-    apiVersions:
-    - '*'
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - namespaces
-  sideEffects: None
-  timeoutSeconds: 5
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: constrainttemplatepodstatuses.status.gatekeeper.sh
+spec:
+  group: status.gatekeeper.sh
+  names:
+    kind: ConstraintTemplatePodStatus
+    listKind: ConstraintTemplatePodStatusList
+    plural: constrainttemplatepodstatuses
+    singular: constrainttemplatepodstatus
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: ConstraintTemplatePodStatus is the Schema for the constrainttemplatepodstatuses API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        status:
+          description: ConstraintTemplatePodStatusStatus defines the observed state of ConstraintTemplatePodStatus
+          properties:
+            errors:
+              items:
+                description: CreateCRDError represents a single error caught during parsing, compiling, etc.
+                properties:
+                  code:
+                    type: string
+                  location:
+                    type: string
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+                type: object
+              type: array
+            id:
+              description: 'Important: Run "make" to regenerate code after modifying this file'
+              type: string
+            observedGeneration:
+              format: int64
+              type: integer
+            operations:
+              items:
+                type: string
+              type: array
+            templateUID:
+              description: UID is a type that holds unique ID values, including UUIDs.  Because we don't ONLY use UUIDs, this is an alias to string.  Being a type captures intent and helps make sure that UIDs and names do not get conflated.
+              type: string
+          type: object
+      type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -455,6 +281,7 @@ metadata:
   creationTimestamp: null
   labels:
     controller-tools.k8s.io: "1.0"
+    gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: constrainttemplates.templates.gatekeeper.sh
@@ -470,14 +297,10 @@ spec:
     openAPIV3Schema:
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -562,6 +385,515 @@ status:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-admin
+  namespace: gatekeeper-system
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-admin
+spec:
+  allowPrivilegeEscalation: false
+  fsGroup:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  requiredDropCapabilities:
+  - ALL
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  volumes:
+  - configMap
+  - projected
+  - secret
+  - downwardAPI
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-role
+  namespace: gatekeeper-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-role
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.gatekeeper.sh
+  resources:
+  - configs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.gatekeeper.sh
+  resources:
+  - configs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - constraints.gatekeeper.sh
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - policy
+  resourceNames:
+  - gatekeeper-admin
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+- apiGroups:
+  - status.gatekeeper.sh
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - templates.gatekeeper.sh
+  resources:
+  - constrainttemplates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - templates.gatekeeper.sh
+  resources:
+  - constrainttemplates/finalizers
+  verbs:
+  - delete
+  - get
+  - patch
+  - update
+- apiGroups:
+  - templates.gatekeeper.sh
+  resources:
+  - constrainttemplates/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - admissionregistration.k8s.io
+  resourceNames:
+  - gatekeeper-validating-webhook-configuration
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-rolebinding
+  namespace: gatekeeper-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gatekeeper-manager-role
+subjects:
+- kind: ServiceAccount
+  name: gatekeeper-admin
+  namespace: gatekeeper-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gatekeeper-manager-role
+subjects:
+- kind: ServiceAccount
+  name: gatekeeper-admin
+  namespace: gatekeeper-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: gatekeeper-webhook-server-cert
+  namespace: gatekeeper-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-webhook-service
+  namespace: gatekeeper-system
+spec:
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    control-plane: controller-manager
+    gatekeeper.sh/operation: webhook
+    gatekeeper.sh/system: "yes"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: audit-controller
+    gatekeeper.sh/operation: audit
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-audit
+  namespace: gatekeeper-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: audit-controller
+      gatekeeper.sh/operation: audit
+      gatekeeper.sh/system: "yes"
+  template:
+    metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+      labels:
+        control-plane: audit-controller
+        gatekeeper.sh/operation: audit
+        gatekeeper.sh/system: "yes"
+    spec:
+      containers:
+      - args:
+        - --operation=audit
+        - --operation=status
+        - --logtostderr
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: {{ContainerImage "gatekeeper"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "gatekeeper"}}
+            memory: {{ContainerMemReqs "gatekeeper"}}
+          limits:
+            cpu: {{ContainerCPULimits "gatekeeper"}}
+            memory: {{ContainerMemLimits "gatekeeper"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+        name: manager
+        ports:
+        - containerPort: 8888
+          name: metrics
+          protocol: TCP
+        - containerPort: 9090
+          name: healthz
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 9090
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
+          runAsGroup: 999
+          runAsNonRoot: true
+          runAsUser: 1000
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: gatekeeper-admin
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+    gatekeeper.sh/operation: webhook
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-controller-manager
+  namespace: gatekeeper-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      gatekeeper.sh/operation: webhook
+      gatekeeper.sh/system: "yes"
+  template:
+    metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
+      labels:
+        control-plane: controller-manager
+        gatekeeper.sh/operation: webhook
+        gatekeeper.sh/system: "yes"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: gatekeeper.sh/operation
+                  operator: In
+                  values:
+                  - webhook
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - args:
+        - --port=8443
+        - --logtostderr
+        - --exempt-namespace=gatekeeper-system
+        - --operation=webhook
+        - --log-denies
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: {{ContainerImage "gatekeeper"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "gatekeeper"}}
+            memory: {{ContainerMemReqs "gatekeeper"}}
+          limits:
+            cpu: {{ContainerCPULimits "gatekeeper"}}
+            memory: {{ContainerMemLimits "gatekeeper"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+        name: manager
+        ports:
+        - containerPort: 8443
+          name: webhook-server
+          protocol: TCP
+        - containerPort: 8888
+          name: metrics
+          protocol: TCP
+        - containerPort: 9090
+          name: healthz
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 9090
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
+          runAsGroup: 999
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /certs
+          name: cert
+          readOnly: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: gatekeeper-admin
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: gatekeeper-webhook-server-cert
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: gatekeeper-validating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: gatekeeper-webhook-service
+      namespace: gatekeeper-system
+      path: /v1/admit
+  failurePolicy: Ignore
+  name: validation.gatekeeper.sh
+  namespaceSelector:
+    matchExpressions:
+    - key: admission.gatekeeper.sh/ignore
+      operator: DoesNotExist
+  rules:
+  - apiGroups:
+    - '*'
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - '*'
+  sideEffects: None
+  timeoutSeconds: 3
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: gatekeeper-webhook-service
+      namespace: gatekeeper-system
+      path: /v1/admitlabel
+  failurePolicy: Fail
+  name: check-ignore-label.gatekeeper.sh
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - namespaces
+  sideEffects: None
+  timeoutSeconds: 3
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
   name: azure-policy
   namespace: kube-system
   labels:
@@ -580,7 +912,7 @@ rules:
   resources: ["*"]
   verbs: ["create", "delete", "update", "list", "get"]
 - apiGroups: ["templates.gatekeeper.sh"]
-  resources: ["constrainttemplates"]
+  resources: ["constrainttemplates", "constrainttemplates/finalizers"]
   verbs: ["create", "delete", "update", "list", "get"]
 ---
 kind: ClusterRoleBinding
@@ -634,7 +966,6 @@ kind: Deployment
 metadata:
   labels:
     app: azure-policy
-    aadpodidbinding: policy-identity
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: azure-policy
@@ -650,6 +981,8 @@ spec:
         app: azure-policy
       name: azure-policy
     spec:
+      nodeSelector:
+        kubernetes.io/os: linux
       serviceAccountName: azure-policy
       containers:
       - name: azure-policy
@@ -661,7 +994,7 @@ spec:
           limits:
             cpu: {{ContainerCPULimits "azure-policy"}}
             memory: {{ContainerMemLimits "azure-policy"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: K8S_POLICY_PREFIX
           value: azurepolicy
@@ -669,10 +1002,14 @@ spec:
           value: <resourceId>
         - name: RESOURCE_TYPE
           value: AKS Engine
-        - name: ACS_CREDENTIAL_LOCATION
-          value: /etc/acs/azure.json
         - name: DATAPLANE_ENDPOINT
           value: https://gov-prod-policy-data.trafficmanager.net
+        - name: FULL_SCAN_EXCLUSION_LIST
+          value: "kube-system,gatekeeper-system"
+        - name: WEBHOOK_EXCLUSION_LIST
+          value: "kube-system,gatekeeper-system"
+        - name: ACS_CREDENTIAL_LOCATION
+          value: /etc/acs/azure.json
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -686,6 +1023,20 @@ spec:
         volumeMounts:
         - name: acs-credential
           mountPath: "/etc/acs/azure.json"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+          initialDelaySeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 9090
+          initialDelaySeconds: 5
+        ports:
+        - containerPort: 9090
+          name: healthz
+          protocol: TCP
       volumes:
       - hostPath:
           path: /etc/kubernetes/azure.json

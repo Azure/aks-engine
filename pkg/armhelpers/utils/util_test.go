@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 )
 
@@ -165,58 +164,6 @@ func Test_GetVMNameIndexWindows(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
-	}
-}
-
-func Test_GetK8sVMName(t *testing.T) {
-	p := &api.Properties{
-		OrchestratorProfile: &api.OrchestratorProfile{
-			OrchestratorType: api.Kubernetes,
-		},
-		HostedMasterProfile: &api.HostedMasterProfile{
-			DNSPrefix: "foo",
-		},
-		AgentPoolProfiles: []*api.AgentPoolProfile{
-			{
-				Name:   "linux1",
-				VMSize: "Standard_D2_v2",
-				Count:  3,
-				OSType: "Linux",
-			},
-			{
-				Name:   "windows2",
-				VMSize: "Standard_D2_v2",
-				Count:  2,
-				OSType: "Windows",
-			},
-			{
-				Name:   "someotherpool",
-				VMSize: "Standard_D2_v2",
-				Count:  5,
-				OSType: "Linux",
-			},
-		},
-	}
-
-	for _, s := range []struct {
-		properties                 *api.Properties
-		agentPoolIndex, agentIndex int
-		expected                   string
-		expectedErr                bool
-	}{
-		{properties: p, agentPoolIndex: 0, agentIndex: 2, expected: "aks-linux1-28513887-2", expectedErr: false},
-		{properties: p, agentPoolIndex: 1, agentIndex: 1, expected: "2851aks011", expectedErr: false},
-	} {
-		vmName, err := GetK8sVMName(s.properties, p.AgentPoolProfiles[s.agentPoolIndex], s.agentIndex)
-
-		if !s.expectedErr {
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-		}
-		if vmName != s.expected {
-			t.Fatalf("Got vmName %s, expected %s", vmName, s.expected)
-		}
 	}
 }
 

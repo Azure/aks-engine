@@ -138,11 +138,6 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/auditd-rules",
-            "destination": "/home/packer/auditd-rules"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/label-nodes.sh",
             "destination": "/home/packer/label-nodes.sh"
         },
@@ -158,38 +153,18 @@
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/kms.service",
-            "destination": "/home/packer/kms.service"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/health-monitor.sh",
             "destination": "/home/packer/health-monitor.sh"
         },
         {
             "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/kubelet-monitor.service",
-            "destination": "/home/packer/kubelet-monitor.service"
-        },
-        {
-            "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.service",
-            "destination": "/home/packer/docker-monitor.service"
-        },
-        {
-            "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.timer",
-            "destination": "/home/packer/docker-monitor.timer"
-        },
-        {
-            "type": "file",
-            "source": "parts/k8s/cloud-init/artifacts/kubelet.service",
-            "destination": "/home/packer/kubelet.service"
-        },
-        {
-            "type": "file",
             "source": "parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf",
             "destination": "/home/packer/docker_clear_mount_propagation_flags.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/generateproxycerts.sh",
+            "destination": "/home/packer/generateproxycerts.sh"
         },
         {
             "type": "file",

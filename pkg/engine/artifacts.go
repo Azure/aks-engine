@@ -56,6 +56,11 @@ func kubernetesComponentSettingsInit(p *api.Properties) map[string]kubernetesCom
 			base64Data:      k.GetComponentData(common.ClusterInitComponentName),
 			destinationFile: clusterInitComponentDestinationFilename,
 		},
+		common.AzureKMSProviderComponentName: {
+			sourceFile:      azureKMSComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.AzureKMSProviderComponentName),
+			destinationFile: azureKMSComponentDestinationFilename,
+		},
 	}
 }
 
@@ -84,11 +89,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			sourceFile:      aadPodIdentityAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.AADPodIdentityAddonName),
 			destinationFile: aadPodIdentityAddonDestinationFilename,
-		},
-		common.ACIConnectorAddonName: {
-			sourceFile:      aciConnectorAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.ACIConnectorAddonName),
-			destinationFile: aciConnectorAddonDestinationFilename,
 		},
 		common.AzureDiskCSIDriverAddonName: {
 			sourceFile:      azureDiskCSIAddonSourceFilename,
@@ -125,11 +125,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.DashboardAddonName),
 			destinationFile: dashboardAddonDestinationFilename,
 		},
-		common.ReschedulerAddonName: {
-			sourceFile:      reschedulerAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.ReschedulerAddonName),
-			destinationFile: reschedulerAddonDestinationFilename,
-		},
 		common.NVIDIADevicePluginAddonName: {
 			sourceFile:      nvidiaAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.NVIDIADevicePluginAddonName),
@@ -144,11 +139,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			sourceFile:      ipMasqAgentAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.IPMASQAgentAddonName),
 			destinationFile: ipMasqAgentAddonDestinationFilename,
-		},
-		common.AzureCNINetworkMonitorAddonName: {
-			sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.AzureCNINetworkMonitorAddonName),
-			destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 		},
 		common.CalicoAddonName: {
 			sourceFile:      calicoAddonSourceFilename,
@@ -234,6 +224,11 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
 			base64Data:      k.GetAddonScript(common.SecretsStoreCSIDriverAddonName),
 			destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
+		},
+		common.AzureArcOnboardingAddonName: {
+			sourceFile:      connectedClusterAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AzureArcOnboardingAddonName),
+			destinationFile: connectedClusterAddonDestinationFilename,
 		},
 	}
 }

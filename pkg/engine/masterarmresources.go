@@ -4,6 +4,8 @@
 package engine
 
 import (
+	"strings"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -90,7 +92,8 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	if isKMSEnabled {
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMAS(cs)
-		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
+		keyVaultKey := CreateKeyVaultKey(cs)
+		masterResources = append(masterResources, keyVaultStorageAccount, keyVault, keyVaultKey)
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
@@ -107,7 +110,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	masterResources = append(masterResources, masterVM)
 
 	var useManagedIdentity, userAssignedIDEnabled bool
-	useManagedIdentity = kubernetesConfig.UseManagedIdentity
+	useManagedIdentity = to.Bool(kubernetesConfig.UseManagedIdentity)
 	userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 
 	if useManagedIdentity && !userAssignedIDEnabled {
@@ -120,19 +123,22 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]")
 	}
 
-	// TODO: This is only necessary if the resource group of the masters is different from the RG of the node pool
-	// subnet. But when we generate the template we don't know to which RG it will be deployed to. To solve this we
-	// would have to add the necessary condition into the template. For the resources we can use the `condition` field
-	// but how can we conditionally declare the dependencies? Perhaps by creating a variable for the dependency array
-	// and conditionally adding more dependencies.
-	if kubernetesConfig.SystemAssignedIDEnabled() &&
-		// The fix for ticket 2373 is only available for individual VMs / AvailabilitySet.
-		cs.Properties.MasterProfile.IsAvailabilitySet() {
-		masterRoleAssignmentForAgentPools := createKubernetesMasterRoleAssignmentForAgentPools(cs.Properties.MasterProfile, cs.Properties.AgentPoolProfiles)
+	// If the control plane is in a discrete VNET
+	if hasDistinctControlPlaneVNET(cs) {
+		// TODO: This is only necessary if the resource group of the masters is different from the RG of the node pool
+		// subnet. But when we generate the template we don't know to which RG it will be deployed to. To solve this we
+		// would have to add the necessary condition into the template. For the resources we can use the `condition` field
+		// but how can we conditionally declare the dependencies? Perhaps by creating a variable for the dependency array
+		// and conditionally adding more dependencies.
+		if kubernetesConfig.SystemAssignedIDEnabled() &&
+			// The fix for ticket 2373 is only available for individual VMs / AvailabilitySet.
+			cs.Properties.MasterProfile.IsAvailabilitySet() {
+			masterRoleAssignmentForAgentPools := createKubernetesMasterRoleAssignmentForAgentPools(cs.Properties.MasterProfile, cs.Properties.AgentPoolProfiles)
 
-		for _, assignmentForAgentPool := range masterRoleAssignmentForAgentPools {
-			masterResources = append(masterResources, assignmentForAgentPool)
-			masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, *assignmentForAgentPool.Name)
+			for _, assignmentForAgentPool := range masterRoleAssignmentForAgentPools {
+				masterResources = append(masterResources, assignmentForAgentPool)
+				masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, *assignmentForAgentPool.Name)
+			}
 		}
 	}
 
@@ -187,9 +193,11 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	}
 
 	if isKMSEnabled {
+		// TODO (aramase) remove storage account creation as part of kms plugin v0.0.11
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMSS(cs)
-		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
+		keyVaultKey := CreateKeyVaultKey(cs)
+		masterResources = append(masterResources, keyVaultStorageAccount, keyVault, keyVaultKey)
 	}
 
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
@@ -206,4 +214,34 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	masterResources = append(masterResources, masterVmss)
 
 	return masterResources
+}
+
+// hasDistinctControlPlaneVNET returns whether or not the VNET config of the control plane is distinct from any one node pool
+// If the VnetSubnetID string is malformed in either the MasterProfile or any AgentPoolProfile, we return false
+func hasDistinctControlPlaneVNET(cs *api.ContainerService) bool {
+	var controlPlaneVNETResourceURI string
+	if cs.Properties.MasterProfile.VnetSubnetID != "" {
+		controlPlaneSubnetElements := strings.Split(cs.Properties.MasterProfile.VnetSubnetID, "/")
+		if len(controlPlaneSubnetElements) >= 9 {
+			controlPlaneVNETResourceURI = strings.Join(controlPlaneSubnetElements[:9], "/")
+		} else {
+			return false
+		}
+	}
+	for _, agentPool := range cs.Properties.AgentPoolProfiles {
+		if agentPool.VnetSubnetID != "" {
+			nodePoolSubnetElements := strings.Split(agentPool.VnetSubnetID, "/")
+			if len(nodePoolSubnetElements) < 9 {
+				return false
+			}
+			if strings.Join(nodePoolSubnetElements[:9], "/") != controlPlaneVNETResourceURI {
+				return true
+			}
+		} else {
+			if cs.Properties.MasterProfile.VnetSubnetID != "" {
+				return true
+			}
+		}
+	}
+	return false
 }

@@ -25,36 +25,53 @@ import (
 
 // Config holds global test configuration
 type Config struct {
-	SkipTest            bool          `envconfig:"SKIP_TEST" default:"false"`
-	SkipLogsCollection  bool          `envconfig:"SKIP_LOGS_COLLECTION" default:"true"`
-	Orchestrator        string        `envconfig:"ORCHESTRATOR" default:"kubernetes"`
-	Name                string        `envconfig:"NAME" default:""`                                                       // Name allows you to set the name of a cluster already created
-	Location            string        `envconfig:"LOCATION" default:""`                                                   // Location where you want to create the cluster
-	Regions             []string      `envconfig:"REGIONS" default:""`                                                    // A whitelist of availableregions
-	ClusterDefinition   string        `envconfig:"CLUSTER_DEFINITION" required:"true" default:"examples/kubernetes.json"` // ClusterDefinition is the path on disk to the json template these are normally located in examples/
-	CleanUpOnExit       bool          `envconfig:"CLEANUP_ON_EXIT" default:"false"`                                       // if true the tests will clean up rgs when tests finish
-	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"false"`
-	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
-	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS" default:"3"`
-	ClusterInitPodName  string        `envconfig:"CLUSTER_INIT_POD_NAME" default:""`
-	ClusterInitJobName  string        `envconfig:"CLUSTER_INIT_JOB_NAME" default:""`
-	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
-	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
-	CurrentWorkingDir   string
-	ResourceGroup       string `envconfig:"RESOURCE_GROUP" default:""`
-	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME" default:""`
-	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY" default:"false"`
-	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND" default:"false"`
-	GinkgoFocus         string `envconfig:"GINKGO_FOCUS" default:""`
-	GinkgoSkip          string `envconfig:"GINKGO_SKIP" default:""`
-	GinkgoFailFast      bool   `envconfig:"GINKGO_FAIL_FAST" default:"true"`
-	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
-	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
-	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
-	TestPVC             bool   `envconfig:"TEST_PVC" default:"false"`
-	SubscriptionID      string `envconfig:"SUBSCRIPTION_ID"`
-	ClientID            string `envconfig:"CLIENT_ID"`
-	ClientSecret        string `envconfig:"CLIENT_SECRET"`
+	SkipTest                           bool          `envconfig:"SKIP_TEST" default:"false"`
+	SkipLogsCollection                 bool          `envconfig:"SKIP_LOGS_COLLECTION" default:"true"`
+	Orchestrator                       string        `envconfig:"ORCHESTRATOR" default:"kubernetes"`
+	Name                               string        `envconfig:"NAME" default:""`                                                       // Name allows you to set the name of a cluster already created
+	Location                           string        `envconfig:"LOCATION" default:""`                                                   // Location where you want to create the cluster
+	Regions                            []string      `envconfig:"REGIONS" default:""`                                                    // A list of regions to instruct the runner to randomly choose when provisioning IaaS
+	ClusterDefinition                  string        `envconfig:"CLUSTER_DEFINITION" required:"true" default:"examples/kubernetes.json"` // ClusterDefinition is the path on disk to the json template these are normally located in examples/
+	CleanUpOnExit                      bool          `envconfig:"CLEANUP_ON_EXIT" default:"false"`                                       // if true the tests will clean up rgs when tests finish
+	CleanUpIfFail                      bool          `envconfig:"CLEANUP_IF_FAIL" default:"false"`
+	RetainSSH                          bool          `envconfig:"RETAIN_SSH" default:"true"`
+	StabilityIterations                int           `envconfig:"STABILITY_ITERATIONS" default:"3"`
+	SingleCommandTimeoutMinutes        int           `envconfig:"SINGLE_COMMAND_TIMEOUT_MINUTES" default:"1"`
+	StabilityTimeoutSeconds            int           `envconfig:"STABILITY_TIMEOUT_SECONDS" default:"5"`
+	ClusterInitPodName                 string        `envconfig:"CLUSTER_INIT_POD_NAME" default:""`
+	ClusterInitJobName                 string        `envconfig:"CLUSTER_INIT_JOB_NAME" default:""`
+	Timeout                            time.Duration `envconfig:"TIMEOUT" default:"20m"`
+	LBTimeout                          time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
+	CurrentWorkingDir                  string
+	ResourceGroup                      string `envconfig:"RESOURCE_GROUP" default:""`
+	SoakClusterName                    string `envconfig:"SOAK_CLUSTER_NAME" default:""`
+	ForceDeploy                        bool   `envconfig:"FORCE_DEPLOY" default:"false"`
+	PrivateSSHKeyPath                  string `envconfig:"PRIVATE_SSH_KEY_FILE" default:""` //Relative path of the custom Private SSH Key in aks-engine
+	UseDeployCommand                   bool   `envconfig:"USE_DEPLOY_COMMAND" default:"false"`
+	GinkgoFocus                        string `envconfig:"GINKGO_FOCUS" default:""`
+	GinkgoSkip                         string `envconfig:"GINKGO_SKIP" default:""`
+	GinkgoFailFast                     bool   `envconfig:"GINKGO_FAIL_FAST" default:"false"`
+	GinkgoParallel                     bool   `envconfig:"GINKGO_PARALLEL" default:"false"`
+	DebugAfterSuite                    bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
+	BlockSSHPort                       bool   `envconfig:"BLOCK_SSH" default:"false"`
+	RebootControlPlaneNodes            bool   `envconfig:"REBOOT_CONTROL_PLANE_NODES" default:"false"`
+	RunVMSSNodePrototype               bool   `envconfig:"RUN_VMSS_NODE_PROTOTYPE" default:"false"`
+	AddNodePoolInput                   string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
+	TestPVC                            bool   `envconfig:"TEST_PVC" default:"false"`
+	SubscriptionID                     string `envconfig:"SUBSCRIPTION_ID"`
+	ClientID                           string `envconfig:"CLIENT_ID"`
+	ClientSecret                       string `envconfig:"CLIENT_SECRET"`
+	ValidateCPULoad                    bool   `envconfig:"VALIDATE_CPU_LOAD" default:"false"`
+	ArcClientID                        string `envconfig:"ARC_CLIENT_ID" default:""`
+	ArcClientSecret                    string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	ArcSubscriptionID                  string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	ArcLocation                        string `envconfig:"ARC_LOCATION" default:""`
+	ArcTenantID                        string `envconfig:"ARC_TENANT_ID" default:""`
+	KaminoVMSSPrototypeLocalChartPath  string `envconfig:"KAMINO_VMSS_PROTOTYPE_LOCAL_CHART_PATH" default:""`
+	KaminoVMSSPrototypeImageRegistry   string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_REGISTRY" default:""`
+	KaminoVMSSPrototypeImageRepository string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_REPOSITORY" default:""`
+	KaminoVMSSPrototypeImageTag        string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_TAG" default:""`
+	KaminoVMSSPrototypeDryRun          bool   `envconfig:"KAMINO_VMSS_PROTOTYPE_DRY_RUN" default:"false"`
 }
 
 // CustomCloudConfig holds configurations for custom cloud
@@ -78,6 +95,7 @@ type CustomCloudConfig struct {
 	PortalURL                    string `envconfig:"PORTAL_ENDPOINT" default:""`
 	TimeoutCommands              bool
 	CustomCloudName              string `envconfig:"CUSTOM_CLOUD_NAME"`
+	KeyVaultEndpoint             string `envconfig:"KEY_VAULT_ENDPOINT"`
 }
 
 const (
@@ -107,13 +125,8 @@ func ParseCustomCloudConfig() (*CustomCloudConfig, error) {
 
 // GetKubeConfig returns the absolute path to the kubeconfig for c.Location
 func (c *Config) GetKubeConfig() string {
-	var kubeconfigPath string
-
-	if c.IsKubernetes() {
-		file := fmt.Sprintf("kubeconfig.%s.json", c.Location)
-		kubeconfigPath = filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
-	}
-	return kubeconfigPath
+	file := fmt.Sprintf("kubeconfig.%s.json", c.Location)
+	return filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
 }
 
 // IsCustomCloudProfile returns true if the cloud is a custom cloud
@@ -178,10 +191,17 @@ func (ccc *CustomCloudConfig) SetEnvironment() error {
 	azsSelfSignedCaPath := "/aks-engine/Certificates.pem"
 	if _, err = os.Stat(azsSelfSignedCaPath); err == nil {
 		// latest dev_image has an azure-cli version that requires python3
-		cmd := exec.Command("/bin/bash", "-c",
-			fmt.Sprintf(`VER=$(python3 -V | grep -o [0-9].[0-9]*. | grep -o [0-9].[0-9]*);
+		cert_command := fmt.Sprintf(`VER=$(python3 -V | grep -o [0-9].[0-9]*. | grep -o [0-9].[0-9]*);
 		CA=/usr/local/lib/python${VER}/dist-packages/certifi/cacert.pem;
-		if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath))
+		if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath)
+		// include cacert.pem from python2.7 path for upgrade scenario
+		if _, err := os.Stat("/usr/local/lib/python2.7/dist-packages/certifi/cacert.pem"); err == nil {
+			cert_command = fmt.Sprintf(`CA=/usr/local/lib/python2.7/dist-packages/certifi/cacert.pem;
+			if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath)
+		}
+
+		cmd := exec.Command("/bin/bash", "-c", cert_command)
+
 		if out, err := cmd.CombinedOutput(); err != nil {
 			log.Printf("output:%s\n", out)
 			return err
@@ -307,11 +327,6 @@ func (c *Config) SetSSHKeyPermissions() error {
 		return err
 	}
 	return nil
-}
-
-// IsKubernetes will return true if the ORCHESTRATOR env var is set to kubernetes or not set at all
-func (c *Config) IsKubernetes() bool {
-	return c.Orchestrator == kubernetesOrchestrator
 }
 
 // SetRandomRegion sets Location to a random region

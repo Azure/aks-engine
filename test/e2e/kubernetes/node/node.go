@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
+
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/pkg/errors"
 )
@@ -41,6 +43,7 @@ type Metadata struct {
 type Spec struct {
 	Taints        []Taint `json:"taints"`
 	Unschedulable bool    `json:"unschedulable"`
+	ProviderID    string  `json:"providerID"`
 }
 
 // Taint defines a Node Taint
@@ -55,6 +58,7 @@ type Status struct {
 	NodeInfo      Info        `json:"nodeInfo"`
 	NodeAddresses []Address   `json:"addresses"`
 	Conditions    []Condition `json:"conditions"`
+	Capacity      Capacity    `json:capacity`
 }
 
 // Address contains an address and a type
@@ -70,6 +74,10 @@ type Info struct {
 	KubeletVersion          string `json:"kubeletVersion"`
 	OperatingSystem         string `json:"operatingSystem"`
 	OSImage                 string `json:"osImage"`
+}
+
+type Capacity struct {
+	CPU string `json:"cpu"`
 }
 
 // Condition contains various status information
@@ -93,6 +101,11 @@ type GetNodesResult struct {
 	Err   error
 }
 
+// TopNodesResult is the result type for TopNodesAsync
+type TopNodesResult struct {
+	Err error
+}
+
 // GetNodesAsync wraps Get with a struct response for goroutine + channel usage
 func GetNodesAsync() GetNodesResult {
 	list, err := Get()
@@ -104,6 +117,14 @@ func GetNodesAsync() GetNodesResult {
 	return GetNodesResult{
 		Nodes: list.Nodes,
 		Err:   err,
+	}
+}
+
+// TopNodesAsync wraps TopNodes with a struct response for goroutine + channel usage
+func TopNodesAsync() TopNodesResult {
+	err := TopNodes()
+	return TopNodesResult{
+		Err: err,
 	}
 }
 
@@ -204,7 +225,85 @@ func (n *Node) Describe() error {
 	return err
 }
 
-// Add taint to node
+// AddLabel adds a label to a node
+func (n *Node) AddLabel(label string) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "label", "node", n.Metadata.Name, label)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
+// AddLabelWithRetry add label to a node until success or timeout
+func (n *Node) AddLabelWithRetry(sleep, timeout time.Duration, label string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- n.AddLabel(label)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			if result == nil {
+				return nil
+			}
+			mostRecentRetryError = result
+		case <-ctx.Done():
+			return errors.Errorf("AddLabelWithRetry timed out: %s\n", mostRecentRetryError)
+		}
+	}
+}
+
+// AddAnnotation adds an annotation to node
+func (n *Node) AddAnnotation(annotation string) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "annotate", "nodes", n.Metadata.Name, annotation)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
+// AddAnnotationWithRetry adds annotation to node trying until success or timeout
+func (n *Node) AddAnnotationWithRetry(sleep, timeout time.Duration, annotation string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- n.AddAnnotation(annotation)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			if result == nil {
+				return nil
+			}
+			mostRecentRetryError = result
+		case <-ctx.Done():
+			return errors.Errorf("AddAnnotationWithRetry timed out: %s\n", mostRecentRetryError)
+		}
+	}
+}
+
+// AddTaint adds a taint to node
 func (n *Node) AddTaint(taint Taint) error {
 	var commandTimeout time.Duration
 	cmd := exec.Command("k", "taint", "nodes", n.Metadata.Name, taint.Key+"="+taint.Value+":"+taint.Effect)
@@ -213,7 +312,7 @@ func (n *Node) AddTaint(taint Taint) error {
 	return err
 }
 
-// Remove taint to node
+// RemoveTaint removes a taint from a node
 func (n *Node) RemoveTaint(taint Taint) error {
 	var commandTimeout time.Duration
 	cmd := exec.Command("k", "taint", "nodes", n.Metadata.Name, taint.Key+":"+taint.Effect+"-")
@@ -285,17 +384,12 @@ func AreMaxNodesReady(nodeCount int) bool {
 	var ready int
 	if list != nil {
 		for _, node := range list.Nodes {
-			nodeReady := node.IsReady()
-			if !nodeReady {
-				return false
+			if node.IsReady() {
+				ready++
 			}
-			ready++
 		}
 	}
-	if ready <= nodeCount {
-		return true
-	}
-	return false
+	return ready <= nodeCount
 }
 
 // WaitOnReady will block until all nodes are in ready state
@@ -385,6 +479,40 @@ func WaitOnReadyMax(nodeCount int, sleep, timeout time.Duration) bool {
 	}
 }
 
+// WaitForNodesWithAnnotation will wait until the desired number of nodes have a particular annotation
+func WaitForNodesWithAnnotation(nodeCount int, key, val string, sleep, timeout time.Duration) ([]Node, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetNodesResult)
+	var mostRecentWaitForNodesWithAnnotationError error
+	var nodes []Node
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetByAnnotationsAsync(key, val)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentWaitForNodesWithAnnotationError = result.Err
+			nodes = result.Nodes
+			if mostRecentWaitForNodesWithAnnotationError == nil {
+				if len(nodes) == nodeCount {
+					return nodes, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("WaitForNodesWithAnnotation timed out: %s\n", mostRecentWaitForNodesWithAnnotationError)
+		}
+	}
+}
+
 // Get returns the current nodes for a given kubeconfig
 func Get() (*List, error) {
 	cmd := exec.Command("k", "get", "nodes", "-o", "json")
@@ -403,6 +531,29 @@ func Get() (*List, error) {
 		log.Printf("Error unmarshalling nodes json:%s", err)
 	}
 	return &nl, nil
+}
+
+// TopNodes prints nodes metrics
+func TopNodes() error {
+	cmd := exec.Command("k", "top", "nodes")
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error trying to run 'kubectl top nodes':\n - %s", err)
+		if len(string(out)) > 0 {
+			log.Printf("\n - %s", string(out))
+		}
+		pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
+		return err
+	}
+
+	if strings.Contains(string(out), "<unknown>") {
+		log.Printf("\n - %s", string(out))
+		pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
+		return errors.Errorf("Node contained unknown value")
+	}
+
+	return nil
 }
 
 // GetReadyWithRetry gets nodes, allowing for retries
@@ -507,6 +658,36 @@ func GetByRegexWithRetry(regex string, sleep, timeout time.Duration) ([]Node, er
 	}
 }
 
+// TopNodesWithRetry gets nodes, allowing for retries
+func TopNodesWithRetry(sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan TopNodesResult)
+	var mostRecentTopNodesWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- TopNodesAsync()
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentTopNodesWithRetryError = result.Err
+			if mostRecentTopNodesWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("TopNodesWithRetry timed out: %s\n", mostRecentTopNodesWithRetryError)
+		}
+	}
+}
+
 // GetReady returns the current nodes for a given kubeconfig
 func GetReady() (*List, error) {
 	l, err := Get()
@@ -572,6 +753,15 @@ func GetByLabel(label string) ([]Node, error) {
 	return nodes, nil
 }
 
+// GetByAnnotationsAsync wraps GetByAnnotations with a struct response for goroutine + channel usage
+func GetByAnnotationsAsync(key, value string) GetNodesResult {
+	nodes, err := GetByAnnotations(key, value)
+	return GetNodesResult{
+		Nodes: nodes,
+		Err:   err,
+	}
+}
+
 // GetByAnnotations will return a []Node of all nodes that have a matching annotation
 func GetByAnnotations(key, value string) ([]Node, error) {
 	list, err := Get()
@@ -581,8 +771,14 @@ func GetByAnnotations(key, value string) ([]Node, error) {
 
 	nodes := make([]Node, 0)
 	for _, n := range list.Nodes {
-		if n.Metadata.Annotations[key] == value {
-			nodes = append(nodes, n)
+		if value != "" {
+			if n.Metadata.Annotations[key] == value {
+				nodes = append(nodes, n)
+			}
+		} else {
+			if _, ok := n.Metadata.Annotations[key]; ok {
+				nodes = append(nodes, n)
+			}
 		}
 	}
 	return nodes, nil

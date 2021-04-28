@@ -200,18 +200,18 @@ New-InfraContainer {
     $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
     $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
-    $pauseImageVersions = @("1803", "1809", "1903", "1909")
+    $pauseImageVersions = @("1809", "1903", "1909", "2004", "2009", "20h2")
 
     if ($pauseImageVersions -icontains $windowsVersion) {
         if ($ContainerRuntime -eq "docker") {
-            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime) -or $global:AlwaysPullWindowsPauseImage) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
             Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
         else {
             # containerd
-            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime) -or $global:AlwaysPullWindowsPauseImage) {
                 Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
             Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "tag", "$defaultPauseImage", "$DestinationTag")
@@ -315,12 +315,17 @@ New-NSSMService {
         $KubeletStartFile,
         [string]
         [Parameter(Mandatory = $true)]
-        $KubeProxyStartFile
+        $KubeProxyStartFile,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
 
-    $kubeletDependOnServices = "docker"
+    $kubeletDependOnServices = $ContainerRuntime
     if ($global:EnableCsiProxy) {
         $kubeletDependOnServices += " csi-proxy"
+    }
+    if ($global:EnableHostsConfigAgent) {
+        $kubeletDependOnServices += " hosts-config-agent"
     }
 
     # setup kubelet
@@ -370,7 +375,9 @@ function
 Install-KubernetesServices {
     param(
         [Parameter(Mandatory = $true)][string]
-        $KubeDir
+        $KubeDir,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
 
     # TODO ksbrmnn fix callers to this function
@@ -380,5 +387,6 @@ Install-KubernetesServices {
 
     New-NSSMService -KubeDir $KubeDir `
         -KubeletStartFile $KubeletStartFile `
-        -KubeProxyStartFile $KubeProxyStartFile
+        -KubeProxyStartFile $KubeProxyStartFile `
+        -ContainerRuntime $ContainerRuntime
 }

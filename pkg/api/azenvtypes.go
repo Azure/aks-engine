@@ -3,35 +3,12 @@
 
 package api
 
-import "fmt"
-
 //AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
 type AzureEnvironmentSpecConfig struct {
 	CloudName            string                        `json:"cloudName,omitempty"`
-	DockerSpecConfig     DockerSpecConfig              `json:"dockerSpecConfig,omitempty"`
 	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
-	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
 	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
-}
-
-//DockerSpecConfig is the configurations of docker
-type DockerSpecConfig struct {
-	DockerEngineRepo         string `json:"dockerEngineRepo,omitempty"`
-	DockerComposeDownloadURL string `json:"dockerComposeDownloadURL,omitempty"`
-}
-
-//DCOSSpecConfig is the configurations of DCOS
-type DCOSSpecConfig struct {
-	DCOS188BootstrapDownloadURL     string
-	DCOS190BootstrapDownloadURL     string
-	DCOS198BootstrapDownloadURL     string
-	DCOS110BootstrapDownloadURL     string
-	DCOS111BootstrapDownloadURL     string
-	DCOSWindowsBootstrapDownloadURL string
-	DcosRepositoryURL               string // For custom install, for example CI, need these three addributes
-	DcosClusterPackageListID        string // the id of the package list file
-	DcosProviderPackageID           string // the id of the dcos-provider-xxx package
 }
 
 //KubernetesSpecConfig is the kubernetes container images used.
@@ -40,20 +17,23 @@ type KubernetesSpecConfig struct {
 	// KubernetesImageBase defines a base image URL substring to source images that originate from upstream k8s.gcr.io
 	KubernetesImageBase   string `json:"kubernetesImageBase,omitempty"`
 	TillerImageBase       string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase string `json:"aciConnectorImageBase,omitempty"`
+	ACIConnectorImageBase string `json:"aciConnectorImageBase,omitempty"` // Deprecated
 	// MCRKubernetesImageBase defines a base image URL substring to source MS-curated images that originate from MCR
-	MCRKubernetesImageBase           string `json:"mcrKubernetesImageBase,omitempty"`
-	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
-	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
-	CalicoImageBase                  string `json:"CalicoImageBase,omitempty"`
-	EtcdDownloadURLBase              string `json:"etcdDownloadURLBase,omitempty"`
-	KubeBinariesSASURLBase           string `json:"kubeBinariesSASURLBase,omitempty"`
-	WindowsTelemetryGUID             string `json:"windowsTelemetryGUID,omitempty"`
-	CNIPluginsDownloadURL            string `json:"cniPluginsDownloadURL,omitempty"`
-	VnetCNILinuxPluginsDownloadURL   string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
-	VnetCNIWindowsPluginsDownloadURL string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
-	ContainerdDownloadURLBase        string `json:"containerdDownloadURLBase,omitempty"`
-	CSIProxyDownloadURL              string `json:"csiProxyDownloadURL,omitempty"`
+	MCRKubernetesImageBase               string `json:"mcrKubernetesImageBase,omitempty"`
+	NVIDIAImageBase                      string `json:"nvidiaImageBase,omitempty"`
+	AzureCNIImageBase                    string `json:"azureCNIImageBase,omitempty"`
+	CalicoImageBase                      string `json:"CalicoImageBase,omitempty"`
+	EtcdDownloadURLBase                  string `json:"etcdDownloadURLBase,omitempty"`
+	KubeBinariesSASURLBase               string `json:"kubeBinariesSASURLBase,omitempty"`
+	WindowsTelemetryGUID                 string `json:"windowsTelemetryGUID,omitempty"`
+	CNIPluginsDownloadURL                string `json:"cniPluginsDownloadURL,omitempty"`
+	VnetCNILinuxPluginsDownloadURL       string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
+	VnetCNIWindowsPluginsDownloadURL     string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
+	ContainerdDownloadURLBase            string `json:"containerdDownloadURLBase,omitempty"`
+	CSIProxyDownloadURL                  string `json:"csiProxyDownloadURL,omitempty"`
+	WindowsProvisioningScriptsPackageURL string `json:"windowsProvisioningScriptsPackageURL,omitempty"`
+	WindowsPauseImageURL                 string `json:"windowsPauseImageURL,omitempty"`
+	AlwaysPullWindowsPauseImage          bool   `json:"alwaysPullWindowsPauseImage,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint
@@ -84,41 +64,25 @@ const (
 )
 
 var (
-	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
+	// DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
-		KubernetesImageBase:              "k8s.gcr.io/",
-		TillerImageBase:                  "mcr.microsoft.com/",
-		ACIConnectorImageBase:            "microsoft/",
-		NVIDIAImageBase:                  "mcr.microsoft.com/",
-		CalicoImageBase:                  "calico/",
-		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
-		MCRKubernetesImageBase:           "mcr.microsoft.com/",
-		EtcdDownloadURLBase:              "mcr.microsoft.com/oss/etcd-io/",
-		KubeBinariesSASURLBase:           "https://kubernetesartifacts.azureedge.net/kubernetes/",
-		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
-		CNIPluginsDownloadURL:            "https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
-		VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-		VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
-		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
-		CSIProxyDownloadURL:              "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
-	}
-
-	//DefaultDCOSSpecConfig is the default DC/OS binary download URL.
-	DefaultDCOSSpecConfig = DCOSSpecConfig{
-		DCOS188BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable", "5df43052907c021eeb5de145419a3da1898c58a5"),
-		DCOS190BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable", "58fd0833ce81b6244fc73bf65b5deb43217b0bd7"),
-		DCOS198BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable/1.9.8", "f4ae0d20665fc68ee25282d6f78681b2773c6e10"),
-		DCOS110BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable/1.10.0", "4d92536e7381176206e71ee15b5ffe454439920c"),
-		DCOS111BootstrapDownloadURL:     fmt.Sprintf(AzureEdgeDCOSBootstrapDownloadURL, "stable/1.11.0", "a0654657903fb68dff60f6e522a7f241c1bfbf0f"),
-		DCOSWindowsBootstrapDownloadURL: "http://dcos-win.westus.cloudapp.azure.com/dcos-windows/stable/",
-		DcosRepositoryURL:               "https://dcosio.azureedge.net/dcos/stable/1.11.0",
-		DcosClusterPackageListID:        "248a66388bba1adbcb14a52fd3b7b424ab06fa76",
-	}
-
-	//DefaultDockerSpecConfig is the default Docker engine repo.
-	DefaultDockerSpecConfig = DockerSpecConfig{
-		DockerEngineRepo:         "https://aptdocker.azureedge.net/repo",
-		DockerComposeDownloadURL: "https://github.com/docker/compose/releases/download",
+		KubernetesImageBase:                  "k8s.gcr.io/",
+		TillerImageBase:                      "mcr.microsoft.com/",
+		NVIDIAImageBase:                      "mcr.microsoft.com/",
+		CalicoImageBase:                      "mcr.microsoft.com/oss/calico/",
+		AzureCNIImageBase:                    "mcr.microsoft.com/containernetworking/",
+		MCRKubernetesImageBase:               "mcr.microsoft.com/",
+		EtcdDownloadURLBase:                  "mcr.microsoft.com/oss/etcd-io/",
+		KubeBinariesSASURLBase:               "https://kubernetesartifacts.azureedge.net/kubernetes/",
+		WindowsTelemetryGUID:                 "fb801154-36b9-41bc-89c2-f4d4f05472b0",
+		CNIPluginsDownloadURL:                "https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
+		VnetCNILinuxPluginsDownloadURL:       "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+		VnetCNIWindowsPluginsDownloadURL:     "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+		ContainerdDownloadURLBase:            "https://storage.googleapis.com/cri-containerd-release/",
+		CSIProxyDownloadURL:                  "https://kubernetesartifacts.azureedge.net/csi-proxy/" + DefaultWindowsCsiProxyVersion + "/binaries/csi-proxy-" + DefaultWindowsCsiProxyVersion + ".tar.gz",
+		WindowsProvisioningScriptsPackageURL: "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-" + DefaultWindowsProvisioningScriptsPackageVersion + ".zip",
+		WindowsPauseImageURL:                 "mcr.microsoft.com/oss/kubernetes/pause:" + WindowsPauseImageVersion,
+		AlwaysPullWindowsPauseImage:          DefaultAlwaysPullWindowsPauseImage,
 	}
 
 	//Ubuntu1604OSImageConfig is the default Linux distribution.
@@ -145,36 +109,45 @@ var (
 		ImageVersion:   "latest",
 	}
 
-	//RHELOSImageConfig is the RHEL Linux distribution.
-	RHELOSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "RHEL",
-		ImageSku:       "7.3",
-		ImagePublisher: "RedHat",
+	//FlatcarImageConfig is the Flatcar Linux distribution.
+	FlatcarImageConfig = AzureOSImageConfig{
+		ImageOffer:     "flatcar-container-linux-free",
+		ImageSku:       "stable",
+		ImagePublisher: "kinvolk",
 		ImageVersion:   "latest",
 	}
 
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-engine-ubuntu-1604-202006",
+		ImageSku:       "aks-engine-ubuntu-1604-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.02",
+		ImageVersion:   "2021.04.13",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-engine-ubuntu-1804-202006",
+		ImageSku:       "aks-engine-ubuntu-1804-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.02",
+		ImageVersion:   "2021.04.13",
 	}
 
-	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
+	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk-2005",
+		ImageSku:       "2019-datacenter-core-smalldisk-2104",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.1217.200513",
+		ImageVersion:   "17763.1879.210414",
+	}
+
+	// AKSWindowsServer2019ContainerDOSImageConfig is the aks-engine image based on Windows Server 2019
+	// configured with containerd
+	AKSWindowsServer2019ContainerDOSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "aks-windows",
+		ImageSku:       "2019-datacenter-core-ctrd-2104",
+		ImagePublisher: "microsoft-aks",
+		ImageVersion:   "17763.1879.210414",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -182,7 +155,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.1217.2005081535",
+		ImageVersion:   "17763.1817.2103030313",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -196,11 +169,8 @@ var (
 	//AzureCloudSpec is the default configurations for global azure.
 	AzureCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzurePublicCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DefaultDockerSpecConfig,
 		//KubernetesSpecConfig is the default kubernetes container image url.
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "cloudapp.azure.com",
@@ -210,7 +180,7 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
@@ -222,9 +192,7 @@ var (
 	//AzureGermanCloudSpec is the German cloud config.
 	AzureGermanCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName:            AzureGermanCloud,
-		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "cloudapp.microsoftazure.de",
 		},
@@ -232,7 +200,7 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
 			AKS1604Deprecated: Ubuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
@@ -243,9 +211,7 @@ var (
 	//AzureUSGovernmentCloudSpec is the US government config.
 	AzureUSGovernmentCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName:            AzureUSGovernmentCloud,
-		DockerSpecConfig:     DefaultDockerSpecConfig,
 		KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-		DCOSSpecConfig:       DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "cloudapp.usgovcloudapi.net",
 		},
@@ -253,7 +219,7 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
@@ -264,34 +230,26 @@ var (
 	//AzureChinaCloudSpec is the configurations for Azure China (Mooncake)
 	AzureChinaCloudSpec = AzureEnvironmentSpecConfig{
 		CloudName: AzureChinaCloud,
-		//DockerSpecConfig specify the docker engine download repo
-		DockerSpecConfig: DockerSpecConfig{
-			DockerEngineRepo:         "https://mirror.azk8s.cn/docker-engine/apt/repo/",
-			DockerComposeDownloadURL: "https://mirror.azk8s.cn/docker-toolbox/linux/compose",
-		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:              "gcr.azk8s.cn/google_containers/",
-			TillerImageBase:                  "mcr.microsoft.com/",
-			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
-			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
-			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
-			MCRKubernetesImageBase:           "mcr.microsoft.com/",
-			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
-			EtcdDownloadURLBase:              "mcr.microsoft.com/oss/etcd-io/",
-			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
-			WindowsTelemetryGUID:             DefaultKubernetesSpecConfig.WindowsTelemetryGUID,
-			CNIPluginsDownloadURL:            "https://mirror.azk8s.cn/kubernetes/containernetworking-plugins/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
-			VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.blob.core.chinacloudapi.cn/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-			VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.blob.core.chinacloudapi.cn/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
-			ContainerdDownloadURLBase:        "https://mirror.azk8s.cn/kubernetes/containerd/",
-			CSIProxyDownloadURL:              "https://kubernetesartifacts.blob.core.chinacloudapi.cn/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
-		},
-		DCOSSpecConfig: DCOSSpecConfig{
-			DCOS188BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "5df43052907c021eeb5de145419a3da1898c58a5"),
-			DCOSWindowsBootstrapDownloadURL: "https://dcosdevstorage.blob.core.windows.net/dcos-windows",
-			DCOS190BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "58fd0833ce81b6244fc73bf65b5deb43217b0bd7"),
-			DCOS198BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "f4ae0d20665fc68ee25282d6f78681b2773c6e10"),
+			KubernetesImageBase:    "gcr.azk8s.cn/google_containers/",
+			TillerImageBase:        "mcr.microsoft.com/",
+			NVIDIAImageBase:        "dockerhub.azk8s.cn/nvidia/",
+			AzureCNIImageBase:      "mcr.azk8s.cn/containernetworking/",
+			MCRKubernetesImageBase: "mcr.microsoft.com/",
+			CalicoImageBase:        "dockerhub.azk8s.cn/calico/",
+			EtcdDownloadURLBase:    "mcr.microsoft.com/oss/etcd-io/",
+			// Keep the global default value since mirror for AzureChinaCloud does not have the binaries
+			KubeBinariesSASURLBase:               DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
+			WindowsTelemetryGUID:                 DefaultKubernetesSpecConfig.WindowsTelemetryGUID,
+			CNIPluginsDownloadURL:                "https://mirror.azk8s.cn/kubernetes/containernetworking-plugins/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
+			VnetCNILinuxPluginsDownloadURL:       "https://mirror.azk8s.cn/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+			VnetCNIWindowsPluginsDownloadURL:     "https://mirror.azk8s.cn/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+			ContainerdDownloadURLBase:            "https://mirror.azk8s.cn/kubernetes/containerd/",
+			CSIProxyDownloadURL:                  "https://mirror.azk8s.cn/csi-proxy/" + DefaultWindowsCsiProxyVersion + "/binaries/csi-proxy-" + DefaultWindowsCsiProxyVersion + ".tar.gz",
+			WindowsProvisioningScriptsPackageURL: "https://mirror.azk8s.cn/aks-engine/windows/provisioning/signedscripts-" + DefaultWindowsProvisioningScriptsPackageVersion + ".zip",
+			WindowsPauseImageURL:                 "mcr.microsoft.com/oss/kubernetes/pause:" + WindowsPauseImageVersion,
+			AlwaysPullWindowsPauseImage:          DefaultAlwaysPullWindowsPauseImage,
 		},
 
 		EndpointConfig: AzureEndpointConfig{
@@ -301,7 +259,7 @@ var (
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
-			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,

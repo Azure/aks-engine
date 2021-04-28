@@ -2,7 +2,6 @@
     "apiVersion": "vlabs",
     "properties": {
       "orchestratorProfile": {
-        "orchestratorType": "Kubernetes",
         "kubernetesConfig": {
           "addons": [
             {
@@ -33,10 +32,6 @@
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
   }

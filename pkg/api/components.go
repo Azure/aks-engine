@@ -80,12 +80,27 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultAzureKMSProviderComponentConfig := KubernetesComponent{
+		Name:    common.AzureKMSProviderComponentName,
+		Enabled: to.BoolPtr(to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.AzureKMSProviderComponentName,
+				Image: getComponentDefaultContainerImage(common.AzureKMSProviderComponentName, cs),
+			},
+		},
+		Config: map[string]string{
+			"command": "\"k8s-azure-kms\"",
+		},
+	}
+
 	defaultComponents := []KubernetesComponent{
 		defaultSchedulerComponentConfig,
 		defaultControllerManagerComponentConfig,
 		defaultCloudControllerManagerComponentConfig,
 		defaultAPIServerComponentConfig,
 		defaultAddonManagerComponentConfig,
+		defaultAzureKMSProviderComponentConfig,
 	}
 	// Add default component specification, if no user-provided spec exists
 	if kubernetesConfig.Components == nil {
@@ -283,6 +298,8 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 		return hyperkubeImage
 	case common.AddonManagerComponentName:
 		return kubernetesImageBase + k8sComponents[common.AddonManagerComponentName]
+	case common.AzureKMSProviderComponentName:
+		return kubernetesImageBase + k8sComponents[common.AzureKMSProviderComponentName]
 	default:
 		return ""
 	}

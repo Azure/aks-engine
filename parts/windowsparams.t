@@ -1,4 +1,3 @@
- {{if IsKubernetes}}
     "kubeBinariesSASURL": {
       "metadata": {
         "description": "The download url for kubernetes windows binaries package"
@@ -41,7 +40,6 @@
       },
       "type": "string"
     },
- {{end}}
     "windowsAdminUsername": {
       "type": "string",
       "metadata": {
@@ -107,6 +105,20 @@
       "defaultValue": "18.09.2",
       "metadata": {
         "description": "The version of Docker to be installed on Windows Nodes"
+      },
+      "type": "string"
+    },
+    "defaultContainerdRuntimeHandler": {
+      "defaultValue": "process",
+      "metadata": {
+        "description": "The containerd handler type (process isolated or hyperv)"
+      },
+      "type": "string"
+    },
+    "hypervRuntimeHandlers": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "comma separated list of hyperv values"
       },
       "type": "string"
     }

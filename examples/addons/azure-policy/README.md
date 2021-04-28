@@ -1,6 +1,6 @@
 # Azure Policy Add-on
 
-Azure Policy integrates with the AKS Engine to apply at-scale enforcements and safeguards on your clusters in a centralized, consistent manner. By extending use of [Open Policy Agent](https://www.openpolicyagent.org/) (OPA) [Gatekeeper](https://github.com/open-policy-agent/gatekeeper) v3 (beta), an _admission controller webhook_ for Kubernetes, Azure Policy makes it possible to manage and report on the compliance state of your Azure resources and AKS Engine clusters from one place.
+Azure Policy integrates with the AKS Engine to apply at-scale enforcements and safeguards on your clusters in a centralized, consistent manner. By extending use of [Open Policy Agent](https://www.openpolicyagent.org/) (OPA) [Gatekeeper](https://github.com/open-policy-agent/gatekeeper) v3, an _admission controller webhook_ for Kubernetes, Azure Policy makes it possible to manage and report on the compliance state of your Azure resources and AKS Engine clusters from one place.
 
 
 > [!NOTE]
@@ -18,7 +18,6 @@ The following is a sample API definition with azure-policy addon.
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
           {
@@ -75,14 +74,14 @@ kubectl get pods -n kube-system
 | Name                      | Required | Description                 | Default Value |
 | ------------------------- | -------- | --------------------------- | ------------- |
 | auditInterval             | no       | audit interval (in seconds) | 60            |
-| constraintViolationsLimit | no       | constraint violations limit | 100            |
+| constraintViolationsLimit | no       | constraint violations limit | 100           |
 
 ### Azure Policy
 
 | Name           | Required | Description                       | Default Value                                                                 |
 | -------------- | -------- | --------------------------------- | ----------------------------------------------------------------------------- |
 | name           | no       | container name                    | "azure-policy"                                                                |
-| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200505.1" |
+| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20201023.1" |
 | cpuRequests    | no       | cpu requests for the container    | "30m"                                                                         |
 | memoryRequests | no       | memory requests for the container | "50Mi"                                                                        |
 | cpuLimits      | no       | cpu limits for the container      | "100m"                                                                        |
@@ -90,14 +89,14 @@ kubectl get pods -n kube-system
 
 ### Gatekeeper
 
-| Name           | Required | Description                       | Default Value                                        |
-| -------------- | -------- | --------------------------------- | ---------------------------------------------------- |
-| name           | no       | container name                    | "gatekeeper"                                         |
-| image          | no       | image                             | "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.8" |
-| cpuRequests    | no       | cpu requests for the container    | "100m"                                               |
-| memoryRequests | no       | memory requests for the container | "256Mi"                                              |
-| cpuLimits      | no       | cpu limits for the container      | "1000m"                                              |
-| memoryLimits   | no       | memory limits for the container   | "512Mi"                                              |
+| Name           | Required | Description                       | Default Value                                               |
+| -------------- | -------- | --------------------------------- | ----------------------------------------------------------- |
+| name           | no       | container name                    | "gatekeeper"                                                |
+| image          | no       | image                             | "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.2.3" |
+| cpuRequests    | no       | cpu requests for the container    | "100m"                                                      |
+| memoryRequests | no       | memory requests for the container | "256Mi"                                                     |
+| cpuLimits      | no       | cpu limits for the container      | "1000m"                                                     |
+| memoryLimits   | no       | memory limits for the container   | "512Mi"                                                     |
 
 ## Disable Azure Policy Add-on
 

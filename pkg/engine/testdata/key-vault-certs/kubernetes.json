@@ -2,9 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.15",
-      "orchestratorVersion": "1.15.11",
       "kubernetesConfig": {
         "kubernetesImageBase": "k8s.gcr.io/",
         "clusterSubnet": "10.240.0.0/12",
@@ -41,26 +38,6 @@
             ],
             "config": {
               "max-history": "0"
-            }
-          },
-          {
-            "name": "aci-connector",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "aci-connector",
-                "image": "microsoft/virtual-kubelet:latest",
-                "cpuRequests": "50m",
-                "memoryRequests": "150Mi",
-                "cpuLimits": "50m",
-                "memoryLimits": "150Mi"
-              }
-            ],
-            "config": {
-              "nodeName": "aci-connector",
-              "os": "Linux",
-              "region": "westus",
-              "taint": "azure.com/aci"
             }
           },
           {
@@ -125,34 +102,6 @@
             ]
           },
           {
-            "name": "kubernetes-dashboard",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "kubernetes-dashboard",
-                "image": "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-                "cpuRequests": "300m",
-                "memoryRequests": "150Mi",
-                "cpuLimits": "300m",
-                "memoryLimits": "150Mi"
-              }
-            ]
-          },
-          {
-            "name": "rescheduler",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "rescheduler",
-                "image": "k8s.gcr.io/rescheduler:v0.4.0",
-                "cpuRequests": "10m",
-                "memoryRequests": "100Mi",
-                "cpuLimits": "10m",
-                "memoryLimits": "100Mi"
-              }
-            ]
-          },
-          {
             "name": "metrics-server",
             "enabled": true,
             "containers": [
@@ -182,7 +131,15 @@
             "containers": [
               {
                 "name": "omsagent",
-                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod05262020",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02232021",
+                "cpuRequests": "150m",
+                "memoryRequests": "250Mi",
+                "cpuLimits": "1",
+                "memoryLimits": "750Mi"
+              },
+              {
+                "name": "omsagentWin",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod02232021",
                 "cpuRequests": "150m",
                 "memoryRequests": "250Mi",
                 "cpuLimits": "1",
@@ -190,7 +147,7 @@
               }
             ],
             "config": {
-              "dockerProviderVersion": "10.0.0-1",
+              "dockerProviderVersion": "13.0.0-0",
               "omsAgentVersion": "1.10.0.1"
             }
           },
@@ -317,7 +274,7 @@
           "--etcd-certfile": "/etc/kubernetes/certs/etcdclient.crt",
           "--etcd-keyfile": "/etc/kubernetes/certs/etcdclient.key",
           "--etcd-servers": "https://<etcdEndPointUri>:2379",
-          "--insecure-port": "8080",
+          "--insecure-port": "0",
           "--kubelet-client-certificate": "/etc/kubernetes/certs/client.crt",
           "--kubelet-client-key": "/etc/kubernetes/certs/client.key",
           "--profiling": "false",

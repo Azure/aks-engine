@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -47,7 +48,7 @@ type Status struct {
 
 // CreateJobFromFile will create a Job from file with a name
 func CreateJobFromFile(filename, name, namespace string, sleep, timeout time.Duration) (*Job, error) {
-	cmd := exec.Command("k", "create", "-f", filename)
+	cmd := exec.Command("k", "apply", "-f", filename)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -60,6 +61,49 @@ func CreateJobFromFile(filename, name, namespace string, sleep, timeout time.Dur
 		return nil, err
 	}
 	return job, nil
+}
+
+// CreateJobFromFileAsync wraps CreateJobFromFile with a struct response for goroutine + channel usage
+func CreateJobFromFileAsync(filename, name, namespace string, sleep, timeout time.Duration) GetResult {
+	j, err := CreateJobFromFile(filename, name, namespace, sleep, timeout)
+	return GetResult{
+		Job: j,
+		Err: err,
+	}
+}
+
+// CreateJobFromFileWithRetry will kubectl apply a Job from file with a name with retry toleration
+func CreateJobFromFileWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*Job, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateJobFromFileWithRetryError error
+	var j *Job
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateJobFromFileAsync(filename, name, namespace, sleep, timeout)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateJobFromFileWithRetryError = result.Err
+			j = result.Job
+			if mostRecentCreateJobFromFileWithRetryError == nil {
+				if j != nil {
+					return j, nil
+				}
+			}
+		case <-ctx.Done():
+			return j, errors.Errorf("CreateJobFromFileWithRetry timed out: %s\n", mostRecentCreateJobFromFileWithRetryError)
+		}
+	}
 }
 
 // CreateWindowsJobFromTemplate will create a Job from file with a name
@@ -101,22 +145,6 @@ func CreateWindowsJobFromTemplateDeleteIfExists(filename, name, namespace string
 	return CreateWindowsJobFromTemplate(filename, name, namespace, windowsTestImages, sleep, timeout)
 }
 
-// CreateJobFromFileDeleteIfExists will create a Job from file, deleting any pre-existing job with the same name
-func CreateJobFromFileDeleteIfExists(filename, name, namespace string, sleep, timeout time.Duration) (*Job, error) {
-	j, err := Get(name, namespace)
-	if err == nil {
-		err := j.Delete(util.DefaultDeleteRetries)
-		if err != nil {
-			return nil, err
-		}
-		_, err = WaitOnDeleted(j.Metadata.Name, j.Metadata.Namespace, 5*time.Second, 1*time.Minute)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return CreateJobFromFile(filename, name, namespace, sleep, timeout)
-}
-
 // GetAll will return all jobs in a given namespace
 func GetAll(namespace string) (*List, error) {
 	cmd := exec.Command("k", "get", "jobs", "-n", namespace, "-o", "json")
@@ -134,16 +162,16 @@ func GetAll(namespace string) (*List, error) {
 	return &jl, nil
 }
 
-// GetAllByPrefixResult is a return struct for GetAllByPrefixAsync
-type GetAllByPrefixResult struct {
+// GetJobsResult is a return struct for GetAllByPrefixAsync
+type GetJobsResult struct {
 	jobs []Job
 	err  error
 }
 
 // GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
-func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+func GetAllByPrefixAsync(prefix, namespace string) GetJobsResult {
 	jobs, err := GetAllByPrefix(prefix, namespace)
-	return GetAllByPrefixResult{
+	return GetJobsResult{
 		jobs: jobs,
 		err:  err,
 	}
@@ -167,6 +195,33 @@ func GetAllByPrefix(prefix, namespace string) ([]Job, error) {
 		}
 	}
 	return jobs, nil
+}
+
+// GetAllByLabelsAsync wraps GetAllByLabel with a struct response for goroutine + channel usage
+func GetAllByLabelsAsync(labelKey, labelVal, namespace string) GetJobsResult {
+	jobs, err := GetAllByLabel(labelKey, labelVal, namespace)
+	return GetJobsResult{
+		jobs: jobs,
+		err:  err,
+	}
+}
+
+// GetAllByLabel will return all jobs in a given namespace that match a label
+func GetAllByLabel(labelKey, labelVal, namespace string) ([]Job, error) {
+	cmd := exec.Command("k", "get", "jobs", "-n", namespace, "-l", fmt.Sprintf("%s=%s", labelKey, labelVal), "-o", "json")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error getting job:\n")
+		util.PrintCommand(cmd)
+		return nil, err
+	}
+	jl := List{}
+	err = json.Unmarshal(out, &jl)
+	if err != nil {
+		log.Printf("Error unmarshalling jobs json:%s\n", err)
+		return nil, err
+	}
+	return jl.Jobs, nil
 }
 
 // GetResult is a return struct for GetAsync
@@ -361,7 +416,7 @@ func DescribeJobs(jobPrefix, namespace string) {
 // Describe will describe a Job resource
 func (j *Job) Describe() error {
 	var commandTimeout time.Duration
-	cmd := exec.Command("k", "describe", "jobs/", j.Metadata.Name, "-n", j.Metadata.Namespace)
+	cmd := exec.Command("k", "describe", fmt.Sprintf("jobs/%s", j.Metadata.Name), "-n", j.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
 	return err
@@ -371,7 +426,7 @@ func (j *Job) Describe() error {
 func WaitOnDeleted(jobPrefix, namespace string, sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan GetAllByPrefixResult)
+	ch := make(chan GetJobsResult)
 	var mostRecentWaitOnDeletedError error
 	var jobs []Job
 	go func() {
@@ -400,6 +455,38 @@ func WaitOnDeleted(jobPrefix, namespace string, sleep, timeout time.Duration) (b
 				j.Describe()
 			}
 			return false, errors.Errorf("WaitOnDeleted timed out: %s\n", mostRecentWaitOnDeletedError)
+		}
+	}
+}
+
+// GetAllByLabelWithRetry will return all jobs in a given namespace that match a label, retrying if error up to a timeout
+func GetAllByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Job, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetJobsResult)
+	var mostRecentGetAllByLabelWithRetryError error
+	var jobs []Job
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetAllByLabelsAsync(labelKey, labelVal, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllByLabelWithRetryError = result.err
+			jobs = result.jobs
+			if mostRecentGetAllByLabelWithRetryError == nil && len(jobs) > 0 {
+				return jobs, nil
+			}
+		case <-ctx.Done():
+			return jobs, errors.Errorf("GetAllByLabelWithRetry timed out: %s\n", mostRecentGetAllByLabelWithRetryError)
 		}
 	}
 }

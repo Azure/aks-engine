@@ -2,8 +2,8 @@
 
 write_files:
 {{- if .RequiresCloudproviderConfig}}
-- path: /etc/kubernetes/azure.json
-  permissions: "0600"
+- path: /opt/azure/needs_azure.json
+  permissions: "0644"
   owner: root
   content: |
     #EOF
@@ -46,15 +46,13 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{- if not .IsVHDDistro}}
-  {{- if .IsAuditDEnabled}}
+{{- if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
-  {{end}}
 {{end}}
 
 {{- if .IsUbuntu1804}}
@@ -89,7 +87,7 @@ write_files:
     Requires=-.slice
     After=-.slice
     #EOF
-    
+
 - path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
@@ -98,24 +96,34 @@ write_files:
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
 
-  {{if NeedsContainerd}}
-- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+- path: /etc/systemd/system/{{GetContainerRuntime}}.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
   content: |
     [Service]
     Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
-  {{else}}
-- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+{{- end}}
+
+{{- if HasKubeletHealthZPort}}
+- path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
+  encoding: gzip
   owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-  {{end}}
-{{end}}
+  content: !!binary |
+    {{CloudInitData "kubeletMonitorSystemdService"}}
+{{- end}}
+
+{{- if .IsFlatcar}}
+- path: /opt/bin/health-monitor.sh
+{{else}}
+- path: /usr/local/bin/health-monitor.sh
+{{- end}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "healthMonitorScript"}}
 
 - path: /etc/systemd/system/kubelet.service
   permissions: "0644"
@@ -124,28 +132,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{- if not .IsVHDDistro}}
-- path: /usr/local/bin/health-monitor.sh
-  permissions: "0544"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
-
-- path: /etc/systemd/system/kubelet-monitor.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdService"}}
-
-- path: /etc/systemd/system/docker-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
-
+{{- /* for historical reasons, we overload the name "docker" here; in fact this monitor service supports both docker and containerd */}}
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -153,13 +140,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
 
-- path: /etc/systemd/system/kms.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
-
+{{- if not .IsVHDDistro}}
 - path: /etc/apt/preferences
   permissions: "0644"
   encoding: gzip
@@ -177,7 +158,7 @@ write_files:
     APT::Periodic::AutocleanInterval "0";
     APT::Periodic::Unattended-Upgrade "0";
 
-{{- if IsIPv6Enabled}}
+{{- if and IsIPv6Enabled .IsUbuntu1604}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -194,22 +175,29 @@ write_files:
 {{end}}
 
 {{- if .KubernetesConfig.RequiresDocker}}
-    {{if not .IsVHDDistro}}
+    {{- if not .IsFlatcar}}
+        {{- if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-    {{end}}
+        {{- end}}
+    {{- end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: "0644"
   owner: root
   content: |
     [Service]
+    Restart=always
     ExecStart=
+    {{- if .IsFlatcar}}
+    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
+    {{- end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -273,6 +261,11 @@ write_files:
                 "subnet": "{{`{{.PodCIDR}}`}}",
                 "routes": [{ "dst": "0.0.0.0/0" }]
             }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {"portMappings": true},
+            "snat": false
           }]
       }
   {{end}}
@@ -347,11 +340,7 @@ write_files:
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-{{- if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
-{{else}}
-    KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
-{{end}}
 {{- if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
@@ -368,6 +357,9 @@ write_files:
       mount --bind $MOUNT_DIR $MOUNT_DIR
     fi
     mount --make-shared $MOUNT_DIR
+{{- if IsAzureCNI}}
+    ifconfig eth0 mtu {{GetEth0MTU}} up
+{{- end}}
 {{- if and (IsVirtualMachineScaleSets .) IsAADPodIdentityAddonEnabled UseManagedIdentity}}
     {{- /* Disable TCP access to IMDS endpoint, aad-pod-identity nmi component will provide a complementary iptables rule to re-route this traffic */}}
     iptables -A OUTPUT -s 127.0.0.1/32 -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DROP
@@ -377,6 +369,8 @@ write_files:
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
+    {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
+    iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
     #EOF
 
 {{- if IsCustomCloudProfile}}
@@ -387,7 +381,57 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+{{- if .IsFlatcar}}
+- path: "/etc/kubernetes/manifests/.keep"
+
+  {{- if .KubernetesConfig.RequiresDocker}}
+groups:
+  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
+  {{end}}
+
+coreos:
+  units:
+    - name: kubelet.service
+      enable: true
+      drop-ins:
+        - name: "10-flatcar.conf"
+          content: |
+            [Unit]
+            Requires=rpc-statd.service
+            ConditionPathExists=
+            ConditionPathExists=/opt/bin/kubelet
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/kubelet \
+              --enable-server \
+              --node-labels="${KUBELET_NODE_LABELS}" \
+              --v=2 \
+              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
+              $KUBELET_CONFIG $KUBELET_OPTS \
+              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
+    - name: kubelet-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-flatcar.conf"
+          content: |
+            After=kubelet.service
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh kubelet
+    - name: docker-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-flatcar.conf"
+          content: |
+            After={{GetContainerRuntime}}.service
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh container-runtime
+    - name: rpcbind.service
+      enable: true
+{{else}}
 runcmd:
 - set -x
-- . {{GetCSEHelpersScriptFilepath}}
+- source {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
+{{- end}}

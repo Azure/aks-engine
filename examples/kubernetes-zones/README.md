@@ -15,10 +15,6 @@ Here is an [example of a Kubernetes cluster with Availability Zones support](../
 {
     "apiVersion": "vlabs",
     "properties": {
-      "orchestratorProfile": {
-        "orchestratorType": "Kubernetes",
-        "orchestratorRelease": "1.13"
-      },
       "masterProfile": {
         "count": 5,
         "dnsPrefix": "",
@@ -50,10 +46,6 @@ Here is an [example of a Kubernetes cluster with Availability Zones support](../
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
 }

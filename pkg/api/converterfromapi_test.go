@@ -4,7 +4,6 @@
 package api
 
 import (
-	"net/url"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -19,26 +18,32 @@ const ValidSSHPublicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEApD8+lRvLtUcyfO8N2
 
 func TestConvertCloudProfileToVLabs(t *testing.T) {
 	const (
-		name                         = "AzureStackCloud"
-		managementPortalURL          = "https://management.local.azurestack.external/"
-		publishSettingsURL           = "https://management.local.azurestack.external/publishsettings/index"
-		serviceManagementEndpoint    = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
-		resourceManagerEndpoint      = "https://management.local.azurestack.external/"
-		activeDirectoryEndpoint      = "https://login.windows.net/"
-		galleryEndpoint              = "https://portal.local.azurestack.external=30015/"
-		keyVaultEndpoint             = "https://vault.azurestack.external/"
-		graphEndpoint                = "https://graph.windows.net/"
-		serviceBusEndpoint           = "https://servicebus.azurestack.external/"
-		batchManagementEndpoint      = "https://batch.azurestack.external/"
-		storageEndpointSuffix        = "core.azurestack.external"
-		sqlDatabaseDNSSuffix         = "database.azurestack.external"
-		trafficManagerDNSSuffix      = "trafficmanager.cn"
-		keyVaultDNSSuffix            = "vault.azurestack.external"
-		serviceBusEndpointSuffix     = "servicebus.azurestack.external"
-		serviceManagementVMDNSSuffix = "chinacloudapp.cn"
-		resourceManagerVMDNSSuffix   = "cloudapp.azurestack.external"
-		containerRegistryDNSSuffix   = "azurecr.io"
-		tokenAudience                = "https://management.azurestack.external/"
+		name                                  = "AzureStackCloud"
+		managementPortalURL                   = "https://management.local.azurestack.external/"
+		publishSettingsURL                    = "https://management.local.azurestack.external/publishsettings/index"
+		serviceManagementEndpoint             = "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189"
+		resourceManagerEndpoint               = "https://management.local.azurestack.external/"
+		activeDirectoryEndpoint               = "https://login.windows.net/"
+		galleryEndpoint                       = "https://portal.local.azurestack.external=30015/"
+		keyVaultEndpoint                      = "https://vault.azurestack.external/"
+		graphEndpoint                         = "https://graph.windows.net/"
+		serviceBusEndpoint                    = "https://servicebus.azurestack.external/"
+		batchManagementEndpoint               = "https://batch.azurestack.external/"
+		storageEndpointSuffix                 = "core.azurestack.external"
+		sqlDatabaseDNSSuffix                  = "database.azurestack.external"
+		trafficManagerDNSSuffix               = "trafficmanager.cn"
+		keyVaultDNSSuffix                     = "vault.azurestack.external"
+		serviceBusEndpointSuffix              = "servicebus.azurestack.external"
+		serviceManagementVMDNSSuffix          = "chinacloudapp.cn"
+		resourceManagerVMDNSSuffix            = "cloudapp.azurestack.external"
+		containerRegistryDNSSuffix            = "azurecr.io"
+		tokenAudience                         = "https://management.azurestack.external/"
+		graphResourceIdentifier               = "https://graph.azurestack.external/"
+		keyVaultResourceIdentifier            = "https://keyvault.azurestack.external/"
+		datalakeResourceIdentifier            = "https://datalake.azurestack.external/"
+		batchResourceIdentifier               = "https://batch.azurestack.external/"
+		operationalInsightsResourceIdentifier = "https://operationalinsights.azurestack.external/"
+		storageResourceIdentifier             = "https://storage.azurestack.external/"
 	)
 
 	cs := &ContainerService{
@@ -67,6 +72,14 @@ func TestConvertCloudProfileToVLabs(t *testing.T) {
 					ResourceManagerVMDNSSuffix:   resourceManagerVMDNSSuffix,
 					ContainerRegistryDNSSuffix:   containerRegistryDNSSuffix,
 					TokenAudience:                tokenAudience,
+					ResourceIdentifiers: azure.ResourceIdentifier{
+						Graph:               graphResourceIdentifier,
+						KeyVault:            keyVaultResourceIdentifier,
+						Datalake:            datalakeResourceIdentifier,
+						Batch:               batchResourceIdentifier,
+						OperationalInsights: operationalInsightsResourceIdentifier,
+						Storage:             storageResourceIdentifier,
+					},
 				},
 			},
 		},
@@ -140,6 +153,24 @@ func TestConvertCloudProfileToVLabs(t *testing.T) {
 	if vlabscs.Properties.CustomCloudProfile.Environment.TokenAudience != tokenAudience {
 		t.Errorf("incorrect TokenAudience, expect: '%s', actual: '%s'", tokenAudience, vlabscs.Properties.CustomCloudProfile.Environment.TokenAudience)
 	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Graph != graphResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Graph, expect: '%s', actual: '%s'", graphResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Graph)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.KeyVault != keyVaultResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.KeyVault, expect: '%s', actual: '%s'", keyVaultResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.KeyVault)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Datalake != datalakeResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Datalake, expect: '%s', actual: '%s'", datalakeResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Datalake)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Batch != batchResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Batch, expect: '%s', actual: '%s'", batchResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Batch)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.OperationalInsights != operationalInsightsResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.OperationalInsights, expect: '%s', actual: '%s'", operationalInsightsResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.OperationalInsights)
+	}
+	if vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Storage != storageResourceIdentifier {
+		t.Errorf("incorrect ResourceIdentifiers.Storage, expect: '%s', actual: '%s'", storageResourceIdentifier, vlabscs.Properties.CustomCloudProfile.Environment.ResourceIdentifiers.Storage)
+	}
 }
 
 func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
@@ -151,39 +182,25 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 				AuthenticationMethod: ClientCertificateAuthMethod,
 				AzureEnvironmentSpecConfig: &AzureEnvironmentSpecConfig{
 					CloudName: "AzureStackCloud",
-					//DockerSpecConfig specify the docker engine download repo
-					DockerSpecConfig: DockerSpecConfig{
-						DockerEngineRepo:         "DockerEngineRepo",
-						DockerComposeDownloadURL: "DockerComposeDownloadURL",
-					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
-						AzureTelemetryPID:                "AzureTelemetryPID",
-						KubernetesImageBase:              "KubernetesImageBase",
-						TillerImageBase:                  "TillerImageBase",
-						ACIConnectorImageBase:            "ACIConnectorImageBase",
-						NVIDIAImageBase:                  "NVIDIAImageBase",
-						AzureCNIImageBase:                "AzureCNIImageBase",
-						CalicoImageBase:                  "CalicoImageBase",
-						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
-						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
-						CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
-						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
-						CSIProxyDownloadURL:              "CSIProxyDownloadURL",
-					},
-					DCOSSpecConfig: DCOSSpecConfig{
-						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
-						DCOS190BootstrapDownloadURL:     "DCOS190BootstrapDownloadURL",
-						DCOS198BootstrapDownloadURL:     "DCOS198BootstrapDownloadURL",
-						DCOS110BootstrapDownloadURL:     "DCOS110BootstrapDownloadURL",
-						DCOS111BootstrapDownloadURL:     "DCOS111BootstrapDownloadURL",
-						DCOSWindowsBootstrapDownloadURL: "DCOSWindowsBootstrapDownloadURL",
-						DcosRepositoryURL:               "DcosRepositoryURL",
-						DcosClusterPackageListID:        "DcosClusterPackageListID",
-						DcosProviderPackageID:           "DcosProviderPackageID",
+						AzureTelemetryPID:                    "AzureTelemetryPID",
+						KubernetesImageBase:                  "KubernetesImageBase",
+						TillerImageBase:                      "TillerImageBase",
+						NVIDIAImageBase:                      "NVIDIAImageBase",
+						AzureCNIImageBase:                    "AzureCNIImageBase",
+						CalicoImageBase:                      "CalicoImageBase",
+						EtcdDownloadURLBase:                  "EtcdDownloadURLBase",
+						KubeBinariesSASURLBase:               "KubeBinariesSASURLBase",
+						WindowsTelemetryGUID:                 "WindowsTelemetryGUID",
+						CNIPluginsDownloadURL:                "CNIPluginsDownloadURL",
+						VnetCNILinuxPluginsDownloadURL:       "VnetCNILinuxPluginsDownloadURL",
+						VnetCNIWindowsPluginsDownloadURL:     "VnetCNIWindowsPluginsDownloadURL",
+						ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
+						CSIProxyDownloadURL:                  "CSIProxyDownloadURL",
+						WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
+						WindowsPauseImageURL:                 "WindowsPauseImageURL",
+						AlwaysPullWindowsPauseImage:          true,
 					},
 					EndpointConfig: AzureEndpointConfig{
 						ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
@@ -225,9 +242,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	if vlabscsSpec.KubernetesSpecConfig.TillerImageBase != csSpec.KubernetesSpecConfig.TillerImageBase {
 		t.Errorf("incorrect TillerImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.TillerImageBase, vlabscsSpec.KubernetesSpecConfig.TillerImageBase)
 	}
-	if vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase != csSpec.KubernetesSpecConfig.ACIConnectorImageBase {
-		t.Errorf("incorrect ACIConnectorImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.ACIConnectorImageBase, vlabscsSpec.KubernetesSpecConfig.ACIConnectorImageBase)
-	}
 	if vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase != csSpec.KubernetesSpecConfig.NVIDIAImageBase {
 		t.Errorf("incorrect NVIDIAImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.NVIDIAImageBase, vlabscsSpec.KubernetesSpecConfig.NVIDIAImageBase)
 	}
@@ -258,42 +272,14 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	if vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL != csSpec.KubernetesSpecConfig.CSIProxyDownloadURL {
 		t.Errorf("incorrect CSIProxyDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.CSIProxyDownloadURL, vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL)
 	}
-
-	//DockerSpecConfig
-	if vlabscsSpec.DockerSpecConfig.DockerComposeDownloadURL != csSpec.DockerSpecConfig.DockerComposeDownloadURL {
-		t.Errorf("incorrect DockerComposeDownloadURL, expect: '%s', actual: '%s'", csSpec.DockerSpecConfig.DockerComposeDownloadURL, vlabscsSpec.DockerSpecConfig.DockerComposeDownloadURL)
+	if vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL != csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL {
+		t.Errorf("incorrect WindowsProvisioningScriptsPackageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
 	}
-	if vlabscsSpec.DockerSpecConfig.DockerEngineRepo != csSpec.DockerSpecConfig.DockerEngineRepo {
-		t.Errorf("incorrect DockerEngineRepo, expect: '%s', actual: '%s'", csSpec.DockerSpecConfig.DockerEngineRepo, vlabscsSpec.DockerSpecConfig.DockerEngineRepo)
+	if vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL != csSpec.KubernetesSpecConfig.WindowsPauseImageURL {
+		t.Errorf("incorrect WindowsPauseImageURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.WindowsPauseImageURL, vlabscsSpec.KubernetesSpecConfig.WindowsPauseImageURL)
 	}
-
-	//DCOSSpecConfig
-	if vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS188BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS188BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS190BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS190BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS198BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS198BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS110BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS110BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL {
-		t.Errorf("incorrect DCOS111BootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOS111BootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL != csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL {
-		t.Errorf("incorrect DCOSWindowsBootstrapDownloadURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL, vlabscsSpec.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL != csSpec.DCOSSpecConfig.DcosRepositoryURL {
-		t.Errorf("incorrect DcosRepositoryURL, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DcosRepositoryURL, vlabscsSpec.DCOSSpecConfig.DcosRepositoryURL)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID != csSpec.DCOSSpecConfig.DcosClusterPackageListID {
-		t.Errorf("incorrect DcosClusterPackageListID, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DcosClusterPackageListID, vlabscsSpec.DCOSSpecConfig.DcosClusterPackageListID)
-	}
-	if vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID != csSpec.DCOSSpecConfig.DcosProviderPackageID {
-		t.Errorf("incorrect DcosProviderPackageID, expect: '%s', actual: '%s'", csSpec.DCOSSpecConfig.DcosProviderPackageID, vlabscsSpec.DCOSSpecConfig.DcosProviderPackageID)
+	if vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage != csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage {
+		t.Errorf("incorrect AlwaysPullWindowsPauseImage, expect: '%t', actual: '%t'", csSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage, vlabscsSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage)
 	}
 
 	//EndpointConfig
@@ -331,7 +317,6 @@ func TestConvertContainerServiceToVLabs(t *testing.T) {
 }
 
 func getDefaultContainerService() *ContainerService {
-	u, _ := url.Parse("http://foobar.com/search")
 	return &ContainerService{
 		ID:       "sampleID",
 		Location: "westus2",
@@ -350,12 +335,6 @@ func getDefaultContainerService() *ContainerService {
 			WindowsProfile: &WindowsProfile{
 				AdminUsername: "sampleAdminUsername",
 				AdminPassword: "sampleAdminPassword",
-			},
-			DiagnosticsProfile: &DiagnosticsProfile{
-				VMDiagnostics: &VMDiagnostics{
-					Enabled:    true,
-					StorageURL: u,
-				},
 			},
 			LinuxProfile: &LinuxProfile{
 				AdminUsername: "azureuser",
@@ -447,29 +426,10 @@ func getDefaultContainerService() *ContainerService {
 				AdminGroupID:    "SampleAdminGroupID",
 				Authenticator:   Webhook,
 			},
-			CustomProfile: &CustomProfile{
-				Orchestrator: "Kubernetes",
-			},
 			OrchestratorProfile: &OrchestratorProfile{
 				OrchestratorType:    "Kubernetes",
 				OrchestratorVersion: "1.11.6",
-				DcosConfig: &DcosConfig{
-					DcosBootstrapURL:         "SampleDcosBootstrapURL",
-					DcosWindowsBootstrapURL:  "SampleWindowsDcosBootstrapURL",
-					Registry:                 "SampleRegistry",
-					RegistryPass:             "SampleRegistryPass",
-					RegistryUser:             "SampleRegistryUser",
-					DcosClusterPackageListID: "SampleDcosClusterPackageListID",
-					DcosProviderPackageID:    "SampleDcosProviderPackageID",
-					BootstrapProfile: &BootstrapProfile{
-						VMSize:       "Standard_Ds1_v1",
-						OSDiskSizeGB: 256,
-						OAuthEnabled: true,
-						StaticIP:     "172.0.0.1",
-						Subnet:       "255.255.255.0",
-					},
-				},
-				KubernetesConfig: &KubernetesConfig{},
+				KubernetesConfig:    &KubernetesConfig{},
 			},
 			MasterProfile: &MasterProfile{
 				Count:     1,
@@ -525,7 +485,7 @@ func getDefaultContainerService() *ContainerService {
 					DockerBridgeSubnet:              "sampleDockerSubnet",
 					DNSServiceIP:                    "172.0.0.1",
 					ServiceCIDR:                     "172.0.0.1/16",
-					UseManagedIdentity:              true,
+					UseManagedIdentity:              to.BoolPtr(true),
 					UserAssignedID:                  "fooUserAssigneID",
 					UserAssignedClientID:            "fooUserAssigneClientID",
 					MobyVersion:                     "3.0.0",
@@ -549,7 +509,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.1.3",
+					AzureCNIVersion:                 "1.1.8",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",
@@ -589,7 +549,8 @@ func getDefaultContainerService() *ContainerService {
 						"sampleSchedulerKey": "sampleSchedulerVal",
 					},
 					PrivateCluster: &PrivateCluster{
-						Enabled: to.BoolPtr(true),
+						Enabled:                to.BoolPtr(true),
+						EnableHostsConfigAgent: to.BoolPtr(true),
 						JumpboxProfile: &PrivateJumpboxProfile{
 							Name:           "sampleJumpboxProfile",
 							VMSize:         "Standard_DS1_v2",
@@ -666,8 +627,7 @@ func TestTelemetryEnabledToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if !vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+	} else if !vlabsCS.Properties.FeatureFlags.EnableTelemetry {
 		t.Errorf("expected the EnableTelemetry feature flag to be true")
 	}
 }
@@ -677,9 +637,29 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if vlabsCS.Properties.FeatureFlags.EnableTelemetry {
+	} else if vlabsCS.Properties.FeatureFlags.EnableTelemetry {
 		t.Errorf("expected the EnableTelemetry feature flag to be false")
+	}
+}
+
+func TestWinDSREnabledToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.FeatureFlags.EnableWinDSR = true
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	} else if !vlabsCS.Properties.FeatureFlags.EnableWinDSR {
+		t.Errorf("expected the EnableWinDSR feature flag to be true")
+	}
+}
+
+func TestWinDSRDefaultToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	} else if vlabsCS.Properties.FeatureFlags.EnableWinDSR {
+		t.Errorf("expected the EnableWinDSR feature flag to be false")
 	}
 }
 
@@ -692,12 +672,9 @@ func TestPPGToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if vlabsCS.Properties.MasterProfile.ProximityPlacementGroupID != ppgResourceID1 {
+	} else if vlabsCS.Properties.MasterProfile.ProximityPlacementGroupID != ppgResourceID1 {
 		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID1)
-	}
-
-	if vlabsCS.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID != ppgResourceID2 {
+	} else if vlabsCS.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID != ppgResourceID2 {
 		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID2)
 	}
 }
@@ -709,11 +686,9 @@ func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if *vlabsCS.Properties.MasterProfile.PlatformFaultDomainCount != 3 {
+	} else if *vlabsCS.Properties.MasterProfile.PlatformFaultDomainCount != 3 {
 		t.Errorf("expected the master profile platform FD to be 3")
-	}
-	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != 5 {
+	} else if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != 5 {
 		t.Errorf("expected the agent pool profile platform FD to be 5")
 	}
 }
@@ -725,11 +700,9 @@ func TestPlatformUpdateDomainCountToVLabs(t *testing.T) {
 	vlabsCS := ConvertContainerServiceToVLabs(cs)
 	if vlabsCS == nil {
 		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-	if *vlabsCS.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
+	} else if *vlabsCS.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
 		t.Errorf("expected the master profile platform FD to be 3")
-	}
-	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
+	} else if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
 		t.Errorf("expected the agent pool profile platform FD to be 3")
 	}
 }
@@ -778,6 +751,13 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
+				EnableAHUB:             to.BoolPtr(true),
+				WindowsRuntimes: &WindowsRuntimes{
+					Default: "process",
+					HypervRuntimes: []RuntimeHandlers{
+						{BuildNumber: "17763"},
+					},
+				},
 			},
 			expected: vlabs.WindowsProfile{
 				AdminUsername:          "user",
@@ -790,6 +770,13 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
 				Secrets:                []vlabs.KeyVaultSecrets{},
+				EnableAHUB:             to.BoolPtr(true),
+				WindowsRuntimes: &vlabs.WindowsRuntimes{
+					Default: "process",
+					HypervRuntimes: []vlabs.RuntimeHandlers{
+						{BuildNumber: "17763"},
+					},
+				},
 			},
 		},
 		{
@@ -817,9 +804,9 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
 			actual := vlabs.WindowsProfile{}
 			convertWindowsProfileToVLabs(&c.w, &actual)
 

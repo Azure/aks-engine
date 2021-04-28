@@ -1,13 +1,13 @@
 {
 	"env": {
-		"SCALE_CLUSTER": true
+		"UPGRADE_CLUSTER": true,
+		"SCALE_CLUSTER": true,
+		"STABILITY_ITERATIONS": "0",
+		"GINKGO_SKIP_AFTER_UPGRADE": "dns-liveness pod"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
-			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
-			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
@@ -15,14 +15,14 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agent1",
+					"name": "poollinux1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Linux",
 					"availabilityProfile": "AvailabilitySet"
 				},
 				{
-					"name": "poolwin",
+					"name": "poolwin1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
@@ -44,17 +44,22 @@
 				"adminPassword": "replacepassword1234$",
 				"enableAutomaticUpdates": false,
 				"sshEnabled": true
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	},
-	"addNodePool": {
-		"name": "pooladded",
-		"count": 1,
-		"vmSize": "Standard_D2_v3",
-		"availabilityProfile": "AvailabilitySet"
-	}
+	"addNodePool": [
+		{
+			"name": "poollinux2",
+			"count": 1,
+			"vmSize": "Standard_D2_v3",
+			"availabilityProfile": "AvailabilitySet"
+		},
+		{
+			"name": "poolwin2",
+			"count": 1,
+			"vmSize": "Standard_D2_v3",
+			"osType": "Windows",
+			"availabilityProfile": "AvailabilitySet"
+		}
+	]
 }

@@ -209,7 +209,7 @@ spec:
               name: cilium-config
               optional: true
         image: {{ContainerImage "cilium-agent"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
             exec:
@@ -353,7 +353,7 @@ spec:
           secretName: cilium-clustermesh
   updateStrategy:
     rollingUpdate:
-      maxUnavailable: 2
+      maxUnavailable: 50%
     type: RollingUpdate
 ---
 apiVersion: apps/v1
@@ -362,10 +362,9 @@ metadata:
   labels:
     io.cilium/app: operator
     name: cilium-operator
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: cilium-operator
   namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: "Reconcile"
 spec:
   replicas: 1
   selector:
@@ -444,7 +443,7 @@ spec:
               name: cilium-aws
               optional: true
         image: {{ContainerImage "cilium-operator"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: cilium-operator
         volumeMounts:
         - mountPath: /var/lib/etcd-config

@@ -11,22 +11,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
-// CreateMockAgentPoolProfile creates a mock AgentPoolResource for testing
-func CreateMockAgentPoolProfile(agentPoolName, orchestratorVersion string, provisioningState ProvisioningState, agentCount int) *AgentPoolResource {
-	agentPoolResource := AgentPoolResource{}
-	agentPoolResource.ID = uuid.Must(uuid.NewRandom()).String()
-	agentPoolResource.Location = "westus2"
-	agentPoolResource.Name = agentPoolName
-
-	agentPoolResource.Properties = &AgentPoolProfile{}
-	// AgentPoolProfile needs to be remain same, so the name is repeated inside.
-	agentPoolResource.Properties.Name = agentPoolName
-	agentPoolResource.Properties.Count = agentCount
-	agentPoolResource.Properties.OrchestratorVersion = orchestratorVersion
-	agentPoolResource.Properties.ProvisioningState = provisioningState
-	return &agentPoolResource
-}
-
 // CreateMockContainerService returns a mock container service for testing purposes
 func CreateMockContainerService(containerServiceName, orchestratorVersion string, masterCount, agentCount int, certs bool) *ContainerService {
 	cs := ContainerService{}
@@ -69,28 +53,33 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 
 	cs.Properties.OrchestratorProfile = &OrchestratorProfile{}
 	cs.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	cs.Properties.OrchestratorProfile.OrchestratorVersion = orchestratorVersion
+	if orchestratorVersion == "" {
+		cs.Properties.OrchestratorProfile.OrchestratorVersion = common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
+	} else {
+		cs.Properties.OrchestratorProfile.OrchestratorVersion = orchestratorVersion
+	}
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		EnableSecureKubelet:     to.BoolPtr(DefaultSecureKubeletEnabled),
-		EnableRbac:              to.BoolPtr(DefaultRBACEnabled),
-		EtcdDiskSizeGB:          DefaultEtcdDiskSize,
-		ServiceCIDR:             DefaultKubernetesServiceCIDR,
-		DockerBridgeSubnet:      DefaultDockerBridgeSubnet,
-		DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-		GCLowThreshold:          DefaultKubernetesGCLowThreshold,
-		GCHighThreshold:         DefaultKubernetesGCHighThreshold,
-		MaxPods:                 DefaultKubernetesMaxPodsVNETIntegrated,
-		ClusterSubnet:           DefaultKubernetesSubnet,
-		ContainerRuntime:        DefaultContainerRuntime,
-		NetworkPlugin:           DefaultNetworkPlugin,
-		NetworkPolicy:           DefaultNetworkPolicy,
-		EtcdVersion:             DefaultEtcdVersion,
-		MobyVersion:             DefaultMobyVersion,
-		ContainerdVersion:       DefaultContainerdVersion,
-		LoadBalancerSku:         BasicLoadBalancerSku,
-		KubeletConfig:           make(map[string]string),
-		ControllerManagerConfig: make(map[string]string),
-		KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+		EnableSecureKubelet:       to.BoolPtr(DefaultSecureKubeletEnabled),
+		EnableRbac:                to.BoolPtr(DefaultRBACEnabled),
+		EtcdDiskSizeGB:            DefaultEtcdDiskSize,
+		ServiceCIDR:               DefaultKubernetesServiceCIDR,
+		DockerBridgeSubnet:        DefaultDockerBridgeSubnet,
+		DNSServiceIP:              DefaultKubernetesDNSServiceIP,
+		GCLowThreshold:            DefaultKubernetesGCLowThreshold,
+		GCHighThreshold:           DefaultKubernetesGCHighThreshold,
+		MaxPods:                   DefaultKubernetesMaxPodsVNETIntegrated,
+		ClusterSubnet:             DefaultKubernetesSubnet,
+		ContainerRuntime:          DefaultContainerRuntime,
+		NetworkPlugin:             DefaultNetworkPlugin,
+		NetworkPolicy:             DefaultNetworkPolicy,
+		EtcdVersion:               DefaultEtcdVersion,
+		MobyVersion:               DefaultMobyVersion,
+		ContainerdVersion:         DefaultContainerdVersion,
+		LoadBalancerSku:           BasicLoadBalancerSku,
+		KubeletConfig:             make(map[string]string),
+		ControllerManagerConfig:   make(map[string]string),
+		KubernetesImageBaseType:   common.KubernetesImageBaseTypeGCR,
+		MicrosoftAptRepositoryURL: DefaultMicrosoftAptRepositoryURL,
 	}
 
 	cs.Properties.CertificateProfile = &CertificateProfile{}
@@ -215,17 +204,14 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 			//azureStackCloudSpec is the default configurations for azure stack with public Azure.
 			azureStackCloudSpec := AzureEnvironmentSpecConfig{
 				CloudName: AzureStackCloud,
-				//DockerSpecConfig specify the docker engine download repo
-				DockerSpecConfig: DefaultDockerSpecConfig,
 				//KubernetesSpecConfig is the default kubernetes container image url.
 				KubernetesSpecConfig: DefaultKubernetesSpecConfig,
-				DCOSSpecConfig:       DefaultDCOSSpecConfig,
 				EndpointConfig: AzureEndpointConfig{
 					ResourceManagerVMDNSSuffix: "",
 				},
 				OSImageConfig: map[Distro]AzureOSImageConfig{
 					Ubuntu:        Ubuntu1604OSImageConfig,
-					RHEL:          RHELOSImageConfig,
+					Flatcar:       FlatcarImageConfig,
 					AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 				},
 			}

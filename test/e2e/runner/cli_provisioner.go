@@ -18,6 +18,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/test/e2e/azure"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
@@ -86,15 +87,31 @@ func (cli *CLIProvisioner) Run() error {
 	return errors.New("Unable to run provisioner")
 }
 
-func createSaveSSH(outputPath string, privateKeyName string) (string, error) {
+func createSaveSSH(outputPath string, privateKeyName string, existingPrivateKeyPath string) (string, error) {
 	os.Mkdir(outputPath, 0755)
 	keyPath := filepath.Join(outputPath, privateKeyName)
 	cmd := exec.Command("ssh-keygen", "-f", keyPath, "-q", "-N", "", "-b", "2048", "-t", "rsa")
+
+	var err error
+	if existingPrivateKeyPath != "" {
+		err = os.Rename(existingPrivateKeyPath, keyPath)
+		if err != nil {
+			return "", errors.Wrapf(err, "Error while trying to move private ssh key")
+		}
+		cmd = exec.Command("ssh-keygen", "-y", "-f", keyPath)
+	}
 
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", errors.Wrapf(err, "Error while trying to generate ssh key\nOutput:%s", out)
+	}
+
+	if existingPrivateKeyPath != "" {
+		err = ioutil.WriteFile(keyPath+".pub", out, 0644)
+		if err != nil {
+			return "", errors.Wrapf(err, "Error while trying to write public ssh key")
+		}
 	}
 
 	os.Chmod(keyPath, 0600)
@@ -114,7 +131,7 @@ func (cli *CLIProvisioner) provision() error {
 
 	outputPath := filepath.Join(cli.Config.CurrentWorkingDir, "_output")
 	if !cli.Config.UseDeployCommand {
-		publicSSHKey, err := createSaveSSH(outputPath, cli.Config.Name+"-ssh")
+		publicSSHKey, err := createSaveSSH(outputPath, cli.Config.Name+"-ssh", cli.Config.PrivateSSHKeyPath)
 		if err != nil {
 			return errors.Wrap(err, "Error while generating ssh keys")
 		}
@@ -126,6 +143,13 @@ func (cli *CLIProvisioner) provision() error {
 	err := cli.Account.CreateGroupWithRetry(cli.Config.Name, cli.Config.Location, 30*time.Second, cli.Config.Timeout)
 	if err != nil {
 		return errors.Wrap(err, "Error while trying to create resource group")
+	}
+	cli.Account.ResourceGroup = azure.ResourceGroup{
+		Name:     cli.Config.Name,
+		Location: cli.Config.Location,
+		Tags: map[string]string{
+			"now": fmt.Sprintf("now=%v", time.Now().Unix()),
+		},
 	}
 	err = cli.Account.ShowGroupWithRetry(cli.Account.ResourceGroup.Name, 10*time.Second, cli.Config.Timeout)
 	if err != nil {
@@ -155,12 +179,12 @@ func (cli *CLIProvisioner) provision() error {
 			if err != nil {
 				return errors.Errorf("Error trying to create vnet:%s", err.Error())
 			}
-			err = cli.Account.CreateSubnet(vnetName, masterSubnetName, "10.239.0.0/17")
+			err = cli.Account.CreateSubnetWithRetry(vnetName, masterSubnetName, "10.239.0.0/17", 30*time.Second, cli.Config.Timeout)
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet:%s", err.Error())
 			}
 			subnets = append(subnets, masterSubnetName)
-			err = cli.Account.CreateSubnet(vnetName, agentSubnetName, "10.239.128.0/17")
+			err = cli.Account.CreateSubnetWithRetry(vnetName, agentSubnetName, "10.239.128.0/17", 30*time.Second, cli.Config.Timeout)
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet in subnet:%s", err.Error())
 			}
@@ -172,14 +196,14 @@ func (cli *CLIProvisioner) provision() error {
 			if err != nil {
 				return errors.Errorf("Error trying to create vnet:%s", err.Error())
 			}
-			err = cli.Account.CreateSubnet(vnetName, masterSubnetName, "10.239.255.0/24")
+			err = cli.Account.CreateSubnetWithRetry(vnetName, masterSubnetName, "10.239.255.0/24", 30*time.Second, cli.Config.Timeout)
 			if err != nil {
 				return errors.Errorf("Error trying to create subnet:%s", err.Error())
 			}
 			subnets = append(subnets, masterSubnetName)
 			for i, pool := range cs.ContainerService.Properties.AgentPoolProfiles {
 				subnetName := fmt.Sprintf("%sCustomSubnet", pool.Name)
-				err = cli.Account.CreateSubnet(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/20", i*16))
+				err = cli.Account.CreateSubnetWithRetry(vnetName, subnetName, fmt.Sprintf("10.239.%d.0/20", i*16), 30*time.Second, cli.Config.Timeout)
 				if err != nil {
 					return errors.Errorf("Error trying to create subnet:%s", err.Error())
 				}
@@ -204,6 +228,8 @@ func (cli *CLIProvisioner) provision() error {
 	}
 	cli.Engine = eng
 
+	cli.EnsureArcResourceGroup()
+
 	err = cli.Engine.Write()
 	if err != nil {
 		return errors.Wrap(err, "Error while trying to write Engine Template to disk:%s")
@@ -227,7 +253,7 @@ func (cli *CLIProvisioner) provision() error {
 		}
 	}
 
-	if cli.Config.IsKubernetes() && !cli.Config.SkipTest {
+	if !cli.Config.SkipTest {
 		// Store the hosts for future introspection
 		hosts, err := cli.Account.GetHosts(cli.Config.Name)
 		if err != nil {
@@ -278,9 +304,8 @@ func (cli *CLIProvisioner) generateAndDeploy() error {
 	}
 	cli.Engine.ExpandedDefinition = csGenerated
 
-	// Kubernetes deployments should have a kubeconfig available
-	// at this point.
-	if cli.Config.IsKubernetes() && !cli.IsPrivate() {
+	// kubeconfig should be available at this point
+	if !cli.IsPrivate() {
 		cli.Config.SetKubeConfig()
 	}
 
@@ -303,60 +328,52 @@ func (cli *CLIProvisioner) generateName() string {
 }
 
 func (cli *CLIProvisioner) waitForNodes() error {
-	if cli.Config.IsKubernetes() {
-		if !cli.IsPrivate() {
-			log.Println("Waiting on nodes to go into ready state...")
-			var expectedReadyNodes int
-			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
-				expectedReadyNodes = cli.Engine.NodeCount()
-				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
-			} else {
-				expectedReadyNodes = -1
-			}
-			ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cli.Config.Timeout)
-			cmd := exec.Command("k", "get", "nodes", "-o", "wide")
-			out, _ := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			if !ready {
-				return errors.New("Error: Not all nodes in a healthy state")
-			}
-			nodes, err := node.GetWithRetry(1*time.Second, cli.Config.Timeout)
-			if err != nil {
-				return errors.Wrap(err, "Unable to get the list of nodes")
-			}
-			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
-				for _, n := range nodes {
-					exp, err := regexp.Compile("k8s-master")
+	if !cli.IsPrivate() {
+		log.Println("Waiting on nodes to go into ready state...")
+		var expectedReadyNodes int
+		if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !cli.Config.RebootControlPlaneNodes {
+			expectedReadyNodes = cli.Engine.NodeCount()
+			log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
+		} else {
+			expectedReadyNodes = -1
+		}
+		ready := node.WaitOnReady(expectedReadyNodes, 10*time.Second, cli.Config.Timeout)
+		cmd := exec.Command("k", "get", "nodes", "-o", "wide")
+		out, _ := cmd.CombinedOutput()
+		log.Printf("%s\n", out)
+		if !ready {
+			return errors.New("Error: Not all nodes in a healthy state")
+		}
+		nodes, err := node.GetWithRetry(1*time.Second, cli.Config.Timeout)
+		if err != nil {
+			return errors.Wrap(err, "Unable to get the list of nodes")
+		}
+		if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			for _, n := range nodes {
+				exp, err := regexp.Compile(common.LegacyControlPlaneVMPrefix)
+				if err != nil {
+					return err
+				}
+				if !exp.MatchString(n.Metadata.Name) {
+					err = n.AddLabelWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
 					if err != nil {
-						return err
+						return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
 					}
-					if !exp.MatchString(n.Metadata.Name) {
-						cmd := exec.Command("k", "label", "node", n.Metadata.Name, "foo=bar")
-						util.PrintCommand(cmd)
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						if err != nil {
-							return errors.Wrapf(err, "Unable to assign label to node %s", n.Metadata.Name)
-						}
-						cmd = exec.Command("k", "annotate", "node", n.Metadata.Name, "foo=bar")
-						util.PrintCommand(cmd)
-						out, err = cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						if err != nil {
-							return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
-						}
+					err = n.AddAnnotationWithRetry(1*time.Second, cli.Config.Timeout, "foo=bar")
+					if err != nil {
+						return errors.Wrapf(err, "Unable to add node annotation to node %s", n.Metadata.Name)
 					}
 				}
 			}
-		} else {
-			log.Println("This cluster is private")
-			if cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile == nil {
-				// TODO: add "bring your own jumpbox to e2e"
-				return errors.New("Error: cannot test a private cluster without provisioning a jumpbox")
-			}
-			log.Printf("Testing a %s private cluster...", cli.Config.Orchestrator)
-			// TODO: create SSH connection and get nodes and k8s version
 		}
+	} else {
+		log.Println("This cluster is private")
+		if cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile == nil {
+			// TODO: add "bring your own jumpbox to e2e"
+			return errors.New("Error: cannot test a private cluster without provisioning a jumpbox")
+		}
+		log.Printf("Testing a %s private cluster...", cli.Config.Orchestrator)
+		// TODO: create SSH connection and get nodes and k8s version
 	}
 
 	return nil
@@ -415,8 +432,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 
 // IsPrivate will return true if the cluster has no public IPs
 func (cli *CLIProvisioner) IsPrivate() bool {
-	return cli.Config.IsKubernetes() &&
-		cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
+	return cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil &&
 		to.Bool(cli.Engine.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled)
 }
 
@@ -430,6 +446,22 @@ func (cli *CLIProvisioner) FetchActivityLog(acct *azure.Account, logPath string)
 		path := filepath.Join(logPath, fmt.Sprintf("activity-log-%s", rg))
 		if err := ioutil.WriteFile(path, []byte(log), 0644); err != nil {
 			return errors.Wrap(err, "cannot write activity log in file")
+		}
+	}
+	return nil
+}
+
+// EnsureArcResourceGroup creates the resource group for the connected cluster resource
+// Once Arc is supported in all regions, we should delete this method and reuse the cluster resource group
+// https://docs.microsoft.com/en-us/azure/azure-arc/kubernetes/overview#supported-regions
+func (cli *CLIProvisioner) EnsureArcResourceGroup() error {
+	for _, addon := range cli.Engine.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.Addons {
+		if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) &&
+			addon.Config["resourceGroup"] != "" &&
+			addon.Config["location"] != "" {
+			if err := cli.Account.CreateGroupWithRetry(addon.Config["resourceGroup"], addon.Config["location"], 30*time.Second, cli.Config.Timeout); err != nil {
+				return errors.Wrapf(err, "Error while trying to create Azure Arc resource group: %s", addon.Config["resourceGroup"])
+			}
 		}
 	}
 	return nil

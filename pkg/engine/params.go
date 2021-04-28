@@ -4,12 +4,9 @@
 package engine
 
 import (
-	"encoding/base64"
 	"fmt"
-	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
@@ -46,21 +43,15 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			addValue(parametersMap, "dnsServer", linuxProfile.CustomNodesDNS.DNSServer)
 		}
 	}
-	// masterEndpointDNSNamePrefix is the basis for storage account creation across dcos, swarm, and k8s
 	if properties.MasterProfile != nil {
-		// MasterProfile exists, uses master DNS prefix
+		// masterEndpointDNSNamePrefix is the basis for storage account creation for k8s
 		addValue(parametersMap, "masterEndpointDNSNamePrefix", properties.MasterProfile.DNSPrefix)
-	} else if properties.HostedMasterProfile != nil {
-		// Agents only, use cluster DNS prefix
-		addValue(parametersMap, "masterEndpointDNSNamePrefix", properties.HostedMasterProfile.DNSPrefix)
-	}
-	if properties.MasterProfile != nil {
 		if properties.MasterProfile.IsCustomVNET() {
 			addValue(parametersMap, "masterVnetSubnetID", properties.MasterProfile.VnetSubnetID)
 			if properties.MasterProfile.IsVirtualMachineScaleSets() {
 				addValue(parametersMap, "agentVnetSubnetID", properties.MasterProfile.AgentVnetSubnetID)
 			}
-			if properties.OrchestratorProfile.IsKubernetes() && properties.MasterProfile.VnetCidr != "" {
+			if properties.MasterProfile.VnetCidr != "" {
 				addValue(parametersMap, "vnetCidr", properties.MasterProfile.VnetCidr)
 			}
 		} else {
@@ -76,17 +67,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			addValue(parametersMap, "availabilityZones", properties.MasterProfile.AvailabilityZones)
 		}
 	}
-	if properties.HostedMasterProfile != nil {
-		addValue(parametersMap, "masterSubnet", properties.HostedMasterProfile.Subnet)
-
-		// For AKS, VnetCidrs of the default (the first) agent pool will be set when users create a k8s
-		// cluster with a custom vnet. Set vnetCidr if a custom vnet is used so the address space can be
-		// added into the ExceptionList of Windows nodes. Otherwise, the default value `10.0.0.0/8` will
-		// be added into the ExceptionList and it does not work if users use other ip address ranges.
-		if len(properties.AgentPoolProfiles) > 0 && len(properties.AgentPoolProfiles[0].VnetCidrs) > 0 {
-			addValue(parametersMap, "vnetCidr", properties.AgentPoolProfiles[0].VnetCidrs[0])
-		}
-	}
 
 	if linuxProfile != nil {
 		addValue(parametersMap, "sshRSAPublicKey", linuxProfile.SSH.PublicKeys[0].KeyData)
@@ -98,95 +78,8 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 		}
 	}
 
-	//Swarm and SwarmMode Parameters
-	if properties.OrchestratorProfile.OrchestratorType == api.Swarm || properties.OrchestratorProfile.OrchestratorType == api.SwarmMode {
-		var dockerEngineRepo, dockerComposeDownloadURL string
-		if cloudSpecConfig.DockerSpecConfig.DockerEngineRepo == "" {
-			dockerEngineRepo = DefaultDockerEngineRepo
-		} else {
-			dockerEngineRepo = cloudSpecConfig.DockerSpecConfig.DockerEngineRepo
-		}
-		if cloudSpecConfig.DockerSpecConfig.DockerComposeDownloadURL == "" {
-			dockerComposeDownloadURL = DefaultDockerComposeURL
-		} else {
-			dockerComposeDownloadURL = cloudSpecConfig.DockerSpecConfig.DockerComposeDownloadURL
-		}
-		addValue(parametersMap, "dockerEngineDownloadRepo", dockerEngineRepo)
-		addValue(parametersMap, "dockerComposeDownloadURL", dockerComposeDownloadURL)
-	}
-
 	// Kubernetes Parameters
-	if properties.OrchestratorProfile.IsKubernetes() {
-		assignKubernetesParameters(properties, parametersMap, cloudSpecConfig, generatorCode)
-	}
-
-	if strings.HasPrefix(properties.OrchestratorProfile.OrchestratorType, api.DCOS) {
-		dcosBootstrapURL := cloudSpecConfig.DCOSSpecConfig.DCOS188BootstrapDownloadURL
-		dcosWindowsBootstrapURL := cloudSpecConfig.DCOSSpecConfig.DCOSWindowsBootstrapDownloadURL
-		dcosRepositoryURL := cloudSpecConfig.DCOSSpecConfig.DcosRepositoryURL
-		dcosClusterPackageListID := cloudSpecConfig.DCOSSpecConfig.DcosClusterPackageListID
-		dcosProviderPackageID := cloudSpecConfig.DCOSSpecConfig.DcosProviderPackageID
-
-		if properties.OrchestratorProfile.OrchestratorType == api.DCOS {
-			switch properties.OrchestratorProfile.OrchestratorVersion {
-			case common.DCOSVersion1Dot8Dot8:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS188BootstrapDownloadURL
-			case common.DCOSVersion1Dot9Dot0:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS190BootstrapDownloadURL
-			case common.DCOSVersion1Dot9Dot8:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS198BootstrapDownloadURL
-			case common.DCOSVersion1Dot10Dot0:
-				dcosBootstrapURL = cloudSpecConfig.DCOSSpecConfig.DCOS110BootstrapDownloadURL
-			default:
-				dcosBootstrapURL = getDCOSDefaultBootstrapInstallerURL(properties.OrchestratorProfile)
-				dcosWindowsBootstrapURL = getDCOSDefaultWindowsBootstrapInstallerURL(properties.OrchestratorProfile)
-			}
-		}
-
-		if properties.OrchestratorProfile.DcosConfig != nil {
-			if properties.OrchestratorProfile.DcosConfig.DcosWindowsBootstrapURL != "" {
-				dcosWindowsBootstrapURL = properties.OrchestratorProfile.DcosConfig.DcosWindowsBootstrapURL
-			}
-			if properties.OrchestratorProfile.DcosConfig.DcosBootstrapURL != "" {
-				dcosBootstrapURL = properties.OrchestratorProfile.DcosConfig.DcosBootstrapURL
-			}
-			if len(properties.OrchestratorProfile.DcosConfig.Registry) > 0 {
-				addValue(parametersMap, "registry", properties.OrchestratorProfile.DcosConfig.Registry)
-				addValue(parametersMap, "registryKey", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", properties.OrchestratorProfile.DcosConfig.RegistryUser, properties.OrchestratorProfile.DcosConfig.RegistryPass))))
-			}
-			if properties.OrchestratorProfile.DcosConfig.DcosRepositoryURL != "" {
-				dcosRepositoryURL = properties.OrchestratorProfile.DcosConfig.DcosRepositoryURL
-			} else {
-				dcosRepositoryURL = getDCOSDefaultRepositoryURL(
-					properties.OrchestratorProfile.OrchestratorType,
-					properties.OrchestratorProfile.OrchestratorVersion)
-			}
-
-			if properties.OrchestratorProfile.DcosConfig.DcosClusterPackageListID != "" {
-				dcosClusterPackageListID = properties.OrchestratorProfile.DcosConfig.DcosClusterPackageListID
-			}
-
-			if properties.OrchestratorProfile.DcosConfig.DcosProviderPackageID != "" {
-				dcosProviderPackageID = properties.OrchestratorProfile.DcosConfig.DcosProviderPackageID
-			} else {
-				dcosProviderPackageID = getDCOSDefaultProviderPackageGUID(
-					properties.OrchestratorProfile.OrchestratorType,
-					properties.OrchestratorProfile.OrchestratorVersion,
-					properties.MasterProfile.Count)
-			}
-		}
-
-		addValue(parametersMap, "dcosBootstrapURL", dcosBootstrapURL)
-		addValue(parametersMap, "dcosWindowsBootstrapURL", dcosWindowsBootstrapURL)
-		addValue(parametersMap, "dcosRepositoryURL", dcosRepositoryURL)
-		addValue(parametersMap, "dcosClusterPackageListID", dcosClusterPackageListID)
-		addValue(parametersMap, "dcosProviderPackageID", dcosProviderPackageID)
-
-		if properties.OrchestratorProfile.DcosConfig != nil && properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-			addValue(parametersMap, "bootstrapStaticIP", properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP)
-			addValue(parametersMap, "bootstrapVMSize", properties.OrchestratorProfile.DcosConfig.BootstrapProfile.VMSize)
-		}
-	}
+	assignKubernetesParameters(properties, parametersMap, cloudSpecConfig, generatorCode)
 
 	// Agent parameters
 	for _, agentProfile := range properties.AgentPoolProfiles {
@@ -250,6 +143,9 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 				addValue(parametersMap, fmt.Sprintf("windowsKeyVaultID%dCertificateStore%d", i, j), c.CertificateStore)
 			}
 		}
+
+		addValue(parametersMap, "defaultContainerdRuntimeHandler", properties.WindowsProfile.GetWindowsDefaultRuntimeHandler())
+		addValue(parametersMap, "hypervRuntimeHandlers", properties.WindowsProfile.GetWindowsHypervRuntimeHandlers())
 	}
 
 	for _, extension := range properties.ExtensionProfiles {

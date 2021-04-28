@@ -54,27 +54,7 @@ For `VERSION` environment variable, we recommend that you provide a value which 
 }
 ```
 
-* AKS Engine defaults to the `ubuntu` "distro" for `customHyperkubeImage` scenarios, which will build Linux VM nodes using the Ubuntu 16.04-LTS image SKU. You may also use Ubuntu 18.04-LTS-built VMs by explicitly setting the "distro" configuration accordingly. The "distro" configuration is applied distinctly to master VMs, and to the VMs in any configured agent pools (you may use different "distro" values in the masterProfile, and in each agentPoolProfile, according to your cluster requirements), for example:
-
-```
-...
-"masterProfile": {
-    ...
-    "distro": "ubuntu-18.04",
-    ...
-},
-...
-"agentPoolProfiles": [
-    {
-        ...
-        "distro": "ubuntu-18.04",
-        ...
-    }
-]
-...
-```
-
-* Run `aks-engine deploy` [as normal](../tutorials/deploy.md).
+* Run `aks-engine deploy` [as normal](../tutorials/quickstart.md#deploy).
 
 ## Kubernetes 1.17+
 

@@ -2,9 +2,9 @@
 
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
-RHEL_OS_NAME="RHEL"
+FLATCAR_OS_NAME="FLATCAR"
 DEBIAN_OS_NAME="DEBIAN"
-if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+if ! echo "${UBUNTU_OS_NAME} ${FLATCAR_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
 if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
@@ -12,15 +12,20 @@ if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
 fi
 DOCKER=/usr/bin/docker
 if [[ $UBUNTU_RELEASE == "18.04" ]]; then
-  export GPU_DV=418.126.02
+  export GPU_DV=450.80.02
 else
   export GPU_DV=418.40.04
 fi
 export GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
-NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+NVIDIA_CONTAINER_RUNTIME_VER=2.0.0
 NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
+PRIVATE_IP=$( (ip -br -4 addr show eth0 || ip -br -4 addr show azure0) | grep -Po '\d+\.\d+\.\d+\.\d+')
+if ! [[ $(echo -n "$PRIVATE_IP" | grep -c '^') == 1 ]]; then
+  PRIVATE_IP=$(hostname -i)
+fi
+export PRIVATE_IP
 
 configure_prerequisites() {
   ip_forward_path=/proc/sys/net/ipv4/ip_forward
@@ -134,13 +139,21 @@ apt_get_update() {
   done
   echo Executed apt-get update $i times
 }
+dpkg_install() {
+  retries=$1; wait_sleep=$2; shift && shift;
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks; dpkg -i "${1}" && break; apt-get update --fix-missing; do_apt_get_install -f && break
+    if [ $i -eq $retries ]; then return 1; fi; sleep $wait_sleep
+  done
+}
+do_apt_get_install() {
+  dpkg --configure -a --force-confdef; DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@}
+}
 apt_get_install() {
   retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
-    export DEBIAN_FRONTEND=noninteractive
-    dpkg --configure -a --force-confdef
-    apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break ||
+    do_apt_get_install ${@} && break ||
       if [ $i -eq $retries ]; then
         return 1
       else
@@ -188,6 +201,18 @@ apt_get_dist_upgrade() {
   done
   echo Executed apt-get dist-upgrade $i times
 }
+unattended_upgrade() {
+  retries=10
+  for i in $(seq 1 $retries); do
+    wait_for_apt_locks
+    /usr/bin/unattended-upgrade && break ||
+    if [ $i -eq $retries ]; then
+      return 1
+    else sleep 5
+    fi
+  done
+  echo Executed unattended-upgrade $i times
+}
 systemctl_restart() {
   retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
   for i in $(seq 1 $retries); do
@@ -226,5 +251,4 @@ sysctl_reload() {
 version_gte() {
   test "$(printf '%s\n' "$@" | sort -rV | head -n 1)" == "$1"
 }
-
 #HELPERSEOF

@@ -6,7 +6,6 @@
         "apiVersion": "vlabs",
         "properties": {
             "orchestratorProfile": {
-                "orchestratorType": "Kubernetes",
                 "kubernetesConfig": {
                     "useCloudControllerManager": true
                 }
@@ -40,10 +39,6 @@
                         }
                     ]
                 }
-            },
-            "servicePrincipalProfile": {
-                "clientId": "",
-                "secret": ""
             }
         }
     }

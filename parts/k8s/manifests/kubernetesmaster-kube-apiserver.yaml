@@ -18,6 +18,8 @@ spec:
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
+        - name: etc-ssl-certs
+          mountPath: /etc/ssl/certs
         - name: var-lib-kubelet
           mountPath: /var/lib/kubelet
         - name: msi
@@ -31,6 +33,9 @@ spec:
     - name: etc-kubernetes
       hostPath:
         path: /etc/kubernetes
+    - name: etc-ssl-certs
+      hostPath:
+        path: /etc/ssl/certs
     - name: var-lib-kubelet
       hostPath:
         path: /var/lib/kubelet
@@ -43,3 +48,4 @@ spec:
     - name: auditlog
       hostPath:
         path: /var/log/kubeaudit
+#EOF

@@ -785,6 +785,22 @@
       },
       "type": "string"
     },
+    "generatorCode": {
+      "defaultValue": "aksengine",
+      "metadata": {
+        "description": "The generator code used to identify the generator"
+      },
+      "type": "string"
+    },
+    "orchestratorName": {
+      "defaultValue": "k8s",
+      "metadata": {
+        "description": "The orchestrator name used to identify the orchestrator.  This must be no more than 3 digits in length, otherwise it will exceed Windows Naming"
+      },
+      "minLength": 3,
+      "maxLength": 3,
+      "type": "string"
+    },
     "dockerBridgeCidr": {
       "defaultValue": "",
       "metadata": {
@@ -803,13 +819,6 @@
       "defaultValue": "10.240.255.5",
       "metadata": {
         "description": "Sets the static IP of the first master"
-      },
-      "type": "string"
-    },
-    "generatorCode": {
-      "defaultValue": "aksengine",
-      "metadata": {
-        "description": "The generator code used to identify the generator"
       },
       "type": "string"
     },
@@ -1065,15 +1074,6 @@
       "metadata": {
         "description": "The network policy enforcement to use (none|azure|calico|cilium|flannel|antrea)"
       },
-      "type": "string"
-    },
-    "orchestratorName": {
-      "defaultValue": "k8s",
-      "maxLength": 3,
-      "metadata": {
-        "description": "The orchestrator name used to identify the orchestrator.  This must be no more than 3 digits in length, otherwise it will exceed Windows Naming"
-      },
-      "minLength": 3,
       "type": "string"
     },
     "servicePrincipalClientId": {
@@ -1653,6 +1653,9 @@
         "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
         "name": "loop"
       },
+      "dependsOn": [
+        "[variables('vnetID')]"
+      ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentppol1VMNamePrefix'), 'nic-', copyIndex(variables('agentppol1Offset')))]",
       "properties": {
@@ -1690,13 +1693,21 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('agentppol1AvailabilitySet')]",
+      "properties": {},
+      "type": "Microsoft.Compute/availabilitySets"
+    },
+    {
+      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
         "name": "vmLoopNode"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentppol1Offset')),variables('maxVMsPerStorageAccount')),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentppol1Offset')),variables('maxVMsPerStorageAccount')),variables('agentppol1StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentppol1AccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentppol1VMNamePrefix'), 'nic-', copyIndex(variables('agentppol1Offset')))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentppol1VMNamePrefix'), 'nic-', copyIndex(variables('agentppol1Offset')))]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('agentppol1AvailabilitySet'))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')))]",
@@ -1756,6 +1767,23 @@
       "type": "Microsoft.Compute/virtualMachines"
     },
     {
+      "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
+      "copy": {
+        "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
+        "name": "vmLoopNode"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')))]"
+      ],
+      "name": "[guid(concat('Microsoft.Compute/virtualMachines/', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset')), 'vmidentity'))]",
+      "properties": {
+        "principalId": "[reference(concat('Microsoft.Compute/virtualMachines/', variables('agentppol1VMNamePrefix'), copyIndex(variables('agentppol1Offset'))), '2017-03-30', 'Full').identity.principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('readerRoleDefinitionId')]"
+      },
+      "type": "Microsoft.Authorization/roleAssignments"
+    },
+    {
       "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentppol1Count'), variables('agentppol1Offset'))]",
@@ -1784,6 +1812,9 @@
         "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
         "name": "loop"
       },
+      "dependsOn": [
+        "[variables('vnetID')]"
+      ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]",
       "properties": {
@@ -1821,13 +1852,21 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('agentpool2AvailabilitySet')]",
+      "properties": {},
+      "type": "Microsoft.Compute/availabilitySets"
+    },
+    {
+      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
         "name": "vmLoopNode"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpool2AccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('agentpool2AvailabilitySet'))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]",
@@ -1887,6 +1926,23 @@
       "type": "Microsoft.Compute/virtualMachines"
     },
     {
+      "apiVersion": "[variables('apiVersionAuthorizationSystem')]",
+      "copy": {
+        "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
+        "name": "vmLoopNode"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]"
+      ],
+      "name": "[guid(concat('Microsoft.Compute/virtualMachines/', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')), 'vmidentity'))]",
+      "properties": {
+        "principalId": "[reference(concat('Microsoft.Compute/virtualMachines/', variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset'))), '2017-03-30', 'Full').identity.principalId]",
+        "principalType": "ServicePrincipal",
+        "roleDefinitionId": "[variables('readerRoleDefinitionId')]"
+      },
+      "type": "Microsoft.Authorization/roleAssignments"
+    },
+    {
       "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
@@ -1912,274 +1968,77 @@
     {
       "apiVersion": "[variables('apiVersionDefault')]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]"
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
+        "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]"
       ],
       "location": "[variables('location')]",
-      "name": "[variables('masterLbName')]",
+      "name": "[variables('virtualNetworkName')]",
       "properties": {
-        "backendAddressPools": [
-          {
-            "name": "[variables('masterLbBackendPoolName')]"
-          }
-        ],
-        "frontendIPConfigurations": [
-          {
-            "name": "[variables('masterLbIPConfigName')]",
-            "properties": {
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('masterPublicIPAddressName'))]"
-              }
-            }
-          }
-        ],
-        "loadBalancingRules": [
-          {
-            "name": "LBRuleHTTPS",
-            "properties": {
-              "backendAddressPool": {
-                "id": "[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
-              },
-              "backendPort": 443,
-              "enableFloatingIP": false,
-              "frontendIPConfiguration": {
-                "id": "[variables('masterLbIPConfigID')]"
-              },
-              "frontendPort": 443,
-              "idleTimeoutInMinutes": 5,
-              "loadDistribution": "Default",
-              "probe": {
-                "id": "[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"
-              },
-              "protocol": "Tcp"
-            }
-          }
-        ],
-        "probes": [
-          {
-            "name": "tcpHTTPSProbe",
-            "properties": {
-              "intervalInSeconds": 5,
-              "numberOfProbes": 2,
-              "port": 443,
-              "protocol": "Tcp"
-            }
-          }
-        ]
-      },
-      "type": "Microsoft.Network/loadBalancers"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('masterInternalLbName')]",
-      "properties": {
-        "backendAddressPools": [
-          {
-            "name": "[variables('masterLbBackendPoolName')]"
-          }
-        ],
-        "frontendIPConfigurations": [
-          {
-            "name": "[variables('masterInternalLbIPConfigName')]",
-            "properties": {
-              "privateIPAddress": "[variables('kubernetesAPIServerIP')]",
-              "privateIPAllocationMethod": "Static",
-              "subnet": {
-                "id": "[variables('vnetSubnetID')]"
-              }
-            }
-          }
-        ],
-        "loadBalancingRules": [
-          {
-            "name": "InternalLBRuleHTTPS",
-            "properties": {
-              "backendAddressPool": {
-                "id": "[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
-              },
-              "backendPort": 4443,
-              "enableFloatingIP": false,
-              "frontendIPConfiguration": {
-                "id": "[variables('masterInternalLbIPConfigID')]"
-              },
-              "frontendPort": 443,
-              "idleTimeoutInMinutes": 5,
-              "protocol": "Tcp"
-            }
-          }
-        ],
-        "probes": [
-          {
-            "name": "tcpHTTPSProbe",
-            "properties": {
-              "intervalInSeconds": 5,
-              "numberOfProbes": 2,
-              "port": 4443,
-              "protocol": "Tcp"
-            }
-          }
-        ]
-      },
-      "type": "Microsoft.Network/loadBalancers"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('masterPublicIPAddressName')]",
-      "properties": {
-        "dnsSettings": {
-          "domainNameLabel": "[variables('masterFqdnPrefix')]"
-        },
-        "publicIPAllocationMethod": "Static"
-      },
-      "type": "Microsoft.Network/publicIPAddresses"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "copy": {
-        "count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-        "name": "masterLbLoopNode"
-      },
-      "dependsOn": [
-        "[variables('masterLbID')]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('masterLbName'), '/', 'SSH-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
-      "properties": {
-        "backendPort": 22,
-        "enableFloatingIP": false,
-        "frontendIPConfiguration": {
-          "id": "[variables('masterLbIPConfigID')]"
-        },
-        "frontendPort": "[variables('sshNatPorts')[copyIndex(variables('masterOffset'))]]",
-        "protocol": "Tcp"
-      },
-      "type": "Microsoft.Network/loadBalancers/inboundNatRules"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "copy": {
-        "count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-        "name": "nicLoopNode"
-      },
-      "dependsOn": [
-        "[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]",
-        "[variables('masterInternalLbName')]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
-      "properties": {
-        "enableIPForwarding": true,
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "loadBalancerBackendAddressPools": [
-                {
-                  "id": "[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
-                },
-                {
-                  "id": "[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"
-                }
-              ],
-              "loadBalancerInboundNatRules": [
-                {
-                  "id": "[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"
-                }
-              ],
-              "primary": true,
-              "privateIPAddress": "[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]",
-              "privateIPAllocationMethod": "Static",
-              "subnet": {
-                "id": "[variables('vnetSubnetID')]"
-              }
-            }
-          }
-        ]
-      },
-      "type": "Microsoft.Network/networkInterfaces"
-    },
-    {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
-      "copy": {
-        "count": "[sub(variables('masterCount'), variables('masterOffset'))]",
-        "name": "vmLoopNode"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"
-      ],
-      "location": "[variables('location')]",
-      "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
-      "properties": {
-        "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('masterAvailabilitySet'))]"
-        },
-        "hardwareProfile": {},
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('masterVMNamePrefix'),'nic-', copyIndex(variables('masterOffset'))))]"
-            }
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetCidr')]"
           ]
         },
-        "osProfile": {
-          "adminUsername": "[parameters('linuxAdminUsername')]",
-          "computername": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
-          "linuxConfiguration": {
-            "disablePasswordAuthentication": true,
-            "ssh": {
-              "publicKeys": [
-                {
-                  "keyData": "[parameters('sshRSAPublicKey')]",
-                  "path": "[variables('sshKeyPath')]"
-                }
-              ]
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('masterSubnet')]",
+              "networkSecurityGroup": {
+                "id": "[variables('nsgID')]"
+              },
+              "routeTable": {
+                "id": "[variables('routeTableID')]"
+              }
             }
           }
-        },
-        "storageProfile": {
-          "osDisk": {
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
+        ]
+      },
+      "type": "Microsoft.Network/virtualNetworks"
+    },
+    {
+      "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('nsgName')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow_ssh",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow SSH traffic to master",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22-22",
+              "direction": "Inbound",
+              "priority": 101,
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "allow_kube_tls",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow kube-apiserver (tls) traffic to master",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "443-443",
+              "direction": "Inbound",
+              "priority": 100,
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
           }
-        }
+        ]
       },
-      "tags": {
-        "creationSource": "[concat('aksengine-', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",
-        "orchestrator": "[variables('orchestratorNameVersionTag')]",
-        "resourceNameSuffix": "[parameters('nameSuffix')]"
-      },
-      "type": "Microsoft.Compute/virtualMachines"
+      "type": "Microsoft.Network/networkSecurityGroups"
+    },
+    {
+      "apiVersion": "[variables('apiVersionDefault')]",
+      "location": "[variables('location')]",
+      "name": "[variables('routeTableName')]",
+      "type": "Microsoft.Network/routeTables"
     }
-  ],
-  "outputs": {
-    "agentStorageAccountPrefixes": {
-      "type": "array",
-      "value": "[variables('storageAccountPrefixes')]"
-    },
-    "agentStorageAccountSuffix": {
-      "type": "string",
-      "value": "[variables('storageAccountBaseName')]"
-    },
-    "agentpool2StorageAccountCount": {
-      "type": "int",
-      "value": "[variables('agentpool2StorageAccountsCount')]"
-    },
-    "agentpool2StorageAccountOffset": {
-      "type": "int",
-      "value": "[variables('agentpool2StorageAccountOffset')]"
-    },
-    "agentppol1StorageAccountCount": {
-      "type": "int",
-      "value": "[variables('agentppol1StorageAccountsCount')]"
-    },
-    "agentppol1StorageAccountOffset": {
-      "type": "int",
-      "value": "[variables('agentppol1StorageAccountOffset')]"
-    },
-    "masterFQDN": {
-      "type": "string",
-      "value": "[reference(concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))).dnsSettings.fqdn]"
-    }
-  }
+  ]
 }

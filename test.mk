@@ -21,7 +21,7 @@ test-interactive:
 
 test-functional: test-kubernetes
 
-test-kubernetes:
+test-kubernetes: ginkgoBuild
 	make -C ./test/e2e build
 	@ORCHESTRATOR=kubernetes bash -c 'pgrep ssh-agent || eval `ssh-agent` && ./test/e2e/bin/e2e-runner'
 

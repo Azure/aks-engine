@@ -5,16 +5,8 @@ package api
 
 // the orchestrators supported by vlabs
 const (
-	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
 )
 
 // the OSTypes supported by vlabs
@@ -28,8 +20,7 @@ const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
 	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
-	RHEL              Distro = "rhel"
-	CoreOS            Distro = "coreos"            // deprecated
+	Flatcar           Distro = "flatcar"
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
 	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
@@ -39,18 +30,12 @@ const (
 )
 
 const (
-	// SwarmVersion is the Swarm orchestrator version
-	SwarmVersion = "swarm:1.1.0"
-	// SwarmDockerComposeVersion is the Docker Compose version
-	SwarmDockerComposeVersion = "1.6.2"
-	// DockerCEVersion is the DockerCE orchestrator version
-	DockerCEVersion = "17.03.*"
-	// DockerCEDockerComposeVersion is the Docker Compose version
-	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.5"
+	KubernetesWindowsDockerVersion = "19.03.14"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
+	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
+	KubernetesDefaultWindowsRuntimeHandler = "process"
 )
 
 // validation values
@@ -73,8 +58,6 @@ const (
 	AvailabilitySet = "AvailabilitySet"
 	// DefaultOrchestratorName specifies the 3 character orchestrator code of the cluster template and affects resource naming.
 	DefaultOrchestratorName = "k8s"
-	// DefaultHostedProfileMasterName specifies the 3 character orchestrator code of the clusters with hosted master profiles.
-	DefaultHostedProfileMasterName = "aks"
 	// DefaultFirstConsecutiveKubernetesStaticIP specifies the static IP address on Kubernetes master 0
 	DefaultFirstConsecutiveKubernetesStaticIP = "10.240.255.5"
 	// DefaultFirstConsecutiveKubernetesStaticIPVMSS specifies the static IP address on Kubernetes master 0 of VMSS
@@ -124,9 +107,6 @@ const (
 	Ephemeral = "Ephemeral"
 )
 
-// To identify programmatically generated public agent pools
-const publicAgentPoolSuffix = "-public"
-
 const (
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = false
@@ -136,8 +116,8 @@ const (
 	DefaultAzurePolicyAddonEnabled = false
 	// DefaultNodeProblemDetectorAddonEnabled determines the aks-engine provided default for enabling the node problem detector addon
 	DefaultNodeProblemDetectorAddonEnabled = false
-	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
-	DefaultACIConnectorAddonEnabled = false
+	// DefaultACIConnectorAddonEnabled // Deprecated
+	DefaultACIConnectorAddonEnabled = false // Deprecated
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
 	DefaultAppGwIngressAddonEnabled = false
 	// DefaultAzureDiskCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure Disk CSI Driver
@@ -152,10 +132,10 @@ const (
 	DefaultSMBFlexVolumeAddonEnabled = false
 	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
 	DefaultKeyVaultFlexVolumeAddonEnabled = true
-	// DefaultDashboardAddonEnabled determines the aks-engine provided default for enabling kubernetes-dashboard addon
-	DefaultDashboardAddonEnabled = false
-	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
-	DefaultReschedulerAddonEnabled = false
+	// DefaultDashboardAddonEnabled // Deprecated
+	DefaultDashboardAddonEnabled = false // Deprecated
+	// DefaultReschedulerAddonEnabled // Deprecated
+	DefaultReschedulerAddonEnabled = false // Deprecated
 	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
 	DefaultAzureCNIMonitoringAddonEnabled = true
 	// DefaultKubeDNSAddonEnabled determines the aks-engine provided default for enabling coredns addon
@@ -186,8 +166,12 @@ const (
 	DefaultContainerMonitoringAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
+	// DefaultArcAddonEnabled determines the aks-engine provided default for enabling arc addon
+	DefaultAzureArcOnboardingAddonEnabled = false
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
+	// DefaultPrivateClusterHostsConfigAgentEnabled enables the hosts config agent for private cluster
+	DefaultPrivateClusterHostsConfigAgentEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
 	NetworkPolicyAzure = "azure"
 	// NetworkPolicyNone is the string expression for the deprecated NetworkPolicy usage pattern "none"
@@ -196,6 +180,8 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginAzure is the string expression for Azure CNI plugin.
 	NetworkPluginAzure = "azure"
+	// NetworkModeTransparent is the string expression for transparent network mode config option
+	NetworkModeTransparent = "transparent"
 	// DefaultSinglePlacementGroup determines the aks-engine provided default for supporting large VMSS
 	// (true = single placement group 0-100 VMs, false = multiple placement group 0-1000 VMs)
 	DefaultSinglePlacementGroup = true
@@ -235,15 +221,19 @@ const (
 	VMSSVMType = "vmss"
 	// StandardVMType is the string const for the standard VM Type
 	StandardVMType = "standard"
+	// DefaultRunUnattendedUpgradesOnBootstrap sets the default configuration for running a blocking unattended-upgrade on Linux VMs as part of CSE
+	DefaultRunUnattendedUpgradesOnBootstrap = true
+	// DefaultEth0MTU is the default MTU configuration for eth0 Linux interfaces
+	DefaultEth0MTU = 1500
 )
 
 // Azure API Versions
 const (
 	APIVersionAuthorizationUser   = "2018-09-01-preview"
-	APIVersionAuthorizationSystem = "2018-01-01-preview"
+	APIVersionAuthorizationSystem = "2018-09-01-preview"
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
-	APIVersionKeyVault            = "2018-02-14"
+	APIVersionKeyVault            = "2019-09-01"
 	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
@@ -310,10 +300,10 @@ const (
 	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
 	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 30
 	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
-	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
-	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
-	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 10
-	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 10
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 100.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 25.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 150
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 30
 	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
 	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
 	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
@@ -321,42 +311,28 @@ const (
 )
 
 const (
-	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
-	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
-	//AzureChinaCloudDCOSBootstrapDownloadURL is the China specific DCOS package download url.
-	AzureChinaCloudDCOSBootstrapDownloadURL = "https://acsengine.blob.core.chinacloudapi.cn/dcos/%s.bootstrap.tar.xz"
-	//AzureEdgeDCOSWindowsBootstrapDownloadURL
+	DefaultMicrosoftAptRepositoryURL = "https://packages.microsoft.com"
 )
 
 const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.1.3"
+	AzureCniPluginVerLinux = "v1.2.7"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.1.3"
+	AzureCniPluginVerWindows = "v1.2.7"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.8.6"
+	CNIPluginVer = "v0.9.1"
+	// WindowsPauseImageVersion specifies version of Windows pause image
+	WindowsPauseImageVersion = "3.4.1"
+	// DefaultAlwaysPullWindowsPauseImage is the default windowsProfile.AlwaysPullWindowsPauseImage value
+	DefaultAlwaysPullWindowsPauseImage = false
 )
 
 const (
-	// DefaultMasterSubnet specifies the default master subnet for DCOS or Swarm
-	DefaultMasterSubnet = "172.16.0.0/24"
-	// DefaultFirstConsecutiveStaticIP specifies the static IP address on master 0 for DCOS or Swarm
-	DefaultFirstConsecutiveStaticIP = "172.16.0.5"
-	// DefaultSwarmWindowsMasterSubnet specifies the default master subnet for a Swarm Windows cluster
-	DefaultSwarmWindowsMasterSubnet = "192.168.255.0/24"
-	// DefaultSwarmWindowsFirstConsecutiveStaticIP specifies the static IP address on master 0 for a Swarm WIndows cluster
-	DefaultSwarmWindowsFirstConsecutiveStaticIP = "192.168.255.5"
-	// DefaultDCOSMasterSubnet specifies the default master subnet for a DCOS cluster
-	DefaultDCOSMasterSubnet = "192.168.255.0/24"
-	// DefaultDCOSFirstConsecutiveStaticIP  specifies the static IP address on master 0 for a DCOS cluster
-	DefaultDCOSFirstConsecutiveStaticIP = "192.168.255.5"
-	// DefaultDCOSBootstrapStaticIP specifies the static IP address on bootstrap for a DCOS cluster
-	DefaultDCOSBootstrapStaticIP = "192.168.255.240"
 	// DefaultKubernetesMasterSubnet specifies the default subnet for masters and agents.
 	// Except when master VMSS is used, this specifies the default subnet for masters.
 	DefaultKubernetesMasterSubnet = "10.240.0.0/16"
@@ -435,12 +411,16 @@ const (
 	DefaultEtcdDiskSizeGT10Nodes = "1024"
 	// DefaultEtcdDiskSizeGT20Nodes = size for Kubernetes master etcd disk volumes in GB if > 20 nodes
 	DefaultEtcdDiskSizeGT20Nodes = "2048"
+	// DefaultEtcdStorageLimitGB specifies the default size for etcd data storage limit
+	DefaultEtcdStorageLimitGB = 2
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes
 	DefaultMasterEtcdClientPort = 2379
 	// DefaultKubeletEventQPS is 0, see --event-qps at https://kubernetes.io/docs/reference/generated/kubelet/
 	DefaultKubeletEventQPS = "0"
 	// DefaultKubeletCadvisorPort is 0, see --cadvisor-port at https://kubernetes.io/docs/reference/generated/kubelet/
 	DefaultKubeletCadvisorPort = "0"
+	// DefaultKubeletHealthzPort is the default /healthz port for the kubelet runtime
+	DefaultKubeletHealthzPort = "10248"
 	// DefaultJumpboxDiskSize specifies the default size for private cluster jumpbox OS disk in GB
 	DefaultJumpboxDiskSize = 30
 	// DefaultJumpboxUsername specifies the default admin username for the private cluster jumpbox
@@ -462,9 +442,9 @@ const (
 	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.12"
+	DefaultMobyVersion = "19.03.14"
 	// DefaultContainerdVersion specifies the default containerd version to install.
-	DefaultContainerdVersion = "1.3.2"
+	DefaultContainerdVersion = "1.3.9"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.
@@ -483,6 +463,15 @@ const (
 	DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
 	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
 	DefaultWindowsSSHEnabled = true
+	// DefaultWindowsContainerdURL is the URL for the default containerd package on Windows
+	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.3+azure/windows/windows_amd64/moby-containerd-1.4.3+azure-1.amd64.zip"
+)
+
+// WindowsProfile defaults
+// TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
+const (
+	DefaultWindowsCsiProxyVersion                   = "v0.2.2"
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.12"
 )
 
 const (

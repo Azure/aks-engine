@@ -17,7 +17,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
-var testK8sVersion = common.GetSupportedKubernetesVersion("1.12", false)
+var testK8sVersion = common.GetSupportedKubernetesVersion("1.12", false, false)
+var testK8sVersionAzureStack = common.GetSupportedKubernetesVersion("1.12", false, true)
 
 func TestSizeMap(t *testing.T) {
 	sizeMap := getSizeMap()
@@ -85,17 +86,18 @@ func TestK8sVars(t *testing.T) {
 		"agentpool1osImageResourceGroup":     "[parameters('agentpool1osImageResourceGroup')]",
 		"agentpool1osImageSKU":               "[parameters('agentpool1osImageSKU')]",
 		"agentpool1osImageVersion":           "[parameters('agentpool1osImageVersion')]",
-		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
+		"apiVersionAuthorizationSystem":      "2018-09-01-preview",
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
-		"apiVersionKeyVault":                 "2018-02-14",
+		"apiVersionKeyVault":                 "2019-09-01",
 		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
 		"applicationInsightsKey":             "c92d8284-b550-4b06-b7ba-e80fd7178faa", // should be DefaultApplicationInsightsKey,
 		"clusterKeyVaultName":                "",
 		"contributorRoleDefinitionId":        "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+		"enableHostsConfigAgent":             false,
 		"enableTelemetry":                    false,
 		"etcdCaFilepath":                     "/etc/kubernetes/certs/ca.crt",
 		"etcdClientCertFilepath":             "/etc/kubernetes/certs/etcdclient.crt",
@@ -134,7 +136,7 @@ func TestK8sVars(t *testing.T) {
 		"masterOffset":                       "[parameters('masterOffset')]",
 		"masterPrivateIpAddrs":               []string{"[concat(variables('masterFirstAddrPrefix'), add(0, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(1, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(2, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(3, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(4, int(variables('masterFirstAddrOctet4'))))]"},
 		"masterPublicIPAddressName":          "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]",
-		"masterVMNamePrefix":                 "k8s-master-18280257-",
+		"masterVMNamePrefix":                 fmt.Sprintf("%s-18280257-", common.LegacyControlPlaneVMPrefix),
 		"masterVMNames":                      []string{"[concat(variables('masterVMNamePrefix'), '0')]", "[concat(variables('masterVMNamePrefix'), '1')]", "[concat(variables('masterVMNamePrefix'), '2')]", "[concat(variables('masterVMNamePrefix'), '3')]", "[concat(variables('masterVMNamePrefix'), '4')]"},
 		"maxVMsPerPool":                      100,
 		"maximumLoadBalancerRuleCount":       250,
@@ -145,26 +147,29 @@ func TestK8sVars(t *testing.T) {
 		"primaryAvailabilitySetName":         "",
 		"primaryScaleSetName":                cs.Properties.GetPrimaryScaleSetName(),
 		"cloudInitFiles": map[string]interface{}{
-			"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-			"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-			"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-			"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-			"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-			"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-			"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-			"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-			"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+			"provisionScript":              getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+			"provisionSource":              getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+			"provisionInstalls":            getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+			"provisionConfigs":             getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+			"customSearchDomainsScript":    getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+			"etcdSystemdService":           getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+			"dhcpv6ConfigurationScript":    getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+			"dhcpv6SystemdService":         getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+			"kubeletSystemdService":        getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+			"etcdMonitorSystemdService":    getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+			"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+			"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+			"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
 		},
 		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]",
-		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
+		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
 		"readerRoleDefinitionId":                    "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
 		"resourceGroup":                             "[resourceGroup().name]",
 		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
 		"routeTableName":                            "[concat(variables('masterVMNamePrefix'),'routetable')]",
 		"scope":                                     "[resourceGroup().id]",
-		"servicePrincipalClientId":                  "[parameters('servicePrincipalClientId')]",
-		"servicePrincipalClientSecret":              "[parameters('servicePrincipalClientSecret')]",
+		"servicePrincipalClientId":                  "msi",
+		"servicePrincipalClientSecret":              "msi",
 		"singleQuote":                               "'",
 		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
@@ -175,7 +180,7 @@ func TestK8sVars(t *testing.T) {
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
 		"useInstanceMetadata":                       "true",
-		"useManagedIdentityExtension":               "false",
+		"useManagedIdentityExtension":               "true",
 		"userAssignedClientID":                      "",
 		"userAssignedID":                            "",
 		"userAssignedIDReference":                   "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
@@ -190,10 +195,12 @@ func TestK8sVars(t *testing.T) {
 		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
-
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
@@ -204,24 +211,31 @@ func TestK8sVars(t *testing.T) {
 			Name:    common.AADPodIdentityAddonName,
 			Enabled: to.BoolPtr(true),
 		},
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		},
 	}
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":            getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":            getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":          getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":           getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"customSearchDomainsScript":  getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":   getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"etcdSystemdService":         getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-		"dhcpv6ConfigurationScript":  getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-		"dhcpv6SystemdService":       getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-		"kubeletSystemdService":      getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
-		"untaintNodesScript":         getBase64EncodedGzippedCustomScript(untaintNodesScript, cs),
-		"untaintNodesSystemdService": getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs),
+		"provisionScript":              getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":              getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":            getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":             getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript":    getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"etcdSystemdService":           getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":    getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":         getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"kubeletSystemdService":        getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"etcdMonitorSystemdService":    getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+		"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+		"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"untaintNodesScript":           getBase64EncodedGzippedCustomScript(untaintNodesScript, cs),
+		"untaintNodesSystemdService":   getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)
@@ -230,28 +244,15 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	// Test with MSI
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-	varMap, err = GetKubernetesVariables(cs)
-	if err != nil {
-		t.Fatal(err)
+	// Test with ubuntu 16.04 distro and UseManagedIdentity disabled
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		},
 	}
-
-	expectedMap["servicePrincipalClientId"] = "msi"
-	expectedMap["servicePrincipalClientSecret"] = "msi"
-	expectedMap["useManagedIdentityExtension"] = "true"
-	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]"
-
-	diff = cmp.Diff(varMap, expectedMap)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-
-	// Test with ubuntu 16.04 distro
-	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{}
 	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(false)
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
@@ -266,23 +267,21 @@ func TestK8sVars(t *testing.T) {
 		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
 		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
-		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
-		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
+		"etcdMonitorSystemdService":        getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
-		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs),
 		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
 		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript, cs),
 		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
-		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
-		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 	}
 
 	diff = cmp.Diff(varMap, expectedMap)
@@ -401,148 +400,6 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	// Test with HostedMasterProfile and StorageAccount
-	cs.Properties.MasterProfile = nil
-	cs.Properties.HostedMasterProfile = &api.HostedMasterProfile{
-		DNSPrefix: "fooDNSPrefix",
-	}
-	cs.Properties.AgentPoolProfiles[0].StorageProfile = api.StorageAccount
-	varMap, err = GetKubernetesVariables(cs)
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
-		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
-		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
-		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
-		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
-		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs),
-		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
-		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript, cs),
-		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
-		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
-		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
-		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
-		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-	}
-	expectedMap["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
-	expectedMap["agentpool1AccountName"] = "[concat(variables('storageAccountBaseName'), 'agnt0')]"
-	expectedMap["agentpool1StorageAccountOffset"] = "[mul(variables('maxStorageAccountsPerAgent'),variables('agentpool1Index'))]"
-	expectedMap["agentpool1StorageAccountsCount"] = "[add(div(variables('agentpool1Count'), variables('maxVMsPerStorageAccount')), mod(add(mod(variables('agentpool1Count'), variables('maxVMsPerStorageAccount')),2), add(mod(variables('agentpool1Count'), variables('maxVMsPerStorageAccount')),1)))]"
-	expectedMap["agentpool1VMNamePrefix"] = "aks-agentpool1-18280257-vmss"
-	expectedMap["dataStorageAccountPrefixSeed"] = 97
-	expectedMap["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"
-	expectedMap["masterFqdnPrefix"] = "foodnsprefix"
-	expectedMap["masterVMNamePrefix"] = "aks-master-18280257-"
-	expectedMap["maxStorageAccountsPerAgent"] = "[div(variables('maxVMsPerPool'),variables('maxVMsPerStorageAccount'))]"
-	expectedMap["maxVMsPerStorageAccount"] = 20
-	expectedMap["nsgName"] = "[concat(variables('agentNamePrefix'), 'nsg')]"
-	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]"
-	expectedMap["routeTableName"] = "[concat(variables('agentNamePrefix'), 'routetable')]"
-	expectedMap["storageAccountBaseName"] = "[uniqueString(concat(variables('masterFqdnPrefix'),variables('location')))]"
-	expectedMap["storageAccountPrefixes"] = []string{"0", "6", "c", "i", "o", "u", "1", "7", "d", "j", "p", "v", "2", "8", "e", "k", "q", "w", "3", "9", "f", "l", "r", "x", "4", "a", "g", "m", "s", "y", "5", "b", "h", "n", "t", "z"}
-	expectedMap["storageAccountPrefixesCount"] = "[length(variables('storageAccountPrefixes'))]"
-	expectedMap["subnetName"] = "aks-subnet"
-	expectedMap["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
-	expectedMap["virtualNetworkResourceGroupName"] = ""
-	expectedMap["vmSizesMap"] = getSizeMap()["vmSizesMap"]
-	expectedMap["vmsPerStorageAccount"] = 20
-	expectedMap["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
-	expectedMap["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
-	expectedMap["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
-
-	delete(expectedMap, "etcdCaFilepath")
-	delete(expectedMap, "etcdClientCertFilepath")
-	delete(expectedMap, "etcdClientKeyFilepath")
-	delete(expectedMap, "etcdPeerCertFilepath")
-	delete(expectedMap, "etcdPeerCertificates")
-	delete(expectedMap, "etcdPeerKeyFilepath")
-	delete(expectedMap, "etcdPeerPrivateKeys")
-	delete(expectedMap, "etcdServerCertFilepath")
-	delete(expectedMap, "etcdServerKeyFilepath")
-	delete(expectedMap, "masterCount")
-	delete(expectedMap, "masterEtcdClientPort")
-	delete(expectedMap, "masterEtcdServerPort")
-	delete(expectedMap, "masterFirstAddrComment")
-	delete(expectedMap, "masterFirstAddrOctets")
-	delete(expectedMap, "masterFirstAddrPrefix")
-	delete(expectedMap, "masterInternalLbID")
-	delete(expectedMap, "masterInternalLbIPConfigID")
-	delete(expectedMap, "masterInternalLbIPConfigName")
-	delete(expectedMap, "masterInternalLbIPOffset")
-	delete(expectedMap, "masterInternalLbName")
-	delete(expectedMap, "kubeConfigServer")
-	delete(expectedMap, "masterFirstAddrOctet4")
-	delete(expectedMap, "masterLbBackendPoolName")
-	delete(expectedMap, "masterLbID")
-	delete(expectedMap, "masterLbIPConfigID")
-	delete(expectedMap, "masterLbIPConfigName")
-	delete(expectedMap, "masterLbName")
-	delete(expectedMap, "masterOffset")
-	delete(expectedMap, "masterPublicIPAddressName")
-	delete(expectedMap, "provisionScriptParametersMaster")
-	delete(expectedMap, "kubeconfigServer")
-	delete(expectedMap, "masterVMNamePrefix")
-	delete(expectedMap, "masterVMNames")
-	delete(expectedMap, "masterPrivateIpAddrs")
-	delete(expectedMap, "masterEtcdPeerURLs")
-	delete(expectedMap, "masterEtcdClusterStates")
-	delete(expectedMap, "masterEtcdClientURLs")
-	delete(expectedMap, "masterEtcdMetricURLs")
-
-	diff = cmp.Diff(varMap, expectedMap)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-
-	// Test with HostedMaster + MSI
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-	varMap, err = GetKubernetesVariables(cs)
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
-		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
-		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
-		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
-		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
-		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs),
-		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
-		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript, cs),
-		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
-		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
-		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
-		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
-		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-	}
-	expectedMap["useManagedIdentityExtension"] = "true"
-	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]"
-
-	diff = cmp.Diff(varMap, expectedMap)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-
 	// Test with IPv6 DualStack feature enabled
 	cs.Properties.FeatureFlags = &api.FeatureFlags{EnableIPv6DualStack: true}
 	varMap, err = GetKubernetesVariables(cs)
@@ -555,23 +412,21 @@ func TestK8sVars(t *testing.T) {
 		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
 		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
 		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
-		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
-		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
+		"etcdMonitorSystemdService":        getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
-		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs),
 		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
 		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript, cs),
 		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
 		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
 		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
-		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
-		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -684,7 +539,7 @@ func TestK8sVars(t *testing.T) {
 		"agentpool1osImageResourceGroup":     "[parameters('agentpool1osImageResourceGroup')]",
 		"agentpool1osImageSKU":               "[parameters('agentpool1osImageSKU')]",
 		"agentpool1osImageVersion":           "[parameters('agentpool1osImageVersion')]",
-		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
+		"apiVersionAuthorizationSystem":      "2018-09-01-preview",
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2017-03-30",
 		"apiVersionDeployments":              "2018-06-01",
@@ -698,6 +553,7 @@ func TestK8sVars(t *testing.T) {
 		"apiVersionStorage":                  "2017-10-01",
 		"clusterKeyVaultName":                "",
 		"contributorRoleDefinitionId":        "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+		"enableHostsConfigAgent":             false,
 		"enableTelemetry":                    false,
 		"etcdCaFilepath":                     "/etc/kubernetes/certs/ca.crt",
 		"etcdClientCertFilepath":             "/etc/kubernetes/certs/etcdclient.crt",
@@ -736,31 +592,34 @@ func TestK8sVars(t *testing.T) {
 		"masterOffset":                       "[parameters('masterOffset')]",
 		"masterPrivateIpAddrs":               []string{"[concat(variables('masterFirstAddrPrefix'), add(0, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(1, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(2, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(3, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(4, int(variables('masterFirstAddrOctet4'))))]"},
 		"masterPublicIPAddressName":          "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]",
-		"masterVMNamePrefix":                 "k8s-master-18280257-",
+		"masterVMNamePrefix":                 fmt.Sprintf("%s-18280257-", common.LegacyControlPlaneVMPrefix),
 		"masterVMNames":                      []string{"[concat(variables('masterVMNamePrefix'), '0')]", "[concat(variables('masterVMNamePrefix'), '1')]", "[concat(variables('masterVMNamePrefix'), '2')]", "[concat(variables('masterVMNamePrefix'), '3')]", "[concat(variables('masterVMNamePrefix'), '4')]"},
 		"maxVMsPerPool":                      100,
 		"maximumLoadBalancerRuleCount":       250,
 		"networkContributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
 		"nsgID":                              "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
 		"nsgName":                            "[concat(variables('masterVMNamePrefix'), 'nsg')]",
-		"orchestratorNameVersionTag":         "Kubernetes:" + testK8sVersion,
+		"orchestratorNameVersionTag":         "Kubernetes:" + testK8sVersionAzureStack,
 		"primaryAvailabilitySetName":         "",
 		"primaryScaleSetName":                cs.Properties.GetPrimaryScaleSetName(),
 		"cloudInitFiles": map[string]interface{}{
-			"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-			"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-			"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-			"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-			"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-			"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-			"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-			"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-			"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+			"provisionScript":              getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+			"provisionSource":              getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+			"provisionInstalls":            getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+			"provisionConfigs":             getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+			"customSearchDomainsScript":    getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+			"etcdSystemdService":           getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+			"dhcpv6ConfigurationScript":    getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+			"dhcpv6SystemdService":         getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+			"kubeletSystemdService":        getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+			"etcdMonitorSystemdService":    getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+			"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+			"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+			"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
 		},
 		"provisionConfigsCustomCloud":               getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud, cs),
 		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]",
-		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
+		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
 		"readerRoleDefinitionId":                    "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
 		"resourceGroup":                             "[resourceGroup().name]",
 		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
@@ -791,6 +650,9 @@ func TestK8sVars(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -805,6 +667,10 @@ func TestK8sVars(t *testing.T) {
 			Config: map[string]string{
 				"appgw-sku": "WAF_v2",
 			},
+		},
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
 		},
 	}
 
@@ -856,17 +722,20 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-		"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
-		"systemdBPFMount":           getBase64EncodedGzippedCustomScript(systemdBPFMount, cs),
+		"provisionScript":              getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":              getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":            getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":             getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript":    getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"etcdSystemdService":           getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":    getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":         getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"kubeletSystemdService":        getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"etcdMonitorSystemdService":    getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+		"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+		"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"systemdBPFMount":              getBase64EncodedGzippedCustomScript(systemdBPFMount, cs),
 	}
 	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]"
 	diff = cmp.Diff(varMap, expectedMap)
@@ -934,11 +803,11 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 	}
 
 	expectedMap := map[string]interface{}{
-		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
+		"apiVersionAuthorizationSystem":      "2018-09-01-preview",
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
-		"apiVersionKeyVault":                 "2018-02-14",
+		"apiVersionKeyVault":                 "2019-09-01",
 		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
@@ -947,6 +816,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"contributorRoleDefinitionId":        "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
 		"customCloudAuthenticationMethod":    "client_secret",
 		"customCloudIdentifySystem":          "azure_ad",
+		"enableHostsConfigAgent":             false,
 		"enableTelemetry":                    false,
 		"etcdCaFilepath":                     "/etc/kubernetes/certs/ca.crt",
 		"etcdClientCertFilepath":             "/etc/kubernetes/certs/etcdclient.crt",
@@ -990,7 +860,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"masterOffset":                       "[parameters('masterOffset')]",
 		"masterPrivateIpAddrs":               []string{"[concat(variables('masterFirstAddrPrefix'), add(0, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(1, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(2, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(3, int(variables('masterFirstAddrOctet4'))))]", "[concat(variables('masterFirstAddrPrefix'), add(4, int(variables('masterFirstAddrOctet4'))))]"},
 		"masterPublicIPAddressName":          "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]",
-		"masterVMNamePrefix":                 "k8s-master-18280257-",
+		"masterVMNamePrefix":                 fmt.Sprintf("%s-18280257-", common.LegacyControlPlaneVMPrefix),
 		"masterVMNames":                      []string{"[concat(variables('masterVMNamePrefix'), '0')]", "[concat(variables('masterVMNamePrefix'), '1')]", "[concat(variables('masterVMNamePrefix'), '2')]", "[concat(variables('masterVMNamePrefix'), '3')]", "[concat(variables('masterVMNamePrefix'), '4')]"},
 		"maxVMsPerPool":                      100,
 		"maximumLoadBalancerRuleCount":       250,
@@ -1001,26 +871,29 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"primaryAvailabilitySetName":         "",
 		"primaryScaleSetName":                "",
 		"cloudInitFiles": map[string]interface{}{
-			"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-			"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-			"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-			"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-			"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-			"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-			"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-			"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-			"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+			"provisionScript":              getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+			"provisionSource":              getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+			"provisionInstalls":            getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+			"provisionConfigs":             getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+			"customSearchDomainsScript":    getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+			"etcdSystemdService":           getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+			"dhcpv6ConfigurationScript":    getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+			"dhcpv6SystemdService":         getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+			"kubeletSystemdService":        getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+			"etcdMonitorSystemdService":    getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+			"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+			"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+			"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
 		},
 		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]",
-		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
+		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
 		"readerRoleDefinitionId":                    "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
 		"resourceGroup":                             "[resourceGroup().name]",
 		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
 		"routeTableName":                            "[concat(variables('masterVMNamePrefix'),'routetable')]",
 		"scope":                                     "[resourceGroup().id]",
-		"servicePrincipalClientId":                  "[parameters('servicePrincipalClientId')]",
-		"servicePrincipalClientSecret":              "[parameters('servicePrincipalClientSecret')]",
+		"servicePrincipalClientId":                  "msi",
+		"servicePrincipalClientSecret":              "msi",
 		"singleQuote":                               "'",
 		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
@@ -1031,7 +904,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
 		"useInstanceMetadata":                       "true",
-		"useManagedIdentityExtension":               "false",
+		"useManagedIdentityExtension":               "true",
 		"userAssignedClientID":                      "",
 		"userAssignedID":                            "",
 		"userAssignedIDReference":                   "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
@@ -1044,8 +917,42 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
+		"windowsPauseImageURL":                      "",
+		"alwaysPullWindowsPauseImage":               "false",
 	}
 	diff := cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	// enable external kms encryption
+	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(true)
+	expectedMap["clusterKeyVaultName"] = string("[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]")
+	expectedMap["cloudInitFiles"] = map[string]interface{}{
+		"provisionScript":              getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":              getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":            getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":             getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript":    getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"etcdSystemdService":           getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":    getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":         getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"kubeletSystemdService":        getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"etcdMonitorSystemdService":    getBase64EncodedGzippedCustomScript(etcdMonitorSystemdService, cs),
+		"healthMonitorScript":          getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"kubeletMonitorSystemdService": getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+		"dockerMonitorSystemdService":  getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"kmsKeyvaultKeySystemdService": getBase64EncodedGzippedCustomScript(kmsKeyvaultKeySystemdService, cs),
+		"kmsKeyvaultKeyScript":         getBase64EncodedGzippedCustomScript(kmsKeyvaultKeyScript, cs),
+	}
+
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	diff = cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
@@ -1060,30 +967,42 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 		expectedVars map[string]interface{}
 	}{
 		{
-			name: "No windows profile",
+			name: "No Windows profile",
 			wp:   nil,
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
 			},
 		},
 		{
-			name: "Defaults",
+			name: "Empty Windows profile",
 			wp:   &api.WindowsProfile{},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
+				"windowsPauseImageURL":                 "",
+				"alwaysPullWindowsPauseImage":          "false",
 			},
 		},
 		{
 			name: "Non-defaults",
 			wp: &api.WindowsProfile{
-				EnableCSIProxy: &trueVar,
-				CSIProxyURL:    "http://some/package.tar",
+				EnableCSIProxy:                &trueVar,
+				CSIProxyURL:                   "http://some/package.tar",
+				ProvisioningScriptsPackageURL: "https://provisioning/package",
+				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
+				AlwaysPullWindowsPauseImage:   &trueVar,
 			},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": true,
-				"windowsCSIProxyURL":    "http://some/package.tar",
+				"windowsEnableCSIProxy":                true,
+				"windowsCSIProxyURL":                   "http://some/package.tar",
+				"windowsProvisioningScriptsPackageURL": "https://provisioning/package",
+				"windowsPauseImageURL":                 "mcr.contoso.com/core/pause:",
+				"alwaysPullWindowsPauseImage":          "true",
 			},
 		},
 	}

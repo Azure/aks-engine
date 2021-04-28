@@ -111,7 +111,9 @@ For upgrading the container monitoring addon, you can disable the monitoring add
 
 ### Container Runtime(s)
 
-Starting with agent version ciprod05262020, chart will support Container Runtime Interface(CRI) compatiable runtimes such as CRI-O and ContainerD etc. in addition to Docker/Moby.
+Starting with agent version ciprod05262020, container monitoring addon will support Container Runtime Interface(CRI) compatiable runtimes such as CRI-O and ContainerD etc. in addition to Docker/Moby.
+
+The container monitoring addon also supports log collection from windows nodes starting from agent version ciprod05262020-2. Currently only Docker/Moby supported on windows nodes.
 
 ## Contact
 

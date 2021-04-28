@@ -1,18 +1,24 @@
 {
+	"env": {
+		"CREATE_VNET": true,
+		"STABILITY_ITERATIONS": "0",
+		"STABILITY_TIMEOUT_SECONDS": "10"
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPolicy": "calico",
 					"networkPlugin": "azure",
+					"clusterSubnet": "10.239.0.0/16",
 					"addons": [
 						{
 							"name": "calico",
 							"enabled": true,
 							"config": {
-								"logSeverityScreen": "error"
+								"logSeverityScreen": "error",
+								"usageReportingEnabled": "false"
 							}
 						}
 					]
@@ -21,14 +27,18 @@
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v3"
+				"vmSize": "Standard_D2_v3",
+				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+				"firstConsecutiveStaticIP": "10.239.255.239",
+				"vnetCidr": "10.239.0.0/16"
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agentpool1",
+					"name": "agent1",
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
+					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot"
 				}
 			],
@@ -41,10 +51,6 @@
 						}
 					]
 				}
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	}

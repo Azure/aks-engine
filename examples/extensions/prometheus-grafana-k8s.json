@@ -1,9 +1,6 @@
 {
   "apiVersion": "vlabs",
   "properties": {
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
@@ -38,10 +35,6 @@
         "version": "v1",
         "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
       }
-    ],
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
+    ]
   }
 }

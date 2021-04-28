@@ -13,12 +13,10 @@ spec:
       k8s-app: nvidia-device-plugin
   updateStrategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   template:
     metadata:
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ""
-{{- end}}
 {{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
@@ -65,9 +63,5 @@ spec:
           hostPath:
             path: /var/lib/kubelet/device-plugins
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
         accelerator: nvidia

@@ -20,6 +20,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -71,7 +72,7 @@ func newAddPoolCmd() *cobra.Command {
 	f.StringVarP(&apc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&apc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
 	f.StringVarP(&apc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
-	f.StringVarP(&apc.nodePoolPath, "node-pool", "p", "", "path to the generated nodepool.json file")
+	f.StringVarP(&apc.nodePoolPath, "node-pool", "p", "", "path to a JSON file that defines the new node pool spec")
 
 	addAuthFlags(&apc.authArgs, f)
 
@@ -143,6 +144,16 @@ func (apc *addPoolCmd) load() error {
 		return errors.Wrap(err, "error parsing the agent pool")
 	}
 
+	// Assign VMSSName property based on the new pool being added to the end of the existing AgentPoolProfiles array
+	if apc.nodePool.IsVirtualMachineScaleSets() {
+		numExistingPools := len(apc.containerService.Properties.AgentPoolProfiles)
+		// we can reuse the value of numExistingPools due to array index beginning at "0"
+		apc.nodePool.VMSSName = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, numExistingPools)
+		if apc.nodePool.VMSSName == "" {
+			return errors.Errorf("unable to compute a VMSSName property value from new pool definition")
+		}
+	}
+
 	if apc.containerService.Properties.IsCustomCloudProfile() {
 		if err = writeCustomCloudProfile(apc.containerService); err != nil {
 			return errors.Wrap(err, "error writing custom cloud profile")
@@ -210,12 +221,8 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
-				segments := strings.Split(*vmss.Name, "-")
-				if len(segments) == 4 && segments[0] == "k8s" {
-					vmssName := segments[1]
-					if apc.nodePool.Name == vmssName {
-						return errors.New("An agent pool with the given name already exists in the cluster")
-					}
+				if apc.nodePool.VMSSName == to.String(vmss.Name) {
+					return errors.New("A VMSS node pool with the given name already exists in the cluster")
 				}
 			}
 		}
@@ -267,27 +274,25 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 		templateJSON["variables"].(map[string]interface{})[apc.nodePool.Name+"Index"] = winPoolIndex
 		templateJSON["variables"].(map[string]interface{})[apc.nodePool.Name+"VMNamePrefix"] = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, winPoolIndex)
 	}
-	if orchestratorInfo.OrchestratorType == api.Kubernetes {
-		transformer := transform.Transformer{Translator: translator.Translator}
+	transformer := transform.Transformer{Translator: translator.Translator}
 
-		if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
-			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(apc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", apc.apiModelPath)
-			}
+	if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		err = transformer.NormalizeForK8sSLBScalingOrUpgrade(apc.logger, templateJSON)
+		if err != nil {
+			return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", apc.apiModelPath)
 		}
+	}
 
-		if apc.nodePool.IsVirtualMachineScaleSets() {
-			err = transformer.NormalizeForK8sVMASScalingUp(apc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrapf(err, "error transforming the template for scaling template %s", apc.apiModelPath)
-			}
-			addValue(parametersJSON, apc.nodePool.Name+"Count", 0)
-		} else {
-			err = transformer.NormalizeForK8sAddVMASPool(apc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrap(err, "error transforming the template to add a VMAS node pool")
-			}
+	if apc.nodePool.IsVirtualMachineScaleSets() {
+		err = transformer.NormalizeForK8sVMASScalingUp(apc.logger, templateJSON)
+		if err != nil {
+			return errors.Wrapf(err, "error transforming the template for scaling template %s", apc.apiModelPath)
+		}
+		addValue(parametersJSON, apc.nodePool.Name+"Count", 0)
+	} else {
+		err = transformer.NormalizeForK8sAddVMASPool(apc.logger, templateJSON)
+		if err != nil {
+			return errors.Wrap(err, "error transforming the template to add a VMAS node pool")
 		}
 	}
 

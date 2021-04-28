@@ -22,6 +22,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations/kubernetesupgrade"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/blang/semver"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 
@@ -42,6 +43,7 @@ type upgradeCmd struct {
 	resourceGroupName                        string
 	apiModelPath                             string
 	deploymentDirectory                      string
+	currentVersion                           string
 	upgradeVersion                           string
 	location                                 string
 	kubeconfigPath                           string
@@ -50,6 +52,7 @@ type upgradeCmd struct {
 	force                                    bool
 	controlPlaneOnly                         bool
 	disableClusterInitComponentDuringUpgrade bool
+	upgradeWindowsVHD                        bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -85,6 +88,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", -1, "how long to wait for each vm to be cordoned in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
 	f.BoolVarP(&uc.controlPlaneOnly, "control-plane-only", "", false, "upgrade control plane VMs only, do not upgrade node pools")
+	f.BoolVarP(&uc.upgradeWindowsVHD, "upgrade-windows-vhd", "", true, "upgrade image reference of the Windows nodes")
 	addAuthFlags(uc.getAuthArgs(), f)
 
 	_ = f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
@@ -166,6 +170,40 @@ func (uc *upgradeCmd) loadCluster() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	// Ensure there aren't known-breaking API model configurations
+	if uc.containerService.Properties.MasterProfile.AvailabilityProfile == api.VirtualMachineScaleSets {
+		return errors.Errorf("Clusters with a VMSS control plane are not upgradable using `aks-engine upgrade`!")
+	}
+	if uc.containerService.Properties.OrchestratorProfile != nil &&
+		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig != nil &&
+		to.Bool(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) &&
+		to.Bool(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) &&
+		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID == "" {
+		return errors.Errorf("Clusters with enableEncryptionWithExternalKms=true and system-assigned identity are not upgradable using `aks-engine upgrade`!")
+	}
+
+	// Set 60 minutes cordonDrainTimeout for Azure Stack Cloud to give it enough time to move around resources during Node Drain,
+	// especially disk detach/attach operations. We still honor the user's input.
+	if uc.cordonDrainTimeout == nil && uc.containerService.Properties.IsAzureStackCloud() {
+		cordonDrainTimeout := time.Duration(60) * time.Minute
+		uc.cordonDrainTimeout = &cordonDrainTimeout
+	}
+
+	// Use the Windows VHD associated with the aks-engine version if upgradeWindowsVHD is set to "true"
+	if uc.upgradeWindowsVHD && uc.containerService.Properties.WindowsProfile != nil {
+		windowsProfile := uc.containerService.Properties.WindowsProfile
+		if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019ContainerDOSImageConfig) {
+			windowsProfile.ImageVersion = api.AKSWindowsServer2019ContainerDOSImageConfig.ImageVersion
+			windowsProfile.WindowsSku = api.AKSWindowsServer2019ContainerDOSImageConfig.ImageSku
+		} else if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019OSImageConfig) {
+			windowsProfile.ImageVersion = api.AKSWindowsServer2019OSImageConfig.ImageVersion
+			windowsProfile.WindowsSku = api.AKSWindowsServer2019OSImageConfig.ImageSku
+		} else if api.ImagePublisherAndOfferMatch(windowsProfile, api.WindowsServer2019OSImageConfig) {
+			windowsProfile.ImageVersion = api.WindowsServer2019OSImageConfig.ImageVersion
+			windowsProfile.WindowsSku = api.WindowsServer2019OSImageConfig.ImageSku
+		}
+	}
+
 	// The cluster-init component is a cluster create-only feature, temporarily disable if enabled
 	if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
 		if uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].IsEnabled() {
@@ -208,7 +246,7 @@ func (uc *upgradeCmd) loadCluster() error {
 
 func (uc *upgradeCmd) validateTargetVersion() error {
 	// Get available upgrades for container service.
-	orchestratorInfo, err := api.GetOrchestratorVersionProfile(uc.containerService.Properties.OrchestratorProfile, uc.containerService.Properties.HasWindows())
+	orchestratorInfo, err := api.GetOrchestratorVersionProfile(uc.containerService.Properties.OrchestratorProfile, uc.containerService.Properties.HasWindows(), uc.containerService.Properties.IsAzureStackCloud())
 	if err != nil {
 		return errors.Wrap(err, "error getting list of available upgrades")
 	}
@@ -233,12 +271,19 @@ func (uc *upgradeCmd) initialize() error {
 		return errors.New("--location does not match api model location")
 	}
 
+	// Validate semver compatibility
+	_, err := semver.Make(uc.upgradeVersion)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Invalid --upgrade-version value '%s', not a semver string", uc.upgradeVersion))
+	}
+
 	if !uc.force {
 		err := uc.validateTargetVersion()
 		if err != nil {
 			return errors.Wrap(err, "Invalid upgrade target version. Consider using --force if you really want to proceed")
 		}
 	}
+	uc.currentVersion = uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion
 	uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion = uc.upgradeVersion
 
 	//allows to identify VMs in the resource group that belong to this cluster.
@@ -263,6 +308,12 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	err = uc.loadCluster()
 	if err != nil {
 		return errors.Wrap(err, "loading existing cluster")
+	}
+
+	if uc.containerService.Properties.IsAzureStackCloud() {
+		if err = uc.validateOSBaseImage(); err != nil {
+			return errors.Wrapf(err, "validating OS base images required by %s", uc.apiModelPath)
+		}
 	}
 
 	upgradeCluster := kubernetesupgrade.UpgradeCluster{
@@ -305,6 +356,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	upgradeCluster.IsVMSSToBeUpgraded = isVMSSNameInAgentPoolsArray
+	upgradeCluster.CurrentVersion = uc.currentVersion
 
 	if err = upgradeCluster.UpgradeCluster(uc.client, kubeConfig, BuildTag); err != nil {
 		return errors.Wrap(err, "upgrading cluster")
@@ -354,4 +406,14 @@ func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
 		}
 	}
 	return false
+}
+
+// validateOSBaseImage checks if the OS image is available on the target cloud (ATM, Azure Stack only)
+func (uc *upgradeCmd) validateOSBaseImage() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := armhelpers.ValidateRequiredImages(ctx, uc.location, uc.containerService.Properties, uc.client); err != nil {
+		return errors.Wrap(err, "OS base image not available in target cloud")
+	}
+	return nil
 }

@@ -2,14 +2,13 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
-	        {
-	          "name": "aad-pod-identity",
-	          "enabled" : true
-	        }
-	      ]
+          {
+            "name": "aad-pod-identity",
+            "enabled": true
+          }
+        ]
       }
     },
     "masterProfile": {
@@ -33,10 +32,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

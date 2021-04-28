@@ -2,15 +2,10 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
           {
             "name": "tiller",
-            "enabled": false
-          },
-          {
-            "name": "aci-connector",
             "enabled": false
           },
           {
@@ -23,14 +18,6 @@
           },
           {
             "name": "keyvault-flexvolume",
-            "enabled": false
-          },
-          {
-            "name": "kubernetes-dashboard",
-            "enabled": false
-          },
-          {
-            "name": "rescheduler",
             "enabled": false
           },
           {
@@ -74,11 +61,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    },
-    "certificateProfile": {}
+    }
   }
 }

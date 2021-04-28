@@ -3,10 +3,6 @@
   "plan": {},
   "properties": {
     "provisioningState": "",
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-    "orchestratorRelease": "1.15"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "masterdns1",
@@ -20,7 +16,12 @@
         "vmSize": "Standard_D2_v2",
         "availabilityProfile": "VirtualMachineScaleSets",
         "storageProfile": "ManagedDisks",
-        "diskSizesGB": [128, 128, 128, 128]
+        "diskSizesGB": [
+          128,
+          128,
+          128,
+          128
+        ]
       },
       {
         "name": "agentpool2",
@@ -28,7 +29,12 @@
         "vmSize": "Standard_D2_v2",
         "availabilityProfile": "VirtualMachineScaleSets",
         "storageProfile": "ManagedDisks",
-        "diskSizesGB": [10, 10, 10, 10]
+        "diskSizesGB": [
+          10,
+          10,
+          10,
+          10
+        ]
       }
     ],
     "linuxProfile": {
@@ -59,8 +65,12 @@
       "etcdClientPrivateKey": "etcdClientPrivateKey",
       "etcdServerCertificate": "etcdServerCertificate",
       "etcdServerPrivateKey": "etcdServerPrivateKey",
-      "etcdPeerCertificates": ["etcdPeerCertificate0"],
-      "etcdPeerPrivateKeys": ["etcdPeerPrivateKey0"]
+      "etcdPeerCertificates": [
+        "etcdPeerCertificate0"
+      ],
+      "etcdPeerPrivateKeys": [
+        "etcdPeerPrivateKey0"
+      ]
     }
   }
 }

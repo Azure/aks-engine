@@ -26,13 +26,21 @@ if [ -z "$EXPIRATION_IN_HOURS" ]; then
     EXPIRATION_IN_HOURS=2
 fi
 
-az login --service-principal \
+if az login --service-principal \
 		--username "${SERVICE_PRINCIPAL_CLIENT_ID}" \
 		--password "${SERVICE_PRINCIPAL_CLIENT_SECRET}" \
-		--tenant "${TENANT_ID}" &>/dev/null
+		--tenant "${TENANT_ID}" &>/dev/null; then
+    echo "Successfully logged in using service principal"
+else
+    exit 1
+fi
 
 # set to the sub id we want to cleanup
-az account set -s $SUBSCRIPTION_ID_TO_CLEANUP
+if az account set -s $SUBSCRIPTION_ID_TO_CLEANUP; then
+    echo "Successfully set subscription"
+else
+    exit 1
+fi
 
 # convert to seconds so we can compare it against the "tags.now" property in the resource group metadata
 (( expirationInSecs = ${EXPIRATION_IN_HOURS} * 60 * 60 ))

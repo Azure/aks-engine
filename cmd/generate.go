@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
@@ -153,12 +154,12 @@ func (gc *generateCmd) loadAPIModel() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	if gc.containerService.Properties.MasterProfile == nil {
+		return errors.New("MasterProfile can't be nil")
+	}
+
 	if gc.outputDirectory == "" {
-		if gc.containerService.Properties.MasterProfile != nil {
-			gc.outputDirectory = path.Join("_output", gc.containerService.Properties.MasterProfile.DNSPrefix)
-		} else {
-			gc.outputDirectory = path.Join("_output", gc.containerService.Properties.HostedMasterProfile.DNSPrefix)
-		}
+		gc.outputDirectory = path.Join("_output", gc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
 	// consume gc.caCertificatePath and gc.caPrivateKeyPath
@@ -191,7 +192,7 @@ func (gc *generateCmd) loadAPIModel() error {
 func (gc *generateCmd) autofillApimodel() error {
 	// set the client id and client secret by command flags
 	k8sConfig := gc.containerService.Properties.OrchestratorProfile.KubernetesConfig
-	useManagedIdentity := k8sConfig != nil && k8sConfig.UseManagedIdentity
+	useManagedIdentity := k8sConfig != nil && to.Bool(k8sConfig.UseManagedIdentity)
 	if !useManagedIdentity {
 		if (gc.containerService.Properties.ServicePrincipalProfile == nil || ((gc.containerService.Properties.ServicePrincipalProfile.ClientID == "" || gc.containerService.Properties.ServicePrincipalProfile.ClientID == "00000000-0000-0000-0000-000000000000") && gc.containerService.Properties.ServicePrincipalProfile.Secret == "")) && gc.ClientID.String() != "" && gc.ClientSecret != "" {
 			gc.containerService.Properties.ServicePrincipalProfile = &api.ServicePrincipalProfile{

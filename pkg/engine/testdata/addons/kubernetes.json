@@ -4,36 +4,11 @@
   "properties": {
     "provisioningState": "",
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.15",
       "kubernetesConfig": {
         "addons": [
           {
             "name": "tiller",
             "enabled": false
-          },
-          {
-            "name": "kubernetes-dashboard",
-            "enabled": false
-          },
-          {
-            "name": "aci-connector",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "aci-connector",
-                "cpuRequests": "50m",
-                "memoryRequests": "150Mi",
-                "cpuLimits": "50m",
-                "memoryLimits": "150Mi"
-              }
-            ],
-            "config": {
-              "nodeName": "aci-connector",
-              "os": "Linux",
-              "region": "westus",
-              "taint": "azure.com/aci"
-            }
           },
           {
             "name": "cluster-autoscaler",
@@ -64,19 +39,6 @@
           {
             "name": "keyvault-flexvolume",
             "enabled": true
-          },
-          {
-            "name": "rescheduler",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "rescheduler",
-                "cpuRequests": "10m",
-                "memoryRequests": "100Mi",
-                "cpuLimits": "10m",
-                "memoryLimits": "100Mi"
-              }
-            ]
           },
           {
             "name": "metrics-server",

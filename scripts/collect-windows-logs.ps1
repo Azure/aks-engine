@@ -1,6 +1,19 @@
 $ProgressPreference = "SilentlyContinue"
 
-$lockedFiles = "kubelet.err.log", "kubelet.log", "kubeproxy.log", "kubeproxy.err.log", "containerd.err.log", "containerd.log", "azure-vnet-telemetry.log", "azure-vnet.log"
+$lockedFiles = @(
+  "kubelet.err.log", 
+  "kubelet.log", 
+  "kubeproxy.log", 
+  "kubeproxy.err.log", 
+  "azure-vnet-telemetry.log", 
+  "azure-vnet.log", 
+  "network-interfaces.json", 
+  "interfaces.json", 
+  "csi-proxy.log", 
+  "csi-proxy.err.log",
+  "containerd.log",
+  "containerd.err.log"
+)
 
 $timeStamp = get-date -format 'yyyyMMdd-hhmmss'
 $zipName = "$env:computername-$($timeStamp)_logs.zip"
@@ -10,6 +23,7 @@ $paths = @()
 get-childitem c:\k\*.log* -Exclude $lockedFiles | Foreach-Object {
   $paths += $_
 }
+
 $lockedTemp = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 New-Item -Type Directory $lockedTemp
 $lockedFiles | Foreach-Object {
@@ -20,6 +34,29 @@ $lockedFiles | Foreach-Object {
     if ($tempFile) {
       $paths += $tempFile
     }
+  }
+}
+
+# azure-cni logs currently end up in system32 when called by containerd so check there for logs too
+$lockedTemp = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+New-Item -Type Directory $lockedTemp
+$lockedFiles | Foreach-Object {
+  Write-Host "Copying $_ to temp"
+  $src = "c:\windows\system32\$_"
+  if (Test-Path $src) {
+    $tempfile = Copy-Item $src $lockedTemp -Passthru -ErrorAction Ignore
+    if ($tempFile) {
+      $paths += $tempFile
+    }
+  }
+}
+
+# Containerd log is outside the c:\k folder 
+$containerd = "C:\ProgramData\containerd\root\panic.log"
+if (Test-Path $containerd) {
+  $tempfile = Copy-Item $containerd $lockedTemp -Passthru -ErrorAction Ignore
+  if ($tempFile) {
+    $paths += $tempFile
   }
 }
 
@@ -47,6 +84,30 @@ if (-not (Test-Path 'c:\k\debug\collectlogs.ps1')) {
 $netLogs = Get-ChildItem (Get-ChildItem -Path c:\k\debug -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName | Select-Object -ExpandProperty FullName
 $paths += $netLogs
 $paths += "c:\AzureData\CustomDataSetupScript.log"
+
+Write-Host "Collecting containerd hyperv logs"
+if ((Test-Path "$Env:ProgramFiles\containerd\diag.ps1") -And (Test-Path "$Env:ProgramFiles\containerd\ContainerPlatform.wprp")) {
+  $tempHyperv = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
+  New-Item -Type Directory $tempHyperv
+  $persistedLogs = "c:\logs"
+  # there will either be an error collecting "bootlogs" or "trace profiles" as only one will be active at time. This will be fixed in future release of the script 
+  & $Env:ProgramFiles\containerd\diag.ps1 -Snap -ProfilePath "$Env:ProgramFiles\containerd\ContainerPlatform.wprp!ContainerPlatformPersistent" -TraceDirPath "$tempHyperv" -TempPath $persistedLogs
+  $hypervlogs = (Get-ChildItem -Path $tempHyperv | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+  $paths += $hypervlogs
+}
+else {
+  Write-Host "Containerd hyperv logs not avalaible"
+}
+
+# log containerd containers (this is done for docker via networking collectlogs.ps1)
+$res = Get-Command ctr.exe -ErrorAction SilentlyContinue
+if ($res)
+{ 
+  & ctr.exe -n k8s.io c ls > "$ENV:TEMP\$timeStamp-containerd-containers.txt"
+  & ctr.exe -n k8s.io t ls > "$ENV:TEMP\$timeStamp-containerd-tasks.txt"
+  $paths += "$ENV:TEMP\$timeStamp-containerd-containers.txt"
+  $paths += "$ENV:TEMP\$timeStamp-containerd-tasks.txt"
+}
 
 Write-Host "Compressing all logs to $zipName"
 $paths | Format-Table FullName, Length -AutoSize

@@ -11,13 +11,14 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -43,6 +44,12 @@ type scaleCmd struct {
 	agentPoolToScale     string
 	masterFQDN           string
 
+	// lib input
+	updateVMSSModel bool
+	validateCmd     bool
+	loadAPIModel    bool
+	persistAPIModel bool
+
 	// derived
 	containerService *api.ContainerService
 	apiVersion       string
@@ -60,13 +67,18 @@ type scaleCmd struct {
 const (
 	scaleName             = "scale"
 	scaleShortDescription = "Scale an existing AKS Engine-created Kubernetes cluster"
-	scaleLongDescription  = "Scale an existing AKS Engine-created Kubernetes cluster by specifying increasing or decreasing the number of nodes in a node pool"
+	scaleLongDescription  = "Scale an existing AKS Engine-created Kubernetes cluster by specifying a new desired number of nodes in a node pool"
 	apiModelFilename      = "apimodel.json"
 )
 
 // NewScaleCmd run a command to upgrade a Kubernetes cluster
 func newScaleCmd() *cobra.Command {
-	sc := scaleCmd{}
+	sc := scaleCmd{
+		validateCmd:     true,
+		updateVMSSModel: false,
+		loadAPIModel:    true,
+		persistAPIModel: true,
+	}
 
 	scaleCmd := &cobra.Command{
 		Use:   scaleName,
@@ -140,6 +152,7 @@ func (sc *scaleCmd) load() error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
+	sc.updateVMSSModel = true
 
 	if sc.apiModelPath == "" {
 		sc.apiModelPath = filepath.Join(sc.deploymentDirectory, apiModelFilename)
@@ -213,6 +226,11 @@ func (sc *scaleCmd) load() error {
 		}
 	}
 
+	// Back-compat logic to populate the VMSSName property for clusters built prior to VMSSName being a part of the API model spec
+	if sc.agentPool.IsVirtualMachineScaleSets() && sc.agentPool.VMSSName == "" {
+		sc.agentPool.VMSSName = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, sc.agentPoolIndex)
+	}
+
 	//allows to identify VMs in the resource group that belong to this cluster.
 	sc.nameSuffix = sc.containerService.Properties.GetClusterID()
 	log.Debugf("Cluster ID used in all agent pools: %s", sc.nameSuffix)
@@ -235,11 +253,21 @@ func (sc *scaleCmd) load() error {
 }
 
 func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
-	if err := sc.validate(cmd); err != nil {
-		return errors.Wrap(err, "failed to validate scale command")
+	if sc.validateCmd {
+		if err := sc.validate(cmd); err != nil {
+			return errors.Wrap(err, "failed to validate scale command")
+		}
 	}
-	if err := sc.load(); err != nil {
-		return errors.Wrap(err, "failed to load existing container service")
+	if sc.loadAPIModel {
+		if err := sc.load(); err != nil {
+			return errors.Wrap(err, "failed to load existing container service")
+		}
+	}
+
+	if sc.containerService.Properties.IsAzureStackCloud() {
+		if err := sc.validateOSBaseImage(); err != nil {
+			return errors.Wrapf(err, "validating OS base images required by %s", sc.apiModelPath)
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
@@ -251,7 +279,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	indexToVM := make(map[int]string)
 
 	// Get nodes list from the k8s API before scaling for the desired pool
-	if sc.apiserverURL != "" && orchestratorInfo.OrchestratorType == api.Kubernetes {
+	if sc.apiserverURL != "" {
 		nodes, err := operations.GetNodes(sc.client, sc.logger, sc.apiserverURL, sc.kubeconfig, time.Duration(5)*time.Minute, sc.agentPoolToScale, -1)
 		if err == nil && nodes != nil {
 			sc.nodes = nodes
@@ -259,30 +287,39 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if sc.agentPool.IsAvailabilitySets() {
-		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
-			if err != nil {
-				return errors.Wrap(err, "failed to get VMs in the resource group")
-			} else if len(vmsListPage.Values()) < 1 {
-				return errors.New("The provided resource group does not contain any VMs")
-			}
-			for _, vm := range vmsListPage.Values() {
-				vmName := *vm.Name
-				if !sc.vmInAgentPool(vmName, vm.Tags) {
-					continue
-				}
-
-				if sc.agentPool.OSType == api.Windows {
-					_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
-				} else {
-					_, _, index, err = utils.K8sLinuxVMNameParts(vmName)
-				}
+		for i := 0; i < 10; i++ {
+			for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 				if err != nil {
-					return err
+					return errors.Wrap(err, "failed to get VMs in the resource group")
+				} else if len(vmsListPage.Values()) < 1 {
+					return errors.New("The provided resource group does not contain any VMs")
 				}
+				for _, vm := range vmsListPage.Values() {
+					vmName := *vm.Name
+					if !sc.vmInAgentPool(vmName, vm.Tags) {
+						continue
+					}
 
-				indexToVM[index] = vmName
-				indexes = append(indexes, index)
+					if sc.agentPool.OSType == api.Windows {
+						_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
+					} else {
+						_, _, index, err = utils.K8sLinuxVMNameParts(vmName)
+					}
+					if err != nil {
+						return err
+					}
+
+					indexToVM[index] = vmName
+					indexes = append(indexes, index)
+				}
 			}
+			// If we get zero VMs that match our api model pool name, then
+			// Retry every 30 seconds for up to 5 minutes to accommodate temporary issues connecting to the VM API
+			if len(indexes) > 0 {
+				break
+			}
+			log.Warnf("Found no VMs in resource group %s that match pool name %s\n", sc.resourceGroupName, sc.agentPool.Name)
+			time.Sleep(30 * time.Second)
 		}
 		sortedIndexes := sort.IntSlice(indexes)
 		sortedIndexes.Sort()
@@ -335,11 +372,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			for _, node := range vmsToDelete {
 				sc.logger.Infof("Node %s will be cordoned and drained\n", node)
 			}
-			if orchestratorInfo.OrchestratorType == api.Kubernetes {
-				err := sc.drainNodes(vmsToDelete)
-				if err != nil {
-					return errors.Wrap(err, "Got error while draining the nodes to be deleted")
-				}
+			err := sc.drainNodes(vmsToDelete)
+			if err != nil {
+				return errors.Wrap(err, "Got error while draining the nodes to be deleted")
 			}
 
 			for _, node := range vmsToDelete {
@@ -372,7 +407,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
-			return sc.saveAPIModel()
+			if sc.persistAPIModel {
+				return sc.saveAPIModel()
+			}
 		}
 	} else {
 		for vmssListPage, err := sc.client.ListVirtualMachineScaleSets(ctx, sc.resourceGroupName); vmssListPage.NotDone(); err = vmssListPage.NextWithContext(ctx) {
@@ -380,32 +417,32 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
-				vmssName := *vmss.Name
-				if !sc.vmInAgentPool(vmssName, vmss.Tags) {
+				vmssName := to.String(vmss.Name)
+				if sc.agentPool.VMSSName == vmssName {
+					log.Infof("found VMSS %s in resource group %s that correlates with node pool %s", vmssName, sc.resourceGroupName, sc.agentPoolToScale)
+				} else {
 					continue
 				}
 
 				if vmss.Sku != nil {
 					currentNodeCount = int(*vmss.Sku.Capacity)
-					if int(*vmss.Sku.Capacity) == sc.newDesiredAgentCount {
+					if int(*vmss.Sku.Capacity) == sc.newDesiredAgentCount && !sc.updateVMSSModel {
 						sc.printScaleTargetEqualsExisting(currentNodeCount)
 						return nil
 					} else if int(*vmss.Sku.Capacity) > sc.newDesiredAgentCount {
 						log.Warnf("VMSS scale down is an alpha feature: VMSS VM nodes will not be cordoned and drained before scaling down!")
 					}
-				}
-
-				if sc.agentPool.OSType == api.Windows {
-					winPoolIndexStr := vmssName[len(vmssName)-2:]
-					var err error
-					winPoolIndex, err = strconv.Atoi(winPoolIndexStr)
-					if err != nil {
-						return errors.Wrap(err, "failed to get Windows pool index from VMSS name")
+				} else {
+					// Fall back to comparing against the known count value in the api model
+					if sc.agentPool.Count == sc.newDesiredAgentCount {
+						sc.printScaleTargetEqualsExisting(currentNodeCount)
+						return nil
 					}
 				}
 
 				currentNodeCount = int(*vmss.Sku.Capacity)
 				highestUsedIndex = 0
+				break
 			}
 		}
 	}
@@ -468,23 +505,21 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"Index"] = winPoolIndex
 		templateJSON["variables"].(map[string]interface{})[sc.agentPool.Name+"VMNamePrefix"] = sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)
 	}
-	if orchestratorInfo.OrchestratorType == api.Kubernetes {
-		if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
-			err = transformer.NormalizeForK8sSLBScalingOrUpgrade(sc.logger, templateJSON)
-			if err != nil {
-				return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", sc.apiModelPath)
-			}
-		}
-		err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
+	if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		err = transformer.NormalizeForK8sSLBScalingOrUpgrade(sc.logger, templateJSON)
 		if err != nil {
-			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
+			return errors.Wrapf(err, "error transforming the template for scaling with SLB %s", sc.apiModelPath)
 		}
+	}
+	err = transformer.NormalizeForK8sVMASScalingUp(sc.logger, templateJSON)
+	if err != nil {
+		return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
+	}
 
-		transformer.RemoveImmutableResourceProperties(sc.logger, templateJSON)
+	transformer.RemoveImmutableResourceProperties(sc.logger, templateJSON)
 
-		if sc.agentPool.IsAvailabilitySets() {
-			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
-		}
+	if sc.agentPool.IsAvailabilitySets() {
+		addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
 	}
 
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -514,7 +549,10 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return sc.saveAPIModel()
+	if sc.persistAPIModel {
+		return sc.saveAPIModel()
+	}
+	return nil
 }
 
 func (sc *scaleCmd) saveAPIModel() error {
@@ -560,11 +598,14 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 		}
 	}
 
-	// For Windows, we rely upon the tags
-	if sc.agentPool.OSType == api.Windows {
+	// Fall back to checking the VM name to see if it fits the naming pattern
+	if sc.agentPool.OSType == api.Windows && sc.agentPool.AvailabilityProfile == api.AvailabilitySet && strings.HasPrefix(vmName, sc.containerService.Properties.GetClusterID()[:4]) {
+		_, _, winPoolIndex, _, err := utils.WindowsVMNameParts(vmName)
+		if err == nil {
+			return vmName[:9] == sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)[:9]
+		}
 		return false
 	}
-	// Fall back to checking the VM name to see if it fits the naming pattern for Linux
 	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.Contains(vmName, sc.agentPoolToScale)
 }
 
@@ -613,9 +654,19 @@ func (sc *scaleCmd) printScaleTargetEqualsExisting(currentNodeCount int) {
 	log.Infof("Node pool %s is already at the desired count %d%s", sc.agentPoolToScale, sc.newDesiredAgentCount, trailingChar)
 	if printNodes {
 		operations.PrintNodes(sc.nodes)
+		numNodesFromK8sAPI := len(sc.nodes)
+		if currentNodeCount != numNodesFromK8sAPI {
+			sc.logger.Warnf("There are %d nodes named \"*%s*\" in the Kubernetes cluster, but there are %d VMs named \"*%s*\" in the resource group %s\n", numNodesFromK8sAPI, sc.agentPoolToScale, currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName)
+		}
 	}
-	numNodesFromK8sAPI := len(sc.nodes)
-	if currentNodeCount != numNodesFromK8sAPI {
-		sc.logger.Warnf("There are %d nodes named \"*%s*\" in the Kubernetes cluster, but there are %d VMs named \"*%s*\" in the resource group %s\n", numNodesFromK8sAPI, sc.agentPoolToScale, currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName)
+}
+
+// validateOSBaseImage checks if the OS image is available on the target cloud (ATM, Azure Stack only)
+func (sc *scaleCmd) validateOSBaseImage() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := armhelpers.ValidateRequiredImages(ctx, sc.location, sc.containerService.Properties, sc.client); err != nil {
+		return errors.Wrap(err, "OS base image not available in target cloud")
 	}
+	return nil
 }

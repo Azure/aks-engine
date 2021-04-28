@@ -1,9 +1,6 @@
 {
     "apiVersion": "vlabs",
     "properties": {
-      "orchestratorProfile": {
-        "orchestratorType": "Kubernetes"
-      },
       "masterProfile": {
         "imageReference": {
           "name": "linuxvm",
@@ -40,11 +37,6 @@
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
   }
-  

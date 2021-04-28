@@ -27,6 +27,7 @@ type getVersionsCmd struct {
 	orchestrator string
 	version      string
 	windows      bool
+	azureEnv     string
 	output       string
 }
 
@@ -44,6 +45,7 @@ func newGetVersionsCmd() *cobra.Command {
 	gvc.orchestrator = "Kubernetes" // orchestrator is always Kubernetes
 	f.StringVar(&gvc.version, "version", "", "Kubernetes version (optional)")
 	f.BoolVar(&gvc.windows, "windows", false, "Kubernetes cluster with Windows nodes (optional)")
+	f.StringVar(&gvc.azureEnv, "azure-env", "AzurePublicCloud", "The target Azure cloud")
 	getVersionsCmdDescription := fmt.Sprintf("Output format. Allowed values: %s",
 		strings.Join(outputFormatOptions, ", "))
 	f.StringVarP(&gvc.output, "output", "o", "human", getVersionsCmdDescription)
@@ -52,7 +54,7 @@ func newGetVersionsCmd() *cobra.Command {
 }
 
 func (gvc *getVersionsCmd) run(cmd *cobra.Command, args []string) error {
-	orchs, err := api.GetOrchestratorVersionProfileListVLabs(gvc.orchestrator, gvc.version, gvc.windows)
+	orchs, err := api.GetOrchestratorVersionProfileListVLabs(gvc.orchestrator, gvc.version, gvc.windows, gvc.azureEnv)
 	if err != nil {
 		return err
 	}

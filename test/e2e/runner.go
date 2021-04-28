@@ -12,11 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/test/e2e/azure"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/metrics"
 	"github.com/Azure/aks-engine/test/e2e/runner"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 var (
@@ -262,7 +264,7 @@ func teardown() {
 		log.Printf("cannot create directory for logs: %s", err)
 	}
 
-	if cliProvisioner.Config.IsKubernetes() && cfg.SoakClusterName == "" && !cfg.SkipLogsCollection {
+	if cfg.SoakClusterName == "" && !cfg.SkipLogsCollection {
 		err = cliProvisioner.FetchProvisioningMetrics(logsPath, cfg, acct)
 		if err != nil {
 			log.Printf("cliProvisioner.FetchProvisioningMetrics error: %s\n", err)
@@ -288,8 +290,17 @@ func teardown() {
 	}
 	if cfg.CleanUpOnExit {
 		for _, rg := range rgs {
-			log.Printf("Deleting Group:%s\n", rg)
+			log.Printf("Deleting Group: %s\n", rg)
 			acct.DeleteGroup(rg, false)
+		}
+		// Delete once we reuse the cluster group for the connectedCluster resource
+		for _, addon := range eng.ClusterDefinition.Properties.OrchestratorProfile.KubernetesConfig.Addons {
+			if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) &&
+				addon.Config["resourceGroup"] != "" &&
+				addon.Config["location"] != "" {
+				log.Printf("Deleting Arc Group: %s\n", fmt.Sprintf("%s-arc", cfg.Name))
+				acct.DeleteGroup(fmt.Sprintf("%s-arc", cfg.Name), false)
+			}
 		}
 	}
 }

@@ -43,6 +43,7 @@ ensureCustomCloudSourcesList() {
 
 configureK8sCustomCloud() {
   {{- if IsAzureStackCloud}}
+  local azure_json_path="/etc/kubernetes/azure.json"
   export -f ensureAzureStackCertificates
   retrycmd 60 10 30 bash -c ensureAzureStackCertificates
   set +x
@@ -65,20 +66,20 @@ configureK8sCustomCloud() {
     SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD#'"'}
     SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD%'"'}
 
-    KUBERNETES_FILE_DIR=$(dirname "${AZURE_JSON_PATH}")
+    KUBERNETES_FILE_DIR=$(dirname "${azure_json_path}")
     K8S_CLIENT_CERT_PATH="${KUBERNETES_FILE_DIR}/k8s_auth_certificate.pfx"
     echo $SERVICE_PRINCIPAL_CLIENT_SECRET_CERT | base64 --decode >$K8S_CLIENT_CERT_PATH
     # shellcheck disable=SC2002,SC2005
-    echo $(cat "${AZURE_JSON_PATH}" |
+    echo $(cat "${azure_json_path}" |
       jq --arg K8S_CLIENT_CERT_PATH ${K8S_CLIENT_CERT_PATH} '. + {aadClientCertPath:($K8S_CLIENT_CERT_PATH)}' |
       jq --arg SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD ${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD} '. + {aadClientCertPassword:($SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD)}' |
-      jq 'del(.aadClientSecret)') >${AZURE_JSON_PATH}
+      jq 'del(.aadClientSecret)') >${azure_json_path}
   fi
 
   if [[ ${IDENTITY_SYSTEM,,} == "adfs" ]]; then
     # update the tenent id for ADFS environment.
     # shellcheck disable=SC2002,SC2005
-    echo $(cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"') >${AZURE_JSON_PATH}
+    echo $(cat "${azure_json_path}" | jq '.tenantId = "adfs"') >${azure_json_path}
   fi
   set -x
 
@@ -195,7 +196,12 @@ configureAzureStackInterfaces() {
 
   mapfile -t local_interfaces < <(cat /sys/class/net/*/address | tr -d : | sed 's/.*/\U&/g')
 
-  SDN_INTERFACES=$(jq ".value | map(select(.properties.macAddress | inside(\"${local_interfaces[*]}\"))) | map(select((.properties.ipConfigurations | length) > 0))" ${NETWORK_INTERFACES_FILE})
+  SDN_INTERFACES=$(jq ".value | map(select(.properties != null) | select(.properties.macAddress != null) | select(.properties.macAddress | inside(\"${local_interfaces[*]}\"))) | map(select((.properties.ipConfigurations | length) > 0))" ${NETWORK_INTERFACES_FILE})
+
+  if [[ -z $SDN_INTERFACES ]]; then
+      echo "Error extracting the SDN interfaces from the network interfaces file"
+      exit 123
+  fi
 
   AZURE_CNI_CONFIG=$(echo ${SDN_INTERFACES} | jq "{Interfaces: [.[] | {MacAddress: .properties.macAddress, IsPrimary: .properties.primary, IPSubnets: [{Prefix: .properties.ipConfigurations[0].properties.subnet.id, IPAddresses: .properties.ipConfigurations | [.[] | {Address: .properties.privateIPAddress, IsPrimary: .properties.primary}]}]}]}")
 

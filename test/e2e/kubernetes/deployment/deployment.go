@@ -180,12 +180,55 @@ func CreateLinuxDeploy(image, name, namespace, app, role string) (*Deployment, e
 	return d, nil
 }
 
+// CreateDeployFromImageAsync wraps CreateLinuxDeploy with a struct response for goroutine + channel usage
+func CreateDeployFromImageAsync(image, name, namespace, app, role string) GetResult {
+	d, err := CreateLinuxDeploy(image, name, namespace, app, role)
+	return GetResult{
+		deployment: d,
+		err:        err,
+	}
+}
+
+// CreateDeploymentFromImageWithRetry will kubectl apply a Deployment from file with a name with retry toleration
+func CreateDeploymentFromImageWithRetry(image, name, namespace, app, role string, sleep, timeout time.Duration) (*Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateDeploymentFromImageWithRetryError error
+	var d *Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateDeployFromImageAsync(image, name, namespace, app, role)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateDeploymentFromImageWithRetryError = result.err
+			d = result.deployment
+			if mostRecentCreateDeploymentFromImageWithRetryError == nil {
+				if d != nil {
+					return d, nil
+				}
+			}
+		case <-ctx.Done():
+			return d, errors.Errorf("CreateDeploymentFromImageWithRetry timed out: %s\n", mostRecentCreateDeploymentFromImageWithRetryError)
+		}
+	}
+}
+
 // CreateLinuxDeployIfNotExist first checks if a deployment already exists, and return it if so
 // If not, we call CreateLinuxDeploy
-func CreateLinuxDeployIfNotExist(image, name, namespace, app, role string) (*Deployment, error) {
+func CreateLinuxDeployIfNotExist(image, name, namespace, app, role string, sleep, timeout time.Duration) (*Deployment, error) {
 	deployment, err := Get(name, namespace, validateDeploymentNotExistRetries)
 	if err != nil {
-		return CreateLinuxDeploy(image, name, namespace, app, role)
+		return CreateDeploymentFromImageWithRetry(image, name, namespace, app, role, sleep, timeout)
 	}
 	return deployment, nil
 }
@@ -299,7 +342,7 @@ func RunDeploymentMultipleTimes(deployRunnerCmd deployRunnerCmd, image, name, co
 		}
 		var podsSucceeded int
 		for _, p := range pods {
-			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, podTimeout)
+			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, true, sleep, podTimeout)
 			if err != nil {
 				log.Printf("pod %s did not succeed in time\n", p.Metadata.Name)
 				return successfulAttempts, err
@@ -357,6 +400,66 @@ func CreateWindowsDeployWithRetry(image, name, namespace, app, role string, slee
 			}
 		case <-ctx.Done():
 			return d, errors.Errorf("GetAllByPrefixWithRetry timed out: %s\n", mostRecentCreateWindowsDeployWithRetryError)
+		}
+	}
+}
+
+// CreateDeploymentFromFile will create a Deployment from file with a name
+func CreateDeploymentFromFile(filename, name, namespace string, sleep, timeout time.Duration) (*Deployment, error) {
+	cmd := exec.Command("k", "apply", "-f", filename)
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error trying to create Deployment %s:%s\n", name, string(out))
+		return nil, err
+	}
+	d, err := GetWithRetry(name, namespace, sleep, timeout)
+	if err != nil {
+		log.Printf("Error while trying to fetch Deployment %s:%s\n", name, err)
+		return nil, err
+	}
+	return d, nil
+}
+
+// CreateDeploymentFromFileAsync wraps CreateDeploymentFromFile with a struct response for goroutine + channel usage
+func CreateDeploymentFromFileAsync(filename, name, namespace string, sleep, timeout time.Duration) GetResult {
+	d, err := CreateDeploymentFromFile(filename, name, namespace, sleep, timeout)
+	return GetResult{
+		deployment: d,
+		err:        err,
+	}
+}
+
+// CreateDeploymentFromFileWithRetry will kubectl apply a Deployment from file with a name with retry toleration
+func CreateDeploymentFromFileWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateDeploymentFromFileWithRetryError error
+	var d *Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateDeploymentFromFileAsync(filename, name, namespace, sleep, timeout)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateDeploymentFromFileWithRetryError = result.err
+			d = result.deployment
+			if mostRecentCreateDeploymentFromFileWithRetryError == nil {
+				if d != nil {
+					return d, nil
+				}
+			}
+		case <-ctx.Done():
+			return d, errors.Errorf("CreateDeploymentFromFileWithRetry timed out: %s\n", mostRecentCreateDeploymentFromFileWithRetryError)
 		}
 	}
 }
@@ -783,7 +886,7 @@ func GetAsync(name, namespace string) GetResult {
 func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration) ([]pod.Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	ch := make(chan pod.GetAllByPrefixResult)
+	ch := make(chan pod.GetPodsResult)
 	var mostRecentWaitForReplicasError error
 	var pods []pod.Pod
 	go func() {
@@ -794,6 +897,61 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 			default:
 				ch <- pod.GetAllRunningByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace)
 				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentWaitForReplicasError = result.Err
+			pods = result.Pods
+			if mostRecentWaitForReplicasError == nil {
+				if min == -1 {
+					if len(pods) <= max {
+						return pods, nil
+					}
+				} else if max == -1 {
+					if len(pods) >= min {
+						return pods, nil
+					}
+				} else {
+					if len(pods) >= min && len(pods) <= max {
+						return pods, nil
+					}
+				}
+			}
+		case <-ctx.Done():
+			err := d.Describe()
+			if err != nil {
+				log.Printf("Unable to describe deployment %s: %s", d.Metadata.Name, err)
+			}
+			return pods, errors.Errorf("WaitForReplicas timed out: %s\n", mostRecentWaitForReplicasError)
+		}
+	}
+}
+
+// WaitForReplicasWithAction waits for a pod replica count between min and max and runs an action after every check
+func (d *Deployment) WaitForReplicasWithAction(min, max int, sleep, timeout time.Duration, action func() error) ([]pod.Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan pod.GetPodsResult)
+	var mostRecentWaitForReplicasError error
+	var pods []pod.Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- pod.GetAllRunningByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace)
+				time.Sleep(sleep)
+
+				err := action()
+				if err != nil {
+					mostRecentWaitForReplicasError = err
+					cancel()
+				}
+
 			}
 		}
 	}()

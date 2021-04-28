@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-var defaultTestClusterVer = common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false)
+var defaultTestClusterVer = common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false, false)
 
 func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	// Test EnableDataEncryptionAtRest = true
@@ -166,7 +166,7 @@ func TestAPIServerConfigHasAadProfile(t *testing.T) {
 	}
 
 	// Test OIDC user overrides
-	cs = CreateMockContainerService("testcluster", "1.7.12", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.AADProfile = &AADProfile{
 		ServerAppID: "test-id",
 		TenantID:    "test-tenant",
@@ -261,16 +261,6 @@ func TestAPIServerConfigEnableRbac(t *testing.T) {
 			a["--authorization-mode"])
 	}
 
-	// Test EnableRbac = true with 1.6 cluster
-	cs = CreateMockContainerService("testcluster", "1.6.11", 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
-	cs.setAPIServerConfig()
-	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--authorization-mode"] != "RBAC" {
-		t.Fatalf("got unexpected '--authorization-mode' API server config value for 1.6 cluster with EnableRbac=true: %s",
-			a["--authorization-mode"])
-	}
-
 	// Test EnableRbac = false
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
@@ -278,16 +268,6 @@ func TestAPIServerConfigEnableRbac(t *testing.T) {
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--authorization-mode"]; ok {
 		t.Fatalf("got unexpected '--authorization-mode' API server config value for EnableRbac=false: %s",
-			a["--authorization-mode"])
-	}
-
-	// Test EnableRbac = false with 1.6 cluster
-	cs = CreateMockContainerService("testcluster", "1.6.11", 3, 2, false)
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(false)
-	cs.setAPIServerConfig()
-	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if _, ok := a["--authorization-mode"]; ok {
-		t.Fatalf("got unexpected '--authorization-mode' API server config value for 1.6 cluster with EnableRbac=false: %s",
 			a["--authorization-mode"])
 	}
 }
@@ -301,6 +281,43 @@ func TestAPIServerConfigDisableRbac(t *testing.T) {
 	if a["--authorization-mode"] != "" {
 		t.Fatalf("got unexpected '--authorization-mode' API server config value for EnableRbac=false: %s",
 			a["--authorization-mode"])
+	}
+}
+
+func TestAPIServerServiceAccountFlags(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--service-account-issuer"] != "https://kubernetes.default.svc.cluster.local" {
+		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-issuer"])
+	}
+	if a["--service-account-signing-key-file"] != "/etc/kubernetes/certs/apiserver.key" {
+		t.Fatalf("got unexpected '--service-account-signing-key-file' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-signing-key-file"])
+	}
+
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.19", "", false, false, false), 3, 2, false)
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--service-account-issuer"] != "" {
+		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-issuer"])
+	}
+	if a["--service-account-signing-key-file"] != "" {
+		t.Fatalf("got unexpected '--service-account-signing-key-file' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-signing-key-file"])
+	}
+
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{
+		"--service-account-issuer": "kubernetes.default.svc",
+	}
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--service-account-issuer"] != "https://kubernetes.default.svc.cluster.local" {
+		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.20: %s",
+			a["--service-account-issuer"])
 	}
 }
 
@@ -392,7 +409,7 @@ func TestAPIServerConfigEnableProfiling(t *testing.T) {
 
 func TestAPIServerConfigRepairMalformedUpdates(t *testing.T) {
 	// Test default
-	cs := CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--repair-malformed-updates"]; ok {
@@ -404,7 +421,7 @@ func TestAPIServerConfigRepairMalformedUpdates(t *testing.T) {
 func TestAPIServerAuditPolicyBackCompatOverride(t *testing.T) {
 	// Validate that we statically override "--audit-policy-file" values of "/etc/kubernetes/manifests/audit-policy.yaml" for back-compat
 	auditPolicyKey := "--audit-policy-file"
-	cs := CreateMockContainerService("testcluster", "1.10.8", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig[auditPolicyKey] = "/etc/kubernetes/manifests/audit-policy.yaml"
 	cs.setAPIServerConfig()
@@ -445,7 +462,7 @@ func TestAPIServerWeakCipherSuites(t *testing.T) {
 
 func TestAPIServerCosmosEtcd(t *testing.T) {
 	// Test default
-	cs := CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--etcd-cafile"] != "/etc/kubernetes/certs/ca.crt" {
@@ -457,7 +474,7 @@ func TestAPIServerCosmosEtcd(t *testing.T) {
 			a["--etcd-servers"])
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(true)
 	cs.Properties.MasterProfile.DNSPrefix = "my-cosmos"
 	cs.setAPIServerConfig()
@@ -469,27 +486,17 @@ func TestAPIServerCosmosEtcd(t *testing.T) {
 }
 
 func TestAPIServerFeatureGates(t *testing.T) {
-	// Test 1.13 <= k8s <= 1.16
-	cs := CreateMockContainerService("testcluster", "1.15.12", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--feature-gates"] != "VolumeSnapshotDataSource=true" {
-		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
-			"1.15.12", a["--feature-gates"])
-	}
-
-	// Test k8s >= 1.17
-	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cs.setAPIServerConfig()
-	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--feature-gates"] != "" {
 		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
-			"1.17.0", a["--feature-gates"])
+			defaultTestClusterVer, a["--feature-gates"])
 	}
 }
 
 func TestAPIServerIPv6Only(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", "1.18.0", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
 	cs.setAPIServerConfig()
 
@@ -504,5 +511,28 @@ func TestAPIServerIPv6Only(t *testing.T) {
 			t.Fatalf("got unexpected '%s' API server config value for '--advertise-address' %s",
 				key, a[key])
 		}
+	}
+}
+
+func TestAPIServerAnonymousAuth(t *testing.T) {
+	// Validate anonymous-auth default is false
+	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--anonymous-auth"] != "false" {
+		t.Fatalf("got unexpected '--anonymous-auth' API server config value: %s",
+			a["--anonymous-auth"])
+	}
+
+	// Validate anonymous-auth enabled
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{
+		"--anonymous-auth": "true",
+	}
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--anonymous-auth"] != "true" {
+		t.Fatalf("got unexpected '--anonymous-auth' API server config value: %s",
+			a["--anonymous-auth"])
 	}
 }

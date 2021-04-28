@@ -10,7 +10,7 @@ spec:
       restartPolicy: Never
       containers:
       - name: cuda-vector-add
-        image: k8s.gcr.io/cuda-vector-add:v0.1
+        image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda11.1-ubuntu18.04
       nodeSelector:
         kubernetes.io/os: linux
         accelerator: nvidia

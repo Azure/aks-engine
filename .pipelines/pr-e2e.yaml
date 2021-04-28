@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.27.0
+    image: mcr.microsoft.com/oss/azcu/go-dev:v1.31.0
 
 jobs:
 - job: unit_tests
@@ -34,6 +34,13 @@ jobs:
     GOBIN:  '$(GOPATH)/bin' # Go binaries path
     GOROOT: '/usr/local/go' # Go installation path
     GOPATH: '$(Agent.TempDirectory)/go' # Go workspace path
+    MSI_USER_ASSIGNED_ID_AKS_ENGINE_E2E: ''
+    REGIONS: ''
+    SUBSCRIPTION_ID_E2E_KUBERNETES: ''
+    TENANT_ID: ''
+    SERVICE_PRINCIPAL_CLIENT_ID_E2E_KUBERNETES: ''
+    SERVICE_PRINCIPAL_CLIENT_SECRET_E2E_KUBERNETES: ''
+
 
   steps:
   - script: |
@@ -60,16 +67,80 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_1_18_release_e2e'
+    name: 'k8s_1_18_docker_e2e'
     k8sRelease: '1.18'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     enableKMSEncryption: false
+    containerRuntime: 'docker'
+    runSSHTests: true
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_1_19_release_e2e'
+    name: 'k8s_1_19_docker_e2e'
     k8sRelease: '1.19'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     enableKMSEncryption: false
+    containerRuntime: 'docker'
+    runSSHTests: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_20_docker_e2e'
+    k8sRelease: '1.20'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+    enableKMSEncryption: false
+    containerRuntime: 'docker'
+    runSSHTests: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_21_docker_e2e'
+    k8sRelease: '1.21'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+    enableKMSEncryption: false
+    containerRuntime: 'docker'
+    runSSHTests: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_18_containerd_e2e'
+    k8sRelease: '1.18'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition-no-vnet.json'
+    createVNET: false
+    enableKMSEncryption: false
+    containerRuntime: 'containerd'
+    runSSHTests: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_19_containerd_e2e'
+    k8sRelease: '1.19'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition-no-vnet.json'
+    createVNET: false
+    enableKMSEncryption: false
+    containerRuntime: 'containerd'
+    runSSHTests: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_20_containerd_e2e'
+    k8sRelease: '1.20'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition-no-vnet.json'
+    createVNET: false
+    enableKMSEncryption: false
+    containerRuntime: 'containerd'
+    runSSHTests: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_21_containerd_e2e'
+    k8sRelease: '1.21'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition-no-vnet.json'
+    createVNET: false
+    enableKMSEncryption: false
+    containerRuntime: 'containerd'
+    runSSHTests: true

@@ -173,6 +173,27 @@ func TestGenerateCmdMLoadAPIModel(t *testing.T) {
 	}
 }
 
+func TestGenerateCmdMLoadAPIModelWithoutMasterProfile(t *testing.T) {
+	g := &generateCmd{}
+	r := &cobra.Command{}
+
+	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+	g.set = []string{"masterProfile=nil"}
+
+	err := g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json"})
+	if err != nil {
+		t.Fatalf("unexpected error validating api model: %s", err.Error())
+	}
+	err = g.mergeAPIModel()
+	if err != nil {
+		t.Fatalf("unexpected error merging api model: %s", err.Error())
+	}
+	err = g.loadAPIModel()
+	if err == nil {
+		t.Fatalf("expected error loading api model without MasterProfile: %s", err.Error())
+	}
+}
+
 func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd(t *testing.T) {
 	t.Parallel()
 
@@ -255,7 +276,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInGene
 	}
 
 	err = generateCmd.validateAPIModelAsVLabs()
-	expectedErr := errors.New("ServicePrincipalProfile must be specified with Orchestrator Kubernetes")
+	expectedErr := errors.New("ServicePrincipalProfile must be specified")
 
 	if err != nil && err.Error() != expectedErr.Error() {
 		t.Fatalf("expected validate generate command to return error %s, but instead got %s", expectedErr.Error(), err.Error())
@@ -322,11 +343,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "ACI connector",
-			apiModelPath: "../examples/addons/aci-connector/kubernetes-aci-connector.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "App gateway ingress",
 			apiModelPath: "../examples/addons/appgw-ingress/kubernetes-appgw-ingress.json",
 			setArgs:      defaultSet,
@@ -364,6 +380,16 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "node problem detector",
 			apiModelPath: "../examples/addons/node-problem-detector/node-problem-detector.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "flatcar",
+			apiModelPath: "../examples/flatcar/kubernetes-flatcar.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "flatcar hybrid",
+			apiModelPath: "../examples/flatcar/kubernetes-flatcar-hybrid.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -502,11 +528,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "dashboard disabled",
-			apiModelPath: "../examples/kubernetes-config/kubernetes-no-dashboard.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "private cluster single master",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-private-cluster-single-master.json",
 			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
@@ -515,11 +536,6 @@ func TestExampleAPIModels(t *testing.T) {
 			name:         "private cluster",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-private-cluster.json",
 			setArgs:      []string{"orchestratorProfile.kubernetesConfig.privateCluster.jumpboxProfile.publicKey=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",masterProfile.dnsPrefix=my-cluster,linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""},
-		},
-		{
-			name:         "rescheduler addon",
-			apiModelPath: "../examples/kubernetes-config/kubernetes-rescheduler.json",
-			setArgs:      defaultSet,
 		},
 		{
 			name:         "standard LB",
@@ -547,16 +563,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "1.15 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.15.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "1.16 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.16.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "1.17 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.17.json",
 			setArgs:      defaultSet,
@@ -569,6 +575,16 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "1.19 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.19.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.20 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.20.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.21 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.21.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -737,11 +753,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "windows automatic updates",
-			apiModelPath: "../examples/windows/kubernetes-windows-automatic-update.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "windows windowsDockerVersion",
 			apiModelPath: "../examples/windows/kubernetes-windows-docker-version.json",
 			setArgs:      defaultSet,
@@ -767,11 +778,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "containerd",
-			apiModelPath: "../examples/kubernetes-containerd.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "Standard_D2",
 			apiModelPath: "../examples/kubernetes-D2.json",
 			setArgs:      defaultSet,
@@ -789,6 +795,11 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "containerd tmp dir",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-containerd-tmpdir.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e flatcar",
+			apiModelPath: "../examples/e2e-tests/kubernetes/flatcar/flatcar.json",
 			setArgs:      defaultSet,
 		},
 		{

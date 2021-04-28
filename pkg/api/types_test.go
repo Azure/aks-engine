@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/to"
+	. "github.com/onsi/gomega"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -33,20 +34,6 @@ const exampleAPIModel = `{
 		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
 		},
 		"servicePrincipalProfile": { "clientId": "", "secret": "" }
-	}
-}
-`
-
-const exampleAKSAPIModel = `{
-		"apiVersion": "2018-03-31",
-	"properties": {
-		"dnsPrefix": "agents006",
-		"fqdn": "agents006.azmk8s.io",
-		"kubernetesVersion": "1.15.11",
-		"agentPoolProfiles": [ { "name": "agentpool1", "count": 2, "vmSize": "Standard_D2_v2" } ],
-		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
-	},
-	"servicePrincipalProfile": { "clientId": "", "secret": "" }
 	}
 }
 `
@@ -119,7 +106,7 @@ func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
 		},
 		OrchestratorVersion: "1.16.0",
 	}
-	expected := "foo/oss/kubernetes/pause:1.3.1"
+	expected := "foo/oss/kubernetes/pause:3.4.1"
 	actual := o.GetPodInfraContainerSpec()
 	if actual != expected {
 		t.Fatalf("expected GetPodInfraContainerSpec to return %s, but got %s", expected, actual)
@@ -129,21 +116,28 @@ func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
 func TestOSType(t *testing.T) {
 	p := Properties{
 		MasterProfile: &MasterProfile{
-			Distro: RHEL,
+			Distro: Ubuntu1804,
 		},
 		AgentPoolProfiles: []*AgentPoolProfile{
 			{
 				OSType: Linux,
+				Distro: Ubuntu,
 			},
 			{
 				OSType: Linux,
-				Distro: RHEL,
+				Distro: Ubuntu,
 			},
 		},
 	}
 
+	if !p.MasterProfile.IsUbuntu1804() {
+		t.Fatalf("expected IsUbuntu1804() to return true but instead returned false")
+	}
 	if p.HasWindows() {
 		t.Fatalf("expected HasWindows() to return false but instead returned true")
+	}
+	if p.HasFlatcar() {
+		t.Fatalf("expected HasFlatcar() to return false but instead returned true")
 	}
 	if p.AgentPoolProfiles[0].IsWindows() {
 		t.Fatalf("expected IsWindows() to return false but instead returned true")
@@ -153,16 +147,39 @@ func TestOSType(t *testing.T) {
 		t.Fatalf("expected IsLinux() to return true but instead returned false")
 	}
 
-	if p.AgentPoolProfiles[0].IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return false but instead returned true")
+	if p.AgentPoolProfiles[0].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
 	}
 
-	if !p.AgentPoolProfiles[1].IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return true but instead returned false")
+	if p.AgentPoolProfiles[1].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
 	}
 
-	if !p.MasterProfile.IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return true but instead returned false")
+	p.AgentPoolProfiles[0].OSType = Windows
+	p.AgentPoolProfiles[1].Distro = Flatcar
+
+	if !p.HasWindows() {
+		t.Fatalf("expected HasWindows() to return true but instead returned false")
+	}
+
+	if !p.HasFlatcar() {
+		t.Fatalf("expected HasFlatcar() to return true but instead returned false")
+	}
+
+	if !p.AgentPoolProfiles[0].IsWindows() {
+		t.Fatalf("expected IsWindows() to return true but instead returned false")
+	}
+
+	if p.AgentPoolProfiles[0].IsLinux() {
+		t.Fatalf("expected IsLinux() to return false but instead returned true")
+	}
+
+	if p.AgentPoolProfiles[0].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
+	}
+
+	if !p.AgentPoolProfiles[1].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return true but instead returned false")
 	}
 }
 
@@ -185,6 +202,13 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 				Distro: AKSUbuntu1804,
 			},
 			expected: true,
+		},
+		{
+			name: "flatcar distro",
+			ap: AgentPoolProfile{
+				Distro: Flatcar,
+			},
+			expected: false,
 		},
 		{
 			name: "ubuntu distro",
@@ -296,6 +320,93 @@ func TestMasterProfileIsAuditDEnabled(t *testing.T) {
 	}
 }
 
+func TestNeedsAuditdRules(t *testing.T) {
+	cases := []struct {
+		name     string
+		p        *Properties
+		expected bool
+	}{
+		{
+			name: "enabled on control plane",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: to.BoolPtr(true),
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "enabled on one node pool",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: nil,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AuditDEnabled: nil,
+					},
+					{
+						AuditDEnabled: to.BoolPtr(true),
+					},
+					{
+						AuditDEnabled: to.BoolPtr(false),
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "enabled",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: to.BoolPtr(true),
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AuditDEnabled: to.BoolPtr(true),
+					},
+					{
+						AuditDEnabled: to.BoolPtr(true),
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "disabled",
+			p: &Properties{
+				MasterProfile: &MasterProfile{
+					AuditDEnabled: nil,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AuditDEnabled: nil,
+					},
+					{
+						AuditDEnabled: to.BoolPtr(false),
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:     "nil",
+			p:        &Properties{},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.p.NeedsAuditdRules() {
+				t.Fatalf("Got unexpected Properrties.NeedsAuditdRules() result. Expected: %t. Got: %t.", c.expected, c.p.NeedsAuditdRules())
+			}
+		})
+	}
+}
+
 func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -313,6 +424,13 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 VHD distro",
 			ap: AgentPoolProfile{
 				Distro: AKSUbuntu1804,
+			},
+			expected: false,
+		},
+		{
+			name: "flatcar distro",
+			ap: AgentPoolProfile{
+				Distro: Flatcar,
 			},
 			expected: false,
 		},
@@ -816,7 +934,8 @@ func TestHasStorageProfile(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						PrivateCluster: &PrivateCluster{
-							Enabled: to.BoolPtr(true),
+							Enabled:                to.BoolPtr(true),
+							EnableHostsConfigAgent: to.BoolPtr(true),
 							JumpboxProfile: &PrivateJumpboxProfile{
 								StorageProfile: ManagedDisks,
 							},
@@ -1230,59 +1349,6 @@ func TestTotalNodes(t *testing.T) {
 	}
 }
 
-func TestPropertiesIsHostedMasterProfile(t *testing.T) {
-	cases := []struct {
-		name     string
-		p        Properties
-		expected bool
-	}{
-		{
-			name: "valid master 1 node",
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count: 1,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "valid master 3 nodes",
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count: 3,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "valid master 5 nodes",
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count: 5,
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "zero value hosted master",
-			p: Properties{
-				HostedMasterProfile: &HostedMasterProfile{},
-			},
-			expected: true,
-		},
-	}
-
-	for _, c := range cases {
-		c := c
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			if c.p.IsHostedMasterProfile() != c.expected {
-				t.Fatalf("expected IsHostedMasterProfile() to return %t but instead returned %t", c.expected, c.p.IsHostedMasterProfile())
-			}
-		})
-	}
-}
-
 func TestPropertiesMasterCustomOS(t *testing.T) {
 	cases := []struct {
 		name            string
@@ -1589,33 +1655,6 @@ func TestPerAgentPoolVersionAndState(t *testing.T) {
 		}
 		if c.ap.ProvisioningState != c.expectedState {
 			t.Fatalf("Provisioning state mismatch. Expected: %s. Got: %s.", c.expectedState, c.ap.ProvisioningState)
-		}
-	}
-}
-
-func TestPerAgentPoolWindowsNameVersion(t *testing.T) {
-	cases := []struct {
-		ap                         AgentPoolProfile
-		expectedWindowsNameVersion string
-	}{
-		{
-			ap: AgentPoolProfile{
-				Name:               "agentpool1",
-				WindowsNameVersion: "v2",
-			},
-			expectedWindowsNameVersion: "v2",
-		},
-		{
-			ap: AgentPoolProfile{
-				Name: "agentpool2",
-			},
-			expectedWindowsNameVersion: "",
-		},
-	}
-
-	for _, c := range cases {
-		if c.expectedWindowsNameVersion != c.ap.WindowsNameVersion {
-			t.Fatalf("WindowsNameVersion flag mismatch. Expected: %v. Got: %v.", &c.expectedWindowsNameVersion, &c.ap.WindowsNameVersion)
 		}
 	}
 }
@@ -1979,15 +2018,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: RHEL,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
 					Distro: "foo",
 				},
 			},
@@ -2078,7 +2108,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: RHEL,
+						Distro: Flatcar,
 					},
 				},
 			},
@@ -2100,171 +2130,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 	for _, c := range cases {
 		if c.p.AgentPoolProfiles[0].IsUbuntu() != c.expected {
 			t.Fatalf("expected IsUbuntu() to return %t but instead returned %t", c.expected, c.p.AgentPoolProfiles[0].IsUbuntu())
-		}
-	}
-}
-
-func TestIsUbuntuDistroForAllNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804Gen2,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.IsUbuntuDistroForAllNodes() != c.expected {
-			t.Fatalf("expected IsUbuntuDistroForAllNodes() to return %t but instead returned %t", c.expected, c.p.IsUbuntuDistroForAllNodes())
 		}
 	}
 }
@@ -2421,171 +2286,6 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 	for _, c := range cases {
 		if c.p.IsVHDDistroForAllNodes() != c.expected {
 			t.Fatalf("expected IsVHDDistroForAllNodes() to return %t but instead returned %t", c.expected, c.p.IsVHDDistroForAllNodes())
-		}
-	}
-}
-
-func TestHasUbuntuDistroNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: AKSUbuntu1604,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.HasUbuntuDistroNodes() != c.expected {
-			t.Fatalf("expected HasUbuntuDistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntuDistroNodes())
 		}
 	}
 }
@@ -2755,336 +2455,6 @@ func TestHasVHDDistroNodes(t *testing.T) {
 	}
 }
 
-func TestHasUbuntu1604DistroNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: AKSUbuntu1604,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.HasUbuntu1604DistroNodes() != c.expected {
-			t.Fatalf("expected HasUbuntu1604DistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntu1604DistroNodes())
-		}
-	}
-}
-
-func TestHasUbuntu1804DistroNodes(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804Gen2,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: AKSUbuntu1604,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: AKSUbuntu1604,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						OSType: Windows,
-					},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.HasUbuntu1804DistroNodes() != c.expected {
-			t.Fatalf("expected HasUbuntu1804DistroNodes() to return %t but instead returned %t", c.expected, c.p.HasUbuntu1804DistroNodes())
-		}
-	}
-}
-
 func TestUbuntuVersion(t *testing.T) {
 	cases := []struct {
 		p                  Properties
@@ -3175,14 +2545,6 @@ func TestRequireRouteTable(t *testing.T) {
 		{
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						NetworkPolicy: "",
@@ -3238,14 +2600,6 @@ func TestIsPrivateCluster(t *testing.T) {
 		p        Properties
 		expected bool
 	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expected: false,
-		},
 		{
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -3329,108 +2683,61 @@ func TestIsAzureCNI(t *testing.T) {
 	}
 }
 
-func TestOrchestrator(t *testing.T) {
+func TestIsHostsConfigAgentEnabled(t *testing.T) {
 	cases := []struct {
-		p                    Properties
-		expectedIsDCOS       bool
-		expectedIsKubernetes bool
-		expectedIsSwarmMode  bool
+		p        Properties
+		expected bool
 	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expectedIsDCOS:       true,
-			expectedIsKubernetes: false,
-			expectedIsSwarmMode:  false,
-		},
 		{
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
 				},
 			},
-			expectedIsDCOS:       false,
-			expectedIsKubernetes: true,
-			expectedIsSwarmMode:  false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: SwarmMode,
-				},
-			},
-			expectedIsDCOS:       false,
-			expectedIsKubernetes: false,
-			expectedIsSwarmMode:  true,
-		},
-	}
-
-	for _, c := range cases {
-		if c.expectedIsDCOS != c.p.OrchestratorProfile.IsDCOS() {
-			t.Fatalf("Expected IsDCOS() to be %t with OrchestratorType=%s", c.expectedIsDCOS, c.p.OrchestratorProfile.OrchestratorType)
-		}
-		if c.expectedIsKubernetes != c.p.OrchestratorProfile.IsKubernetes() {
-			t.Fatalf("Expected IsKubernetes() to be %t with OrchestratorType=%s", c.expectedIsKubernetes, c.p.OrchestratorProfile.OrchestratorType)
-		}
-		if c.expectedIsSwarmMode != c.p.OrchestratorProfile.IsSwarmMode() {
-			t.Fatalf("Expected IsSwarmMode() to be %t with OrchestratorType=%s", c.expectedIsSwarmMode, c.p.OrchestratorProfile.OrchestratorType)
-		}
-	}
-}
-
-func TestIsDCOS19(t *testing.T) {
-	cases := []struct {
-		p                Properties
-		expectedIsDCOS19 bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    DCOS,
-					OrchestratorVersion: common.DCOSVersion1Dot9Dot8,
-				},
-			},
-			expectedIsDCOS19: true,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    DCOS,
-					OrchestratorVersion: "1.9.7",
-				},
-			},
-			expectedIsDCOS19: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-				},
-			},
-			expectedIsDCOS19: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{},
-			},
-			expectedIsDCOS19: false,
+			expected: false,
 		},
 		{
 			p: Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						PrivateCluster: &PrivateCluster{
+							EnableHostsConfigAgent: to.BoolPtr(true),
+						},
+					},
 				},
 			},
-			expectedIsDCOS19: false,
+			expected: true,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						PrivateCluster: &PrivateCluster{
+							EnableHostsConfigAgent: to.BoolPtr(false),
+						},
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						PrivateCluster: &PrivateCluster{},
+					},
+				},
+			},
+			expected: false,
 		},
 	}
 
 	for _, c := range cases {
-		if c.expectedIsDCOS19 != c.p.OrchestratorProfile.IsDCOS19() {
-			t.Fatalf("Expected IsDCOS19() to be %t got %t", c.expectedIsDCOS19, c.p.OrchestratorProfile.IsDCOS19())
+		if c.p.OrchestratorProfile.IsHostsConfigAgentEnabled() != c.expected {
+			t.Fatalf("expected IsHostsConfigAgentEnabled() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.IsHostsConfigAgentEnabled())
 		}
 	}
 }
@@ -3448,6 +2755,16 @@ func TestWindowsProfile(t *testing.T) {
 		t.Fatalf("Expected GetWindowsDockerVersion() to equal default KubernetesWindowsDockerVersion, got %s", dv)
 	}
 
+	dh := w.GetWindowsDefaultRuntimeHandler()
+	if dh != KubernetesDefaultWindowsRuntimeHandler {
+		t.Fatalf("Expected GetWindowsDefaultRuntimeHandler() to equal default KubernetesWindowsDockerVersion, got %s", dh)
+	}
+
+	rth := w.GetWindowsHypervRuntimeHandlers()
+	if rth != "" {
+		t.Fatalf("Expected GetWindowsHypervRuntimeHandlers() to equal default empty, got %s", rth)
+	}
+
 	windowsSku := w.GetWindowsSku()
 	if windowsSku != KubernetesDefaultWindowsSku {
 		t.Fatalf("Expected GetWindowsSku() to equal default KubernetesDefaultWindowsSku, got %s", windowsSku)
@@ -3461,6 +2778,11 @@ func TestWindowsProfile(t *testing.T) {
 	autoGenerated := w.GetIsCredentialAutoGenerated()
 	if autoGenerated {
 		t.Fatalf("Expected GetIsCredentialAutoGenerated() to equal default 'false', got %t", autoGenerated)
+	}
+
+	enableAHUB := w.GetEnableAHUB()
+	if enableAHUB {
+		t.Fatalf("Expected GetEnableAHUB() to equal default 'false', got %t", enableAHUB)
 	}
 
 	w = WindowsProfile{
@@ -3477,6 +2799,7 @@ func TestWindowsProfile(t *testing.T) {
 		},
 		WindowsImageSourceURL:     "testCustomImage",
 		IsCredentialAutoGenerated: to.BoolPtr(true),
+		EnableAHUB:                to.BoolPtr(true),
 	}
 
 	if !(w.HasSecrets() && w.HasCustomImage()) {
@@ -3488,11 +2811,24 @@ func TestWindowsProfile(t *testing.T) {
 		t.Fatalf("Expected GetIsCredentialAutoGenerated() to equal default 'true', got %t", autoGenerated)
 	}
 
+	enableAHUB = w.GetEnableAHUB()
+	if !enableAHUB {
+		t.Fatalf("Expected GetEnableAHUB() to equal default 'true', got %t", enableAHUB)
+	}
+
 	w = WindowsProfile{
 		WindowsDockerVersion:      "18.03.1-ee-3",
 		WindowsSku:                "Datacenter-Core-1809-with-Containers-smalldisk",
 		SSHEnabled:                &trueVar,
 		IsCredentialAutoGenerated: to.BoolPtr(false),
+		EnableAHUB:                to.BoolPtr(false),
+		WindowsRuntimes: &WindowsRuntimes{
+			Default: "hyperv",
+			HypervRuntimes: []RuntimeHandlers{
+				{BuildNumber: "17763"},
+				{BuildNumber: "18362"},
+			},
+		},
 	}
 
 	dv = w.GetWindowsDockerVersion()
@@ -3513,6 +2849,21 @@ func TestWindowsProfile(t *testing.T) {
 	autoGenerated = w.GetIsCredentialAutoGenerated()
 	if autoGenerated {
 		t.Fatalf("Expected GetIsCredentialAutoGenerated() to equal default 'false', got %t", autoGenerated)
+	}
+
+	enableAHUB = w.GetEnableAHUB()
+	if enableAHUB {
+		t.Fatalf("Expected GetEnableAHUB() to equal default 'false', got %t", enableAHUB)
+	}
+
+	hypervruntimeHandler := w.GetWindowsDefaultRuntimeHandler()
+	if hypervruntimeHandler != "hyperv" {
+		t.Fatalf("Expected GetWindowsDefaultRuntimeHandler() to equal hyperv, got %s", hypervruntimeHandler)
+	}
+
+	hypervruntimeHandlers := w.GetWindowsHypervRuntimeHandlers()
+	if hypervruntimeHandlers != "17763,18362" {
+		t.Fatalf("Expected GetWindowsDefaultRuntimeHandler() to equal '17763,18362', got %s", hypervruntimeHandler)
 	}
 }
 
@@ -3700,7 +3051,7 @@ func TestUserAssignedMSI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserailizing the example user msi api model: %s", err)
 	}
-	systemMSI := apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	systemMSI := to.Bool(apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	actualUserMSI := apiModel.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
 	if !systemMSI || actualUserMSI != "" {
 		t.Fatalf("found user msi: %t and usermsi: %s", systemMSI, actualUserMSI)
@@ -3714,7 +3065,7 @@ func TestUserAssignedMSI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserailizing the example user msi api model: %s", err)
 	}
-	systemMSI = apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+	systemMSI = to.Bool(apiModel.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 	actualUserMSI = apiModel.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID
 	if !systemMSI && actualUserMSI != exampleUserMSI {
 		t.Fatalf("found user msi: %t and usermsi: %s", systemMSI, actualUserMSI)
@@ -4035,37 +3386,6 @@ func TestAgentPoolIsNSeriesSKU(t *testing.T) {
 	}
 }
 
-func TestIsReschedulerEnabled(t *testing.T) {
-	c := KubernetesConfig{
-		Addons: []KubernetesAddon{
-			getMockAddon("addon"),
-		},
-	}
-	enabled := c.IsReschedulerEnabled()
-	enabledDefault := DefaultReschedulerAddonEnabled
-	if enabled != enabledDefault {
-		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return %t when no rescheduler addon has been specified, instead returned %t", enabledDefault, enabled)
-	}
-	c.Addons = append(c.Addons, getMockAddon(common.ReschedulerAddonName))
-	enabled = c.IsReschedulerEnabled()
-	if enabled {
-		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return true when a custom rescheduler addon has been specified, instead returned %t", enabled)
-	}
-	b := true
-	c = KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    common.ReschedulerAddonName,
-				Enabled: &b,
-			},
-		},
-	}
-	enabled = c.IsReschedulerEnabled()
-	if !enabled {
-		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return false when a custom rescheduler addon has been specified as enabled, instead returned %t", enabled)
-	}
-}
-
 func TestIsIPMasqAgentEnabled(t *testing.T) {
 	cases := []struct {
 		p                                            Properties
@@ -4141,89 +3461,11 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 			expectedPropertiesIsIPMasqAgentEnabled:       false,
 			expectedKubernetesConfigIsIPMasqAgentEnabled: false,
 		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						Addons: []KubernetesAddon{
-							{
-								Name:    common.IPMASQAgentAddonName,
-								Enabled: to.BoolPtr(false),
-								Containers: []KubernetesContainerSpec{
-									{
-										Name: common.IPMASQAgentAddonName,
-									},
-								},
-							},
-						},
-					},
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: true,
-				},
-			},
-			expectedPropertiesIsIPMasqAgentEnabled:       true,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: false, // unsure of the validity of this case, but because it's possible we unit test it
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						Addons: []KubernetesAddon{
-							{
-								Name:    common.IPMASQAgentAddonName,
-								Enabled: to.BoolPtr(true),
-								Containers: []KubernetesContainerSpec{
-									{
-										Name: common.IPMASQAgentAddonName,
-									},
-								},
-							},
-						},
-					},
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: true,
-				},
-			},
-			expectedPropertiesIsIPMasqAgentEnabled:       true,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: true,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-					KubernetesConfig: &KubernetesConfig{
-						Addons: []KubernetesAddon{
-							{
-								Name:    common.IPMASQAgentAddonName,
-								Enabled: to.BoolPtr(true),
-								Containers: []KubernetesContainerSpec{
-									{
-										Name: common.IPMASQAgentAddonName,
-									},
-								},
-							},
-						},
-					},
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: false,
-				},
-			},
-			expectedPropertiesIsIPMasqAgentEnabled:       false,
-			expectedKubernetesConfigIsIPMasqAgentEnabled: true, // unsure of the validity of this case, but because it's possible we unit test it
-		},
 	}
 
 	for _, c := range cases {
 		if c.p.IsIPMasqAgentEnabled() != c.expectedPropertiesIsIPMasqAgentEnabled {
 			t.Fatalf("expected Properties.IsIPMasqAgentEnabled() to return %t but instead returned %t", c.expectedPropertiesIsIPMasqAgentEnabled, c.p.IsIPMasqAgentEnabled())
-		}
-		if c.p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled() != c.expectedKubernetesConfigIsIPMasqAgentEnabled {
-			t.Fatalf("expected KubernetesConfig.IsIPMasqAgentEnabled() to return %t but instead returned %t", c.expectedKubernetesConfigIsIPMasqAgentEnabled, c.p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled())
 		}
 	}
 }
@@ -4694,75 +3936,6 @@ func TestCloudProviderDefaults(t *testing.T) {
 		}
 	}
 
-	// Test cloudprovider defaults for VMSS scenario + AKS
-	v = "1.18.2"
-	p = Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType:    "Kubernetes",
-			OrchestratorVersion: v,
-			KubernetesConfig:    &KubernetesConfig{},
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				AvailabilityProfile: VirtualMachineScaleSets,
-			},
-		},
-		HostedMasterProfile: &HostedMasterProfile{
-			FQDN: "my-cluster",
-		},
-	}
-	o = p.OrchestratorProfile
-	p.SetCloudProviderBackoffDefaults()
-	p.SetCloudProviderRateLimitDefaults()
-
-	intCasesMixed = []struct {
-		expectedVal int
-		computedVal int
-	}{
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffRetries,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
-		},
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffDuration,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
-		},
-		{
-			expectedVal: common.MaxAgentCount,
-			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
-		},
-	}
-
-	for _, c := range intCasesMixed {
-		if c.computedVal != c.expectedVal {
-			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.expectedVal, c.computedVal)
-		}
-	}
-
-	floatCasesMixed = []struct {
-		expectedVal float64
-		computedVal float64
-	}{
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffJitter,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
-		},
-		{
-			expectedVal: DefaultKubernetesCloudProviderBackoffExponent,
-			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
-		},
-		{
-			expectedVal: float64(common.MaxAgentCount) * common.MinCloudProviderQPSToBucketFactor,
-			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
-		},
-	}
-
-	for _, c := range floatCasesMixed {
-		if c.computedVal != c.expectedVal {
-			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
-		}
-	}
-
 	// Test cloudprovider defaults for VMAS scenario
 	v = "1.18.2"
 	p = Properties{
@@ -5086,20 +4259,6 @@ func TestGenerateClusterID(t *testing.T) {
 			expectedClusterID: "24569115",
 		},
 		{
-			name: "From Hosted Master Profile",
-			properties: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					DNSPrefix: "foo_hosted_master",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name: "foo_agent1",
-					},
-				},
-			},
-			expectedClusterID: "42761241",
-		},
-		{
 			name: "No Master Profile",
 			properties: &Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -5186,6 +4345,7 @@ func TestGetPrimaryScaleSetName(t *testing.T) {
 		AgentPoolProfiles: []*AgentPoolProfile{
 			{
 				Name:                "agentpool",
+				OSType:              Linux,
 				VMSize:              "Standard_D2_v2",
 				Count:               1,
 				AvailabilityProfile: VirtualMachineScaleSets,
@@ -5235,39 +4395,6 @@ func TestGetRouteTableName(t *testing.T) {
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType: Kubernetes,
 		},
-		HostedMasterProfile: &HostedMasterProfile{
-			FQDN:      "fqdn",
-			DNSPrefix: "foo",
-			Subnet:    "mastersubnet",
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:                "agentpool",
-				VMSize:              "Standard_D2_v2",
-				Count:               1,
-				AvailabilityProfile: VirtualMachineScaleSets,
-			},
-		},
-	}
-
-	actualRTName := p.GetRouteTableName()
-	expectedRTName := "aks-agentpool-28513887-routetable"
-
-	actualNSGName := p.GetNSGName()
-	expectedNSGName := "aks-agentpool-28513887-nsg"
-
-	if actualRTName != expectedRTName {
-		t.Errorf("expected route table name %s, but got %s", expectedRTName, actualRTName)
-	}
-
-	if actualNSGName != expectedNSGName {
-		t.Errorf("expected route table name %s, but got %s", expectedNSGName, actualNSGName)
-	}
-
-	p = &Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType: Kubernetes,
-		},
 		MasterProfile: &MasterProfile{
 			Count:     1,
 			DNSPrefix: "foo",
@@ -5283,11 +4410,11 @@ func TestGetRouteTableName(t *testing.T) {
 		},
 	}
 
-	actualRTName = p.GetRouteTableName()
-	expectedRTName = "k8s-master-28513887-routetable"
+	actualRTName := p.GetRouteTableName()
+	expectedRTName := fmt.Sprintf("%s-28513887-routetable", common.LegacyControlPlaneVMPrefix)
 
-	actualNSGName = p.GetNSGName()
-	expectedNSGName = "k8s-master-28513887-nsg"
+	actualNSGName := p.GetNSGName()
+	expectedNSGName := fmt.Sprintf("%s-28513887-nsg", common.LegacyControlPlaneVMPrefix)
 
 	if actualRTName != expectedRTName {
 		t.Errorf("expected route table name %s, but got %s", actualRTName, expectedRTName)
@@ -5304,51 +4431,6 @@ func TestGetSubnetName(t *testing.T) {
 		properties         *Properties
 		expectedSubnetName string
 	}{
-		{
-			name: "Cluster with HosterMasterProfile",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-					},
-				},
-			},
-			expectedSubnetName: "aks-subnet",
-		},
-		{
-			name: "Cluster with HosterMasterProfile and custom VNET",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-						VnetSubnetID:        "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-					},
-				},
-			},
-			expectedSubnetName: "BazAgentSubnet",
-		},
 		{
 			name: "Cluster with MasterProfile",
 			properties: &Properties{
@@ -5429,158 +4511,6 @@ func TestGetSubnetName(t *testing.T) {
 				t.Errorf("expected subnet name %s, but got %s", test.expectedSubnetName, actual)
 			}
 		})
-	}
-}
-
-func TestProperties_GetVirtualNetworkName(t *testing.T) {
-	tests := []struct {
-		name                       string
-		properties                 *Properties
-		expectedVirtualNetworkName string
-	}{
-		{
-			name: "Cluster with HostedMasterProfile and Custom VNET AgentProfiles",
-			properties: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-						VnetSubnetID:        "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-					},
-				},
-			},
-			expectedVirtualNetworkName: "ExampleCustomVNET",
-		},
-		{
-			name: "Cluster with HostedMasterProfile and AgentProfiles",
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: Kubernetes,
-				},
-				HostedMasterProfile: &HostedMasterProfile{
-					FQDN:      "fqdn",
-					DNSPrefix: "foo",
-					Subnet:    "mastersubnet",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool",
-						VMSize:              "Standard_D2_v2",
-						Count:               1,
-						AvailabilityProfile: VirtualMachineScaleSets,
-					},
-				},
-			},
-			expectedVirtualNetworkName: "aks-vnet-28513887",
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			actual := test.properties.GetVirtualNetworkName()
-
-			if actual != test.expectedVirtualNetworkName {
-				t.Errorf("expected virtual network name %s, but got %s", test.expectedVirtualNetworkName, actual)
-			}
-		})
-	}
-}
-
-func TestProperties_GetVNetResourceGroupName(t *testing.T) {
-	p := &Properties{
-		HostedMasterProfile: &HostedMasterProfile{
-			FQDN:      "fqdn",
-			DNSPrefix: "foo",
-			Subnet:    "mastersubnet",
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:                "agentpool",
-				VMSize:              "Standard_D2_v2",
-				Count:               1,
-				AvailabilityProfile: VirtualMachineScaleSets,
-				VnetSubnetID:        "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-			},
-		},
-	}
-	expectedVNETResourceGroupName := "RESOURCE_GROUP_NAME"
-
-	actual := p.GetVNetResourceGroupName()
-
-	if expectedVNETResourceGroupName != actual {
-		t.Errorf("expected vnet resource group name name %s, but got %s", expectedVNETResourceGroupName, actual)
-	}
-}
-
-func TestProperties_GetClusterMetadata(t *testing.T) {
-	p := &Properties{
-		OrchestratorProfile: &OrchestratorProfile{
-			OrchestratorType: Kubernetes,
-		},
-		MasterProfile: &MasterProfile{
-			Count:        1,
-			DNSPrefix:    "foo",
-			VMSize:       "Standard_DS2_v2",
-			VnetSubnetID: "/subscriptions/SUBSCRIPTION_ID/resourceGroups/SAMPLE_RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/BazAgentSubnet",
-		},
-		AgentPoolProfiles: []*AgentPoolProfile{
-			{
-				Name:                "agentpool",
-				VMSize:              "Standard_D2_v2",
-				Count:               1,
-				AvailabilityProfile: AvailabilitySet,
-			},
-		},
-	}
-
-	metadata := p.GetClusterMetadata()
-
-	if metadata == nil {
-		t.Error("did not expect cluster metadata to be nil")
-	}
-
-	expectedSubnetName := "BazAgentSubnet"
-	if metadata.SubnetName != expectedSubnetName {
-		t.Errorf("expected subnet name %s, but got %s", expectedSubnetName, metadata.SubnetName)
-	}
-
-	expectedVNetResourceGroupName := "SAMPLE_RESOURCE_GROUP_NAME"
-	if metadata.VNetResourceGroupName != expectedVNetResourceGroupName {
-		t.Errorf("expected vNetResourceGroupName name %s, but got %s", expectedVNetResourceGroupName, metadata.VNetResourceGroupName)
-	}
-
-	expectedVirtualNetworkName := "ExampleCustomVNET"
-	if metadata.VirtualNetworkName != expectedVirtualNetworkName {
-		t.Errorf("expected VirtualNetworkName name %s, but got %s", expectedVirtualNetworkName, metadata.VirtualNetworkName)
-	}
-
-	expectedRouteTableName := "k8s-master-28513887-routetable"
-	if metadata.RouteTableName != expectedRouteTableName {
-		t.Errorf("expected RouteTableName name %s, but got %s", expectedVirtualNetworkName, metadata.RouteTableName)
-	}
-
-	expectedSecurityGroupName := "k8s-master-28513887-nsg"
-	if metadata.SecurityGroupName != expectedSecurityGroupName {
-		t.Errorf("expected SecurityGroupName name %s, but got %s", expectedSecurityGroupName, metadata.SecurityGroupName)
-	}
-
-	expectedPrimaryAvailabilitySetName := "agentpool-availabilitySet-28513887"
-	if metadata.PrimaryAvailabilitySetName != expectedPrimaryAvailabilitySetName {
-		t.Errorf("expected PrimaryAvailabilitySetName name %s, but got %s", expectedPrimaryAvailabilitySetName, metadata.PrimaryAvailabilitySetName)
-	}
-
-	expectedPrimaryScaleSetName := ""
-	if metadata.PrimaryScaleSetName != expectedPrimaryScaleSetName {
-		t.Errorf("expected PrimaryScaleSetName name %s, but got %s", expectedPrimaryScaleSetName, metadata.PrimaryScaleSetName)
 	}
 }
 
@@ -5865,7 +4795,39 @@ func TestGetAgentVMPrefix(t *testing.T) {
 			expectedVMPrefix: "k8s-agentpool-30819786-vmss",
 		},
 		{
-			name: "Windows agent pool profile",
+			name: "Linux VMSS agent pool profile with VMSSName",
+			profile: &AgentPoolProfile{
+				Name:                "agentpool",
+				VMSize:              "Standard_D2_v2",
+				Count:               1,
+				AvailabilityProfile: "VirtualMachineScaleSets",
+				OSType:              Linux,
+				VMSSName:            "foo",
+			},
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Count:     1,
+					DNSPrefix: "myprefix1",
+					VMSize:    "Standard_DS2_v2",
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+						VMSSName:            "foo",
+					},
+				},
+			},
+			expectedVMPrefix: "foo",
+		},
+		{
+			name: "Windows VMAS agent pool profile",
 			profile: &AgentPoolProfile{
 				Name:   "agentpool",
 				VMSize: "Standard_D2_v2",
@@ -5890,7 +4852,36 @@ func TestGetAgentVMPrefix(t *testing.T) {
 					},
 				},
 			},
-			expectedVMPrefix: "2478k8s00",
+			expectedVMPrefix: "2478k8s00", // Windows VMAS and VMSS pools should generate the same prefix string
+		},
+		{
+			name: "Windows VMSS agent pool profile",
+			profile: &AgentPoolProfile{
+				Name:   "agentpool",
+				VMSize: "Standard_D2_v2",
+				Count:  1,
+				OSType: Windows,
+			},
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Count:     1,
+					DNSPrefix: "myprefix2",
+					VMSize:    "Standard_DS2_v2",
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						Count:               1,
+						OSType:              Windows,
+					},
+				},
+			},
+			expectedVMPrefix: "2478k8s00", // Windows VMAS and VMSS pools should generate the same prefix string
 		},
 		{
 			name: "agent profile doesn't exist",
@@ -5935,6 +4926,138 @@ func TestGetAgentVMPrefix(t *testing.T) {
 	}
 }
 
+func TestIsAgentPoolMember(t *testing.T) {
+	tests := []struct {
+		name       string
+		vmName     string
+		properties *Properties
+		expected   bool
+	}{
+		{
+			name:   "Member of Linux VMAS agent pool profile",
+			vmName: "k8s-agentpool-99117399-",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Linux VMAS agent pool profile",
+			vmName: "k8s-blah-99117399-",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Linux,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:   "Member of Linux VMSS agent pool profile",
+			vmName: "k8s-agentpool-99117399-vmss",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Linux VMSS agent pool profile",
+			vmName: "k8s-blah-99117399-vmss",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: "VirtualMachineScaleSets",
+						OSType:              Linux,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:   "Member of Windows agent pool profile",
+			vmName: "9911k8s00",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:   "Not member of Windows agent pool profile",
+			vmName: "9911k8s01",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "agentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			p := test.properties
+			actual := p.IsAgentPoolMember(test.vmName, test.properties.AgentPoolProfiles[0], 0)
+			if actual != test.expected {
+				t.Errorf("expected %t, but got %t", test.expected, actual)
+			}
+		})
+	}
+}
+
 func TestFormatAzureProdFQDN(t *testing.T) {
 	dnsPrefix := "santest"
 	var actual []string
@@ -5948,6 +5071,7 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.australiaeast.cloudapp.azure.com",
 		"santest.australiasoutheast.cloudapp.azure.com",
 		"santest.brazilsouth.cloudapp.azure.com",
+		"santest.brazilsoutheast.cloudapp.azure.com",
 		"santest.canadacentral.cloudapp.azure.com",
 		"santest.canadaeast.cloudapp.azure.com",
 		"santest.centralindia.cloudapp.azure.com",
@@ -5997,6 +5121,7 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.westindia.cloudapp.azure.com",
 		"santest.westus.cloudapp.azure.com",
 		"santest.westus2.cloudapp.azure.com",
+		"santest.westus3.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -6021,6 +5146,7 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.australiaeast.cloudapp.azure.com",
 		"santest.australiasoutheast.cloudapp.azure.com",
 		"santest.brazilsouth.cloudapp.azure.com",
+		"santest.brazilsoutheast.cloudapp.azure.com",
 		"santest.canadacentral.cloudapp.azure.com",
 		"santest.canadaeast.cloudapp.azure.com",
 		"santest.centralindia.cloudapp.azure.com",
@@ -6070,6 +5196,7 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.westindia.cloudapp.azure.com",
 		"santest.westus.cloudapp.azure.com",
 		"santest.westus2.cloudapp.azure.com",
+		"santest.westus3.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -6126,24 +5253,6 @@ func TestContainerService_GetAzureProdFQDN(t *testing.T) {
 	}
 }
 
-func TestAgentPoolResource(t *testing.T) {
-	expectedName := "TestAgentPool"
-	expectedVersion := "1.13.0"
-	expectedCount := 100
-
-	agentPoolResource := CreateMockAgentPoolProfile(expectedName, expectedVersion, Succeeded, expectedCount)
-
-	gotName := agentPoolResource.Properties.Name
-	gotVervsion := agentPoolResource.Properties.OrchestratorVersion
-	gotCount := agentPoolResource.Properties.Count
-
-	if gotName != expectedName || gotVervsion != expectedVersion || gotCount != expectedCount {
-		t.Fatalf("Expected values - name: %s, version: %s, count: %d. Got - name: %s, version: %s, count: %d", expectedName, expectedVersion, expectedCount,
-			gotName, gotVervsion, gotCount)
-	}
-
-}
-
 func TestKubernetesConfig_RequiresDocker(t *testing.T) {
 	// k8sConfig with empty runtime string
 	k := &KubernetesConfig{
@@ -6162,6 +5271,37 @@ func TestKubernetesConfig_RequiresDocker(t *testing.T) {
 	if !k.RequiresDocker() {
 		t.Error("expected RequiresDocker to return true for docker runtime")
 	}
+}
+
+func TestProperties_GetMasterVMNameList(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	p := &Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType: Kubernetes,
+		},
+		MasterProfile: &MasterProfile{
+			Count:               3,
+			DNSPrefix:           "myprefix1",
+			AvailabilityProfile: "AvailabilitySet",
+		},
+	}
+	actual := p.GetMasterVMNameList()
+	expected := []string{
+		fmt.Sprintf("%s-30819786-0", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-1", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-2", common.LegacyControlPlaneVMPrefix),
+	}
+	g.Expect(actual).To(Equal(expected))
+
+	p.MasterProfile.AvailabilityProfile = "VirtualMachineScaleSets"
+	actual = p.GetMasterVMNameList()
+	expected = []string{
+		fmt.Sprintf("%s-30819786-vmss000000", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-vmss000001", common.LegacyControlPlaneVMPrefix),
+		fmt.Sprintf("%s-30819786-vmss000002", common.LegacyControlPlaneVMPrefix),
+	}
+	g.Expect(actual).To(Equal(expected))
 }
 
 func TestProperties_GetMasterVMPrefix(t *testing.T) {
@@ -6186,7 +5326,7 @@ func TestProperties_GetMasterVMPrefix(t *testing.T) {
 	}
 
 	actual := p.GetMasterVMPrefix()
-	expected := "k8s-master-30819786-"
+	expected := fmt.Sprintf("%s-30819786-", common.LegacyControlPlaneVMPrefix)
 
 	if actual != expected {
 		t.Errorf("expected master VM prefix %s, but got %s", expected, actual)
@@ -6237,6 +5377,14 @@ func TestIsFeatureEnabled(t *testing.T) {
 			expected: false,
 		},
 		{
+			name:    "Windows DSR",
+			feature: "EnableWinDSR",
+			flags: &FeatureFlags{
+				EnableWinDSR: true,
+			},
+			expected: true,
+		},
+		{
 			name:    "Non-existent feature",
 			feature: "Foo",
 			flags: &FeatureFlags{
@@ -6261,7 +5409,7 @@ func TestIsFeatureEnabled(t *testing.T) {
 
 func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "fooID",
 	}
 	if !k.UserAssignedIDEnabled() {
@@ -6269,7 +5417,7 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: false,
+		UseManagedIdentity: to.BoolPtr(false),
 		UserAssignedID:     "fooID",
 	}
 
@@ -6280,7 +5428,7 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 
 func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "fooID",
 	}
 	if !k.ShouldCreateNewUserAssignedIdentity() {
@@ -6288,7 +5436,7 @@ func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     exampleUserMSI,
 	}
 
@@ -6299,7 +5447,7 @@ func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 
 func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "",
 	}
 	if !k.SystemAssignedIDEnabled() {
@@ -6307,7 +5455,7 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: true,
+		UseManagedIdentity: to.BoolPtr(true),
 		UserAssignedID:     "foo",
 	}
 
@@ -6316,7 +5464,7 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	}
 
 	k = KubernetesConfig{
-		UseManagedIdentity: false,
+		UseManagedIdentity: to.BoolPtr(false),
 		UserAssignedID:     "",
 	}
 
@@ -6582,6 +5730,7 @@ func TestGetLocations(t *testing.T) {
 		"australiaeast",
 		"australiasoutheast",
 		"brazilsouth",
+		"brazilsoutheast",
 		"canadacentral",
 		"canadaeast",
 		"centralindia",
@@ -6631,6 +5780,7 @@ func TestGetLocations(t *testing.T) {
 		"westindia",
 		"westus",
 		"westus2",
+		"westus3",
 	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
@@ -6660,22 +5810,6 @@ func TestGetMasterFQDN(t *testing.T) {
 			},
 			expectedFQDN:      "FQDNFromMasterProfile",
 			expectedDNSPrefix: "foo_master",
-		},
-		{
-			name: "From Hosted Master Profile",
-			properties: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					DNSPrefix: "foo_hosted_master",
-					FQDN:      "FQDNFromHostedMasterProfile",
-				},
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name: "foo_agent1",
-					},
-				},
-			},
-			expectedFQDN:      "FQDNFromHostedMasterProfile",
-			expectedDNSPrefix: "foo_hosted_master",
 		},
 	}
 
@@ -6731,6 +5865,70 @@ func TestGetKubeProxyFeatureGates(t *testing.T) {
 	}
 }
 
+func TestGetKubeProxyFeatureGatesWindowsArguments(t *testing.T) {
+	tests := []struct {
+		name                 string
+		properties           *Properties
+		expectedFeatureGates string
+	}{
+		{
+			name: "default",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{},
+			},
+			expectedFeatureGates: "",
+		},
+		{
+			name: "Non kubeproxy feature",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableTelemetry: true,
+				},
+			},
+			expectedFeatureGates: "",
+		},
+		{
+			name: "IPV6 enabled",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expectedFeatureGates: "\"IPv6DualStack=true\"",
+		},
+		{
+			name: "WinDSR enabled",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableWinDSR: true,
+				},
+			},
+			expectedFeatureGates: "\"WinDSR=true\", \"WinOverlay=false\"",
+		},
+		{
+			name: "both IPV6 and WinDSR enabled",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+					EnableWinDSR:        true,
+				},
+			},
+			expectedFeatureGates: "\"IPv6DualStack=true\", \"WinDSR=true\", \"WinOverlay=false\"",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetKubeProxyFeatureGatesWindowsArguments()
+			if actual != test.expectedFeatureGates {
+				t.Errorf("expected featureGates %s, but got %s", test.expectedFeatureGates, actual)
+			}
+		})
+	}
+}
+
 func TestAADAdminGroupIDMethods(t *testing.T) {
 	tests := []struct {
 		name                       string
@@ -6779,85 +5977,6 @@ func TestAADAdminGroupIDMethods(t *testing.T) {
 				t.Errorf("expected HasAADAdminGroupID %s, but got %s", test.expectedGetAADAdminGroupID, getAADAdminGroupID)
 			}
 		})
-	}
-}
-
-func TestDcosConfigHasPrivateRegistry(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig: &DcosConfig{
-						Registry: "my-custom-registry",
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig: &DcosConfig{
-						Registry: "",
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig:       &DcosConfig{},
-				},
-			},
-			expected: false,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry() != c.expected {
-			t.Fatalf("expected HasPrivateRegistry() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasPrivateRegistry())
-		}
-	}
-}
-
-func TestDcosConfigHasBootstrap(t *testing.T) {
-	cases := []struct {
-		p        Properties
-		expected bool
-	}{
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig:       &DcosConfig{},
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: DCOS,
-					DcosConfig: &DcosConfig{
-						BootstrapProfile: &BootstrapProfile{},
-					},
-				},
-			},
-			expected: true,
-		},
-	}
-
-	for _, c := range cases {
-		if c.p.OrchestratorProfile.DcosConfig.HasBootstrap() != c.expected {
-			t.Fatalf("expected HasBootstrap() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.DcosConfig.HasBootstrap())
-		}
 	}
 }
 
@@ -7617,24 +6736,6 @@ func TestPropertiesIsIPMasqAgentDisabled(t *testing.T) {
 			expectedDisabled: false,
 		},
 		{
-			name: "hostedMasterProfile disabled",
-			p: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: false,
-				},
-			},
-			expectedDisabled: true,
-		},
-		{
-			name: "hostedMasterProfile enabled",
-			p: &Properties{
-				HostedMasterProfile: &HostedMasterProfile{
-					IPMasqAgent: true,
-				},
-			},
-			expectedDisabled: false,
-		},
-		{
 			name: "nil KubernetesConfig",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{},
@@ -7726,66 +6827,8 @@ func TestPropertiesIsIPMasqAgentDisabled(t *testing.T) {
 	}
 }
 
-func TestKubernetesConfigIsIPMasqAgentDisabled(t *testing.T) {
-	cases := []struct {
-		name             string
-		k                *KubernetesConfig
-		expectedDisabled bool
-	}{
-		{
-			name:             "default",
-			k:                &KubernetesConfig{},
-			expectedDisabled: false,
-		},
-		{
-			name: "ip-masq-agent present but no configuration",
-			k: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					{
-						Name: common.IPMASQAgentAddonName,
-					},
-				},
-			},
-			expectedDisabled: false,
-		},
-		{
-			name: "ip-masq-agent explicitly disabled",
-			k: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					{
-						Name:    common.IPMASQAgentAddonName,
-						Enabled: to.BoolPtr(false),
-					},
-				},
-			},
-			expectedDisabled: true,
-		},
-		{
-			name: "ip-masq-agent explicitly enabled",
-			k: &KubernetesConfig{
-				Addons: []KubernetesAddon{
-					{
-						Name:    common.IPMASQAgentAddonName,
-						Enabled: to.BoolPtr(true),
-					},
-				},
-			},
-			expectedDisabled: false,
-		},
-	}
-
-	for _, c := range cases {
-		c := c
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			if c.k.IsIPMasqAgentDisabled() != c.expectedDisabled {
-				t.Fatalf("expected KubernetesConfig.IsIPMasqAgentDisabled() to return %t but instead returned %t", c.expectedDisabled, c.k.IsIPMasqAgentDisabled())
-			}
-		})
-	}
-}
-
 func TestGetProvisionScriptParametersCommon(t *testing.T) {
+	k8sVersion := common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
 	cases := []struct {
 		name     string
 		cs       *ContainerService
@@ -7794,7 +6837,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 	}{
 		{
 			name: "Default container service with no ARM variables",
-			cs:   CreateMockContainerService("testcluster", "1.16.8", 1, 3, true),
+			cs:   CreateMockContainerService("testcluster", k8sVersion, 1, 3, true),
 			input: ProvisionScriptParametersInput{
 				Location:             "westus",
 				ResourceGroup:        "fakerg",
@@ -7806,11 +6849,11 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 				KubeletPrivateKey:    "fakekubeletkey",
 				ClusterKeyVaultName:  "",
 			},
-			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=fakecert AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME= KUBELET_PRIVATE_KEY=fakekubeletkey KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=westus MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=fakerg ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret SUBNET=k8s-subnet SUBSCRIPTION_ID=fakesubID TENANT_ID=faketenantID USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=fakecert AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker CUSTOM_HYPERKUBE_IMAGE= ENABLE_MULTIPLE_STANDARD_LOAD_BALANCERS=false ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL= IDENTITY_SYSTEM=azure_ad IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME= KUBELET_PRIVATE_KEY=fakekubeletkey KUBERNETES_VERSION=" + k8sVersion + " KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=westus MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " MS_APT_REPO=" + DefaultMicrosoftAptRepositoryURL + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=" + common.LegacyControlPlaneVMPrefix + "-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=fakerg ROUTE_TABLE=" + common.LegacyControlPlaneVMPrefix + "-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret SUBNET=k8s-subnet SUBSCRIPTION_ID=fakesubID TAGS= TENANT_ID=faketenantID USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
 		},
 		{
 			name: "With ARM variables",
-			cs:   CreateMockContainerService("testcluster", "1.16.8", 1, 3, true),
+			cs:   CreateMockContainerService("testcluster", k8sVersion, 1, 3, true),
 			input: ProvisionScriptParametersInput{
 				Location:             common.WrapAsARMVariable("location"),
 				ResourceGroup:        common.WrapAsARMVariable("resourceGroup"),
@@ -7822,7 +6865,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 				KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
 				ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyvaultName"),
 			},
-			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyvaultName'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=',variables('location'),' MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=',variables('resourceGroup'),' ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' SUBNET=k8s-subnet SUBSCRIPTION_ID=',variables('subscriptionId'),' TENANT_ID=',variables('tenantID'),' USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker CUSTOM_HYPERKUBE_IMAGE= ENABLE_MULTIPLE_STANDARD_LOAD_BALANCERS=false ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL= IDENTITY_SYSTEM=azure_ad IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyvaultName'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' KUBERNETES_VERSION=" + k8sVersion + " KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=',variables('location'),' MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " MS_APT_REPO=" + DefaultMicrosoftAptRepositoryURL + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=" + common.LegacyControlPlaneVMPrefix + "-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=',variables('resourceGroup'),' ROUTE_TABLE=" + common.LegacyControlPlaneVMPrefix + "-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' SUBNET=k8s-subnet SUBSCRIPTION_ID=',variables('subscriptionId'),' TAGS= TENANT_ID=',variables('tenantID'),' USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
 		},
 	}
 

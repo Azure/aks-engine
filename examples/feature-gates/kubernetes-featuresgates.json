@@ -2,8 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.15",
       "kubernetesConfig": {
         "kubeletConfig" : {
           "--feature-gates": "MountPropagation=true,DebugContainers=true"
@@ -35,10 +33,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

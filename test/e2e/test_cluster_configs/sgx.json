@@ -6,9 +6,6 @@
     "apiModel": {
         "apiVersion": "vlabs",
         "properties": {
-            "orchestratorProfile": {
-                "orchestratorType": "Kubernetes"
-            },
             "masterProfile": {
                 "count": 1,
                 "vmSize": "Standard_D2s_v3",
@@ -33,10 +30,6 @@
                         }
                     ]
                 }
-            },
-            "servicePrincipalProfile": {
-                "clientId": "",
-                "secret": ""
             }
         }
     }

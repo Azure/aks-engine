@@ -2,8 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.17",
       "kubernetesConfig": {
         "networkPlugin": "kubenet",
         "containerRuntime": "containerd",
@@ -38,10 +36,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

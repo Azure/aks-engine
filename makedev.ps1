@@ -1,4 +1,4 @@
-$DEV_ENV_IMAGE = "quay.io/deis/go-dev:v1.27.0"
+$DEV_ENV_IMAGE = "mcr.microsoft.com/oss/azcu/go-dev:v1.31.0"
 $DEV_ENV_WORK_DIR = "/aks-engine"
 
 # Ensure docker is configured for linux containers

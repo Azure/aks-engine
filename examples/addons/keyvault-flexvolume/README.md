@@ -11,7 +11,6 @@ Add this add-on to your API model as shown below to automatically enable Key Vau
     "apiVersion": "vlabs",
     "properties": {
       "orchestratorProfile": {
-        "orchestratorType": "Kubernetes",
         "kubernetesConfig": {
           "addons": [
             {
@@ -43,10 +42,6 @@ Add this add-on to your API model as shown below to automatically enable Key Vau
             }
           ]
         }
-      },
-      "servicePrincipalProfile": {
-        "clientId": "",
-        "secret": ""
       }
     }
   }

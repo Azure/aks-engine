@@ -1,0 +1,59 @@
+{
+	"env": {
+		"VALIDATE_CPU_LOAD": true
+	},
+	"options": {
+		"allowedOrchestratorVersions": ["1.17", "1.18", "1.19"]
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"kubernetesConfig": {
+					"useManagedIdentity": false
+				}
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v3"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "linuxpool1",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"availabilityProfile": "VirtualMachineScaleSets"
+				},
+				{
+					"name": "agentwin",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"osType": "Windows",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Spot"
+				}
+			],
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true,
+				"windowsPublisher": "microsoft-aks",
+				"windowsOffer": "aks-windows",
+				"windowsSku": "2019-datacenter-core-smalldisk-2008",
+				"imageVersion": "latest"
+			},
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			}
+		}
+	}
+}

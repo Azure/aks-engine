@@ -2,13 +2,10 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.18",
       "kubernetesConfig": {
         "networkPlugin": "azure",
         "containerRuntime": "containerd",
-        "windowsContainerdURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip",
-        "windowsSdnPluginURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
+        "windowsContainerdURL": "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
       }
     },
     "masterProfile": {
@@ -46,10 +43,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

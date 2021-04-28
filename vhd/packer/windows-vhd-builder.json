@@ -8,10 +8,15 @@
         "client_id": "{{env `AZURE_CLIENT_ID`}}",
         "client_secret": "{{env `AZURE_CLIENT_SECRET`}}",
         "container_runtime": "{{env `CONTAINER_RUNTIME`}}",
+        "image_publisher": null,
+        "image_offer": null,
+        "image_sku": null,
+        "image_version": null,
         "tenant_id": "{{env `AZURE_TENANT_ID`}}",
         "subscription_id": "{{env `AZURE_SUBSCRIPTION_ID`}}",
         "location": "{{env `AZURE_LOCATION`}}",
-        "vm_size": "{{env `AZURE_VM_SIZE`}}"
+        "vm_size": "{{env `AZURE_VM_SIZE`}}",
+        "windows_server_version": null
     },
     "builders": [
         {
@@ -23,12 +28,12 @@
             "location": "{{user `location`}}",
             "vm_size": "{{user `vm_size`}}",
             "os_type": "Windows",
-            "image_publisher": "MicrosoftWindowsServer",
-            "image_offer": "WindowsServer",
-            "image_sku": "2019-Datacenter-Core-smalldisk",
-            "image_version": "17763.1158.2004131759",
+            "image_publisher": "{{user `image_publisher`}}",
+            "image_offer": "{{user `image_offer`}}",
+            "image_sku": "{{user `image_sku`}}",
+            "image_version": "{{user `image_version`}}",
             "resource_group_name": "{{user `resource_group_name`}}",
-            "capture_container_name": "aksengine-vhds-windows-ws2019",
+            "capture_container_name": "aksengine-vhds-windows-{{user `windows_server_version`}}-{{user `container_runtime`}}",
             "capture_name_prefix": "aksengine-{{user `create_time`}}",
             "storage_account": "{{user `storage_account_name`}}",
             "communicator": "winrm",
@@ -49,7 +54,8 @@
             "elevated_password": "{{.WinRMPassword}}",
             "environment_vars": [
                 "ProvisioningPhase=1",
-                "ContainerRuntime={{user `container_runtime`}}"
+                "ContainerRuntime={{user `container_runtime`}}",
+                "windowsServerVersion={{user `windows_server_version`}}"
             ],
             "type": "powershell",
             "script": "vhd/packer/configure-windows-vhd.ps1"
@@ -67,7 +73,8 @@
             "elevated_password": "{{.WinRMPassword}}",
             "environment_vars": [
                 "ProvisioningPhase=2",
-                "ContainerRuntime={{user `container_runtime`}}"
+                "ContainerRuntime={{user `container_runtime`}}",
+                "windowsServerVersion={{user `windows_server_version`}}"
             ],
             "type": "powershell",
             "script": "vhd/packer/configure-windows-vhd.ps1"
@@ -108,21 +115,10 @@
             "destination": "release-notes.txt"
         },
         {
+            "elevated_user": "packer",
+            "elevated_password": "{{.WinRMPassword}}",
             "type": "powershell",
-            "inline": [
-                "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /mode:vm /quiet /quit",
-                "Stop-Service WindowsAzureGuestAgent",
-                "Stop-Service WindowsAzureNetAgentSvc",
-                "Stop-Service RdAgent",
-                "Stop-Service WindowsAzureTelemetryService",
-                "& sc.exe delete WindowsAzureGuestAgent",
-                "& sc.exe delete WindowsAzureNetAgentSvc",
-                "& sc.exe delete RdAgent",
-                "& sc.exe delete WindowsAzureTelemetryService",
-                "Get-ChildItem c:\\WindowsAzure -Force | Sort-Object -Property FullName -Descending | ForEach-Object { try { Remove-Item -Path $_.FullName -Force -Recurse -ErrorAction SilentlyContinue; } catch { } }",
-                "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }",
-                "Remove-Item -Path WSMan:\\Localhost\\listener\\listener* -Recurse"
-            ]
+            "script": "vhd/packer/sysprep.ps1"
         }
     ]
 }

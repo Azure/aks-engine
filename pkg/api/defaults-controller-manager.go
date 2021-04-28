@@ -37,8 +37,6 @@ func (cs *ContainerService) setControllerManagerConfig() {
 	// Set --cluster-name based on appropriate DNS prefix
 	if cs.Properties.MasterProfile != nil {
 		staticControllerManagerConfig["--cluster-name"] = cs.Properties.MasterProfile.DNSPrefix
-	} else if cs.Properties.HostedMasterProfile != nil {
-		staticControllerManagerConfig["--cluster-name"] = cs.Properties.HostedMasterProfile.DNSPrefix
 	}
 
 	// Enable cloudprovider if we're not using cloud controller manager

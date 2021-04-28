@@ -13,6 +13,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -55,12 +56,9 @@ func (kmn *UpgradeMasterNode) CreateNode(ctx context.Context, poolName string, m
 	masterOffset := templateVariables["masterCount"]
 	kmn.logger.Infof("Master pool set count to: %v temporarily during upgrade...", masterOffset)
 
-	// Debug function - keep commented out
-	// WriteTemplate(kmn.Translator, kmn.UpgradeContainerService, kmn.TemplateMap, kmn.ParametersMap)
-
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	deploymentSuffix := random.Int31()
-	deploymentName := fmt.Sprintf("master-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
+	deploymentName := fmt.Sprintf("k8s-upgrade-master-%d-%s-%d", masterNo, time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
 
 	_, err := kmn.Client.DeployTemplate(
 		ctx,
@@ -99,7 +97,7 @@ func (kmn *UpgradeMasterNode) Validate(vmName *string) error {
 			if err != nil {
 				kmn.logger.Infof("Master node: %s status error: %v", nodeName, err)
 				time.Sleep(time.Second * 5)
-			} else if isNodeReady(masterNode) {
+			} else if kubernetes.IsNodeReady(masterNode) {
 				kmn.logger.Infof("Master node: %s is ready", nodeName)
 				ch <- struct{}{}
 			} else {

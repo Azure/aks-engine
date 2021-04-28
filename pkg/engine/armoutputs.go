@@ -46,12 +46,8 @@ func GetKubernetesOutputs(cs *api.ContainerService) map[string]interface{} {
 		},
 	}
 
-	isHostedMaster := cs.Properties.IsHostedMasterProfile()
-
-	if !isHostedMaster {
-		for k, v := range getMasterOutputs(cs) {
-			outputs[k] = v
-		}
+	for k, v := range getMasterOutputs(cs) {
+		outputs[k] = v
 	}
 
 	for _, profile := range cs.Properties.AgentPoolProfiles {

@@ -20,9 +20,7 @@ rules:
   resources:
   - pods
   - nodes
-{{- if IsKubernetesVersionGe "1.16.0"}}
   - nodes/stats
-{{- end}}
   - namespaces
   verbs:
   - get
@@ -53,7 +51,7 @@ subjects:
   name: metrics-server
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: metrics-server-auth-reader
@@ -70,7 +68,7 @@ subjects:
   name: metrics-server
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: metrics-server:system:auth-delegator
@@ -103,11 +101,7 @@ spec:
     protocol: TCP
     targetPort: 443
 ---
-{{- if IsKubernetesVersionGe "1.16.0"}}
 apiVersion: apps/v1
-{{else}}
-apiVersion: extensions/v1beta1
-{{- end}}
 kind: Deployment
 metadata:
   name: metrics-server
@@ -134,19 +128,12 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
         - /metrics-server
-{{- if IsKubernetesVersionGe "1.16.0"}}
         - --kubelet-insecure-tls
-{{else}}
-        - --source=kubernetes.summary_api:''
-{{- end}}
+        - --kubelet-preferred-address-types=InternalIP
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
 ---
-apiVersion: apiregistration.k8s.io/v1beta1
+apiVersion: apiregistration.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
 kind: APIService
 metadata:
   name: v1beta1.metrics.k8s.io

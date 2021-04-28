@@ -28,13 +28,13 @@ data:
     }
   net-conf.json: |
     {
-      "Network": "<kubeClusterCidr>",
+      "Network": "{{GetClusterSubnet}}",
       "Backend": {
         "Type": "vxlan"
       }
     }
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds
@@ -44,21 +44,19 @@ metadata:
     app: flannel
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       tier: node
       app: flannel
-{{- end}}
   template:
     metadata:
       labels:
         tier: node
         app: flannel
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-{{- end}}
 {{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"

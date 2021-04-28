@@ -104,10 +104,6 @@ func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerServ
 		}
 	}()
 
-	if !validateDistro(containerService) {
-		return templateRaw, parametersRaw, errors.New("Invalid distro")
-	}
-
 	var b bytes.Buffer
 	if err = templ.ExecuteTemplate(&b, baseFile, properties); err != nil {
 		return templateRaw, parametersRaw, err
@@ -127,9 +123,6 @@ func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerServ
 
 func (t *TemplateGenerator) verifyFiles() error {
 	allFiles := commonTemplateFiles
-	allFiles = append(allFiles, dcosTemplateFiles...)
-	allFiles = append(allFiles, dcos2TemplateFiles...)
-	allFiles = append(allFiles, swarmTemplateFiles...)
 	for _, file := range allFiles {
 		if _, err := Asset(file); err != nil {
 			return t.Translator.Errorf("template file %s does not exist", file)
@@ -139,28 +132,7 @@ func (t *TemplateGenerator) verifyFiles() error {
 }
 
 func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]string, string, error) {
-	var files []string
-	var baseFile string
-	switch properties.OrchestratorProfile.OrchestratorType {
-	case api.DCOS:
-		if properties.OrchestratorProfile.DcosConfig == nil || properties.OrchestratorProfile.DcosConfig.BootstrapProfile == nil {
-			files = append(commonTemplateFiles, dcosTemplateFiles...)
-			baseFile = dcosBaseFile
-		} else {
-			files = append(commonTemplateFiles, dcos2TemplateFiles...)
-			baseFile = dcos2BaseFile
-		}
-	case api.Swarm:
-		files = append(commonTemplateFiles, swarmTemplateFiles...)
-		baseFile = swarmBaseFile
-	case api.SwarmMode:
-		files = append(commonTemplateFiles, swarmModeTemplateFiles...)
-		baseFile = swarmBaseFile
-	default:
-		return nil, "", t.Translator.Errorf("orchestrator '%s' is unsupported", properties.OrchestratorProfile.OrchestratorType)
-	}
-
-	return files, baseFile, nil
+	return []string{}, "", t.Translator.Errorf("orchestrator '%s' is unsupported", properties.OrchestratorProfile.OrchestratorType)
 }
 
 func (t *TemplateGenerator) GetJumpboxCustomDataJSON(cs *api.ContainerService) string {
@@ -266,32 +238,20 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsVirtualMachineScaleSets": func(profile *api.AgentPoolProfile) bool {
 			return profile.IsVirtualMachineScaleSets()
 		},
-		"IsHostedMaster": func() bool {
-			return cs.Properties.IsHostedMasterProfile()
-		},
 		"IsIPMasqAgentEnabled": func() bool {
 			return cs.Properties.IsIPMasqAgentEnabled()
 		},
-		"IsDCOS19": func() bool {
-			return cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.IsDCOS19()
-		},
 		"IsKubernetesVersionGe": func(version string) bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
+			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 		"IsKubernetesVersionLt": func(version string) bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
+			return !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 		"GetMasterKubernetesLabels": func(rg string) string {
 			return common.GetMasterKubernetesLabels(rg, false)
 		},
-		"GetMasterKubernetesLabelsDeprecated": func(rg string) string {
-			return common.GetMasterKubernetesLabels(rg, true)
-		},
 		"GetAgentKubernetesLabels": func(profile *api.AgentPoolProfile, rg string) string {
 			return profile.GetKubernetesLabels(rg, false)
-		},
-		"GetAgentKubernetesLabelsDeprecated": func(profile *api.AgentPoolProfile, rg string) string {
-			return profile.GetKubernetesLabels(rg, true)
 		},
 		"GetKubeletConfigKeyVals": func(kc *api.KubernetesConfig) string {
 			if kc == nil {
@@ -304,6 +264,15 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				return ""
 			}
 			return kc.GetOrderedKubeletConfigStringForPowershell()
+		},
+		"GetKubeProxyFeatureGatesPsh": func() string {
+			return cs.Properties.GetKubeProxyFeatureGatesWindowsArguments()
+		},
+		"GetKubeletHealthZPort": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--healthz-port"]
+		},
+		"HasKubeletHealthZPort": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--healthz-port"] != ""
 		},
 		"HasKubeReservedCgroup": func() bool {
 			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
@@ -327,16 +296,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return string(cs.Properties.OrchestratorProfile.KubernetesConfig.ProxyMode)
 		},
 		"HasPrivateRegistry": func() bool {
-			if cs.Properties.OrchestratorProfile.DcosConfig != nil {
-				return cs.Properties.OrchestratorProfile.DcosConfig.HasPrivateRegistry()
-			}
 			return false
-		},
-		"IsSwarmMode": func() bool {
-			return cs.Properties.OrchestratorProfile.IsSwarmMode()
-		},
-		"IsKubernetes": func() bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes()
 		},
 		"IsPublic": func(ports []int) bool {
 			return common.SliceIntIsNonEmpty(ports)
@@ -360,11 +320,14 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsPrivateCluster": func() bool {
 			return cs.Properties.OrchestratorProfile.IsPrivateCluster()
 		},
+		"EnableHostsConfigAgent": func() bool {
+			return cs.Properties.OrchestratorProfile.IsHostsConfigAgentEnabled()
+		},
 		"ProvisionJumpbox": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision()
 		},
 		"UseManagedIdentity": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)
 		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)
@@ -390,34 +353,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDataDisks": func(profile *api.AgentPoolProfile) string {
 			return getDataDisks(profile)
 		},
-		"HasBootstrap": func() bool {
-			return cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.HasBootstrap()
-		},
-		"GetDCOSBootstrapCustomData": func() string {
-			return getDCOSBootstrapCustomData(cs.Properties)
-		},
-		"GetDCOSMasterCustomData": func() string {
-			return getDCOSMasterCustomData(cs)
-		},
-		"GetDCOSAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			return getDCOSAgentCustomData(cs, profile)
-		},
-		"GetDCOSWindowsAgentCustomData": func(profile *api.AgentPoolProfile) string {
-			return getDCOSWindowsAgentCustomData(cs, profile)
-		},
-		"GetDCOSWindowsAgentCustomNodeAttributes": func(profile *api.AgentPoolProfile) string {
-			return getDCOSWindowsAgentCustomAttributes(profile)
-		},
-		"GetDCOSWindowsAgentPreprovisionParameters": func(profile *api.AgentPoolProfile) string {
-			if profile.PreprovisionExtension != nil {
-				return getDCOSWindowsAgentPreprovisionParameters(cs, profile)
-			}
-			return ""
-		},
 		"GetMasterAllowedSizes": func() string {
-			if cs.Properties.OrchestratorProfile.OrchestratorType == api.DCOS {
-				return helpers.GetDCOSMasterAllowedSizes()
-			}
 			return helpers.GetKubernetesAllowedVMSKUs()
 		},
 		"GetDefaultVNETCIDR": func() string {
@@ -429,17 +365,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDefaultVNETCIDRIPv6": func() string {
 			return DefaultVNETCIDRIPv6
 		},
-		"getSwarmVersions": func() string {
-			return getSwarmVersions(api.SwarmVersion, api.SwarmDockerComposeVersion)
-		},
-		"GetSwarmModeVersions": func() string {
-			return getSwarmVersions(api.DockerCEVersion, api.DockerCEDockerComposeVersion)
-		},
 		"GetSizeMap": func() string {
 			return helpers.GetSizeMap()
-		},
-		"WriteLinkedTemplatesForExtensions": func() string {
-			return getLinkedTemplatesForExtensions(cs.Properties)
 		},
 		"GetSshPublicKeysPowerShell": func() string {
 			return getSSHPublicKeysPowerShell(cs.Properties.LinuxProfile)
@@ -463,40 +390,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return str
 		},
-		"GetMasterSwarmCustomData": func() string {
-			files := []string{swarmProvision}
-			str := buildYamlFileWithWriteFiles(files, cs)
-			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
-				extensionStr := makeMasterExtensionScriptCommands(cs)
-				str += "'runcmd:\n" + extensionStr + "\n\n'"
-			}
-			str = escapeSingleLine(str)
-			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
-		},
-		"GetAgentSwarmCustomData": func(profile *api.AgentPoolProfile) string {
-			files := []string{swarmProvision}
-			str := buildYamlFileWithWriteFiles(files, cs)
-			str = escapeSingleLine(str)
-			return fmt.Sprintf("\"customData\": \"[base64(concat('%s',variables('%sRunCmdFile'),variables('%sRunCmd')))]\",", str, profile.Name, profile.Name)
-		},
-		"GetSwarmAgentPreprovisionExtensionCommands": func(profile *api.AgentPoolProfile) string {
-			str := ""
-			if profile.PreprovisionExtension != nil {
-				makeAgentExtensionScriptCommands(cs, profile)
-			}
-			str = escapeSingleLine(str)
-			return str
-		},
 		"GetLocation": func() string {
 			return cs.Location
-		},
-		"GetWinAgentSwarmCustomData": func() string {
-			str := getBase64EncodedGzippedCustomScript(swarmWindowsProvision, cs)
-			return fmt.Sprintf("\"customData\": \"%s\"", str)
-		},
-		"GetWinAgentSwarmModeCustomData": func() string {
-			str := getBase64EncodedGzippedCustomScript(swarmModeWindowsProvision, cs)
-			return fmt.Sprintf("\"customData\": \"%s\"", str)
 		},
 		"GetKubernetesWindowsAgentFunctions": func() string {
 			// Collect all the parts into a zip
@@ -508,11 +403,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
-				kubernetesWindowsLogsCleanupPS1,
-				kubernetesWindowsNodeResetPS1,
+				kubernetesWindowsHostsConfigAgentFunctionsPS1,
 				kubernetesWindowsOpenSSHFunctionPS1,
-				kubeletStartPS1,
-				kubeproxyStartPS1,
+				kubernetesWindowsHypervtemplatetoml,
 			}
 
 			// Create a buffer, new zip
@@ -538,22 +431,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				panic(err)
 			}
 			return base64.StdEncoding.EncodeToString(buf.Bytes())
-		},
-		"GetMasterSwarmModeCustomData": func() string {
-			files := []string{swarmModeProvision}
-			str := buildYamlFileWithWriteFiles(files, cs)
-			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
-				extensionStr := makeMasterExtensionScriptCommands(cs)
-				str += "runcmd:\n" + extensionStr + "\n\n"
-			}
-			str = escapeSingleLine(str)
-			return fmt.Sprintf("\"customData\": \"[base64(concat('%s'))]\",", str)
-		},
-		"GetAgentSwarmModeCustomData": func(profile *api.AgentPoolProfile) string {
-			files := []string{swarmModeProvision}
-			str := buildYamlFileWithWriteFiles(files, cs)
-			str = escapeSingleLine(str)
-			return fmt.Sprintf("\"customData\": \"[base64(concat('%s',variables('%sRunCmdFile'),variables('%sRunCmd')))]\",", str, profile.Name, profile.Name)
 		},
 		"WrapAsVariable": func(s string) string {
 			return common.WrapAsARMVariable(s)
@@ -626,13 +503,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"WindowsSSHEnabled": func() bool {
 			return cs.Properties.WindowsProfile.GetSSHEnabled()
-		},
-		"GetConfigurationScriptRootURL": func() string {
-			linuxProfile := cs.Properties.LinuxProfile
-			if linuxProfile == nil || linuxProfile.ScriptRootURL == "" {
-				return DefaultConfigurationScriptRootURL
-			}
-			return linuxProfile.ScriptRootURL
 		},
 		"GetMasterOSImageOffer": func() string {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
@@ -718,11 +588,26 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsKubenet": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginKubenet
 		},
+		"HasLinuxMobyURL": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxMobyURL != ""
+		},
+		"GetLinuxMobyURL": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxMobyURL
+		},
 		"NeedsContainerd": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()
 		},
+		"HasLinuxContainerdURL": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxContainerdURL != ""
+		},
+		"GetLinuxContainerdURL": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxContainerdURL
+		},
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
+		},
+		"GetContainerRuntime": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime
 		},
 		"GetDockerConfig": func(hasGPU bool) string {
 			val, err := getDockerConfig(cs, hasGPU)
@@ -744,20 +629,29 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasDCSeriesSKU": func() bool {
 			return cs.Properties.HasDCSeriesSKU()
 		},
+		"HasFlatcar": func() bool {
+			return cs.Properties.HasFlatcar()
+		},
 		"RequiresDocker": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker()
 		},
 		"IsAzurePolicyAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzurePolicyAddonName)
 		},
-		"IsACIConnectorAddonEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ACIConnectorAddonName)
-		},
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 		},
 		"IsAADPodIdentityAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName)
+		},
+		"IsDashboardAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.DashboardAddonName)
+		},
+		"IsPodSecurityPolicyAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.PodSecurityPolicyAddonName)
+		},
+		"IsNvidiaDevicePluginAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 		},
 		"GetAADPodIdentityTaintKey": func() string {
 			return common.AADPodIdentityTaintKey
@@ -809,6 +703,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDHCPv6ConfigCSEScriptFilepath": func() string {
 			return dhcpV6ConfigCSEScriptFilepath
 		},
+		"GetKMSKeyvaultKeyServiceCSEScriptFilepath": func() string {
+			return kmsKeyvaultKeyServiceCSEScriptFilepath
+		},
+		"GetKMSKeyvaultKeyCSEScriptFilepath": func() string {
+			return kmsKeyvaultKeyCSEScriptFilepath
+		},
 		"HasPrivateAzureRegistryServer": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer != ""
 		},
@@ -818,8 +718,14 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
 		},
+		"HasBlockOutboundInternet": func() bool {
+			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.BlockOutboundInternet
+		},
 		"GetCSEErrorCode": func(errorType string) int {
 			return GetCSEErrorCode(errorType)
+		},
+		"GetEtcdStorageLimitGB": func() int {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.EtcdStorageLimitGB * 1024 * 1024 * 1024
 		},
 		"GetApplicationInsightsTelemetryKeys": func() string {
 			userSuppliedAIKey := ""
@@ -865,6 +771,21 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"GetSysctlDConfigKeyVals": func(sysctlDConfig map[string]string) string {
 			return common.GetOrderedNewlinedKeyValsStringForCloudInit(sysctlDConfig)
+		},
+		"GetLinuxCSELogPath": func() string {
+			return linuxCSELogPath
+		},
+		"RunUnattendedUpgrades": func() bool {
+			if cs.Properties.LinuxProfile != nil {
+				return to.Bool(cs.Properties.LinuxProfile.RunUnattendedUpgradesOnBootstrap)
+			}
+			return false
+		},
+		"GetEth0MTU": func() int {
+			if cs.Properties.LinuxProfile != nil {
+				return cs.Properties.LinuxProfile.Eth0MTU
+			}
+			return 0
 		},
 		"OpenBraces": func() string {
 			return "{{"

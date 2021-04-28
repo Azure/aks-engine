@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: large-container-daemonset
+  namespace: default
+  labels:
+    app: large-container-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: large-container-daemonset
+  template:
+    metadata:
+      labels:
+        app: large-container-daemonset
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+      containers:
+      - name: large-container
+        image: mcr.microsoft.com/oss/azcu/go-dev:v1.31.0
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do sleep 1000; done"]

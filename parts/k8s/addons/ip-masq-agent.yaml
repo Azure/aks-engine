@@ -1,4 +1,4 @@
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: azure-ip-masq-agent
@@ -9,12 +9,14 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
-{{- if IsKubernetesVersionGe "1.16.0"}}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       k8s-app: azure-ip-masq-agent
       tier: node
-{{- end}}
   template:
     metadata:
       labels:
@@ -44,10 +46,8 @@ spec:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
         imagePullPolicy: IfNotPresent
-{{- if IsKubernetesVersionGe "1.16.0"}}
         args:
           - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
-{{- end}}
         securityContext:
           privileged: true
         volumeMounts:
@@ -78,11 +78,9 @@ data:
   ip-masq-agent: |-
     nonMasqueradeCIDRs:
       - {{ContainerConfig "non-masquerade-cidr"}}
-{{- if IsKubernetesVersionGe "1.16.0"}}
-  {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
+{{- if ContainerConfig "secondary-non-masquerade-cidr"}}
       - {{ContainerConfig "secondary-non-masquerade-cidr"}}
-  {{end -}}
-{{- end}}
+{{end -}}
 {{- if ContainerConfig "non-masq-cni-cidr"}}
       - {{ContainerConfig "non-masq-cni-cidr"}}
     masqLinkLocal: true

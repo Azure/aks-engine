@@ -1,13 +1,11 @@
 {
-	"env": {},
-	"options": {
-		"allowedOrchestratorVersions": ["1.15", "1.16", "1.17"]
+	"env": {
+		"STABILITY_TIMEOUT_SECONDS": "15"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPlugin": "azure",
 					"networkPolicy": "azure"
@@ -37,10 +35,6 @@
 						}
 					]
 				}
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	}

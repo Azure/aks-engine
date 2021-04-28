@@ -24,7 +24,7 @@ func TestGetLocationsCmd(t *testing.T) {
 	g.Expect(command.Long).Should(Equal(locationsLongDescription))
 	g.Expect(command.Flags().Lookup("output")).NotTo(BeNil())
 
-	command.SetArgs([]string{})
+	command.SetArgs([]string{"--bogus"})
 	err := command.Execute()
 	g.Expect(err).To(HaveOccurred())
 }

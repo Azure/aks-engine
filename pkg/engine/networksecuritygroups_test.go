@@ -19,7 +19,7 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
 					PrivateCluster: &api.PrivateCluster{
-						Enabled: to.BoolPtr(true),
+						Enabled: to.BoolPtr(false),
 					},
 				},
 			},
@@ -155,6 +155,25 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
 	}
+
+	// Test private cluster
+
+	cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.Enabled = to.BoolPtr(true)
+
+	actual = CreateNetworkSecurityGroup(cs)
+
+	for _, rule := range rules {
+		if to.String(rule.Name) == "allow_kube_tls" {
+			source := "VirtualNetwork"
+			rule.SourceAddressPrefix = &source
+		}
+	}
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
+	}
 }
 
 func TestCreateJumpboxNSG(t *testing.T) {
@@ -187,30 +206,6 @@ func TestCreateJumpboxNSG(t *testing.T) {
 	}
 
 	actual := createJumpboxNSG()
-
-	diff := cmp.Diff(actual, expected)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
-	}
-}
-
-func TestCreateHostedMasterNSG(t *testing.T) {
-	expected := NetworkSecurityGroupARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionNetwork')]",
-		},
-		SecurityGroup: network.SecurityGroup{
-			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('nsgName')]"),
-			Type:     to.StringPtr("Microsoft.Network/networkSecurityGroups"),
-			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
-				SecurityRules: &[]network.SecurityRule{},
-			},
-		},
-	}
-
-	actual := createHostedMasterNSG()
 
 	diff := cmp.Diff(actual, expected)
 

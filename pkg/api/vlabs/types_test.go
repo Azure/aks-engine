@@ -21,25 +21,20 @@ func TestOrchestratorProfile(t *testing.T) {
 
 	OrchestratorProfileText = `{ "orchestratorType": "Swarm" }`
 	op = &OrchestratorProfile{}
-	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
-		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
+	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e == nil {
+		t.Fatalf("expected unmarshal failure for OrchestratorProfile when passing an invalid orchestratorType")
 	}
 
 	OrchestratorProfileText = `{ "orchestratorType": "SwarmMode" }`
 	op = &OrchestratorProfile{}
-	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
-		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
-	}
-
-	if !op.IsSwarmMode() {
-		t.Fatalf("unexpectedly detected OrchestratorProfile.Type != DockerCE after unmarshal")
-
+	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e == nil {
+		t.Fatalf("expected unmarshal failure for OrchestratorProfile when passing an invalid orchestratorType")
 	}
 
 	OrchestratorProfileText = `{ "orchestratorType": "DCOS" }`
 	op = &OrchestratorProfile{}
-	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
-		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
+	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e == nil {
+		t.Fatalf("expected unmarshal failure for OrchestratorProfile when passing an invalid orchestratorType")
 	}
 
 	OrchestratorProfileText = `{ "orchestratorType": "Kubernetes" }`
@@ -204,8 +199,8 @@ func TestAgentPoolProfile(t *testing.T) {
 	if !to.Bool(ap.EncryptionAtHost) {
 		t.Fatalf("AgentPoolProfile.EncryptionAtHost should be true after unmarshal")
 	}
-	// With osType Linux and RHEL distro
-	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "rhel", "count": 1, "vmSize": "Standard_D2_v2",
+	// With osType Linux and aks-ubuntu-18.04 distro
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "aks-ubuntu-18.04", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
@@ -218,10 +213,6 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if !ap.IsLinux() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.OSType != Linux after unmarshal")
-	}
-
-	if !ap.IsRHEL() {
-		t.Fatalf("unexpectedly detected AgentPoolProfile.Distro != RHEL after unmarshal")
 	}
 
 	if !ap.IsManagedDisks() {
@@ -263,8 +254,8 @@ func TestAgentPoolProfile(t *testing.T) {
 	if !to.Bool(ap.EncryptionAtHost) {
 		t.Fatalf("AgentPoolProfile.EncryptionAtHost should be true after unmarshal")
 	}
-	// With osType Linux and coreos distro
-	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "coreos", "count": 1, "vmSize": "Standard_D2_v2",
+	// With osType Linux and Flatcar distro
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "flatcar", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000], "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
@@ -277,6 +268,10 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if !ap.IsLinux() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.OSType != Linux after unmarshal")
+	}
+
+	if !ap.IsFlatcar() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.Distro != Flatcar after unmarshal")
 	}
 
 	if !ap.IsManagedDisks() {
@@ -614,15 +609,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: RHEL,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
 					Distro: "foo",
 				},
 			},
@@ -713,7 +699,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: RHEL,
+						Distro: Flatcar,
 					},
 				},
 			},
@@ -1016,6 +1002,44 @@ func TestShouldEnableAzureCloudAddon(t *testing.T) {
 			actual := c.p.ShouldEnableAzureCloudAddon(c.addonName)
 			if actual != c.expected {
 				t.Fatalf("expected p.ShouldEnableAzureCloudAddon(\"%s\") to return %t but instead returned %t", c.addonName, c.expected, actual)
+			}
+		})
+	}
+}
+
+func TestIsWinDSREnabled(t *testing.T) {
+
+	cases := []struct {
+		name         string
+		featureFlags *FeatureFlags
+		expected     bool
+	}{
+		{
+			name:         "nil",
+			featureFlags: nil,
+			expected:     false,
+		},
+		{
+			name:         "EnableWinDSR is disabled",
+			featureFlags: &FeatureFlags{},
+			expected:     false,
+		},
+		{
+			name: "EnableWinDSR is disabled",
+			featureFlags: &FeatureFlags{
+				EnableWinDSR: true,
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := c.featureFlags.IsWinDSREnabled()
+			if actual != c.expected {
+				t.Fatalf("expected test \"%s\" featureFlags.IsWinDSREnabled() to return %t but instead returned %t", c.name, c.expected, actual)
 			}
 		})
 	}

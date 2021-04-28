@@ -42,8 +42,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.PauseComponentName:                         pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
+		common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
 		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
@@ -101,6 +101,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotEighteenDotZero).To(Equal(expected))
 
@@ -131,8 +132,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.PauseComponentName:                         pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
+		common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
 		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
@@ -188,6 +189,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotSeventeenDotZero).To(Equal(expected))
 
@@ -198,7 +200,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = kubernetesImageBaseVersionedImages[kubernetesImageBaseType]["1.16"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.16.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.16.0",
+		common.KubeProxyAddonName:                         getDefaultImage(common.KubeProxyAddonName, kubernetesImageBaseType) + ":v1.16.0",
 		common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 		common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 		common.WindowsArtifactComponentName:               "v1.16.0/windowszip/v1.16.0-1int.zip",
@@ -216,8 +218,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.PauseComponentName:                         pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
+		common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
 		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
@@ -271,6 +273,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotSixteenDotZero).To(Equal(expected))
 
@@ -298,8 +301,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.PauseComponentName:                         pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
+		common.AzureArcOnboardingAddonName:                azureArcOnboardingImageReference,
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
@@ -350,6 +353,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotFifteenDotZero).To(Equal(expected))
 
@@ -378,7 +382,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
@@ -429,6 +432,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotFourteenDotZero).To(Equal(expected))
 
@@ -456,7 +460,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
@@ -507,6 +510,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.AzureKMSProviderComponentName:              azureKMSProviderImageReference,
 	}
 	g.Expect(oneDotThirteenDotZero).To(Equal(expected))
 
@@ -533,7 +537,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
@@ -602,7 +605,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
@@ -671,7 +673,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       k8sComponent[common.ReschedulerAddonName],
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.DNSSidecarComponentName:                    k8sComponent[common.DNSSidecarComponentName],
@@ -740,7 +741,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       k8sComponent[common.ReschedulerAddonName],
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.DNSSidecarComponentName:                    k8sComponent[common.DNSSidecarComponentName],
 		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
@@ -808,7 +808,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       k8sComponent[common.ReschedulerAddonName],
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
 		common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 		common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
@@ -858,34 +857,33 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = kubernetesImageBaseVersionedImages[kubernetesImageBaseType]["1.7"]
 	expected = map[string]string{
-		common.Hyperkube:                       "hyperkube-amd64:v1.7.13",
-		common.KubeProxyAddonName:              "hyperkube-amd64:v1.7.13",
-		common.DashboardAddonName:              k8sComponent["dashboard"],
-		common.ExecHealthZComponentName:        getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
-		common.AddonResizerComponentName:       k8sComponent[common.AddonResizerComponentName],
-		common.MetricsServerAddonName:          k8sComponent[common.MetricsServerAddonName],
-		common.KubeDNSAddonName:                k8sComponent[common.KubeDNSAddonName],
-		common.AddonManagerComponentName:       k8sComponent[common.AddonManagerComponentName],
-		common.DNSMasqComponentName:            k8sComponent[common.DNSMasqComponentName],
-		common.PauseComponentName:              pauseImageReference,
-		common.TillerAddonName:                 tillerImageReference,
-		common.ReschedulerAddonName:            k8sComponent[common.ReschedulerAddonName],
-		common.ACIConnectorAddonName:           virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName: azureCNINetworkMonitorImageReference,
-		"nodestatusfreq":                       DefaultKubernetesNodeStatusUpdateFrequency,
-		"nodegraceperiod":                      DefaultKubernetesCtrlMgrNodeMonitorGracePeriod,
-		"podeviction":                          DefaultKubernetesCtrlMgrPodEvictionTimeout,
-		"routeperiod":                          DefaultKubernetesCtrlMgrRouteReconciliationPeriod,
-		"backoffretries":                       strconv.Itoa(DefaultKubernetesCloudProviderBackoffRetries),
-		"backoffjitter":                        strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffJitter, 'f', -1, 64),
-		"backoffduration":                      strconv.Itoa(DefaultKubernetesCloudProviderBackoffDuration),
-		"backoffexponent":                      strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffExponent, 'f', -1, 64),
-		"ratelimitqps":                         strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPS, 'f', -1, 64),
-		"ratelimitqpswrite":                    strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPSWrite, 'f', -1, 64),
-		"ratelimitbucket":                      strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucket),
-		"ratelimitbucketwrite":                 strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
-		"gchighthreshold":                      strconv.Itoa(DefaultKubernetesGCHighThreshold),
-		"gclowthreshold":                       strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.Hyperkube:                 "hyperkube-amd64:v1.7.13",
+		common.KubeProxyAddonName:        "hyperkube-amd64:v1.7.13",
+		common.DashboardAddonName:        k8sComponent["dashboard"],
+		common.ExecHealthZComponentName:  getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
+		common.AddonResizerComponentName: k8sComponent[common.AddonResizerComponentName],
+		common.MetricsServerAddonName:    k8sComponent[common.MetricsServerAddonName],
+		common.KubeDNSAddonName:          k8sComponent[common.KubeDNSAddonName],
+		common.AddonManagerComponentName: k8sComponent[common.AddonManagerComponentName],
+		common.DNSMasqComponentName:      k8sComponent[common.DNSMasqComponentName],
+		common.PauseComponentName:        pauseImageReference,
+		common.TillerAddonName:           tillerImageReference,
+		common.ReschedulerAddonName:      k8sComponent[common.ReschedulerAddonName],
+		common.ACIConnectorAddonName:     virtualKubeletImageReference,
+		"nodestatusfreq":                 DefaultKubernetesNodeStatusUpdateFrequency,
+		"nodegraceperiod":                DefaultKubernetesCtrlMgrNodeMonitorGracePeriod,
+		"podeviction":                    DefaultKubernetesCtrlMgrPodEvictionTimeout,
+		"routeperiod":                    DefaultKubernetesCtrlMgrRouteReconciliationPeriod,
+		"backoffretries":                 strconv.Itoa(DefaultKubernetesCloudProviderBackoffRetries),
+		"backoffjitter":                  strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffJitter, 'f', -1, 64),
+		"backoffduration":                strconv.Itoa(DefaultKubernetesCloudProviderBackoffDuration),
+		"backoffexponent":                strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffExponent, 'f', -1, 64),
+		"ratelimitqps":                   strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPS, 'f', -1, 64),
+		"ratelimitqpswrite":              strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPSWrite, 'f', -1, 64),
+		"ratelimitbucket":                strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucket),
+		"ratelimitbucketwrite":           strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
+		"gchighthreshold":                strconv.Itoa(DefaultKubernetesGCHighThreshold),
+		"gclowthreshold":                 strconv.Itoa(DefaultKubernetesGCLowThreshold),
 	}
 	g.Expect(oneDotSevenDotZero).To(Equal(expected))
 
@@ -910,7 +908,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.TillerAddonName:                            tillerImageReference,
 		common.ReschedulerAddonName:                       k8sComponent[common.ReschedulerAddonName],
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
-		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
 		common.DNSSidecarComponentName:                    k8sComponent[common.DNSSidecarComponentName],
 		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,

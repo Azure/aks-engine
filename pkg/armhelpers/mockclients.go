@@ -10,8 +10,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
@@ -25,13 +29,25 @@ import (
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	defaultK8sVersionForFakeVMs = "Kubernetes:1.17.5"
 	//DefaultFakeVMName is the default name assigned to VMs part of FakeListVirtualMachineScaleSetVMsResult and FakeListVirtualMachineResult
 	DefaultFakeVMName = "k8s-agentpool1-12345678-0"
 )
+
+var defaultK8sVersionForFakeVMs string
+
+func init() {
+	defaultVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
+	versionSplit := strings.Split(defaultVersion, ".")
+	minorVersion, _ := strconv.Atoi(versionSplit[1])
+	minorVersionLessOne := minorVersion - 1
+	priorVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, versionSplit[0]+"."+strconv.Itoa(minorVersionLessOne), "", false, false, false)
+	defaultK8sVersionForFakeVMs = fmt.Sprintf("Kubernetes:%s", priorVersion)
+}
 
 //MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
 type MockAKSEngineClient struct {
@@ -84,6 +100,9 @@ type MockKubernetesClient struct {
 	FailDeleteServiceAccount  bool
 	FailSupportEviction       bool
 	FailDeletePod             bool
+	FailDeleteClusterRole     bool
+	FailDeleteDaemonSet       bool
+	FailDeleteDeployment      bool
 	FailEvictPod              bool
 	FailWaitForDelete         bool
 	ShouldSupportEviction     bool
@@ -308,17 +327,22 @@ func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
 		return nil, errors.New("ListNodes failed")
 	}
 	node := &v1.Node{}
-	node.Name = "k8s-master-1234"
+	node.Name = fmt.Sprintf("%s-1234", common.LegacyControlPlaneVMPrefix)
 	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
 	node.Status.NodeInfo.KubeletVersion = "1.9.10"
 	node2 := &v1.Node{}
 	node2.Name = "k8s-agentpool3-1234"
-	node2.Status.Conditions = append(node2.Status.Conditions, v1.NodeCondition{Type: v1.NodeOutOfDisk, Status: v1.ConditionTrue})
+	node2.Status.Conditions = append(node2.Status.Conditions, v1.NodeCondition{Type: v1.NodeMemoryPressure, Status: v1.ConditionTrue})
 	node2.Status.NodeInfo.KubeletVersion = "1.9.9"
 	nodeList := &v1.NodeList{}
 	nodeList.Items = append(nodeList.Items, *node)
 	nodeList.Items = append(nodeList.Items, *node2)
 	return nodeList, nil
+}
+
+// ListNodesByOptions returns a list of Nodes registered in the api server
+func (mkc *MockKubernetesClient) ListNodesByOptions(opts metav1.ListOptions) (*v1.NodeList, error) {
+	return &v1.NodeList{}, nil
 }
 
 // ListServiceAccounts returns a list of Service Accounts in the provided namespace
@@ -393,6 +417,30 @@ func (mkc *MockKubernetesClient) SupportEviction() (string, error) {
 	return "", nil
 }
 
+//DeleteDeployment deletes the passed in daemonset
+func (mkc *MockKubernetesClient) DeleteClusterRole(role *rbacv1.ClusterRole) error {
+	if mkc.FailDeleteClusterRole {
+		return errors.New("ClusterRole failed")
+	}
+	return nil
+}
+
+//DeleteDaemonSet deletes the passed in daemonset
+func (mkc *MockKubernetesClient) DeleteDaemonSet(pod *appsv1.DaemonSet) error {
+	if mkc.FailDeleteDaemonSet {
+		return errors.New("DaemonSet failed")
+	}
+	return nil
+}
+
+//DeleteDeployment deletes the passed in daemonset
+func (mkc *MockKubernetesClient) DeleteDeployment(pod *appsv1.Deployment) error {
+	if mkc.FailDeleteDeployment {
+		return errors.New("Deployment failed")
+	}
+	return nil
+}
+
 //DeletePod deletes the passed in pod
 func (mkc *MockKubernetesClient) DeletePod(pod *v1.Pod) error {
 	if mkc.FailDeletePod {
@@ -415,6 +463,13 @@ func (mkc *MockKubernetesClient) WaitForDelete(logger *log.Entry, pods []v1.Pod,
 		return nil, errors.New("WaitForDelete failed")
 	}
 	return []v1.Pod{}, nil
+}
+
+// DaemonSet returns a given daemonset in a namespace.
+func (mkc *MockKubernetesClient) GetDaemonSet(namespace, name string) (*appsv1.DaemonSet, error) {
+	return &appsv1.DaemonSet{
+		Spec: appsv1.DaemonSetSpec{},
+	}, nil
 }
 
 // GetDeployment returns a given deployment in a namespace.
@@ -890,7 +945,7 @@ func (mc *MockAKSEngineClient) ListManagedDisksByResourceGroup(ctx context.Conte
 }
 
 //GetKubernetesClient mock
-func (mc *MockAKSEngineClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (KubernetesClient, error) {
+func (mc *MockAKSEngineClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (kubernetes.Client, error) {
 	if mc.FailGetKubernetesClient {
 		return nil, errors.New("GetKubernetesClient failed")
 	}
@@ -1030,4 +1085,14 @@ func (mc *MockAKSEngineClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context,
 	}
 
 	return "00000000-0000-0000-0000-000000000000", "4D+vyd5/jScBmsAwZOF/0GOBQ5kuFQc9JVaW+HlnJ58cyePJcwTpks+rVmvgcXGmmyujLDNEVPiT8pB274a9Yg==", "westus", nil
+}
+
+// GetVirtualMachinePowerState returns the virtual machine's PowerState status code
+func (mc *MockAKSEngineClient) GetVirtualMachinePowerState(ctx context.Context, resourceGroup, name string) (string, error) {
+	return "", nil
+}
+
+// GetVirtualMachineScaleSetInstancePowerState returns the virtual machine's PowerState status code
+func (mc *MockAKSEngineClient) GetVirtualMachineScaleSetInstancePowerState(ctx context.Context, resourceGroup, name, instanceID string) (string, error) {
+	return "", nil
 }

@@ -6,19 +6,23 @@
 		"TEST_PVC": true,
 		"LB_TEST_TIMEOUT": "10m",
 		"CLUSTER_INIT_POD_NAME": "aks-engine-pod-init",
-		"CLUSTER_INIT_JOB_NAME": "aks-engine-job-init"
+		"CLUSTER_INIT_JOB_NAME": "aks-engine-job-init",
+		"STABILITY_ITERATIONS": "0"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
+					"networkPlugin": "azure",
+					"networkMode": "bridge",
+					"useManagedIdentity": false,
 					"containerRuntimeConfig": {
 						"dataDir": "/mnt/docker"
 					},
 					"kubeReservedCgroup": "kubesystem",
 					"etcdVersion": "3.3.19",
+					"etcdStorageLimitGB": 8,
 					"clusterSubnet": "10.239.0.0/16",
 					"addons": [
 						{
@@ -44,23 +48,22 @@
 							}
 						},
 						{
-							"name": "tiller",
-							"enabled": true
-						},
-						{
-							"name": "kubernetes-dashboard",
-							"enabled": true
-						},
-						{
-							"name": "rescheduler",
-							"enabled": true
-						},
-						{
 							"name": "coredns",
 							"enabled": true,
 							"config": {
 								"min-replicas": "1",
 								"nodes-per-replica": "8"
+							}
+						},
+						{
+							"name": "node-problem-detector",
+							"enabled": true
+						},
+						{
+							"name": "azure-arc-onboarding",
+							"enabled": true,
+							"config": {
+								"location": "eastus"
 							}
 						}
 					],
@@ -71,7 +74,11 @@
 							"data": "YXBpVmVyc2lvbjogdjEKa2luZDogUG9kCm1ldGFkYXRhOgogIG5hbWU6IGFrcy1lbmdpbmUtcG9kLWluaXQKc3BlYzoKICBjb250YWluZXJzOgogIC0gbmFtZTogYWtzLWVuZ2luZS1wb2QtaW5pdAogICAgaW1hZ2U6IGJ1c3lib3g6MS4zMS4xCiAgICBhcmdzOgogICAgLSAvYmluL3NoCiAgICAtIC1jCiAgICAtIHdoaWxlIHRydWU7IGRvIHNsZWVwIDYwMDsgZG9uZQogIG5vZGVTZWxlY3RvcjoKICAgIGJldGEua3ViZXJuZXRlcy5pby9vczogbGludXgKLS0tCmFwaVZlcnNpb246IGJhdGNoL3YxCmtpbmQ6IEpvYgptZXRhZGF0YToKICBuYW1lOiBha3MtZW5naW5lLWpvYi1pbml0CnNwZWM6CiAgdGVtcGxhdGU6CiAgICBzcGVjOgogICAgICBjb250YWluZXJzOgogICAgICAtIGltYWdlOiBidXN5Ym94OjEuMzEuMQogICAgICAgIG5hbWU6IGJ1c3lib3gtYWdlbnQKICAgICAgICBjb21tYW5kOiBbJ3NoJywgJy1jJywgJ1sgJChlY2hvICJIZWxsbywgV29ybGQhIiB8IHNoYTI1NnN1bSB8IGN1dCAtZCIgIiAtZjEpID0gImM5OGMyNGI2NzdlZmY0NDg2MGFmZWE2ZjQ5M2JiYWVjNWJiMWM0Y2JiMjA5YzZmYzJiYmI0N2Y2NmZmMmFkMzEiIF0nXQogICAgICByZXN0YXJ0UG9saWN5OiBOZXZlcgogICAgICBub2RlU2VsZWN0b3I6CiAgICAgICAgYmV0YS5rdWJlcm5ldGVzLmlvL29zOiBsaW51eAogIGJhY2tvZmZMaW1pdDogMAo="
 						}
 					],
-					"loadBalancerOutboundIPs": 2
+					"loadBalancerOutboundIPs": 2,
+					"apiServerConfig": {
+						"--anonymous-auth": "true"
+					},
+					"microsoftAptRepositoryURL": "https://packages.microsoft.com"
 				}
 			},
 			"masterProfile": {
@@ -82,7 +89,6 @@
 				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 				"firstConsecutiveStaticIP": "10.239.255.239",
 				"vnetCidr": "10.239.0.0/16",
-				"auditDEnabled": true,
 				"availabilityZones": [
 					"1",
 					"2"
@@ -101,18 +107,10 @@
 					],
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot",
-					"auditDEnabled": true,
 					"availabilityZones": [
 						"1",
 						"2"
 					]
-				},
-				{
-					"name": "poolgpu",
-					"count": 1,
-					"availabilityProfile": "VirtualMachineScaleSets",
-					"vmSize": "Standard_NC6",
-					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				},
 				{
 					"name": "poolbigsku",
@@ -135,6 +133,7 @@
 				}
 			],
 			"linuxProfile": {
+				"runUnattendedUpgradesOnBootstrap": true,
 				"adminUsername": "azureuser",
 				"ssh": {
 					"publicKeys": [
@@ -149,10 +148,6 @@
 				"adminPassword": "replacepassword1234$",
 				"enableAutomaticUpdates": false,
 				"sshEnabled": true
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	}

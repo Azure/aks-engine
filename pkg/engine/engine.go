@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -30,11 +29,7 @@ import (
 )
 
 var commonTemplateFiles = []string{agentOutputs, agentParams, masterOutputs, iaasOutputs, masterParams, windowsParams}
-var dcosTemplateFiles = []string{dcosBaseFile, dcosAgentResourcesVMAS, dcosAgentResourcesVMSS, dcosAgentVars, dcosMasterResources, dcosMasterVars, dcosParams, dcosWindowsAgentResourcesVMAS, dcosWindowsAgentResourcesVMSS}
-var dcos2TemplateFiles = []string{dcos2BaseFile, dcosAgentResourcesVMAS, dcosAgentResourcesVMSS, dcosAgentVars, dcos2MasterResources, dcos2BootstrapResources, dcos2MasterVars, dcosParams, dcosWindowsAgentResourcesVMAS, dcosWindowsAgentResourcesVMSS, dcos2BootstrapVars, dcos2BootstrapParams}
 var kubernetesParamFiles = []string{armParameters, kubernetesParams, masterParams, agentParams, windowsParams}
-var swarmTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
-var swarmModeTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
 
 var keyvaultSecretPathRe *regexp.Regexp
 
@@ -98,25 +93,6 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 	kubeconfig = strings.Replace(kubeconfig, "{{authInfo}}", authInfo, -1)
 
 	return kubeconfig, nil
-}
-
-// validateDistro checks if the requested orchestrator type is supported on the requested Linux distro.
-func validateDistro(cs *api.ContainerService) bool {
-	// Check Master distro
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Distro == api.RHEL &&
-		(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
-		log.Printf("Orchestrator type %s not suported on RHEL Master", cs.Properties.OrchestratorProfile.OrchestratorType)
-		return false
-	}
-	// Check Agent distros
-	for _, agentProfile := range cs.Properties.AgentPoolProfiles {
-		if agentProfile.Distro == api.RHEL &&
-			(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
-			log.Printf("Orchestrator type %s not suported on RHEL Agent", cs.Properties.OrchestratorProfile.OrchestratorType)
-			return false
-		}
-	}
-	return true
 }
 
 // generateConsecutiveIPsList takes a starting IP address and returns a string slice of length "count" of subsequent, consecutive IP addresses
@@ -235,157 +211,6 @@ func makeWindowsExtensionScriptCommands(extension *api.Extension, extensionProfi
 	scriptFileDir := fmt.Sprintf("$env:SystemDrive:/AzureData/extensions/%s", extensionProfile.Name)
 	scriptFilePath := fmt.Sprintf("%s/%s", scriptFileDir, extensionProfile.Script)
 	return fmt.Sprintf("New-Item -ItemType Directory -Force -Path \"%s\" ; Invoke-WebRequest -Uri \"%s\" -OutFile \"%s\" ; powershell \"%s `\"',parameters('%sParameters'),'`\"\"\n", scriptFileDir, scriptURL, scriptFilePath, scriptFilePath, extensionProfile.Name)
-}
-
-func getDCOSWindowsAgentPreprovisionParameters(cs *api.ContainerService, profile *api.AgentPoolProfile) string {
-	extension := profile.PreprovisionExtension
-
-	var extensionProfile *api.ExtensionProfile
-
-	for _, eP := range cs.Properties.ExtensionProfiles {
-		if strings.EqualFold(eP.Name, extension.Name) {
-			extensionProfile = eP
-			break
-		}
-	}
-
-	parms := extensionProfile.ExtensionParameters
-	return parms
-}
-
-func getDCOSDefaultBootstrapInstallerURL(profile *api.OrchestratorProfile) string {
-	if profile.OrchestratorType == api.DCOS {
-		switch profile.OrchestratorVersion {
-		case common.DCOSVersion1Dot11Dot2:
-			return "https://dcos-mirror.azureedge.net/dcos-1-11-2/dcos_generate_config.sh"
-		case common.DCOSVersion1Dot11Dot0:
-			return "https://dcos-mirror.azureedge.net/dcos-1-11-0/dcos_generate_config.sh"
-		}
-	}
-	return ""
-}
-
-func getDCOSDefaultWindowsBootstrapInstallerURL(profile *api.OrchestratorProfile) string {
-	if profile.OrchestratorType == api.DCOS {
-		switch profile.OrchestratorVersion {
-		case common.DCOSVersion1Dot11Dot2:
-			return "https://dcos-mirror.azureedge.net/dcos-windows/1-11-2"
-		case common.DCOSVersion1Dot11Dot0:
-			return "https://dcos-mirror.azureedge.net/dcos-windows/1-11-0"
-		}
-	}
-	return ""
-}
-
-func getDCOSDefaultProviderPackageGUID(orchestratorType string, orchestratorVersion string, masterCount int) string {
-	if orchestratorType == api.DCOS {
-		switch orchestratorVersion {
-		case common.DCOSVersion1Dot10Dot0:
-			switch masterCount {
-			case 1:
-				return "c4ec6210f396b8e435177b82e3280a2cef0ce721"
-			case 3:
-				return "08197947cb57d479eddb077a429fa15c139d7d20"
-			case 5:
-				return "f286ad9d3641da5abb622e4a8781f73ecd8492fa"
-			}
-		case common.DCOSVersion1Dot9Dot0:
-			switch masterCount {
-			case 1:
-				return "bcc883b7a3191412cf41824bdee06c1142187a0b"
-			case 3:
-				return "dcff7e24c0c1827bebeb7f1a806f558054481b33"
-			case 5:
-				return "b41bfa84137a6374b2ff5eb1655364d7302bd257"
-			}
-		case common.DCOSVersion1Dot9Dot8:
-			switch masterCount {
-			case 1:
-				return "e8b0e3fc4a16394dc6dd5b19fc54bf1543bff429"
-			case 3:
-				return "2d36c3f570d9dd7d187c699f9a322ed9d95e7dfa"
-			case 5:
-				return "c03c9587f88929f310b80af4f448b7b51654f1c8"
-			}
-		case common.DCOSVersion1Dot8Dot8:
-			switch masterCount {
-			case 1:
-				return "441385ce2f5942df7e29075c12fb38fa5e92cbba"
-			case 3:
-				return "b1cd359287504efb780257bd12cc3a63704e42d4"
-			case 5:
-				return "d9b61156dfcc9383e014851529738aa550ef57d9"
-			}
-		}
-	}
-	return ""
-}
-
-func getDCOSDefaultRepositoryURL(orchestratorType string, orchestratorVersion string) string {
-	if orchestratorType == api.DCOS {
-		switch orchestratorVersion {
-		case common.DCOSVersion1Dot10Dot0:
-			return "https://dcosio.azureedge.net/dcos/stable/1.10.0"
-		case common.DCOSVersion1Dot9Dot8:
-			return "https://dcosio.azureedge.net/dcos/stable/1.9.8"
-		default:
-			return "https://dcosio.azureedge.net/dcos/stable"
-		}
-	}
-	return ""
-}
-
-func getDCOSMasterCustomNodeLabels() string {
-	// return empty string for DCOS since no attribtutes needed on master
-	return ""
-}
-
-func getDCOSAgentCustomNodeLabels(profile *api.AgentPoolProfile) string {
-	var buf bytes.Buffer
-	var attrstring string
-	buf.WriteString("")
-	// always write MESOS_ATTRIBUTES because
-	// the provision script will add FD/UD attributes
-	// at node provisioning time
-	if len(profile.OSType) > 0 {
-		attrstring = fmt.Sprintf("MESOS_ATTRIBUTES=\"os:%s", profile.OSType)
-	} else {
-		attrstring = fmt.Sprintf("MESOS_ATTRIBUTES=\"os:%s", api.Linux)
-	}
-
-	if len(profile.Ports) > 0 {
-		attrstring += ";public_ip:yes"
-	}
-
-	buf.WriteString(attrstring)
-	if len(profile.CustomNodeLabels) > 0 {
-		for k, v := range profile.CustomNodeLabels {
-			buf.WriteString(fmt.Sprintf(";%s:%s", k, v))
-		}
-	}
-	buf.WriteString("\"")
-	return buf.String()
-}
-
-func getDCOSWindowsAgentCustomAttributes(profile *api.AgentPoolProfile) string {
-	var buf bytes.Buffer
-	var attrstring string
-	buf.WriteString("")
-	if len(profile.OSType) > 0 {
-		attrstring = fmt.Sprintf("os:%s", profile.OSType)
-	} else {
-		attrstring = "os:windows"
-	}
-	if len(profile.Ports) > 0 {
-		attrstring += ";public_ip:yes"
-	}
-	buf.WriteString(attrstring)
-	if len(profile.CustomNodeLabels) > 0 {
-		for k, v := range profile.CustomNodeLabels {
-			buf.WriteString(fmt.Sprintf(";%s:%s", k, v))
-		}
-	}
-	return buf.String()
 }
 
 func getVNETAddressPrefixes(properties *api.Properties) string {
@@ -692,7 +517,7 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 			return cs.Properties.IsAzureStackCloud()
 		},
 		"IsKubernetesVersionGe": func(version string) bool {
-			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
+			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 	}
 	if component.Name == common.APIServerComponentName {
@@ -742,6 +567,9 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		},
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
+		},
+		"ContainerConfigBase64": func(name string) string {
+			return base64.StdEncoding.EncodeToString([]byte(addon.Config[name]))
 		},
 		"HasWindows": func() bool {
 			return cs.Properties.HasWindows()
@@ -811,6 +639,12 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"GetMode": func() string {
 			return addon.Mode
 		},
+		"GetClusterSubnet": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+		},
+		"IsAzureCNI": func() bool {
+			return cs.Properties.OrchestratorProfile.IsAzureCNI()
+		},
 	}
 }
 
@@ -853,19 +687,19 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 			return base64.StdEncoding.EncodeToString([]byte(cs.Properties.GetVMType()))
 		},
 		"GetVolumeMounts": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+			if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
 				return "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"
 			}
 			return ""
 		},
 		"GetVolumes": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+			if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
 				return "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"
 			}
 			return ""
 		},
 		"GetHostNetwork": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+			if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
 				return "\n      hostNetwork: true"
 			}
 			return ""
@@ -875,7 +709,7 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 			return cloudSpecConfig.CloudName
 		},
 		"UseManagedIdentity": func() string {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+			if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) {
 				return "true"
 			}
 			return "false"
@@ -989,58 +823,6 @@ func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 	return result
 }
 
-func getDCOSMasterProvisionScript(orchProfile *api.OrchestratorProfile, bootstrapIP string) string {
-	scriptname := dcos2Provision
-	if orchProfile.DcosConfig == nil || orchProfile.DcosConfig.BootstrapProfile == nil {
-		scriptname = dcosProvision
-	}
-
-	// add the provision script
-	bp, err := Asset(scriptname)
-	if err != nil {
-		panic(fmt.Sprintf("BUG: %s", err.Error()))
-	}
-
-	provisionScript := string(bp)
-	if strings.Contains(provisionScript, "'") {
-		panic(fmt.Sprintf("BUG: %s may not contain character '", scriptname))
-	}
-
-	// the embedded roleFileContents
-	roleFileContents := `touch /etc/mesosphere/roles/master
-touch /etc/mesosphere/roles/azure_master`
-	provisionScript = strings.Replace(provisionScript, "ROLESFILECONTENTS", roleFileContents, -1)
-	provisionScript = strings.Replace(provisionScript, "BOOTSTRAP_IP", bootstrapIP, -1)
-
-	var b bytes.Buffer
-	b.WriteString(provisionScript)
-	b.WriteString("\n")
-
-	return strings.Replace(strings.Replace(b.String(), "\r\n", "\n", -1), "\n", "\n\n    ", -1)
-}
-
-func buildYamlFileWithWriteFiles(files []string, cs *api.ContainerService) string {
-	clusterYamlFile := `#cloud-config
-
-write_files:
-%s
-`
-	writeFileBlock := ` -  encoding: gzip
-    content: !!binary |
-        %s
-    path: /opt/azure/containers/%s
-    permissions: "0744"
-`
-
-	filelines := ""
-	for _, file := range files {
-		b64GzipString := getBase64EncodedGzippedCustomScript(file, cs)
-		fileNoPath := strings.TrimPrefix(file, "swarm/")
-		filelines += fmt.Sprintf(writeFileBlock, b64GzipString, fileNoPath)
-	}
-	return fmt.Sprintf(clusterYamlFile, filelines)
-}
-
 func getKubernetesSubnets(properties *api.Properties) string {
 	subnetString := `{
             "name": "podCIDR%d",
@@ -1084,13 +866,9 @@ func getKubernetesPodStartIndex(properties *api.Properties) int {
 func getMasterLinkedTemplateText(orchestratorType string, extensionProfile *api.ExtensionProfile, singleOrAll string) (string, error) {
 	extTargetVMNamePrefix := "variables('masterVMNamePrefix')"
 
-	loopCount := "[variables('masterCount')]"
-	loopOffset := ""
-	if orchestratorType == api.Kubernetes {
-		// Due to upgrade k8s sometimes needs to install just some of the nodes.
-		loopCount = "[sub(variables('masterCount'), variables('masterOffset'))]"
-		loopOffset = "variables('masterOffset')"
-	}
+	// Due to upgrade k8s sometimes needs to install just some of the nodes.
+	loopCount := "[sub(variables('masterCount'), variables('masterOffset'))]"
+	loopOffset := "variables('masterOffset')"
 
 	if strings.EqualFold(singleOrAll, "single") {
 		loopCount = "1"
@@ -1230,10 +1008,6 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
-}
-
-func getSwarmVersions(orchestratorVersion, dockerComposeVersion string) string {
-	return fmt.Sprintf("\"orchestratorVersion\": \"%s\",\n\"dockerComposeVersion\": \"%s\",\n", orchestratorVersion, dockerComposeVersion)
 }
 
 func wrapAsVariableObject(o, v string) string {

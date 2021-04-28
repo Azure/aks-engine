@@ -5,22 +5,29 @@ package kubernetesupgrade
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	mock "github.com/Azure/aks-engine/pkg/kubernetes/mock_kubernetes"
 	. "github.com/Azure/aks-engine/pkg/test"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	logtest "github.com/sirupsen/logrus/hooks/test"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const TestAKSEngineVersion = "1.0.0"
@@ -49,13 +56,19 @@ func TestUpgradeCluster(t *testing.T) {
 }
 
 var _ = Describe("Upgrade Kubernetes cluster tests", func() {
+	defaultVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
+	versionSplit := strings.Split(defaultVersion, ".")
+	minorVersion, _ := strconv.Atoi(versionSplit[1])
+	minorVersionLessOne := minorVersion - 1
+	priorVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, versionSplit[0]+"."+strconv.Itoa(minorVersionLessOne), "", false, false, false)
+	mockK8sVersionOneLessThanDefault := fmt.Sprintf("Kubernetes:%s", priorVersion)
 	AfterEach(func() {
 		// delete temp template directory
 		os.RemoveAll("_output")
 	})
 
 	It("Should succeed when cluster VMs are missing expected tags during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -81,7 +94,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to list VMs during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -107,7 +120,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete VMs during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -130,7 +143,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to deploy template during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -153,7 +166,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to get a virtual machine during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 1, 6, false)
+		cs := api.CreateMockContainerService("testcluster", "", 1, 6, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -176,7 +189,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to get storage client during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 5, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "", 5, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -199,7 +212,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete network interface during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -222,9 +235,9 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete role assignment during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -256,7 +269,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		BeforeEach(func() {
 			mockClient = armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
-			cs = api.CreateMockContainerService("testcluster", "1.18.2", 3, 3, false)
+			cs = api.CreateMockContainerService("testcluster", "", 3, 3, false)
 			uc = UpgradeCluster{
 				Translator: &i18n.Translator{},
 				Logger:     log.NewEntry(log.New()),
@@ -285,10 +298,10 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should skip VMs that are already on desired version", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.18.2"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.18.1"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.18.0"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.18.2"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
 				}
 			}
 			uc.Force = false
@@ -356,17 +369,17 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should use kubernetes api to get node versions for VMSS when latest model is not applied", func() {
 			trueVar := true
 			falseVar := false
-			vmWithoutLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.18.2", "vmWithoutLatestModelApplied!")
+			vmWithoutLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName(fmt.Sprintf("Kubernetes:%s", defaultVersion), "vmWithoutLatestModelApplied!")
 			vmWithoutLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &falseVar
-			vmWithLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.18.2", "vmWithLatestModelApplied")
+			vmWithLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName(fmt.Sprintf("Kubernetes:%s", defaultVersion), "vmWithLatestModelApplied")
 			vmWithLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &trueVar
 
 			mockClient.MockKubernetesClient.GetNodeFunc = func(name string) (*v1.Node, error) {
 				node := &v1.Node{}
-				node.Status.NodeInfo.KubeletVersion = "v1.18.1"
+				node.Status.NodeInfo.KubeletVersion = "v" + mockK8sVersionOneLessThanDefault
 				node.Status = v1.NodeStatus{}
 				node.Status.NodeInfo = v1.NodeSystemInfo{
-					KubeletVersion: "v1.18.1",
+					KubeletVersion: "v" + mockK8sVersionOneLessThanDefault,
 				}
 
 				return node, nil
@@ -437,7 +450,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		BeforeEach(func() {
 			mockClient = armhelpers.MockAKSEngineClient{}
-			cs = api.CreateMockContainerService("testcluster", "1.17.5", 3, 3, false)
+			cs = api.CreateMockContainerService("testcluster", "", 3, 3, false)
 			uc = UpgradeCluster{
 				Translator: &i18n.Translator{},
 				Logger:     log.NewEntry(log.New()),
@@ -479,10 +492,10 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should mark scale sets as windows correctly.", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.17.5"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.17.4"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.17.2"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.17.5"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
 				}
 			}
 			uc.Force = false
@@ -591,7 +604,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should skip master VMS that are already on desired version", func() {
 			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
 				return []compute.VirtualMachine{
-					mockClient.MakeFakeVirtualMachine("k8s-master-12345678-0", "Kubernetes:1.9.10"),
+					mockClient.MakeFakeVirtualMachine(fmt.Sprintf("%s-12345678-0", common.LegacyControlPlaneVMPrefix), "Kubernetes:1.9.10"),
 				}
 			}
 			uc.Force = false
@@ -605,7 +618,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should not skip master VMS that are already on desired version when Force is true", func() {
 			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
 				return []compute.VirtualMachine{
-					mockClient.MakeFakeVirtualMachine("k8s-master-12345678-0", "Kubernetes:1.9.10"),
+					mockClient.MakeFakeVirtualMachine(fmt.Sprintf("%s-12345678-0", common.LegacyControlPlaneVMPrefix), "Kubernetes:1.9.10"),
 				}
 			}
 			uc.Force = true
@@ -616,9 +629,9 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(*uc.UpgradedMasterVMs).To(HaveLen(0))
 		})
 		It("Should leave platform fault domain count nil", func() {
-			cs := api.CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+			cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 			cs.Properties.MasterProfile.AvailabilityProfile = "AvailabilitySet"
 			uc := UpgradeCluster{
 				Translator: &i18n.Translator{},
@@ -646,12 +659,12 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should leave platform fault domain count nil for VMSS", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.16.1", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		cs.Properties.MasterProfile.AvailabilityProfile = api.AvailabilitySet
 		cs.Properties.AgentPoolProfiles[0].AvailabilityProfile = api.VirtualMachineScaleSets
 		cs.Properties.AgentPoolProfiles[0].StorageProfile = "ManagedDisks"
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -676,16 +689,16 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		//masters
 		mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
 			return []compute.VirtualMachine{
-				mockClient.MakeFakeVirtualMachine("one", "Kubernetes:1.15.1"),
-				mockClient.MakeFakeVirtualMachine("two", "Kubernetes:1.15.1"),
-				mockClient.MakeFakeVirtualMachine("three", "Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachine("one", fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+				mockClient.MakeFakeVirtualMachine("two", fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+				mockClient.MakeFakeVirtualMachine("three", fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
 			}
 		}
 		//agents
 		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 			return []compute.VirtualMachineScaleSetVM{
-				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.15.1"),
-				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+				mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
 			}
 		}
 		uc.Client = &mockClient
@@ -709,9 +722,9 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should not fail if no managed identity is returned by azure during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -732,7 +745,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should not fail if a Kubernetes client cannot be created", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -766,7 +779,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should fail if cluster-autoscaler cannot be paused unless --force is specified", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		enabled := true
 		addon := api.KubernetesAddon{
 			Name:    "cluster-autoscaler",
@@ -818,7 +831,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should pause cluster-autoscaler during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.17.5", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		enabled := true
 		addon := api.KubernetesAddon{
 			Name:    "cluster-autoscaler",
@@ -863,7 +876,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should not pause cluster-autoscaler if only control plane is upgraded", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.17.5", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
 		enabled := true
 		addon := api.KubernetesAddon{
 			Name:    "cluster-autoscaler",
@@ -1070,3 +1083,236 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		Expect(len(newNode.Spec.Taints)).To(Equal(2))
 	})
 })
+
+func TestCheckControlPlaneNodesStatus(t *testing.T) {
+	t.Parallel()
+	g := NewGomegaWithT(t)
+
+	statusByName := func(name string) v1.NodeCondition {
+		if strings.HasPrefix(name, "ok") {
+			return v1.NodeCondition{
+				Type:   v1.NodeReady,
+				Status: v1.ConditionTrue,
+			}
+		}
+		return v1.NodeCondition{
+			Type:   v1.NodeReady,
+			Status: v1.ConditionFalse,
+		}
+	}
+	nodeList := func(names ...string) *v1.NodeList {
+		nodes := make([]v1.Node, 0)
+		for _, name := range names {
+			node := v1.Node{}
+			node.Name = name
+			node.Status.Conditions = []v1.NodeCondition{statusByName(name)}
+			nodes = append(nodes, node)
+		}
+		return &v1.NodeList{Items: nodes}
+	}
+	upgradedVMs := func(names ...string) *[]compute.VirtualMachine {
+		vms := make([]compute.VirtualMachine, 0)
+		for _, name := range names {
+			var n string = name
+			vm := compute.VirtualMachine{}
+			vm.Name = &n
+			vms = append(vms, vm)
+		}
+		return &vms
+	}
+	upgradedNotReadyStream := func(nodes []string) <-chan []string {
+		stream := make(chan []string)
+		go func() {
+			defer close(stream)
+			time.Sleep(1 * time.Second)
+			stream <- nodes
+		}()
+		return stream
+	}
+	errAPIGeneric := errors.New("error")
+
+	t.Run("cannot fetch node status", func(t *testing.T) {
+		allnodes := []string{}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), errAPIGeneric).Times(1)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
+		g.Expect(res).To(BeNil())
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("timeout, use last value", func(t *testing.T) {
+		upgradedNodes := []string{"nok1"}
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+		defer cancel()
+		err := uc.checkControlPlaneNodesStatus(ctx, upgradedNotReadyStream(upgradedNodes))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("all nodes ready, no node upgraded", func(t *testing.T) {
+		allnodes := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
+		g.Expect(res).To(BeEmpty())
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("upgraded nodes ready, not upgraded nodes not ready", func(t *testing.T) {
+		allnodes := []string{"ok1", "ok2", "nok3", "nok4", "nok5"}
+		upgradedNodes := []string{"ok1", "ok2"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
+		g.Expect(res).To(BeEmpty())
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("1 upgraded node not ready", func(t *testing.T) {
+		allnodes := []string{"nok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
+		g.Expect(res).To(Equal([]string{"nok1"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
+		g.Expect(err).NotTo(HaveOccurred())
+	})
+
+	t.Run("more than 1 upgraded node not ready, return error", func(t *testing.T) {
+		allnodes := []string{"nok1", "nok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1", "nok2"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
+		g.Expect(res).To(Equal([]string{"nok1", "nok2"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("more than 1 alternated upgraded node not ready, return error", func(t *testing.T) {
+		allnodes := []string{"nok1", "ok2", "nok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1", "ok2", "nok3"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
+		g.Expect(res).To(Equal([]string{"nok1", "nok3"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("all upgraded nodes not ready", func(t *testing.T) {
+		allnodes := []string{"nok1", "nok2", "nok3", "nok4", "nok5"}
+		upgradedNodes := []string{"nok1", "nok2", "nok3", "nok4", "nok5"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil).Times(1)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		res, err := uc.getUpgradedNotReady(mock, upgradedNodes)
+		g.Expect(res).To(Equal([]string{"nok1", "nok2", "nok3", "nok4", "nok5"}))
+		g.Expect(err).NotTo(HaveOccurred())
+
+		err = uc.checkControlPlaneNodesStatus(context.Background(), upgradedNotReadyStream(res))
+		g.Expect(err).To(HaveOccurred())
+	})
+
+	t.Run("retry client.ListNodes after API error", func(t *testing.T) {
+		allnodes := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		gomock.InOrder(
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList([]string{}...), errAPIGeneric),
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+		)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		for range uc.upgradedNotReadyStream(mock, wait.Backoff{Steps: 2, Duration: 500 * time.Millisecond}) {
+		}
+	})
+
+	t.Run("retry client.ListNodes until backoff", func(t *testing.T) {
+		allnodes := []string{"nok1", "nok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{"nok1", "nok2"}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		gomock.InOrder(
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+		)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		for range uc.upgradedNotReadyStream(mock, wait.Backoff{Steps: 2, Duration: 500 * time.Millisecond}) {
+		}
+	})
+
+	t.Run("do not retry if no NotReady", func(t *testing.T) {
+		allnodes := []string{"ok1", "ok2", "ok3", "ok4", "ok5"}
+		upgradedNodes := []string{}
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		mock := mock.NewMockClient(mockCtrl)
+		gomock.InOrder(
+			mock.EXPECT().ListNodesByOptions(gomock.Any()).Return(nodeList(allnodes...), nil),
+		)
+
+		uc := &UpgradeCluster{Logger: log.NewEntry(log.New())}
+		uc.UpgradedMasterVMs = upgradedVMs(upgradedNodes...)
+		for range uc.upgradedNotReadyStream(mock, wait.Backoff{Steps: 1, Duration: 500 * time.Millisecond}) {
+		}
+	})
+}

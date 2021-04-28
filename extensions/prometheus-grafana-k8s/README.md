@@ -7,9 +7,6 @@ This is the prometheus-grafana extension.  Add this extension to the API model y
 {
   "apiVersion": "vlabs",
   "properties": {
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
@@ -44,11 +41,7 @@ This is the prometheus-grafana extension.  Add this extension to the API model y
         "version": "v1",
         "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
       }
-    ],
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
+    ]
   }
 }
 ```

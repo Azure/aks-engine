@@ -28,45 +28,63 @@ import (
 
 // Config represents the configuration values of a template stored as env vars
 type Config struct {
-	ClientID                       string `envconfig:"CLIENT_ID" required:"true"`
-	ClientSecret                   string `envconfig:"CLIENT_SECRET" required:"true"`
-	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID" default:""`
-	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY" default:""`
-	MasterDNSPrefix                string `envconfig:"DNS_PREFIX" default:""`
-	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX" default:""`
-	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
-	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY" default:""`
-	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
-	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
-	WindowsNodeImageName           string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
-	WindowsNodeImageResourceGroup  string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
-	WindowsNodeImageSubscriptionID string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
-	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" default:""`
-	WindowsNodeVhdURL              string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
-	LinuxNodeImageGallery          string `envconfig:"LINUX_NODE_IMAGE_GALLERY" default:""`
-	LinuxNodeImageName             string `envconfig:"LINUX_NODE_IMAGE_NAME" default:""`
-	LinuxNodeImageResourceGroup    string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
-	LinuxNodeImageSubscriptionID   string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
-	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
-	OSDiskSizeGB                   string `envconfig:"OS_DISK_SIZE_GB" default:""`
-	ContainerRuntime               string `envconfig:"CONTAINER_RUNTIME" default:""`
-	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE" default:""`
-	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION" default:""`
-	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
-	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
-	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
-	Distro                         string `envconfig:"DISTRO" default:""`
-	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID" required:"true"`
-	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP" default:""`
-	Location                       string `envconfig:"LOCATION" default:""`
-	TenantID                       string `envconfig:"TENANT_ID" required:"true"`
-	ImageName                      string `envconfig:"IMAGE_NAME" default:""`
-	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP" default:""`
-	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
-	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE" default:""`
-	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
-	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
-	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
+	ClientID                         string `envconfig:"CLIENT_ID" required:"true"`
+	ClientSecret                     string `envconfig:"CLIENT_SECRET" required:"true"`
+	ClientObjectID                   string `envconfig:"CLIENT_OBJECTID" default:""`
+	LogAnalyticsWorkspaceKey         string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY" default:""`
+	MasterDNSPrefix                  string `envconfig:"DNS_PREFIX" default:""`
+	AgentDNSPrefix                   string `envconfig:"DNS_PREFIX" default:""`
+	MSIUserAssignedID                string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
+	UseManagedIdentity               bool   `envconfig:"USE_MANAGED_IDENTITY" default:"true"`
+	PublicSSHKey                     string `envconfig:"PUBLIC_SSH_KEY" default:""`
+	WindowsAdminPasssword            string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
+	WindowsNodeImageGallery          string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
+	WindowsNodeImageName             string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
+	WindowsNodeImageResourceGroup    string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	WindowsNodeImageSubscriptionID   string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	WindowsNodeImageVersion          string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" default:""`
+	WindowsNodeVhdURL                string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
+	LinuxNodeImageGallery            string `envconfig:"LINUX_NODE_IMAGE_GALLERY" default:""`
+	LinuxNodeImageName               string `envconfig:"LINUX_NODE_IMAGE_NAME" default:""`
+	LinuxNodeImageResourceGroup      string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	LinuxNodeImageSubscriptionID     string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	LinuxNodeImageVersion            string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
+	OSDiskSizeGB                     string `envconfig:"OS_DISK_SIZE_GB" default:""`
+	ContainerRuntime                 string `envconfig:"CONTAINER_RUNTIME" default:""`
+	OrchestratorRelease              string `envconfig:"ORCHESTRATOR_RELEASE" default:""`
+	OrchestratorVersion              string `envconfig:"ORCHESTRATOR_VERSION" default:""`
+	OutputDirectory                  string `envconfig:"OUTPUT_DIR" default:"_output"`
+	CreateVNET                       bool   `envconfig:"CREATE_VNET" default:"false"`
+	EnableKMSEncryption              bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
+	Distro                           string `envconfig:"DISTRO" default:""`
+	SubscriptionID                   string `envconfig:"SUBSCRIPTION_ID" required:"true"`
+	InfraResourceGroup               string `envconfig:"INFRA_RESOURCE_GROUP" default:""`
+	Location                         string `envconfig:"LOCATION" default:""`
+	TenantID                         string `envconfig:"TENANT_ID" required:"true"`
+	ImageName                        string `envconfig:"IMAGE_NAME" default:""`
+	ImageResourceGroup               string `envconfig:"IMAGE_RESOURCE_GROUP" default:""`
+	DebugCrashingPods                bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
+	CustomHyperKubeImage             string `envconfig:"CUSTOM_HYPERKUBE_IMAGE" default:""`
+	CustomKubeProxyImage             string `envconfig:"CUSTOM_KUBE_PROXY_IMAGE" default:""`
+	CustomKubeAPIServerImage         string `envconfig:"CUSTOM_KUBE_APISERVER_IMAGE" default:""`
+	CustomKubeSchedulerImage         string `envconfig:"CUSTOM_KUBE_SCHEDULER_IMAGE" default:""`
+	CustomKubeControllerManagerImage string `envconfig:"CUSTOM_KUBE_CONTROLLER_MANAGER_IMAGE" default:""`
+	CustomKubeBinaryURL              string `envconfig:"CUSTOM_KUBE_BINARY_URL" default:""`
+	CustomWindowsPackageURL          string `envconfig:"CUSTOM_WINDOWS_PACKAGE_URL" default:""`
+	EnableTelemetry                  bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
+	KubernetesImageBase              string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
+	KubernetesImageBaseType          string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
+	LinuxContainerdURL               string `envconfig:"LINUX_CONTAINERD_URL"`
+	WindowsContainerdURL             string `envconfig:"WINDOWS_CONTAINERD_URL"`
+	LinuxMobyURL                     string `envconfig:"LINUX_MOBY_URL"`
+	WindowsProvisioningScriptsURL    string `envconfig:"WINDOWS_PROVISIONING_SCRIPTS_URL" default:""`
+	ArcClientID                      string `envconfig:"ARC_CLIENT_ID" default:""`
+	ArcClientSecret                  string `envconfig:"ARC_CLIENT_SECRET" default:""`
+	ArcSubscriptionID                string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
+	ArcLocation                      string `envconfig:"ARC_LOCATION" default:""`
+	ArcTenantID                      string `envconfig:"ARC_TENANT_ID" default:""`
+	RunVMSSNodePrototype             bool   `envconfig:"RUN_VMSS_NODE_PROTOTYPE" default:"false"`
+	Eth0MTU                          int    `envconfig:"ETH0_MTU"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -123,8 +141,29 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	if prop.HasWindows() {
 		hasWindows = true
 	}
+	var isAzureStackCloud bool
+	if prop.IsAzureStackCloud() {
+		isAzureStackCloud = true
+	}
 
-	if config.ClientID != "" && config.ClientSecret != "" {
+	if prop.OrchestratorProfile == nil {
+		prop.OrchestratorProfile = &vlabs.OrchestratorProfile{
+			KubernetesConfig: &vlabs.KubernetesConfig{},
+		}
+	} else if prop.OrchestratorProfile.KubernetesConfig == nil {
+		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	}
+
+	if config.MSIUserAssignedID != "" {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
+		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
+	}
+
+	if prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity == nil && !prop.IsAzureStackCloud() {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(config.UseManagedIdentity)
+	}
+
+	if config.ClientID != "" && config.ClientSecret != "" && !(prop.OrchestratorProfile.KubernetesConfig != nil && to.Bool(prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity)) {
 		if !prop.IsAzureStackCloud() {
 			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{
 				ClientID: config.ClientID,
@@ -137,22 +176,16 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		prop.MasterProfile.DNSPrefix = config.MasterDNSPrefix
 	}
 
-	if !cfg.IsKubernetes() && config.AgentDNSPrefix != "" {
-		for idx, pool := range prop.AgentPoolProfiles {
-			pool.DNSPrefix = fmt.Sprintf("%v-%v", config.AgentDNSPrefix, idx)
-		}
-	}
-
-	if prop.OrchestratorProfile.KubernetesConfig == nil {
-		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
-	}
-
 	if prop.LinuxProfile != nil {
 		if config.PublicSSHKey != "" {
 			prop.LinuxProfile.SSH.PublicKeys[0].KeyData = config.PublicSSHKey
 			if prop.OrchestratorProfile.KubernetesConfig != nil && prop.OrchestratorProfile.KubernetesConfig.PrivateCluster != nil && prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile != nil {
 				prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.PublicKey = config.PublicSSHKey
 			}
+		}
+		if config.RunVMSSNodePrototype {
+			// In order to better determine the time it takes for nodes to come online let's eliminate any VM reboot considerations
+			prop.LinuxProfile.RunUnattendedUpgradesOnBootstrap = to.BoolPtr((false))
 		}
 	}
 
@@ -184,6 +217,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		log.Printf("Windows nodes will use image reference name:%s, rg:%s, sub:%s, gallery:%s, version:%s for test pass", config.WindowsNodeImageName, config.WindowsNodeImageResourceGroup, config.WindowsNodeImageSubscriptionID, config.WindowsNodeImageGallery, config.WindowsNodeImageVersion)
 	}
 
+	if config.WindowsProvisioningScriptsURL != "" {
+		prop.WindowsProfile.ProvisioningScriptsPackageURL = config.WindowsProvisioningScriptsURL
+		log.Printf("Windows nodes will use provisioning scripts from: %s", config.WindowsProvisioningScriptsURL)
+	}
+
 	if config.LinuxNodeImageName != "" && config.LinuxNodeImageResourceGroup != "" {
 		prop.MasterProfile.ImageRef = &vlabs.ImageReference{
 			Name:          config.LinuxNodeImageName,
@@ -213,14 +251,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			}
 		}
 	}
-
-	if config.ContainerRuntime == "containerd" &&
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" &&
-		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
-		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip"
-		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
-	}
-
+	
 	if config.ContainerRuntime != "" {
 		prop.OrchestratorProfile.KubernetesConfig.ContainerRuntime = config.ContainerRuntime
 	}
@@ -236,7 +267,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
 			// If ENV similarly has no version opinion, we will rely upon the aks-engine default
 		} else {
-			prop.OrchestratorProfile.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows)
+			prop.OrchestratorProfile.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows, isAzureStackCloud)
 		}
 	}
 
@@ -255,12 +286,17 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
-	if config.EnableKMSEncryption && config.ClientObjectID != "" {
-		if prop.OrchestratorProfile.KubernetesConfig == nil {
-			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	if config.ClientObjectID != "" {
+		if prop.ServicePrincipalProfile == nil {
+			prop.ServicePrincipalProfile = &vlabs.ServicePrincipalProfile{}
 		}
+		if prop.ServicePrincipalProfile.ObjectID == "" {
+			prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
+		}
+	}
+
+	if config.EnableKMSEncryption && prop.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms == nil {
 		prop.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = &config.EnableKMSEncryption
-		prop.ServicePrincipalProfile.ObjectID = config.ClientObjectID
 	}
 
 	var version string
@@ -273,10 +309,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		if prop.OrchestratorProfile.KubernetesConfig == nil {
 			prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 		}
-		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{
-			"--horizontal-pod-autoscaler-downscale-stabilization":   "30s",
-			"--horizontal-pod-autoscaler-cpu-initialization-period": "30s",
+		if prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig == nil {
+			prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig = map[string]string{}
 		}
+		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["--horizontal-pod-autoscaler-downscale-stabilization"] = "30s"
+		prop.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig["--horizontal-pod-autoscaler-cpu-initialization-period"] = "30s"
 	}
 
 	if config.LogAnalyticsWorkspaceKey != "" && len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
@@ -291,8 +328,80 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
+	if len(prop.OrchestratorProfile.KubernetesConfig.Addons) > 0 {
+		for _, addon := range prop.OrchestratorProfile.KubernetesConfig.Addons {
+			if addon.Name == common.AzureArcOnboardingAddonName && to.Bool(addon.Enabled) {
+				if addon.Config == nil {
+					addon.Config = make(map[string]string)
+				}
+				if addon.Config["tenantID"] == "" {
+					if config.ArcTenantID != "" {
+						addon.Config["tenantID"] = config.ArcTenantID
+					} else {
+						addon.Config["tenantID"] = config.TenantID
+					}
+				}
+				if addon.Config["subscriptionID"] == "" {
+					if config.ArcSubscriptionID != "" {
+						addon.Config["subscriptionID"] = config.ArcSubscriptionID
+					} else {
+						addon.Config["subscriptionID"] = config.SubscriptionID
+					}
+				}
+				if addon.Config["clientID"] == "" {
+					if config.ArcClientID != "" {
+						addon.Config["clientID"] = config.ArcClientID
+					} else {
+						addon.Config["clientID"] = config.ClientID
+					}
+				}
+				if addon.Config["clientSecret"] == "" {
+					if config.ArcClientSecret != "" {
+						addon.Config["clientSecret"] = config.ArcClientSecret
+					} else {
+						addon.Config["clientSecret"] = config.ClientSecret
+					}
+				}
+				if addon.Config["location"] == "" {
+					if config.ArcLocation != "" {
+						addon.Config["location"] = config.ArcLocation
+					} else {
+						addon.Config["location"] = "eastus"
+					}
+				}
+				addon.Config["clusterName"] = cfg.Name
+				addon.Config["resourceGroup"] = fmt.Sprintf("%s-arc", cfg.Name) // set to config.Name once Arc is supported in all regions
+				break
+			}
+		}
+	}
+
 	if config.CustomHyperKubeImage != "" {
 		prop.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = config.CustomHyperKubeImage
+	}
+
+	if config.CustomKubeProxyImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = config.CustomKubeProxyImage
+	}
+
+	if config.CustomKubeAPIServerImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeAPIServerImage = config.CustomKubeAPIServerImage
+	}
+
+	if config.CustomKubeSchedulerImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = config.CustomKubeSchedulerImage
+	}
+
+	if config.CustomKubeControllerManagerImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = config.CustomKubeControllerManagerImage
+	}
+
+	if config.CustomKubeBinaryURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeBinaryURL = config.CustomKubeBinaryURL
+	}
+
+	if config.CustomWindowsPackageURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL = config.CustomWindowsPackageURL
 	}
 
 	if config.EnableTelemetry == true {
@@ -324,9 +433,23 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
-	if config.MSIUserAssignedID != "" {
-		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
+	if config.LinuxContainerdURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.LinuxContainerdURL = config.LinuxContainerdURL
+	}
+
+	if config.WindowsContainerdURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = config.WindowsContainerdURL
+	}
+
+	if config.LinuxMobyURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.LinuxMobyURL = config.LinuxMobyURL
+	}
+
+	if config.Eth0MTU != 0 {
+		if prop.LinuxProfile == nil {
+			prop.LinuxProfile = &vlabs.LinuxProfile{}
+		}
+		prop.LinuxProfile.Eth0MTU = config.Eth0MTU
 	}
 
 	return &Engine{
@@ -375,6 +498,9 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 	// tip: curl -L https://mcr.microsoft.com/v2/windows/servercore/tags/list
 	//      curl -L https://mcr.microsoft.com/v2/windows/servercore/iis/tags/list
 	switch {
+	case strings.Contains(windowsSku, "2004"):
+		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-2004",
+			ServerCore: "mcr.microsoft.com/windows/servercore:2004"}, nil
 	case strings.Contains(windowsSku, "1909"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1909",
 			ServerCore: "mcr.microsoft.com/windows/servercore:1909"}, nil
@@ -385,8 +511,7 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:20191112-windowsservercore-ltsc2019",
 			ServerCore: "mcr.microsoft.com/windows/servercore:ltsc2019"}, nil
 	case strings.Contains(windowsSku, "1803"):
-		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1803",
-			ServerCore: "mcr.microsoft.com/windows/servercore:1803"}, nil
+		return nil, errors.New("Windows Server version 1803 is out of support")
 	case strings.Contains(windowsSku, "1709"):
 		return nil, errors.New("Windows Server version 1709 is out of support")
 	}
@@ -406,6 +531,11 @@ func (e *Engine) HasAddon(name string) (bool, api.KubernetesAddon) {
 // HasNetworkPolicy will return true if the specified network policy is enabled
 func (e *Engine) HasNetworkPolicy(name string) bool {
 	return strings.Contains(e.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy, name)
+}
+
+// HasNetworkPolicy will return true if the specified network policy is enabled
+func (e *Engine) HasNetworkPlugin(name string) bool {
+	return strings.Contains(e.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, name)
 }
 
 // Write will write the cluster definition to disk

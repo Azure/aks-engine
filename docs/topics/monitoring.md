@@ -51,49 +51,7 @@ metrics-server-bb7db87bc-nm6vn                  1m           12Mi
 
 The [Kubernetes Dashboard][kubernetes-dashboard] is a web-based user interface that can visualize cluster metrics.
 
-The Dashboard addon is not enabled by default for an AKS Engine cluster. You must enable it before creating a cluster, as shown in this partial cluster configuration:
-
-```json
-"orchestratorProfile": {
-  "orchestratorType": "Kubernetes",
-  "kubernetesConfig": {
-    "addons": [
-      {
-        "name": "kubernetes-dashboard",
-        "enabled": true
-      }
-    ]
-  }
-```
-
-To verify that the Kubernetes Dashboard is running in your cluster:
-
-```shell
-$ kubectl get pods --namespace=kubernetes-dashboard
-NAME                                         READY   STATUS    RESTARTS   AGE
-dashboard-metrics-scraper-7bdfbb4477-7mhc8   1/1     Running   0          18h
-kubernetes-dashboard-b597987c-rr7bf          1/1     Running   0          18h
-```
-
-Accessing the Dashboard requires a Bearer Token. To create a token for demonstration purposes, you can follow the Kubernetes documentation on [creating-a-sample-user][].
-
-> WARNING: The sample user created in the tutorial above will have administrative privileges and is for demonstration purposes only.
-
-In a terminal window, create a command-line proxy to your cluster with this command:
-
-```shell
-kubectl proxy
-```
-
-This will make Dashboard available at http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/.
-
-Open that URL in a web browser on the same machine that's running `kubectl proxy`, and paste your token into the login screen when requested.
-
-After authenticating, you can explore node metrics under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
-
-![Image of Kubernetes dashboard](../static/img/k8s-monitoring-dashboard.png)
-
-For more information about accessing the Dashboard, see the Kubernetes documentation on [web UI (dashboard)][web-ui-dashboard].
+Describing all of the useful ways to use the dashboard project is out of scope of this documentation. See [here](https://github.com/kubernetes/dashboard) to learn more.
 
 ## Azure Monitor for containers
 

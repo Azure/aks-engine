@@ -1,9 +1,6 @@
 {
   "apiVersion": "vlabs",
   "properties": {
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
@@ -22,9 +19,9 @@
       "adminUsername": "azureuser",
       "adminPassword": "replacepassword1234$",
       "windowsPublisher": "MicrosoftWindowsServer",
-      "windowsOffer": "WindowsServerSemiAnnual",
-      "windowsSku": "Datacenter-Core-1803-with-Containers-smalldisk",
-      "imageVersion": "1803.0.20181017"
+      "windowsOffer": "WindowsServer",
+      "windowsSku": "2019-Datacenter-Core-with-Containers-smalldisk",
+      "imageVersion": "17763.1282.2006061953"
     },
     "linuxProfile": {
       "adminUsername": "azureuser",
@@ -35,10 +32,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

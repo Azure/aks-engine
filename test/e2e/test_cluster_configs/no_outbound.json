@@ -1,14 +1,11 @@
 {
 	"env": {},
 	"options": {
-		"allowedOrchestratorVersions": ["1.15", "1.16", "1.17", "1.18"]
+		"allowedOrchestratorVersions": ["1.17", "1.18", "1.19", "1.20", "1.21"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
-			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
-			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
@@ -55,10 +52,6 @@
 			},
 			"featureFlags": {
 				"BlockOutboundInternet": true
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	}

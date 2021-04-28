@@ -104,6 +104,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "4h",
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
+		"--healthz-port":                      DefaultKubeletHealthzPort,
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS or
@@ -125,9 +126,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
 		// for enabling metrics-server v0.3.0+
 		defaultKubeletConfig["--authentication-token-webhook"] = "true"
-		if !cs.Properties.IsHostedMasterProfile() { // Skip for AKS until it supports metrics-server v0.3
-			defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
-		}
+		defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
 	}
 
 	if o.KubernetesConfig.NeedsContainerd() {
@@ -138,7 +137,13 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
+	if isUpgrade {
+		// if upgrade, force default "--pod-infra-container-image" value
+		o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = defaultKubeletConfig["--pod-infra-container-image"]
+	}
+
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
+	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.20.0-rc.0", "ExecProbeTimeout=false")
 
 	// Override default cloud-provider?
 	if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
@@ -178,7 +183,13 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	if cs.Properties.MasterProfile != nil {
 		if cs.Properties.MasterProfile.KubernetesConfig == nil {
 			cs.Properties.MasterProfile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig == nil {
 			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig = make(map[string]string)
+		}
+		if isUpgrade {
+			// if upgrade, force default "--pod-infra-container-image" value
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
 		}
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
@@ -223,7 +234,14 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	for _, profile := range cs.Properties.AgentPoolProfiles {
 		if profile.KubernetesConfig == nil {
 			profile.KubernetesConfig = &KubernetesConfig{}
+		}
+		if profile.KubernetesConfig.KubeletConfig == nil {
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
+		}
+
+		if isUpgrade {
+			// if upgrade, force default "--pod-infra-container-image" value
+			profile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
 		}
 
 		if profile.IsWindows() {

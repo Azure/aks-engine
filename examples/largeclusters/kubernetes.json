@@ -2,8 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.15",
       "kubernetesConfig": {
         "cloudProviderBackoff": true,
         "cloudProviderBackoffRetries": 6,
@@ -69,10 +67,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

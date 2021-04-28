@@ -1,11 +1,3 @@
-{{if IsHostedMaster}}
-    "kubernetesEndpoint": {
-      "metadata": {
-        "description": "The Kubernetes API endpoint https://<kubernetesEndpoint>:443"
-      },
-      "type": "string"
-    },
-{{else}}
     "etcdServerCertificate": {
       "metadata": {
         "description": "The base 64 server certificate used on the master"
@@ -94,7 +86,6 @@
         },
       {{end}}
     {{end}}
-{{end}}
     "apiServerCertificate": {
       "metadata": {
         "description": "The base 64 server certificate used on the master"
@@ -198,12 +189,6 @@
       "type": "bool"
     },
 {{end}}
-    "kubernetesACIConnectorEnabled": {
-      "metadata": {
-        "description": "ACI Connector Status"
-      },
-      "type": "bool"
-    },
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {
@@ -222,7 +207,7 @@
       }
     },
     "mobyVersion": {
-      "defaultValue": "3.0.12",
+      "defaultValue": "19.03.14",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -237,17 +222,29 @@
          "3.0.8",
          "3.0.10",
          "3.0.11",
-         "3.0.12"
+         "3.0.12",
+         "3.0.13",
+         "19.03.11",
+         "19.03.12",
+         "19.03.13",
+         "19.03.14"
        ],
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.3.2",
+      "defaultValue": "1.3.9",
       "metadata": {
         "description": "The Azure Moby build version"
       },
       "allowedValues": [
-         "1.3.2"
+         "1.3.2",
+         "1.3.3",
+         "1.3.4",
+         "1.3.5",
+         "1.3.6",
+         "1.3.7",
+         "1.3.8",
+         "1.3.9"
        ],
       "type": "string"
     },
@@ -355,19 +352,6 @@
       "type": "int"
     },
 {{ if not UseManagedIdentity }}
-    "servicePrincipalClientId": {
-      "metadata": {
-        "description": "Client ID (used by cloudprovider)"
-      },
-      "type": "securestring"
-    },
-    "servicePrincipalClientSecret": {
-      "metadata": {
-        "description": "The Service Principal Client Secret."
-      },
-      "type": "securestring"
-    },
-{{ else if and UseManagedIdentity IsHostedMaster}}
     "servicePrincipalClientId": {
       "metadata": {
         "description": "Client ID (used by cloudprovider)"
@@ -489,15 +473,6 @@
          "description": "SKU for the key vault used by the cluster"
        }
      }
- {{end}}
- {{if IsAzureCNI}}
-    ,"AzureCNINetworkMonitorImageURL": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Azure CNI networkmonitor Image URL"
-      },
-      "type": "string"
-    }
  {{end}}
  {{if .OrchestratorProfile.KubernetesConfig.IsAppGWIngressEnabled}}
     ,"appGwSubnet": {

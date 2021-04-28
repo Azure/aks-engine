@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestCreateKeyVault(t *testing.T) {
@@ -52,7 +53,7 @@ func TestCreateKeyVault(t *testing.T) {
 	}
 
 	//Test with UseManagedIdentityEnabled
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 
 	actual = CreateKeyVaultVMAS(cs)
 
@@ -87,7 +88,7 @@ func TestCreateKeyVault(t *testing.T) {
 	}
 
 	//Test with UserAssignedID
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooID"
 
 	actual = CreateKeyVaultVMAS(cs)
@@ -164,7 +165,7 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 	}
 
 	//Test with UseManagedIdentityEnabled
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 
 	actual = CreateKeyVaultVMSS(cs)
 
@@ -199,7 +200,7 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 	}
 
 	//Test with UserAssignedID
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooID"
 
 	actual = CreateKeyVaultVMSS(cs)
@@ -229,6 +230,69 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 				"name":   "[parameters('clusterKeyVaultSku')]",
 			},
 			"tenantId": "[variables('tenantID')]"},
+	}
+
+	if diff := cmp.Diff(actual, expected); diff != "" {
+		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
+	}
+}
+
+func TestCreateKeyVaultKey(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			OrchestratorProfile: &api.OrchestratorProfile{
+				KubernetesConfig: &api.KubernetesConfig{},
+			},
+			MasterProfile: &api.MasterProfile{
+				Count: 1,
+			},
+		},
+	}
+
+	actual := CreateKeyVaultKey(cs)
+
+	expected := map[string]interface{}{
+		"type":       "Microsoft.KeyVault/vaults/keys",
+		"name":       "[concat(variables('clusterKeyVaultName'), '/', 'k8s')]",
+		"apiVersion": "[variables('apiVersionKeyVault')]",
+		"location":   "[variables('location')]",
+		"dependsOn": []string{
+			"[resourceId('Microsoft.KeyVault/vaults', variables('clusterKeyVaultName'))]",
+		},
+		"properties": map[string]interface{}{
+			"kty": "RSA",
+			"keyOps": []string{
+				"encrypt",
+				"decrypt",
+			},
+			"keySize": 2048,
+		},
+	}
+
+	if diff := cmp.Diff(actual, expected); diff != "" {
+		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
+	}
+
+	// premium keyvault sku
+	cs.Properties.OrchestratorProfile.KubernetesConfig.KeyVaultSku = "premium"
+	actual = CreateKeyVaultKey(cs)
+
+	expected = map[string]interface{}{
+		"type":       "Microsoft.KeyVault/vaults/keys",
+		"name":       "[concat(variables('clusterKeyVaultName'), '/', 'k8s')]",
+		"apiVersion": "[variables('apiVersionKeyVault')]",
+		"location":   "[variables('location')]",
+		"dependsOn": []string{
+			"[resourceId('Microsoft.KeyVault/vaults', variables('clusterKeyVaultName'))]",
+		},
+		"properties": map[string]interface{}{
+			"kty": "RSA-HSM",
+			"keyOps": []string{
+				"encrypt",
+				"decrypt",
+			},
+			"keySize": 2048,
+		},
 	}
 
 	if diff := cmp.Diff(actual, expected); diff != "" {

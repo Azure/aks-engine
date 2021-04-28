@@ -53,7 +53,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: EnsureExists
 ---
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kube-dns
@@ -78,11 +78,6 @@ spec:
     metadata:
       labels:
         k8s-app: kube-dns
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
-{{- end}}
     spec:
       priorityClassName: system-node-critical
       tolerations:

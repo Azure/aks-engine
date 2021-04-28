@@ -6,21 +6,81 @@ This walkthrough is to help you get start with Azure Active Directory(AAD) integ
 
 Please also refer to [Azure Active Directory plugin for client authentication](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/plugin/pkg/client/auth/azure/README.md) in Kubernetes repo for more details about OpenID Connect and AAD support in upstream.
 
+## Azure Active Directory and Kubernetes
+AAD on Kubernetes allows administrators to give users access to the cluster by using the Azure active directory. Users with access to the client group or client service principal will be able to login to the cluster using their Azure credentials and gain access to the cluster. Note however that the user privileges are assigned based on Kubernetes cluster roles. This feature works on clusters deployed on both Azure and Azure Stack Hub. 
+
 ## Prerequisites
 1. An Azure Active Directory tenant, referred to as `AAD Tenant`. You can use the tenant for your Azure subscription;
-2. A `Web app / API` type AAD application, referred to as `Server Application`. This application represents the `apiserver`. For groups to work properly, you'll need to edit the `Server Application` Manifest and set `groupMembershipClaims` to either `All` or `SecurityGroup`.
-3. A `Native` type AAD application, referred to as `Client Application`. This application is for user login via `kubectl`. You'll need to add delegated permission to `Server Application`, please see [troubleshooting](#loginpageerror) section for detail.
+2. Admin access to the Azure Active Directory Tenant
 
-You also need to delegate permission to the application as follows:
+> [!NOTE]
+> This feature is not supported on ADFS
 
-1. Go to Azure Portal, navigate to `Azure Active Directory` -> `App registrations`.
-2. Select the `Client Application`, Navigate to `Settings` -> `Required permissions`
-3. Choose `Add`, select the `Server Application`. You may need to enter the Server Application's name into the search field and search for it.
-   In permissions tab, select `Delegated permissions` -> `Access {Server Application}`
+## Create the Server Application on AAD
+
+An App Registration which serves as a resource identifier for the Kubernetes cluster. 
+
+1. On the Azure portal, select **Azure Active Directory** > **App registrations** > **New registration**.
+
+    a. Give the application a name, such as *KubernetesApiserver*.
+
+    b. For **Supported account types**, select **Accounts in this organizational directory only**.
+
+    c. Select **Register** when you're finished.
+
+
+2. Select **Manifest**, and then edit the **groupMembershipClaims:** value as **"All"**. When you're finished with the updates, select **Save**.
+
+
+3. In the left pane of the Azure AD application, select **Expose an API**, and then select **+ Add a scope**.
+
+    a. Enter a **Scope name**, an **Admin consent display name**, **Admin consent description**, **User consent display name** and **User consent description**.
+
+    b. Select **Who can consent** as **Admins and Users**.
+    > [!NOTE]
+    > **Admins and Users** setting will enable every user to provide consent on their behalf. If you want to restrict that you can choose **Admins only**. However it will require one time admin consent on app.
+
+    c. Make sure **State** is set to **Enabled**.
+
+    d. Select **Add scope**.    
+
+4. Return to the application **Overview** page and note the **Application (client) ID**. When you deploy an OpenID enabled Kubernetes cluster with AAD integration, this value is called the server application ID (serverAppID).
+
+## Create the Client Application on AAD
+
+The second App Registration is used when you sign in with the Kubernetes CLI (kubectl).This credential is used to trigger the AAD device authentication process. To learn more about device login, [click here](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-device-code)
+
+1. On the Azure portal, select **Azure Active Directory** > **App registrations** > **New registration**.
+
+    a. Give the application a name, such as *KubernetesClient*.
+
+    b. For **Supported account types**, select **Accounts in this organizational directory only**.
+
+    c. Select **Register** when you're finished.
+
+2. In the left pane of the Azure AD application, select **API permissions**, and then select **+ Add a permission**.
+
+    a. Select **My APIs** tab, and then choose your Azure AD server application created in the previous step, such as *ArcAzureADServer*.
+
+    b. Select **Delegated permissions**, and then select the check box next to your Azure AD server app (KubernetesApiserver).
+
+    c. Select **Add permissions**.
+
+3. In the left pane of the Azure AD application, select **Authentication**. Under **Default client type**, select **Yes** to **Treat the client as a public client**. Click on **Save**.
+
+4. Return to the application **Overview** page and note the **Application (client) ID** and **Directory (tenant) ID**. This id will also be as the client application ID (clientAppID)
+
+## aadProfile
+|Parameter|Required|Description|
+|-----------------|---|---|
+|serverAppID|yes|The application identifier for which all tokens are issued for|
+|clientAppID|yes|The client identifier used to request access to cluster and trigger device login. Also used to create a kubeconfig to access the cluster post deployment|
+|tenantID|yes|The Azure tenant on for which the server application can be found|
+|adminGroupID|no|The Azure group Id which will be assigned Admin roles at deployment time|
 
 
 ## Deployment
-Follow the [deployment steps](../tutorials/deploy.md). In step #4, add the following under 'properties' section:
+Follow the [deployment steps](../tutorials/quickstart.md#deploy). In step #4, add the following under 'properties' section:
 ```json
 "aadProfile": {
     "serverAppID": "",
@@ -140,10 +200,7 @@ If you failed at the login page, you may see following error message
 Invalid resource. The client has requested access to a resource which is not listed in the requested permissions in the client's application registration. Client app ID: {UUID} Resource value from request: {UUID}. Resource app ID: {UUID}. List of valid resources from app registration: {UUID}.
 ```
 This could be caused by `Client Application` not being authorized.
-
-1. Go to Azure Portal, navigate to `Azure Active Directory` -> `App registrations`.
-2. Select the `Client Application`, Navigate to `Settings` -> `Required permissions`
-3. Choose `Add`, select the `Server Application`. In permissions tab, select `Delegated permissions` -> `Access {Server Application}`
+For more information on how to do this, [click here](#create-the-client-application-on-aad)
 
 ### ClientError
 If you see the following message returned from the server via `kubectl`
@@ -156,10 +213,17 @@ It is usually caused by an incorrect configuration. You could find more debug in
 docker logs -f $(docker ps|grep 'hyperkube apiserver'|cut -d' ' -f1) 2>&1 |grep -a auth
 ```
 
-You might see s message like this:
+You might see a message like this:
 ```
 Unable to authenticate the request due to an error: [invalid bearer token, [crypto/rsa: verification error, oidc: JWT claims invalid: invalid claims, 'aud' claim and 'client_id' do not match, aud=UUID1, client_id=spn:UUID2]]
 ```
 This indicates server and client is using different `Server Application` ID, which usually happens when the configurations are being updated manually.
 
 For other auth issues, you may also find some useful information from the log.
+
+### DeviceLoginError
+If you managed to login but the cluster fails to retrieve the token with an error such as
+```
+Failed to acquire new token: acquiring new fresh token:waiting for device code authentication to complete: autorest/adal/devicetoken: Error while retrieving OAuth token: Unknown Error
+```
+This indicates that the client Id used to login may not have device login flow enabled. To fix this, log on to your Azure portal. Select the client service principal, select **Authentication**. Under **Default client type**, select **Yes** to **Treat the client as a public client**. Click on **Save**.

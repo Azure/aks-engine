@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/aks-engine/pkg/operations"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -49,14 +50,7 @@ type UpgradeAgentNode struct {
 // the node
 // The 'drain' flag is used to invoke 'cordon and drain' flow.
 func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
-	var kubeAPIServerURL string
-
-	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		apiServerListeningPort := 443
-		kubeAPIServerURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
-	} else {
-		kubeAPIServerURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
-	}
+	kubeAPIServerURL := kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 
 	if vmName == nil || *vmName == "" {
 		return errors.Errorf("Error deleting VM: VM name was empty")
@@ -102,12 +96,9 @@ func (kan *UpgradeAgentNode) CreateNode(ctx context.Context, poolName string, ag
 	templateVariables := kan.TemplateMap["variables"].(map[string]interface{})
 	templateVariables[poolOffsetVarName] = agentNo
 
-	// Debug function - keep commented out
-	// WriteTemplate(kan.Translator, kan.UpgradeContainerService, kan.TemplateMap, kan.ParametersMap)
-
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	deploymentSuffix := random.Int31()
-	deploymentName := fmt.Sprintf("agent-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
+	deploymentName := fmt.Sprintf("k8s-upgrade-%s-%d-%s-%d", poolName, agentNo, time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
 
 	return armhelpers.DeployTemplateSync(kan.Client, kan.logger, kan.ResourceGroup, deploymentName, kan.TemplateMap, kan.ParametersMap)
 }
@@ -121,13 +112,7 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 	nodeName := strings.ToLower(*vmName)
 
 	kan.logger.Infof("Validating %s", nodeName)
-	var apiserverURL string
-	if kan.UpgradeContainerService.Properties.HostedMasterProfile != nil {
-		apiServerListeningPort := 443
-		apiserverURL = fmt.Sprintf("https://%s:%d", kan.UpgradeContainerService.Properties.HostedMasterProfile.FQDN, apiServerListeningPort)
-	} else {
-		apiserverURL = kan.UpgradeContainerService.Properties.MasterProfile.FQDN
-	}
+	apiserverURL := kan.UpgradeContainerService.Properties.MasterProfile.FQDN
 
 	client, err := kan.Client.GetKubernetesClient(apiserverURL, kan.kubeConfig, interval, kan.timeout)
 	if err != nil {
@@ -151,7 +136,7 @@ func (kan *UpgradeAgentNode) Validate(vmName *string) error {
 			if err != nil {
 				kan.logger.Infof("Agent node: %s status error: %v", nodeName, err)
 				retryTimer.Reset(retry)
-			} else if isNodeReady(agentNode) {
+			} else if kubernetes.IsNodeReady(agentNode) {
 				kan.logger.Infof("Agent node: %s is ready", nodeName)
 				timeoutTimer.Stop()
 				return nil

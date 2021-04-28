@@ -17,7 +17,6 @@ The kubernetes-calico deployment template enables Calico networking and policies
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "calico",
         "networkPlugin": "azure|kubenet"
@@ -28,7 +27,7 @@ This template will deploy the [Kubernetes Datastore backed version of Calico](ht
 
 If deploying on a K8s 1.8 or later cluster, then egress policies are also supported!
 
-To understand how to deploy this template, please read the baseline [Kubernetes](../../docs/tutorials/deploy.md) document, and use the appropriate **kubernetes-calico-[azure|kubenet].json** example file in this folder as an API model reference.
+To understand how to deploy this template, please read the baseline [Kubernetes](../../docs/tutorials/quickstart.md#deploy) document, and use the appropriate **kubernetes-calico-[azure|kubenet].json** example file in this folder as an API model reference.
 
 ### Post installation
 
@@ -43,21 +42,18 @@ The kubernetes-cilium deployment template enables Cilium networking and policies
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "cilium"
       }
 ```
 
-> Note:  To execute the `cilium` command that is running inside of the pods, you will need remove the `DenyEscalatingExec` when specifying the Admission Control Values.  If running Kubernetes with the `orchestratorRelease` newer than 1.9 use `--enable-admission-plugins` instead of `--admission-control` as illustrated below:
+> Note:  To execute the `cilium` command that is running inside of the pods, you will need remove the `DenyEscalatingExec` when specifying the Admission Control Values.  In addition, use `--enable-admission-plugins` instead of `--admission-control` as illustrated below:
 
 ```json
 {
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.10",
       "kubernetesConfig": {
         "networkPlugin": "cilium",
         "networkPolicy": "cilium",
@@ -81,7 +77,6 @@ The kubernetes-antrea deployment template enables Antrea networking and policies
 ```json
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "antrea",
         "networkPlugin": "antrea"
@@ -95,7 +90,6 @@ Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antr
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "antrea"
       }

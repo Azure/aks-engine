@@ -5,17 +5,23 @@ package kubernetesupgrade
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	util "k8s.io/client-go/util/retry"
 )
 
 // IsVMSSToBeUpgradedCb - Call back for checking whether the given vmss is to be upgraded or not.
@@ -76,10 +82,8 @@ type UpgradeCluster struct {
 	UpgradeWorkFlow    UpgradeWorkFlow
 	Force              bool
 	ControlPlaneOnly   bool
+	CurrentVersion     string
 }
-
-// MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
-const MasterVMNamePrefix = "k8s-master-"
 
 // MasterPoolName pool name
 const MasterPoolName = "master"
@@ -90,7 +94,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 	uc.UpgradedMasterVMs = &[]compute.VirtualMachine{}
 	uc.AgentPools = make(map[string]*AgentPoolTopology)
 
-	var kubeClient armhelpers.KubernetesClient
+	var kubeClient kubernetes.Client
 	if az != nil {
 		timeout := time.Duration(60) * time.Minute
 		k, err := az.GetKubernetesClient("", kubeConfig, interval, timeout)
@@ -100,8 +104,18 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 		kubeClient = k
 	}
 
-	if err := uc.getClusterNodeStatus(kubeClient, uc.ResourceGroup); err != nil {
+	if err := uc.setNodesToUpgrade(kubeClient, uc.ResourceGroup); err != nil {
 		return uc.Translator.Errorf("Error while querying ARM for resources: %+v", err)
+	}
+
+	if kubeClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
+		defer cancel()
+		notReadyStream := uc.upgradedNotReadyStream(kubeClient, wait.Backoff{Steps: 15, Duration: 10 * time.Second})
+		if err := uc.checkControlPlaneNodesStatus(ctx, notReadyStream); err != nil {
+			uc.Logger.Error("Aborting the upgrade process to avoid potential control plane downtime")
+			return errors.Wrap(err, "checking status of upgraded control plane nodes")
+		}
 	}
 
 	kc := uc.DataModel.Properties.OrchestratorProfile.KubernetesConfig
@@ -146,7 +160,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 }
 
 // SetClusterAutoscalerReplicaCount changes the replica count of a cluster-autoscaler deployment.
-func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers.KubernetesClient, replicaCount int32) (int32, error) {
+func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient kubernetes.Client, replicaCount int32) (int32, error) {
 	if kubeClient == nil {
 		return 0, errors.New("no kubernetes client")
 	}
@@ -180,75 +194,78 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 	}
 	u := &Upgrader{}
 	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion, uc.ControlPlaneOnly)
+	u.CurrentVersion = uc.CurrentVersion
 	return u
 }
 
-func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesClient, resourceGroup string) error {
+func (uc *UpgradeCluster) setNodesToUpgrade(kubeClient kubernetes.Client, resourceGroup string) error {
 	goalVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 
-	for vmScaleSetPage, err := uc.Client.ListVirtualMachineScaleSets(ctx, resourceGroup); vmScaleSetPage.NotDone(); err = vmScaleSetPage.NextWithContext(ctx) {
-		if err != nil {
-			return err
-		}
-		for _, vmScaleSet := range vmScaleSetPage.Values() {
-			if uc.IsVMSSToBeUpgraded != nil && !uc.IsVMSSToBeUpgraded(*vmScaleSet.Name, uc.DataModel) {
-				continue
+	if !uc.ControlPlaneOnly {
+		for vmScaleSetPage, err := uc.Client.ListVirtualMachineScaleSets(ctx, resourceGroup); vmScaleSetPage.NotDone(); err = vmScaleSetPage.NextWithContext(ctx) {
+			if err != nil {
+				return err
 			}
-			for vmScaleSetVMsPage, err := uc.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, *vmScaleSet.Name); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.NextWithContext(ctx) {
-				if err != nil {
-					return err
+			for _, vmScaleSet := range vmScaleSetPage.Values() {
+				if uc.IsVMSSToBeUpgraded != nil && !uc.IsVMSSToBeUpgraded(*vmScaleSet.Name, uc.DataModel) {
+					continue
 				}
-				// set agent pool node count to match VMSS capacity
-				for _, pool := range uc.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
-					if poolName, _, _ := utils.VmssNameParts(*vmScaleSet.Name); poolName == pool.Name {
-						pool.Count = int(*vmScaleSet.Sku.Capacity)
-						break
+				for vmScaleSetVMsPage, err := uc.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, *vmScaleSet.Name); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.NextWithContext(ctx) {
+					if err != nil {
+						return err
 					}
-				}
-				scaleSetToUpgrade := AgentPoolScaleSet{
-					Name:     *vmScaleSet.Name,
-					Sku:      *vmScaleSet.Sku,
-					Location: *vmScaleSet.Location,
-				}
-				if vmScaleSet.VirtualMachineProfile != nil &&
-					vmScaleSet.VirtualMachineProfile.OsProfile != nil &&
-					vmScaleSet.VirtualMachineProfile.OsProfile.WindowsConfiguration != nil {
-					scaleSetToUpgrade.IsWindows = true
-					uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
-				}
-				for _, vm := range vmScaleSetVMsPage.Values() {
-					currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName), vm.Tags, *vm.VirtualMachineScaleSetVMProperties.LatestModelApplied)
-					if uc.Force {
-						if currentVersion == "" {
-							currentVersion = "Unknown"
+					// set agent pool node count to match VMSS capacity
+					for _, pool := range uc.ClusterTopology.DataModel.Properties.AgentPoolProfiles {
+						if poolName, _, _ := utils.VmssNameParts(*vmScaleSet.Name); poolName == pool.Name {
+							pool.Count = int(*vmScaleSet.Sku.Capacity)
+							break
 						}
 					}
+					scaleSetToUpgrade := AgentPoolScaleSet{
+						Name:     *vmScaleSet.Name,
+						Sku:      *vmScaleSet.Sku,
+						Location: *vmScaleSet.Location,
+					}
+					if vmScaleSet.VirtualMachineProfile != nil &&
+						vmScaleSet.VirtualMachineProfile.OsProfile != nil &&
+						vmScaleSet.VirtualMachineProfile.OsProfile.WindowsConfiguration != nil {
+						scaleSetToUpgrade.IsWindows = true
+						uc.Logger.Infof("Set isWindows flag for vmss %s.", *vmScaleSet.Name)
+					}
+					for _, vm := range vmScaleSetVMsPage.Values() {
+						currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName), vm.Tags, *vm.VirtualMachineScaleSetVMProperties.LatestModelApplied)
+						if uc.Force {
+							if currentVersion == "" {
+								currentVersion = "Unknown"
+							}
+						}
 
-					if currentVersion == "" {
-						uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
-						continue
+						if currentVersion == "" {
+							uc.Logger.Infof("Skipping VM: %s for upgrade as the orchestrator version could not be determined.", *vm.Name)
+							continue
+						}
+						if uc.Force || currentVersion != goalVersion {
+							uc.Logger.Infof(
+								"VM %s in VMSS %s has a current version of %s and a desired version of %s. Upgrading this node.",
+								*vm.Name,
+								*vmScaleSet.Name,
+								currentVersion,
+								goalVersion,
+							)
+							scaleSetToUpgrade.VMsToUpgrade = append(
+								scaleSetToUpgrade.VMsToUpgrade,
+								AgentPoolScaleSetVM{
+									Name:       *vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName,
+									InstanceID: *vm.InstanceID,
+								},
+							)
+						}
 					}
-					if uc.Force || currentVersion != goalVersion {
-						uc.Logger.Infof(
-							"VM %s in VMSS %s has a current version of %s and a desired version of %s. Upgrading this node.",
-							*vm.Name,
-							*vmScaleSet.Name,
-							currentVersion,
-							goalVersion,
-						)
-						scaleSetToUpgrade.VMsToUpgrade = append(
-							scaleSetToUpgrade.VMsToUpgrade,
-							AgentPoolScaleSetVM{
-								Name:       *vm.VirtualMachineScaleSetVMProperties.OsProfile.ComputerName,
-								InstanceID: *vm.InstanceID,
-							},
-						)
-					}
+					uc.AgentPoolScaleSetsToUpgrade = append(uc.AgentPoolScaleSetsToUpgrade, scaleSetToUpgrade)
 				}
-				uc.AgentPoolScaleSetsToUpgrade = append(uc.AgentPoolScaleSetsToUpgrade, scaleSetToUpgrade)
 			}
 		}
 	}
@@ -279,10 +296,8 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 				}
 				// If the current version is different than the desired version then we add the VM to the list of VMs to upgrade.
 				if currentVersion != goalVersion {
-					if !uc.DataModel.Properties.IsHostedMasterProfile() {
-						if err := uc.upgradable(currentVersion); err != nil {
-							return err
-						}
+					if err := uc.upgradable(currentVersion); err != nil {
+						return err
 					}
 					uc.addVMToUpgradeSets(vm, currentVersion)
 				} else if currentVersion == goalVersion {
@@ -302,7 +317,7 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 	}
 	targetVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
-	orch, err := api.GetOrchestratorVersionProfile(nodeVersion, uc.DataModel.Properties.HasWindows())
+	orch, err := api.GetOrchestratorVersionProfile(nodeVersion, uc.DataModel.Properties.HasWindows(), uc.DataModel.Properties.IsAzureStackCloud())
 	if err != nil {
 		return err
 	}
@@ -321,7 +336,7 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 // Also, if the latest VMSS model is applied, then we can get the version info from the tags.
 // Otherwise, we have to get version via K8s API. This is because VMSS does not support tags
 // for individual instances and old/new instances have the same tags.
-func (uc *UpgradeCluster) getNodeVersion(client armhelpers.KubernetesClient, name string, tags map[string]*string, getVersionFromTags bool) string {
+func (uc *UpgradeCluster) getNodeVersion(client kubernetes.Client, name string, tags map[string]*string, getVersionFromTags bool) string {
 	if getVersionFromTags {
 		if tags != nil && tags["orchestrator"] != nil {
 			parts := strings.Split(*tags["orchestrator"], ":")
@@ -437,7 +452,7 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 }
 
 func (uc *UpgradeCluster) addVMToUpgradeSets(vm compute.VirtualMachine, currentVersion string) {
-	if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
+	if strings.Contains(*(vm.Name), fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix)) {
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)", *vm.Name, currentVersion)
 		*uc.MasterVMs = append(*uc.MasterVMs, vm)
 	} else {
@@ -448,7 +463,7 @@ func (uc *UpgradeCluster) addVMToUpgradeSets(vm compute.VirtualMachine, currentV
 }
 
 func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, currentVersion string) {
-	if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
+	if strings.Contains(*(vm.Name), fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix)) {
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)", *vm.Name, currentVersion)
 		*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 	} else {
@@ -456,4 +471,79 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
 		}
 	}
+}
+
+// checkControlPlaneNodesStatus checks whether it is safe to proceed with the upgrade process
+// by looking at the status of previously upgraded control plane nodes.
+//
+// It returns an error if more than 1 of the already-upgraded control plane nodes are in the NotReady state.
+// To recreate the node, users have to manually update the "orchestrator" tag on the VM.
+func (uc *UpgradeCluster) checkControlPlaneNodesStatus(ctx context.Context, upgradedNotReadyStream <-chan []string) error {
+	if len(*uc.UpgradedMasterVMs) == 0 {
+		return nil
+	}
+	uc.Logger.Infoln("Checking status of upgraded control plane nodes")
+	upgradedNotReadyCount := 0
+loop:
+	for {
+		select {
+		case upgradedNotReady, ok := <-upgradedNotReadyStream:
+			if !ok {
+				break loop
+			}
+			upgradedNotReadyCount = len(upgradedNotReady)
+		case <-ctx.Done():
+			break loop
+		}
+	}
+	// return error if more than 1 upgraded node is not ready
+	if upgradedNotReadyCount > 1 {
+		uc.Logger.Error("At least 2 of the previously upgraded control plane nodes did not reach the NodeReady status")
+		return errors.New("too many upgraded nodes are not ready")
+	}
+	return nil
+}
+
+func (uc *UpgradeCluster) upgradedNotReadyStream(client kubernetes.Client, backoff wait.Backoff) <-chan []string {
+	alwaysRetry := func(_ error) bool {
+		return true
+	}
+	upgraded := []string{}
+	for _, vm := range *uc.UpgradedMasterVMs {
+		upgraded = append(upgraded, *vm.Name)
+	}
+	stream := make(chan []string)
+	go func() {
+		defer close(stream)
+		util.OnError(backoff, alwaysRetry, func() error { //nolint:errcheck
+			upgradedNotReady, err := uc.getUpgradedNotReady(client, upgraded)
+			if err != nil {
+				return err
+			}
+			stream <- upgradedNotReady
+			if len(upgradedNotReady) > 0 {
+				return errors.New("retry to give NotReady nodes some extra time")
+			}
+			return nil
+		})
+	}()
+	return stream
+}
+
+func (uc *UpgradeCluster) getUpgradedNotReady(client kubernetes.Client, upgraded []string) ([]string, error) {
+	cpNodes, err := client.ListNodesByOptions(metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/master"})
+	if err != nil {
+		return nil, err
+	}
+	nodeStatusMap := make(map[string]bool)
+	for _, n := range cpNodes.Items {
+		nodeStatusMap[n.Name] = kubernetes.IsNodeReady(&n)
+	}
+	upgradedNotReady := []string{}
+	for _, vm := range upgraded {
+		if ready, found := nodeStatusMap[vm]; found && !ready {
+			upgradedNotReady = append(upgradedNotReady, vm)
+		}
+	}
+	return upgradedNotReady, nil
 }

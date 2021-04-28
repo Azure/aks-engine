@@ -2,7 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPlugin": "kubenet"
       }
@@ -21,15 +20,16 @@
         "osType": "Windows",
         "osDiskSizeGB": 128,
         "extensions": [
-            {
-                "name": "winrm"
-            }
+          {
+            "name": "winrm"
+          }
         ]
       }
     ],
     "windowsProfile": {
       "adminUsername": "azureuser",
-      "adminPassword": "replacepassword1234$"
+      "adminPassword": "replacepassword1234$",
+      "enableAHUB": true
     },
     "linuxProfile": {
       "adminUsername": "azureuser",
@@ -40,10 +40,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     },
     "extensionProfiles": [
       {

@@ -2,7 +2,6 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "dnsServiceIP": "172.17.1.10",
         "serviceCidr": "172.16.0.0/14",

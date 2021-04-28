@@ -5,25 +5,31 @@
 [![GoDoc](https://godoc.org/github.com/Azure/aks-engine?status.svg)](https://godoc.org/github.com/Azure/aks-engine)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Azure/aks-engine)](https://goreportcard.com/report/github.com/Azure/aks-engine)
 
-AKS Engine is the easiest way to provision a self-managed Kubernetes cluster on Azure.
+## Project status
+
+This project is stable, meaning the pace of new features is intentionally low. AKS Engine is maintained by teams who depend on it including [AKS Engine on Azure Stack Hub](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-kubernetes-aks-engine-overview).
 
 ## Overview
 
-AKS Engine provides convenient tooling to quickly bootstrap Kubernetes clusters on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS Engine is also the library used by AKS for performing these operations to provide managed service implementations.
+AKS Engine is an ARM template-driven way to provision a self-managed Kubernetes cluster on Azure. By leveraging [ARM (Azure Resource Manager)][ARM], AKS Engine helps you create, destroy and maintain clusters provisioned with basic IaaS resources in Azure. AKS Engine has limited support for ongoing operational capabilities such as scaling, in-place upgrade, and extensions. The [Cluster API Provider for Azure a.k.a. CAPZ](https://capz.sigs.k8s.io/) provides more complete operational capabilities. AKS Engine remains the tool for managing Kubernetes clusters on Azure Stack Hub as CAPZ does not yet work there.
 
 ## Getting started
 
-Depending on how new you are to AKS Engine, you can try [a tutorial][tutorials], or just dive straight into the [documentation][docs].
+- Read the [CLI Overview](docs/tutorials/cli-overview.md) for a list of features provided by the `aks-engine` command line tool.
+
+- The [Quickstart Guide](docs/tutorials/quickstart.md) describes how to download the latest release of `aks-engine` for your environment, and demonstrates how to use `aks-engine` to create a Kubernetes cluster on Azure that you will manage and customize.
+
+- The [complete body of documentation can be found here][docs].
 
 Please see the [FAQ][] for answers about AKS Engine and its progenitor ACS-Engine.
 
 ## Join the community
 
-Want to get involved? The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute. The [developer guide][developer-guide] will help you onboard as a developer.
+If you are committed to using AKS Engine longer term and would like to become a project maintainer, please reach out to us via the [#aks-engine-dev Slack channel](https://kubernetes.slack.com/archives/CU1CXUHN0)! The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute. The [developer guide][developer-guide] will help you onboard as a developer. The AKS Engine community is committed to integrating and validating new versions of Kubernetes into AKS Engine. We encourage AKS Engine users to evaluate moving to CAPZ as it provides stronger support for managing the cluster lifecycle compared to AKS Engine.
 
 ## Support
 
-AKS Engine is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/aks-engine/issues), and if your issue isn't already represented please [open a new one](https://github.com/Azure/aks-engine/issues/new/choose). The AKS Engine project maintainers will respond to the best of their abilities.
+Please see our [support policy][support-policy].
 
 ## Code of conduct
 
@@ -39,6 +45,7 @@ For more information, please see the [telemetry documentation][telemetry].
 [developer-guide]: docs/community/developer-guide.md
 [docs]: docs/README.md
 [FAQ]: docs/faq.md
+[support-policy]: SUPPORT.md
 [tutorials]: docs/tutorials/README.md
 [telemetry]: docs/topics/telemetry.md
 [telemetry-config]: docs/topics/telemetry.md#configuration

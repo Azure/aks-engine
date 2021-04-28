@@ -3,20 +3,20 @@
     "location": "",
     "properties": {
         "orchestratorProfile": {
-            "orchestratorType": "Kubernetes",
-            "orchestratorRelease": "1.15",
+            "orchestratorRelease": "1.17",
+            "orchestratorVersion": "1.17.11",
             "kubernetesConfig": {
                 "cloudProviderBackoff": true,
                 "cloudProviderBackoffRetries": 1,
                 "cloudProviderBackoffDuration": 30,
                 "cloudProviderRateLimit": true,
-                "cloudProviderRateLimitQPS": 3,
-                "cloudProviderRateLimitBucket": 10,
-                "cloudProviderRateLimitQPSWrite": 3,
-                "cloudProviderRateLimitBucketWrite": 10,
-                "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
+                "cloudProviderRateLimitQPS": 100,
+                "cloudProviderRateLimitBucket": 150,
+                "cloudProviderRateLimitQPSWrite": 25,
+                "cloudProviderRateLimitBucketWrite": 30,
                 "useInstanceMetadata": false,
                 "networkPlugin": "azure",
+                "networkPolicy": "azure",
                 "kubeletConfig": {
                     "--node-status-update-frequency": "1m"
                 },
@@ -38,7 +38,7 @@
             "dnsPrefix": "",
             "distro": "aks-ubuntu-16.04",
             "count": 3,
-            "vmSize": "Standard_D2_v2"
+            "vmSize": "Standard_DS2_v2"
         },
         "agentPoolProfiles": [
             {

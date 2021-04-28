@@ -6,7 +6,7 @@ AKS Engine enables you to create a customized Kubernetes cluster on Microsoft Az
 
 The example shows you how to configure installing a cert from keyvault. These certs are assumed to be in the secrets portion of your keyvault:
 
-1. **kubernetes.json** - deploying and using [Kubernetes](../../docs/tutorials/deploy.md)
+1. **kubernetes.json** - deploying and using [Kubernetes](../../docs/tutorials/quickstart.md#deploy)
 
 On windows machines certificates will be installed under the machine in the specified store.
 On linux machines the certificates will be installed in the folder /var/lib/waagent/. There will be two files

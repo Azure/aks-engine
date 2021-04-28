@@ -2,22 +2,10 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
+        "useManagedIdentity": true,
         "clusterSubnet": "10.239.0.0/16",
         "addons": [
-          {
-            "name": "tiller",
-            "enabled": true
-          },
-          {
-            "name": "kubernetes-dashboard",
-            "enabled": true
-          },
-          {
-            "name": "rescheduler",
-            "enabled": true
-          },
           {
             "name": "cluster-autoscaler",
             "enabled": true,
@@ -44,9 +32,13 @@
             "name": "coredns",
             "enabled": true,
             "config": {
-              "min-replicas": "1",
+              "min-replicas": "3",
               "nodes-per-replica": "10"
             }
+          },
+          {
+            "name": "azure-policy",
+            "enabled": true
           }
         ]
       }
@@ -59,7 +51,10 @@
       "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
       "firstConsecutiveStaticIP": "10.239.255.239",
       "vnetCidr": "10.239.0.0/16",
-      "availabilityZones": ["1", "2"]
+      "availabilityZones": [
+        "1",
+        "2"
+      ]
     },
     "agentPoolProfiles": [
       {
@@ -80,10 +75,10 @@
         "name": "poolwin",
         "count": 1,
         "vmSize": "Standard_D2s_v3",
+        "OSDiskSizeGB": 256,
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-        "osType": "Windows",
-        "storageProfile": "Ephemeral"
+        "osType": "Windows"
       },
       {
         "name": "pool1604vhd",
@@ -116,15 +111,6 @@
         "distro": "ubuntu-18.04-gen2",
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
-      },
-      {
-        "name": "poolwingen2",
-        "count": 1,
-        "vmSize": "Standard_D2s_v3",
-        "osType": "Windows",
-        "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-        "osDiskCachingType": "ReadOnly"
       }
     ],
     "linuxProfile": {
@@ -142,10 +128,6 @@
       "adminPassword": "replacepassword1234$",
       "sshEnabled": true,
       "enableAutomaticUpdates": false
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

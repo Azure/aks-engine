@@ -1,10 +1,6 @@
 {
   "apiVersion": "vlabs",
   "properties": {
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.15"
-    },
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "my-cluster",
@@ -31,10 +27,6 @@
           }
         ]
       }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
     }
   }
 }

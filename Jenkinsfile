@@ -3,10 +3,11 @@ import groovy.json.*
 defaultEnv = [
 	CLEANUP_ON_EXIT: true,
 	CREATE_VNET: false,
+	VALIDATE_CPU_LOAD: false,
 	] + params
 
-def k8sVersions = ["1.15", "1.16", "1.17", "1.18", "1.19"]
-def latestReleasedVersion = "1.18"
+def k8sVersions = ["1.17", "1.18", "1.19", "1.20", "1.21"]
+def latestReleasedVersion = "1.21"
 def tasks = [:]
 def testConfigs = []
 

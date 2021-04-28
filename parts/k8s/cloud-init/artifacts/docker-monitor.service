@@ -1,9 +1,12 @@
 [Unit]
 Description=a script that checks docker health and restarts if needed
-After=docker.service
+After={{GetContainerRuntime}}.service
 [Service]
 Restart=always
 RestartSec=10
 RemainAfterExit=yes
+Environment=CONTAINER_RUNTIME={{GetContainerRuntime}}
 ExecStart=/usr/local/bin/health-monitor.sh container-runtime
+[Install]
+WantedBy=multi-user.target
 #EOF

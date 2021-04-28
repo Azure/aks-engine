@@ -76,6 +76,8 @@ $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
 ## ContainerD Usage
 $global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
+$global:DefaultContainerdRuntimeHandler = "{{WrapAsParameter "defaultContainerdRuntimeHandler"}}"
+$global:HypervRuntimeHandlers = "{{WrapAsParameter "hypervRuntimeHandlers"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -98,12 +100,10 @@ $global:PrimaryScaleSetName = "{{WrapAsVariable "primaryScaleSetName"}}"
 $global:KubeClusterCIDR = "{{WrapAsParameter "kubeClusterCidr"}}"
 $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
 $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
-{{if IsKubernetesVersionGe "1.16.0"}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
-{{else}}
-$global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}"
-{{end}}
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
+
+$global:KubeproxyFeatureGates = @( {{GetKubeProxyFeatureGatesPsh}} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"
@@ -133,6 +133,7 @@ $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 # $global:NetworkPolicy = "{{WrapAsParameter "networkPolicy"}}" # BUG: unused
 $global:NetworkPlugin = "{{WrapAsParameter "networkPlugin"}}"
 $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
+$global:IsDualStackEnabled = {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
 
 # Telemetry settings
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
@@ -141,6 +142,15 @@ $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 # CSI Proxy settings
 $global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
 $global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
+
+# Hosts Config Agent settings
+$global:EnableHostsConfigAgent = [System.Convert]::ToBoolean("{{WrapAsVariable "enableHostsConfigAgent" }}");
+
+$global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningScriptsPackageURL" }}";
+
+# PauseImage
+$global:WindowsPauseImageURL = "{{WrapAsVariable "windowsPauseImageURL" }}";
+$global:AlwaysPullWindowsPauseImage = [System.Convert]::ToBoolean("{{WrapAsVariable "alwaysPullWindowsPauseImage" }}");
 
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
@@ -158,6 +168,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 . c:\AzureData\k8s\windowscontainerdfunc.ps1
+. c:\AzureData\k8s\windowshostsconfigagentfunc.ps1
 
 $useContainerD = ($global:ContainerRuntime -eq "containerd")
 $global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
@@ -169,6 +180,7 @@ try
     # to the windows machine, and run the script manually to watch
     # the output.
     if ($true) {
+        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret -NetworkAPIVersion $NetworkAPIVersion -TargetEnvironment $TargetEnvironment"
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
         $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
@@ -239,7 +251,21 @@ try
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
 
+        New-Item -ItemType Directory -Path "c:\k" -Force | Out-Null
+        Get-ProvisioningScripts
+
         Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
+
+        Write-Log "Download kubelet binaries and unzip"
+        Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
+
+        # The custom package has a few files that are nessary for future steps (nssm.exe)
+        # this is a temporary work around to get the binaries until we depreciate
+        # custom package and nssm.exe as defined in #3851.
+        if ($global:WindowsKubeBinariesURL){
+            Write-Log "Overwriting kube node binaries from $global:WindowsKubeBinariesURL"
+            Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
+        }
 
         if ($useContainerD) {
             Write-Log "Installing ContainerD"
@@ -250,7 +276,7 @@ try
                 $cniBinPath = $global:CNIPath
                 $cniConfigPath = $global:CNIConfigPath
             }
-            Install-Containerd -ContainerdUrl $global:ContainerdUrl -CNIBinDir $cniBinPath -CNIConfDir $cniConfigPath
+            Install-Containerd -ContainerdUrl $global:ContainerdUrl -CNIBinDir $cniBinPath -CNIConfDir $cniConfigPath -KubeDir $global:KubeDir
             $containerdTimer.Stop()
             $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
             # TODO: disable/uninstall Docker later
@@ -261,18 +287,6 @@ try
             Set-DockerLogFileOptions
             $dockerTimer.Stop()
             $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
-        }
-
-        Write-Log "Download kubelet binaries and unzip"
-        Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
-
-        # this overwrite the binaries that are download from the custom packge with binaries
-        # The custom package has a few files that are nessary for future steps (nssm.exe)
-        # this is a temporary work around to get the binaries until we depreciate
-        # custom package and nssm.exe as defined in #3851.
-        if ($global:WindowsKubeBinariesURL){
-            Write-Log "Overwriting kube node binaries from $global:WindowsKubeBinariesURL"
-            Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
         }
 
         Write-Log "Write Azure cloud provider config"
@@ -320,6 +334,11 @@ try
             -AgentKey $AgentKey `
             -AgentCertificate $global:AgentCertificate
 
+        if ($global:EnableHostsConfigAgent) {
+             Write-Log "Starting hosts config agent"
+             New-HostsConfigService
+         }
+
         Write-Log "Create the Pause Container kubletwin/pause"
         $infraContainerTimer = [System.Diagnostics.Stopwatch]::StartNew()
         New-InfraContainer -KubeDir $global:KubeDir -ContainerRuntime $global:ContainerRuntime
@@ -357,7 +376,8 @@ try
                 -KubeServiceCIDR $global:KubeServiceCIDR `
                 -VNetCIDR $global:VNetCIDR `
                 {{- /* Azure Stack has discrete Azure CNI config requirements */}}
-                -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}}
+                -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}} `
+                -IsDualStackEnabled $global:IsDualStackEnabled
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig `
@@ -382,15 +402,21 @@ try
             }
         }
 
-        New-ExternalHnsNetwork
+        New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
 
         Install-KubernetesServices `
-            -KubeDir $global:KubeDir
+            -KubeDir $global:KubeDir `
+            -ContainerRuntime $global:ContainerRuntime
 
         Get-LogCollectionScripts
 
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
+
+        # if multple LB policies are included for same endpoint then HNS hangs.
+        # this fix forces an error  
+        Write-Host "Enable a HNS fix in 2021-2C+"
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
 
         Write-Log "Adjust pagefile size"
         Adjust-PageFileSize
@@ -405,12 +431,6 @@ try
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
         Update-DefenderPreferences
-
-        # Output kubelet and kube-proxy scripts
-        (Get-Content "c:\AzureData\k8s\kubeletstart.ps1") |
-        Out-File "c:\k\kubeletstart.ps1"
-        (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
-        Out-File "c:\k\kubeproxystart.ps1"
 
         if (Test-Path $CacheDir)
         {

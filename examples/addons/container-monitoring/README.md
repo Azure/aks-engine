@@ -7,7 +7,6 @@ This is sample API definition with Container-monitoring addon.
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "addons": [
           {
@@ -51,7 +50,7 @@ This is sample API definition with Container-monitoring addon.
 > Note: If the AKS Engine version is v0.38.5 or higher, the clusterName will be the dnsPrefix of the cluster. If the AKS Engine version is v0.29.1 or ACS Engine Kubernetes cluster, then default clusterName is my_acs_cluster_name in the container monitoring addon. In  AKS Engine version is less than v0.38.5, the default cluster name is aks-engine-cluster.
 
 Example command to create AKS Engine cluster with monitoring addon
-`aks-engine deploy --subscription-id <subscriptionId> --client-id <clientId> --client-secret <clientSecret> --dns-prefix <dnsPrefix> --location <location> --api-model  <kubernetes.json>`
+`aks-engine deploy ---dns-prefix <dnsPrefix> --location <location> --api-model <kubernetes.json>`
 
 You can validate that the addon is running as expected with the following commands:
 

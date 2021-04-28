@@ -5,16 +5,8 @@ package common
 
 // the orchestrators supported
 const (
-	// Mesos is the string constant for MESOS orchestrator type
-	Mesos string = "Mesos"
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
 )
 
 // validation values
@@ -66,58 +58,15 @@ const (
 const (
 	// KubernetesDefaultRelease is the default Kubernetes release
 	KubernetesDefaultRelease string = "1.18"
-	// KubernetesDefaultReleaseWindows is the default Kubernetes release
+	// KubernetesDefaultReleaseWindows is the default Kubernetes release for Windows
 	KubernetesDefaultReleaseWindows string = "1.18"
+	// KubernetesDefaultReleaseAzureStack is the default Kubernetes release on Azure Stack
+	KubernetesDefaultReleaseAzureStack string = "1.17"
+	// KubernetesDefaultReleaseWindowsAzureStack is the default Kubernetes release for Windows on Azure Stack
+	KubernetesDefaultReleaseWindowsAzureStack string = "1.17"
 )
 
-const (
-	// DCOSVersion1Dot11Dot2 is the major.minor.patch string for 1.11.0 versions of DCOS
-	DCOSVersion1Dot11Dot2 string = "1.11.2"
-	// DCOSVersion1Dot11Dot0 is the major.minor.patch string for 1.11.0 versions of DCOS
-	DCOSVersion1Dot11Dot0 string = "1.11.0"
-	// DCOSVersion1Dot10Dot0 is the major.minor.patch string for 1.10.0 versions of DCOS
-	DCOSVersion1Dot10Dot0 string = "1.10.0"
-	// DCOSVersion1Dot9Dot0 is the major.minor.patch string for 1.9.0 versions of DCOS
-	DCOSVersion1Dot9Dot0 string = "1.9.0"
-	// DCOSVersion1Dot9Dot8 is the major.minor.patch string for 1.9.8 versions of DCOS
-	DCOSVersion1Dot9Dot8 string = "1.9.8"
-	// DCOSVersion1Dot8Dot8 is the major.minor.patch string for 1.8.8 versions of DCOS
-	DCOSVersion1Dot8Dot8 string = "1.8.8"
-	// DCOSDefaultVersion is the default major.minor.patch version for DCOS
-	DCOSDefaultVersion string = DCOSVersion1Dot11Dot0
-)
-
-// AllDCOSSupportedVersions maintain a list of available dcos versions in aks-engine
-var AllDCOSSupportedVersions = []string{
-	DCOSVersion1Dot11Dot2,
-	DCOSVersion1Dot11Dot0,
-	DCOSVersion1Dot10Dot0,
-	DCOSVersion1Dot9Dot8,
-	DCOSVersion1Dot9Dot0,
-	DCOSVersion1Dot8Dot8,
-}
-
-const (
-	// SwarmVersion is the Swarm orchestrator version
-	SwarmVersion = "swarm:1.1.0"
-	// DockerCEVersion is the DockerCE orchestrator version
-	DockerCEVersion = "17.03.*"
-)
-
-// GetAllSupportedDCOSVersions returns a slice of all supported DCOS versions.
-func GetAllSupportedDCOSVersions() []string {
-	return AllDCOSSupportedVersions
-}
-
-// GetAllSupportedSwarmVersions returns a slice of all supported Swarm versions.
-func GetAllSupportedSwarmVersions() []string {
-	return []string{SwarmVersion}
-}
-
-// GetAllSupportedDockerCEVersions returns a slice of all supported Docker CE versions.
-func GetAllSupportedDockerCEVersions() []string {
-	return []string{DockerCEVersion}
-}
+const LegacyControlPlaneVMPrefix string = "k8s-master"
 
 // MinCloudProviderQPSToBucketFactor defines the minimum ratio between QPS and Bucket size for cloudprovider rate limiting
 const MinCloudProviderQPSToBucketFactor float64 = 0.1
@@ -126,8 +75,8 @@ const MinCloudProviderQPSToBucketFactor float64 = 0.1
 const (
 	// TillerAddonName is the name of the tiller addon deployment
 	TillerAddonName = "tiller"
-	// ACIConnectorAddonName is the name of the aci-connector addon deployment
-	ACIConnectorAddonName = "aci-connector"
+	// ACIConnectorAddonName // Deprecated
+	ACIConnectorAddonName = "aci-connector" // Deprecated
 	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
 	ClusterAutoscalerAddonName = "cluster-autoscaler"
 	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
@@ -136,12 +85,12 @@ const (
 	SMBFlexVolumeAddonName = "smb-flexvolume"
 	// KeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DashboardAddonName = "kubernetes-dashboard"
+	// DashboardAddonName // Deprecated
+	DashboardAddonName = "kubernetes-dashboard" // Deprecated
 	// DashboardMetricsScraperContainerName is the name of the metrics-scraper container in the kubernetes-dashboard addon
-	DashboardMetricsScraperContainerName = "kubernetes-dashboard-metrics-scraper"
-	// ReschedulerAddonName is the name of the rescheduler addon deployment
-	ReschedulerAddonName = "rescheduler"
+	DashboardMetricsScraperContainerName = "kubernetes-dashboard-metrics-scraper" // Deprecated
+	// ReschedulerAddonName // Deprecated
+	ReschedulerAddonName = "rescheduler" // Deprecated
 	// ExecHealthZComponentName is the name of the exechealthz component
 	ExecHealthZComponentName = "exechealthz"
 	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
@@ -280,6 +229,8 @@ const (
 	CSISecretsStoreDriverContainerName = "secrets-store"
 	// CSISecretsStoreProviderAzureContainerName is the name of the provider-azure-installer container in csi-secrets-store addon
 	CSISecretsStoreProviderAzureContainerName = "provider-azure-installer"
+	// ArcAddonName is the name of the arc addon
+	AzureArcOnboardingAddonName = "azure-arc-onboarding"
 )
 
 // Component name consts
@@ -296,6 +247,8 @@ const (
 	AddonManagerComponentName = "kube-addon-manager"
 	// ClusterInitComponentName is the name of the cluster-init component
 	ClusterInitComponentName = "cluster-init"
+	// AzureKMSProviderComponentName is the name of the azure-kms-provider component
+	AzureKMSProviderComponentName = "azure-kms-provider"
 )
 
 const WindowsArtifactComponentName = "windowszip"

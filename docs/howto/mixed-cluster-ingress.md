@@ -115,27 +115,27 @@ Copy the YAML below into a file called `iis.yaml`.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: iis-1803
+  name: iis-ltsc2019
   labels:
-    app: iis-1803
+    app: iis-ltsc2019
 spec:
   replicas: 1
   template:
     metadata:
-      name: iis-1803
+      name: iis-ltsc2019
       labels:
-        app: iis-1803
+        app: iis-ltsc2019
     spec:
       containers:
       - name: iis
-        image: microsoft/iis:windowsservercore-1803
+        image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
         ports:
           - containerPort: 80
       nodeSelector:
         "kubernetes.io/os": windows
   selector:
     matchLabels:
-      app: iis-1803
+      app: iis-ltsc2019
 ---
 apiVersion: v1
 kind: Service
@@ -147,19 +147,19 @@ spec:
   - protocol: TCP
     port: 80
   selector:
-    app: iis-1803
+    app: iis-ltsc201909
 ```
 
-If you're using Windows Server version 1803, you can use it as-is. If you're using 1709, replace all the instances of 1803 with 1709.
+If you're using Windows Server version ltsc2019, you can use it as-is. If you're using another version (1903, 1909, etc) look for that version.
 
 Now, run `kubectl create -f iis.yaml`
 
-Check that the web server is running with `kubectl get pod`, and look for `iis-1803-...`.
+Check that the web server is running with `kubectl get pod`, and look for `iis-1809-...`.
 
 ```console
 $ kubectl get pods
 NAME                                             READY     STATUS    RESTARTS   AGE
-iis-1803-8b7fdd569-nvzx8                         1/1       Running   0          4m
+iis-ltsc2019-8b7fdd569-nvzx8                         1/1       Running   0          4m
 nginx-ingress-controller-57cbbfcb7c-fgtdn        1/1       Running   0          17m
 nginx-ingress-default-backend-69c6b65b46-zjc2c   1/1       Running   0          17m
 ```
@@ -174,7 +174,7 @@ Name:              iis
 Namespace:         default
 Labels:            <none>
 Annotations:       <none>
-Selector:          app=iis-1803
+Selector:          app=ltsc2019
 Type:              ClusterIP
 IP:                10.0.7.142
 Port:              <unset>  80/TCP

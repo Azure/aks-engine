@@ -1,0 +1,60 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "featureFlags": {
+            "enableIPv6DualStack": true
+        },
+        "orchestratorProfile": {
+            "orchestratorRelease": "1.19",
+            "kubernetesConfig": {
+                "apiServerConfig": {
+                    "--feature-gates": "IPv6DualStack=true"
+                },
+                "kubeletConfig": {
+                    "--feature-gates": "IPv6DualStack=true"
+                },
+                "controllerManagerConfig": {
+                    "--feature-gates": "IPv6DualStack=true"
+                },
+                "kubeProxyMode": "ipvs",
+                "networkPlugin": "azure",
+                "networkMode": "bridge",
+                "networkPolicy": "",
+                "useManagedIdentity": false
+            }
+        },
+        "masterProfile": {
+            "count": 1,
+            "dnsPrefix": "",
+            "vmSize": "Standard_D2_v3"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "windowspool2",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "availabilityProfile": "VirtualMachineScaleSets",
+                "osType": "Windows",
+                "osDiskSizeGB": 128
+            }
+        ],
+        "windowsProfile": {
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "windowsOffer": "WindowsServer",
+            "windowsSku": "Datacenter-Core-2004-with-Containers-smalldisk",
+            "imageVersion": "latest",
+            "adminUsername": "azureuser",
+            "adminPassword": "replacepassword1234$"
+        },
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        }
+    }
+}

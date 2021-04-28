@@ -1,11 +1,10 @@
 #!/bin/bash
 set -x
-OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
+OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
-RHEL_OS_NAME="RHEL"
-COREOS_OS_NAME="COREOS"
+FLATCAR_OS_NAME="FLATCAR"
 DEBIAN_OS_NAME="DEBIAN"
-if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${COREOS_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+if ! echo "${UBUNTU_OS_NAME} ${FLATCAR_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
     OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
 
@@ -16,7 +15,11 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     sudo timedatectl status | grep 'Network time on: yes' || exit 1
     sudo timedatectl status | grep 'NTP synchronized: yes' || exit 1
   elif [[ $RELEASE == "18.04" ]]; then
-    sudo ntpstat | grep 'synchronised to NTP server' || exit 1
+    if apt list --installed | grep 'chrony'; then
+      sudo chronyc sources | grep '#* PHC' || exit 1 # Make sure chrony is running and synced with host-based PTP source clock ('#' means local clock and '*' means synced)
+    else
+      sudo ntpstat | grep 'synchronised to NTP server' || exit 1
+    fi
     sudo timedatectl status | grep 'System clock synchronized: yes' || exit 1
   fi
 fi

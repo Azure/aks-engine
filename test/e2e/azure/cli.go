@@ -152,7 +152,8 @@ func (a *Account) CreateGroupWithRetry(name, location string, sleep, timeout tim
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- a.CreateGroup(name, location):
+			default:
+				ch <- a.CreateGroup(name, location)
 				time.Sleep(sleep)
 			}
 		}
@@ -186,14 +187,6 @@ func (a *Account) CreateGroup(name, location string) error {
 		log.Printf("Output:%s\n", out)
 		return err
 	}
-	r := ResourceGroup{
-		Name:     name,
-		Location: location,
-		Tags: map[string]string{
-			"now": now,
-		},
-	}
-	a.ResourceGroup = r
 	return nil
 }
 
@@ -208,7 +201,8 @@ func (a *Account) ShowGroupWithRetry(name string, sleep, timeout time.Duration) 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- a.ShowGroup(name):
+			default:
+				ch <- a.ShowGroup(name)
 				time.Sleep(sleep)
 			}
 		}
@@ -286,11 +280,12 @@ func (a *Account) CreateDeployment(name string, e *engine.Engine) error {
 		}
 	}()
 
-	cmd := exec.Command("az", "deployment", "group", "create",
+	azArgsStringSlice := []string{"deployment", "group", "create",
 		"--name", d.Name,
 		"--resource-group", a.ResourceGroup.Name,
 		"--template-file", e.Config.GeneratedTemplatePath,
-		"--parameters", e.Config.GeneratedParametersPath)
+		"--parameters", e.Config.GeneratedParametersPath}
+	cmd := exec.Command("az", azArgsStringSlice...)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -394,7 +389,8 @@ func (a *Account) GetRGRouteTable(timeout time.Duration) (network.RouteTable, er
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- a.ListRGRouteTable():
+			default:
+				ch <- a.ListRGRouteTable()
 				time.Sleep(5 * time.Second)
 			}
 		}
@@ -408,6 +404,35 @@ func (a *Account) GetRGRouteTable(timeout time.Duration) (network.RouteTable, er
 			}
 		case <-ctx.Done():
 			return network.RouteTable{}, mostRecentListRGRouteTableError
+		}
+	}
+}
+
+// CreateSubnetWithRetry will create a subnet in a vnet in a resource group, retrying if error up to a timeout
+func (a *Account) CreateSubnetWithRetry(vnet, subnetName, subnetPrefix string, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentCreateSubnetWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- a.CreateSubnet(vnet, subnetName, subnetPrefix)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case mostRecentCreateSubnetWithRetryError = <-ch:
+			if mostRecentCreateSubnetWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("CreateSubnetWithRetry timed out: %s\n", mostRecentCreateSubnetWithRetryError)
 		}
 	}
 }
@@ -438,38 +463,6 @@ type RouteTable struct {
 	Name              string `json:"name"`
 	ProvisioningState string `json:"provisioningState"`
 	ResourceGroup     string `json:"resourceGroup"`
-}
-
-// UpdateRouteTables is used to updated a vnet with the appropriate route tables
-func (a *Account) UpdateRouteTables(subnet, vnet string) error {
-	var cmd *exec.Cmd
-	if a.TimeoutCommands {
-		cmd = exec.Command("timeout", "60", "az", "network", "route-table", "list", "-g", a.ResourceGroup.Name)
-	} else {
-		cmd = exec.Command("az", "network", "route-table", "list", "-g", a.ResourceGroup.Name)
-	}
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error while trying to get route table list!\n Output:%s\n", out)
-		return err
-	}
-	rts := []RouteTable{}
-	json.Unmarshal(out, &rts)
-
-	if a.TimeoutCommands {
-		cmd = exec.Command("timeout", "60", "az", "network", "vnet", "subnet", "update",
-			"-n", subnet, "-g", a.ResourceGroup.Name, "--vnet-name", vnet, "--route-table", rts[0].Name)
-	} else {
-		cmd = exec.Command("az", "network", "vnet", "subnet", "update",
-			"-n", subnet, "-g", a.ResourceGroup.Name, "--vnet-name", vnet, "--route-table", rts[0].Name)
-	}
-	util.PrintCommand(cmd)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		log.Printf("Error while trying to update vnet route tables:%s\n", out)
-		return err
-	}
-	return nil
 }
 
 // GetHosts will get a list of vms in the resource group

@@ -114,6 +114,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 				env.ResourceManagerVMDNSSuffix = fmt.Sprintf("cloudapp.%s", azsFQDNSuffix)
 				env.StorageEndpointSuffix = fmt.Sprintf("%s.%s", cs.Location, azsFQDNSuffix)
 				env.KeyVaultDNSSuffix = fmt.Sprintf("vault.%s.%s", cs.Location, azsFQDNSuffix)
+				env.KeyVaultEndpoint = strings.Replace(env.ServiceManagementEndpoint, "https://management.", "https://vault.", 1)
 			} else if env.ResourceManagerVMDNSSuffix == "" || env.StorageEndpointSuffix == "" || env.KeyVaultDNSSuffix == "" {
 				// Non-AzureStack CustomCloud MUST provide suffixes
 				return fmt.Errorf("Non-AzureStack CustomCloudProfile MUST provide ResourceManagerVMDNSSuffix, StorageEndpointSuffix, KeyVaultDNSSuffix")
@@ -176,18 +177,11 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
 			azureCustomCloudSpec.CloudName = helpers.EnsureString(ascc.CloudName, azureCustomCloudSpec.CloudName)
 
-			// DockerSpecConfig
-			asccDockerSpecConfig := ascc.DockerSpecConfig
-			azsDockerSpecConfig := azureCustomCloudSpec.DockerSpecConfig
-			azureCustomCloudSpec.DockerSpecConfig.DockerComposeDownloadURL = helpers.EnsureString(asccDockerSpecConfig.DockerComposeDownloadURL, azsDockerSpecConfig.DockerComposeDownloadURL)
-			azureCustomCloudSpec.DockerSpecConfig.DockerEngineRepo = helpers.EnsureString(asccDockerSpecConfig.DockerEngineRepo, azsDockerSpecConfig.DockerComposeDownloadURL)
-
 			//KubernetesSpecConfig
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureCustomCloudSpec.KubernetesSpecConfig
 
 			azureCustomCloudSpec.KubernetesSpecConfig.AzureTelemetryPID = helpers.EnsureString(asccKubernetesSpecConfig.AzureTelemetryPID, DefaultAzureStackDeployTelemetryPID)
-			azureCustomCloudSpec.KubernetesSpecConfig.ACIConnectorImageBase = helpers.EnsureString(asccKubernetesSpecConfig.ACIConnectorImageBase, azsKubernetesSpecConfig.ACIConnectorImageBase)
 			azureCustomCloudSpec.KubernetesSpecConfig.AzureCNIImageBase = helpers.EnsureString(asccKubernetesSpecConfig.AzureCNIImageBase, azsKubernetesSpecConfig.AzureCNIImageBase)
 			azureCustomCloudSpec.KubernetesSpecConfig.CalicoImageBase = helpers.EnsureString(asccKubernetesSpecConfig.CalicoImageBase, azsKubernetesSpecConfig.CalicoImageBase)
 			azureCustomCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.CNIPluginsDownloadURL, azsKubernetesSpecConfig.CNIPluginsDownloadURL)
@@ -202,6 +196,9 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			azureCustomCloudSpec.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL)
 			azureCustomCloudSpec.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL = helpers.EnsureString(asccKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL, azsKubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL)
 			azureCustomCloudSpec.KubernetesSpecConfig.WindowsTelemetryGUID = helpers.EnsureString(asccKubernetesSpecConfig.WindowsTelemetryGUID, azsKubernetesSpecConfig.WindowsTelemetryGUID)
+			azureCustomCloudSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, azsKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
+			azureCustomCloudSpec.KubernetesSpecConfig.WindowsPauseImageURL = helpers.EnsureString(asccKubernetesSpecConfig.WindowsPauseImageURL, azsKubernetesSpecConfig.WindowsPauseImageURL)
+			azureCustomCloudSpec.KubernetesSpecConfig.AlwaysPullWindowsPauseImage = asccKubernetesSpecConfig.AlwaysPullWindowsPauseImage
 
 			//EndpointConfig
 			asccEndpointConfig := ascc.EndpointConfig

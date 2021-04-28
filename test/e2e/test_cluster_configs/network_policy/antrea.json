@@ -2,13 +2,12 @@
 	"env": {
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.15", "1.16"]
+		"allowedOrchestratorVersions": ["1.16"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPolicy": "antrea"
 				}
@@ -36,10 +35,6 @@
 						}
 					]
 				}
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	}

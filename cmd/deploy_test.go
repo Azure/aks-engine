@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -669,6 +670,31 @@ func TestDeployCmdRun(t *testing.T) {
 	}
 }
 
+func TestDeployCmdWithoutMasterProfile(t *testing.T) {
+	t.Parallel()
+
+	outdir, del := makeTmpDir(t)
+	defer del()
+
+	d := &deployCmd{
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs:      &authArgs{},
+			getClientMock: &armhelpers.MockAKSEngineClient{},
+		},
+		apimodelPath:    "../pkg/engine/testdata/simple/kubernetes.json",
+		outputDirectory: outdir,
+		forceOverwrite:  true,
+		location:        "westus",
+	}
+	d.set = []string{"masterProfile=nil"}
+
+	err := d.loadAPIModel()
+	if err == nil {
+		t.Fatalf("expected error loading api model without MasterProfile: %s", err.Error())
+	}
+}
+
 func TestLoadApiModelOnCustomCloud(t *testing.T) {
 	t.Parallel()
 
@@ -1134,5 +1160,16 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 				t.Fatalf("expected workspaceDomain : %s but got : %s", c.expectedResponse.WorkspaceDomain, addon.Config["workspaceDomain"])
 			}
 		})
+	}
+}
+
+func makeTmpFile(t *testing.T, name string) (string, func()) {
+	tmpF, err := ioutil.TempFile(os.TempDir(), name)
+	if err != nil {
+		t.Fatalf("unable to create file: %s", err.Error())
+	}
+
+	return tmpF.Name(), func() {
+		defer os.Remove(tmpF.Name())
 	}
 }

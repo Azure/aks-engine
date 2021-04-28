@@ -100,48 +100,7 @@ Once the input is validated, the template generator is invoked which will conver
         {{end}}
       {{end}}
     {{end}}
-    {{if not IsHostedMaster}}
       ,{{template "k8s/kubernetesmasterresources.t" .}}
-    {{else}}
-      {{if not IsCustomVNET}}
-      ,{
-        "apiVersion": "[variables('apiVersionDefault')]",
-        "dependsOn": [
-          "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]"
-      {{if not IsAzureCNI}}
-          ,
-          "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]"
-      {{end}}
-        ],
-        "location": "[variables('location')]",
-        "name": "[variables('virtualNetworkName')]",
-        "properties": {
-          "addressSpace": {
-            "addressPrefixes": [
-              "[parameters('vnetCidr')]"
-            ]
-          },
-          "subnets": [
-            {
-              "name": "[variables('subnetName')]",
-              "properties": {
-                "addressPrefix": "[parameters('masterSubnet')]",
-                "networkSecurityGroup": {
-                  "id": "[variables('nsgID')]"
-                }
-      {{if not IsAzureCNI}}
-                ,
-                "routeTable": {
-                  "id": "[variables('routeTableID')]"
-                }
-      {{end}}
-              }
-            }
-          ]
-        },
-        "type": "Microsoft.Network/virtualNetworks"
-      }
-    {{end}}
     {{if not IsAzureCNI}}
     ,{
       "apiVersion": "[variables('apiVersionDefault')]",
@@ -209,9 +168,7 @@ Once the input is validated, the template generator is invoked which will conver
   "outputs": {
     {{range .AgentPoolProfiles}}{{template "agentoutputs.t" .}}
     {{end}}
-    {{if not IsHostedMaster}}
-      {{template "masteroutputs.t" .}} ,
-    {{end}}
+    {{template "masteroutputs.t" .}} ,
     {{template "iaasoutputs.t" .}}
 
   }

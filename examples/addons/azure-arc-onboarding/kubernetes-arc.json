@@ -1,0 +1,49 @@
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "kubernetesConfig": {
+        "useManagedIdentity": true,
+        "addons": [
+          {
+            "name": "azure-arc-onboarding",
+            "enabled": true,
+            "config": {
+              "tenantID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+              "subscriptionID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+              "resourceGroup": "connectedClusters",
+              "clusterName": "clusterName",
+              "clientID": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+              "clientSecret": "88e66958-71dd-48b9-8fed-99e13b5c0a59",
+              "location": "eastus"
+            }
+          }
+        ]
+      }
+    },
+    "masterProfile": {
+      "count": 1,
+      "dnsPrefix": "",
+      "vmSize": "Standard_DS2_v2"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentpool",
+        "count": 1,
+        "vmSize": "Standard_DS2_v2",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "storageProfile": "ManagedDisks"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": ""
+          }
+        ]
+      }
+    }
+  }
+}

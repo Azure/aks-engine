@@ -4,10 +4,12 @@
 package operations
 
 import (
+	"context"
 	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -25,7 +27,7 @@ const (
 )
 
 type drainOperation struct {
-	client  armhelpers.KubernetesClient
+	client  kubernetes.Client
 	node    *v1.Node
 	logger  *log.Entry
 	timeout time.Duration
@@ -44,7 +46,7 @@ func SafelyDrainNode(az armhelpers.AKSEngineClient, logger *log.Entry, apiserver
 }
 
 // SafelyDrainNodeWithClient safely drains a node so that it can be deleted from the cluster
-func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.Entry, nodeName string, timeout time.Duration) error {
+func SafelyDrainNodeWithClient(client kubernetes.Client, logger *log.Entry, nodeName string, timeout time.Duration) error {
 	nodeName = strings.ToLower(nodeName)
 	//Mark the node unschedulable
 	var node *v1.Node
@@ -172,24 +174,32 @@ func (o *drainOperation) deleteOrEvictPods(pods []v1.Pod) error {
 }
 
 func (o *drainOperation) evictPods(pods []v1.Pod, policyGroupVersion string) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	doneCh := make(chan bool, len(pods))
 	errCh := make(chan error, 1)
 
 	for _, pod := range pods {
-		go func(pod v1.Pod, doneCh chan bool, errCh chan error) {
+		go func(ctx context.Context, pod v1.Pod, doneCh chan bool, errCh chan error) {
 			var err error
+		doneEviction:
 			for {
-				err = o.client.EvictPod(&pod, policyGroupVersion)
-				if err == nil {
-					break
-				} else if apierrors.IsNotFound(err) {
-					doneCh <- true
+				select {
+				case <-ctx.Done():
 					return
-				} else if apierrors.IsTooManyRequests(err) {
-					time.Sleep(5 * time.Second)
-				} else {
-					errCh <- errors.Wrapf(err, "error when evicting pod %q", pod.Name)
-					return
+				default:
+					err = o.client.EvictPod(&pod, policyGroupVersion)
+					if err == nil {
+						break doneEviction
+					} else if apierrors.IsNotFound(err) {
+						doneCh <- true
+						return
+					} else if apierrors.IsTooManyRequests(err) {
+						time.Sleep(5 * time.Second)
+					} else {
+						errCh <- errors.Wrapf(err, "error when evicting pod %q", pod.Name)
+						return
+					}
 				}
 			}
 			podArray := []v1.Pod{pod}
@@ -199,7 +209,7 @@ func (o *drainOperation) evictPods(pods []v1.Pod, policyGroupVersion string) err
 			} else {
 				errCh <- errors.Wrapf(err, "error when waiting for pod %q terminating", pod.Name)
 			}
-		}(pod, doneCh, errCh)
+		}(ctx, pod, doneCh, errCh)
 	}
 
 	doneCount := 0

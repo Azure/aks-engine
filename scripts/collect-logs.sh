@@ -18,6 +18,12 @@ collectCloudProviderJson() {
     if [ -f /etc/kubernetes/azurestackcloud.json ]; then
         jq . /etc/kubernetes/azurestackcloud.json > ${DIR}/azurestackcloud.json
     fi
+    if [ -f /etc/kubernetes/network_interfaces.json ]; then
+        cp /etc/kubernetes/network_interfaces.json ${DIR}
+    fi
+    if [ -f /etc/kubernetes/interfaces.json ]; then
+        cp /etc/kubernetes/interfaces.json ${DIR}
+    fi
     if [ -f /opt/azure/vhd-install.complete ]; then
         mkdir -p ${OUTDIR}/opt/azure
         cp /opt/azure/vhd-install.complete ${OUTDIR}/opt/azure
@@ -44,7 +50,8 @@ collectDaemonLogs() {
     local DIR=${OUTDIR}/daemons
     mkdir -p ${DIR}
     if systemctl list-units --no-pager | grep -q ${1}; then
-        timeout 15 journalctl --utc -o short-iso --no-pager -u ${1} &>> ${DIR}/${1}.log
+        timeout 15 journalctl --utc -o short-iso --no-pager -r -u ${1} &> /tmp/${1}.log
+        tac /tmp/${1}.log > ${DIR}/${1}.log
     fi
 }
 
@@ -77,7 +84,7 @@ stackfy() {
 
 stackfyKubeletLog() {
     KUBELET_VERSION=$(kubelet --version | grep -oh -E 'v.*$')
-    KUBELET_VERBOSITY=$(grep -e '--v=[0-9]' -oh | grep -e '[0-9]' -oh /etc/systemd/system/kubelet.service | head -n 1)
+    KUBELET_VERBOSITY=$(grep -e '--v=[0-9]' -oh /etc/systemd/system/kubelet.service | grep -e '[0-9]' -oh /etc/systemd/system/kubelet.service | head -n 1)
     KUBELET_LOG_FILE=${OUTDIR}/daemons/k8s-kubelet.log
     
     {
@@ -192,6 +199,7 @@ OUTDIR="$(mktemp -d)/${HOSTNAME}"
 collectCloudProviderJson
 collectDirLogs /var/log
 collectDirLogs /var/log/azure
+collectDirLogs /var/log/kubeaudit
 collectDir /etc/kubernetes/manifests
 collectDir /etc/kubernetes/addons
 collectDaemonLogs kubelet.service

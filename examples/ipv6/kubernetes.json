@@ -1,0 +1,53 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "featureFlags": {
+            "enableIPv6Only": true
+        },
+        "orchestratorProfile": {
+            "orchestratorRelease": "1.18",
+            "kubernetesConfig": {
+                "loadBalancerSku": "Standard",
+                "excludeMasterFromStandardLB": true,
+                "networkPlugin": "kubenet",
+                "apiServerConfig": {
+                    "--bind-address": "::"
+                },
+                "kubeletConfig": {
+                    "--node-ip": "::"
+                },
+                "controllerManagerConfig": {
+                    "--bind-address": "::"
+                },
+                "schedulerConfig": {
+                    "--bind-address": "::"
+                }
+            }
+        },
+        "masterProfile": {
+            "count": 1,
+            "dnsPrefix": "ss-ipv601",
+            "vmSize": "Standard_D2_v3",
+            "distro": "ubuntu"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "agentpool1",
+                "count": 2,
+                "vmSize": "Standard_D2_v3",
+                "availabilityProfile": "AvailabilitySet",
+                "distro": "ubuntu"
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,82 @@
+# Required pipeline variables:
+# - BUILD_POOL - Azure DevOps build pool to use
+# - CLIENT_ID - Service principal ID
+# - CLIENT_SECRET - Service principal secret
+# - CLUSTER_DEFINITION - Relative path to a cluster definition file used when running e2e tests
+# - DEIS_GO_DEV_IMAGE - Dev container to use
+# - LOCATION - Azure region to create resources in
+# - RESOURCE_GROUP_NAME - Name of resource group to use or create
+# - SUBSCRIPTION_ID - Azure subscription to use
+# - TENANT_ID - Tenant Id used for service principal login
+
+trigger: none
+pr: none
+
+jobs:
+- job: test_staged_windows_provisioning_scripts
+  timeoutInMinutes: 150
+  pool:
+    name: $(BUILD_POOL)
+  steps:
+  - script: |
+      echo -n 'aksengineci' > sa_name && \
+      head /dev/urandom | tr -dc a-z0-9 | head -c 10 >> sa_name && \
+      cat sa_name
+    displayName: Make unique storage account name
+
+  - script: |
+      SA_NAME="$(cat sa_name)" && \
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e LOCATION=${LOCATION} \
+      -e RESOURCE_GROUP_NAME=${RESOURCE_GROUP_NAME} \
+      -e STORAGE_ACCOUNT_NAME=${SA_NAME} \
+      -e STORAGE_CONTAINER_NAME="scripts" \
+      -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
+      -e TENANT_ID=${TENANT_ID} \
+      ${DEIS_GO_DEV_IMAGE} ./scripts/build-windows-provisioning-scripts.sh | tee output.log
+    displayName: Build Windows provisioning scripts
+
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make all
+    displayName: Build aks-engine-test - make all
+    condition: succeeded()
+
+  - script: |
+      SCRIPT_PACKAGE_URL="$(cat output.log | grep https.*zip)" && \
+      echo ${SCRIPT_PACKAGE_URL} && \
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLEANUP_ON_EXIT="true" \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e CLUSTER_DEFINITION="${CLUSTER_DEFINITION}" \
+      -e LOCATION=${LOCATION} \
+      -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
+      -e TENANT_ID=${TENANT_ID} \
+      -e WINDOWS_PROVISIONING_SCRIPTS_URL=${SCRIPT_PACKAGE_URL} \
+      -e USE_MANAGED_IDENTITY="false" \
+      -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
+      ${DEIS_GO_DEV_IMAGE} make test-kubernetes
+    displayName: Run e2e tests
+    condition: succeeded()
+
+  - script: |
+      SA_NAME="$(cat sa_name)" && \
+      az login --service-principal -u ${CLIENT_ID} -p "$(CLIENT_SECRET)" --tenant ${TENANT_ID} && \
+      az storage account delete -y -n ${SA_NAME} -g ${RESOURCE_GROUP_NAME}
+    displayName: Delete storage account
+    condition: always()
+    continueOnError: true
+
+  - script: |
+      sudo chown -R $USER:$USER .
+    displayName: cleanup - chown all files in work directory
+    condition: always()

@@ -69,10 +69,18 @@ Set-AzureCNIConfig
         [Parameter(Mandatory=$true)][string]
         $VNetCIDR,
         [Parameter(Mandatory=$true)][bool]
-        $IsAzureStack
+        $IsAzureStack,
+        [Parameter(Mandatory=$true)][bool]
+        $IsDualStackEnabled
     )
     # Fill in DNS information for kubernetes.
-    $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
+    if ($IsDualStackEnabled){
+        $subnetToPass = $KubeClusterCIDR -split ","
+        $exceptionAddresses = @($subnetToPass[0], $MasterSubnet, $VNetCIDR)
+    }
+    else {
+        $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
+    }
 
     $fileName  = [Io.path]::Combine("$AzureCNIConfDir", "10-azure.conflist")
     $configJson = Get-Content $fileName | ConvertFrom-Json
@@ -93,11 +101,67 @@ Set-AzureCNIConfig
         $configJson.plugins.AdditionalArgs[0].Value.ExceptionList = $exceptionAddresses
     }
 
-    $configJson.plugins.AdditionalArgs[1].Value.DestinationPrefix  = $KubeServiceCIDR
+    if ($IsDualStackEnabled){
+        $configJson.plugins[0]|Add-Member -Name "ipv6Mode" -Value "ipv6nat" -MemberType NoteProperty
+        $serviceCidr = $KubeServiceCIDR -split ","
+        $configJson.plugins[0].AdditionalArgs[1].Value.DestinationPrefix = $serviceCidr[0]
+        $valueObj = [PSCustomObject]@{
+            Type = 'ROUTE'
+            DestinationPrefix = $serviceCidr[1]
+            NeedEncap = $True
+        }
+
+        $jsonContent = [PSCustomObject]@{
+            Name = 'EndpointPolicy'
+            Value = $valueObj
+        }
+        $configJson.plugins[0].AdditionalArgs += $jsonContent
+    }
+    else {
+        $configJson.plugins[0].AdditionalArgs[1].Value.DestinationPrefix = $KubeServiceCIDR
+    }
 
     if ($IsAzureStack) {
         Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
     }
+    
+    $aclRule1 = [PSCustomObject]@{
+        Type = 'ACL'
+        Protocols = '6'
+        Action = 'Block'
+        Direction = 'Out'
+        RemoteAddresses = '168.63.129.16/32'
+        RemotePorts = '80'
+        Priority = 200
+        RuleType = 'Switch'
+    }
+    $aclRule2 = [PSCustomObject]@{
+        Type = 'ACL'
+        Action = 'Allow'
+        Direction = 'In'
+        Priority = 65500
+    }
+    $aclRule3 = [PSCustomObject]@{
+        Type = 'ACL'
+        Action = 'Allow'
+        Direction = 'Out'
+        Priority = 65500
+    }
+    $jsonContent = [PSCustomObject]@{
+        Name = 'EndpointPolicy'
+        Value = $aclRule1
+    }
+    $configJson.plugins[0].AdditionalArgs += $jsonContent
+    $jsonContent = [PSCustomObject]@{
+        Name = 'EndpointPolicy'
+        Value = $aclRule2
+    }
+    $configJson.plugins[0].AdditionalArgs += $jsonContent
+    $jsonContent = [PSCustomObject]@{
+        Name = 'EndpointPolicy'
+        Value = $aclRule3
+    }
+    $configJson.plugins[0].AdditionalArgs += $jsonContent
 
     $configJson | ConvertTo-Json -depth 20 | Out-File -encoding ASCII -filepath $fileName
 }
@@ -229,8 +293,12 @@ function GenerateAzureStackCNIConfig
     $sdnNics = Get-Content $networkInterfacesFile `
         | ConvertFrom-Json `
         | Select-Object -ExpandProperty value `
-        | Where-Object { $localNics.Contains($_.properties.macAddress) } `
+        | Where-Object { $null -ne $_.properties.macAddress -and $localNics.Contains($_.properties.macAddress) } `
         | Where-Object { $_.properties.ipConfigurations.Count -gt 0}
+
+    if (!$sdnNics) {
+        throw 'Error extracting the SDN interfaces from the network interfaces file'
+    }
 
     $interfaces = @{
         Interfaces = @( $sdnNics | ForEach-Object { @{
@@ -255,7 +323,13 @@ function GenerateAzureStackCNIConfig
     Set-ItemProperty -Path $azureCNIConfigFile -Name IsReadOnly -Value $true
 }
 
-function New-ExternalHnsNetwork {
+function New-ExternalHnsNetwork
+{
+    param (
+        [Parameter(Mandatory=$true)][bool]
+        $IsDualStackEnabled
+    )
+
     Write-Log "Creating new HNS network `"ext`""
     $externalNetwork = "ext"
     $na = @(Get-NetAdapter -Physical)
@@ -272,9 +346,14 @@ function New-ExternalHnsNetwork {
 
     $stopWatch = New-Object System.Diagnostics.Stopwatch
     $stopWatch.Start()
-    # Fixme : use a smallest range possible, that will not collide with any pod space
-    New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name $externalNetwork -Verbose
 
+    # Fixme : use a smallest range possible, that will not collide with any pod space
+    if ($IsDualStackEnabled) {
+        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix @("192.168.255.0/30","192:168:255::0/127") -Gateway @("192.168.255.1","192:168:255::1") -AdapterName $adapterName -Name $externalNetwork -Verbose
+    }
+    else {
+        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name $externalNetwork -Verbose
+    }
     # Wait for the switch to be created and the ip address to be assigned.
     for ($i = 0; $i -lt 60; $i++) {
         $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue

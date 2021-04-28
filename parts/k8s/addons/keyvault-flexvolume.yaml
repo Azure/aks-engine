@@ -1,4 +1,4 @@
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -10,11 +10,11 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
-{{- if IsKubernetesVersionGe "1.16.0"}}
+    rollingUpdate:
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: keyvault-flexvolume
-{{- end}}
   template:
     metadata:
       labels:
@@ -27,6 +27,15 @@ spec:
 {{- end}}
     spec:
       priorityClassName: system-cluster-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       tolerations:
       containers:
       - name: keyvault-flexvolume

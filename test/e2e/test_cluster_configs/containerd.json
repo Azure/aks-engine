@@ -4,12 +4,11 @@
         "apiVersion": "vlabs",
         "properties": {
             "orchestratorProfile": {
-                "orchestratorType": "Kubernetes",
                 "kubernetesConfig": {
                     "networkPlugin": "azure",
                     "containerRuntime": "containerd",
-                    "windowsContainerdURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip",
-                    "windowsSdnPluginURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
+                    "linuxContainerdURL": "https://packages.microsoft.com/repos/microsoft-ubuntu-bionic-prod/pool/main/m/moby-containerd/moby-containerd_1.3.7+azure-2_amd64.deb",
+                    "windowsContainerdURL": "https://github.com/containerd/containerd/releases/download/v1.4.0/containerd-1.4.0-windows-amd64.tar.gz"
                 }
             },
             "masterProfile": {
@@ -49,11 +48,7 @@
                 "adminUsername": "azureuser",
                 "adminPassword": "replacepassword1234$",
                 "enableAutomaticUpdates": false,
-                "sshEnabled": true,
-                "windowsPublisher": "microsoft-aks",
-                "windowsOffer": "aks-windows",
-                "windowsSku": "2019-datacenter-core-smalldisk-containerd-2005",
-                "imageVersion": "latest"
+                "sshEnabled": true
             }
         }
     }

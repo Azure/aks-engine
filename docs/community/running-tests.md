@@ -1,11 +1,24 @@
 # Running Tests
 
-If you are an AKS Engine developer, running local E2E tests to validate changes can greatly increase iterative velocity.
+If you are an AKS Engine developer, running local E2E tests to validate changes can greatly increase iterative velocity.  
 
-As mentioned briefly in the [developer guide](developer-guide.md), a `make` target is maintained to provide convenient shell invocation of the E2E test runner across for generic, configurable usage:
+As mentioned briefly in the [developer guide](developer-guide.md), a `make` target is maintained to provide convenient shell invocation of the E2E test runner across for generic, configurable usage.  In addition you can run the tests from a [dev contianer](developer-guide.md#docker-development-environment) using `make dev` then run the following commands:
 
 ```sh
-$ ORCHESTRATOR_RELEASE=1.18 CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID CLIENT_ID=$TEST_AZURE_SP_ID CLIENT_SECRET=$TEST_AZURE_SP_PW TENANT_ID=$TEST_AZURE_TENANT_ID LOCATION=$AZURE_REGION CLEANUP_ON_EXIT=false make test-kubernetes
+# build local a copy of aks-engine
+$ make build
+
+# run e2e tests
+$ ORCHESTRATOR_RELEASE=1.18 \
+    CLUSTER_DEFINITION=examples/kubernetes.json \
+    SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID \
+    CLIENT_ID=$TEST_AZURE_SP_ID \
+    CLIENT_SECRET=$TEST_AZURE_SP_PW \
+    TENANT_ID=$TEST_AZURE_TENANT_ID \
+    LOCATION=$AZURE_REGION \
+    CLEANUP_ON_EXIT=false \
+    OUTPUT_DIR=./_output \
+    make test-kubernetes
 ```
 
 The above, simple example describes an E2E test invocation against a base cluster configuration defined by the API model at `examples/kubernetes.json`, overriding any specific Kubernetes version therein to validate the most recent, supported v1.18 release; using Azure service principal authentication defined in the various `$TEST_AZURE_`* environment variables; deployed to the region defined by the environment variable `$AZURE_REGION`; and finally, we tell the E2E test runner not to delete the cluster resources (i.e., the resource group) following the completion of the tests.
@@ -37,6 +50,6 @@ The E2E test runner is designed to be flexible across a wide range of cluster co
 | `TIMEOUT` | no      | How much timeout tolerance for tests? Decrease timeout tolerance to do performance-type tests, increase to allow for more operational variability and possibly reduce flakes. E.g., `TIMEOUT=10m`. Default is 20m. |
 | `LB_TIMEOUT` | no      | How much timeout tolerance for Load Balancer tests? Decrease timeout tolerance to do performance-type tests, increase to allow for more operational variability and possibly reduce flakes. E.g., `LB_TIMEOUT=5m`. Default is 20m. |
 | `GINKGO_FAIL_FAST` | no      | Stop the suite right after the first failure? E.g., `GINKGO_FAIL_FAST=false`. Default is true. |
-| `GINKGO_FOCUS` | no      | Regular expression string to pass to test runner to run only a subset of tests that match the regular expression. E.g., `GINKGO_FOCUS="should be able to produce working LoadBalancers"`. Only works if `GINKGO_FAIL_FAST` is set to true. |
-| `GINKGO_SKIP` | no      | Regular expression string to pass to test runner to skip the subset of tests that match the regular expression. E.g., `GINKGO_SKIP="should be able to attach azure file"`. Only works if `GINKGO_FAIL_FAST` is set to true. |
+| `GINKGO_FOCUS` | no      | Regular expression string to pass to test runner to run only a subset of tests that match the regular expression. E.g., `GINKGO_FOCUS="should be able to produce working LoadBalancers"`. |
+| `GINKGO_SKIP` | no      | Regular expression string to pass to test runner to skip the subset of tests that match the regular expression. E.g., `GINKGO_SKIP="should be able to attach azure file"`. |
 | `DEBUG_AFTERSUITE` | no      | Print out Kubernetes resources and logs after E2E suite. This is especially useful if you have to delete your cluster after running the test and you wish to debug at a later time. E.g., `DEBUG_AFTERSUITE=true`. Default is false. |

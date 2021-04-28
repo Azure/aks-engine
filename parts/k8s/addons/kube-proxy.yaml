@@ -1,4 +1,3 @@
-{{if IsKubernetesVersionGe "1.16.0" -}}
 apiVersion: v1
 kind: ConfigMap
 data:
@@ -32,8 +31,7 @@ metadata:
     tier: node
     k8s-app: kube-proxy
 ---
-{{- end}}
-apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
@@ -48,10 +46,8 @@ spec:
   selector:
     matchLabels:
       k8s-app: kube-proxy
-{{- if IsKubernetesVersionGe "1.16.0"}}
       component: kube-proxy
       tier: node
-{{- end}}
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
@@ -82,18 +78,8 @@ spec:
         operator: Exists
       containers:
       - command:
-{{- if not (IsKubernetesVersionGe "1.17.0")}}
-        - /hyperkube
-{{- end}}
         - kube-proxy
-{{- if not (IsKubernetesVersionGe "1.16.0")}}
-        - --kubeconfig=/var/lib/kubelet/kubeconfig
-        - --cluster-cidr={{ContainerConfig "cluster-cidr"}}
-        - --feature-gates=ExperimentalCriticalPodAnnotation=true
-        - --proxy-mode={{ContainerConfig "proxy-mode"}}
-{{else}}
         - --config=/var/lib/kube-proxy/config.yaml
-{{- end}}
         image: {{ContainerImage "kube-proxy"}}
         imagePullPolicy: IfNotPresent
         name: kube-proxy
@@ -117,12 +103,10 @@ spec:
         - mountPath: /lib/modules/
           name: kernelmodules
           readOnly: true
-{{- if IsKubernetesVersionGe "1.16.0"}}
         - mountPath: /var/lib/kube-proxy/config.yaml
           subPath: config.yaml
           name: kube-proxy-config-volume
           readOnly: true
-{{- end}}
       hostNetwork: true
       volumes:
       - hostPath:
@@ -140,10 +124,8 @@ spec:
       - hostPath:
           path: /lib/modules/
         name: kernelmodules
-{{- if IsKubernetesVersionGe "1.16.0"}}
       - configMap:
           name: kube-proxy-config
         name: kube-proxy-config-volume
-{{- end}}
       nodeSelector:
         kubernetes.io/os: linux

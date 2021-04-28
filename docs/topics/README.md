@@ -4,24 +4,25 @@ Introductions to all the key parts of AKS Engine you’ll need to know.
 
 - [AAD integration Walkthrough](aad.md)
 - [Architecture](architecture.md)
-- [Cluster Definitions](clusterdefinitions.md) ([Chinese](clusterdefinitions.zh-CN.md))
+- [Cluster Definitions](clusterdefinitions.md)
 - [Extensions](extensions.md)
 - [Features](features.md)
 - [Using GPUs with Kubernetes](gpu.md)
 - [Running Kubernetes in a hybrid environment](hybrid-environment.md)
 - [For Kubernetes Developers](kubernetes-developers.md)
-- [Kubernetes Walkthrough](kubernetes-walkthrough.md)
 - [Service Principals](service-principals.md)
 - [Use Key Vault as the Source of Cluster Configuration Secrets](keyvault-secrets.md)
 - [More on Windows and Kubernetes](windows-and-kubernetes.md)
 - [Kubernetes Windows Walkthrough](windows.md)
 - [Using Intel&reg; SGX with Kubernetes](sgx.md)
+- [Monitoring Kubernetes Clusters](monitoring.md)
 
 **Operations**
 
-- [Scaling Kubernetes Clusters](scale.md)
-- [Upgrading Kubernetes Clusters](upgrade.md)
-- [Monitoring Kubernetes Clusters](monitoring.md)
+- [Scaling Clusters](scale.md)
+- [Updating VMSS Node Pools](update.md)
+- [Adding Node Pools to Existing Clusters](addpool.md)
+- [Upgrading Clusters](upgrade.md)
 
 **Azure Stack**
 

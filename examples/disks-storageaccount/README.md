@@ -6,4 +6,4 @@ AKS Engine enables you to create a customized Kubernetes cluster on Microsoft Az
 
 The example JSON API model file in this directory shows you how to configure up to 4 attached disks. Disks can range from 1 to 1024 GB in size.
 
-1. **kubernetes.json** - deploying and using [Kubernetes](../../docs/tutorials/deploy.md)
+1. **kubernetes.json** - deploying and using [Kubernetes](../../docs/tutorials/quickstart.md#deploy)

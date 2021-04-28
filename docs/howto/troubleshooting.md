@@ -19,7 +19,11 @@ CSE stands for CustomScriptExtension, and is just a way of expressing: "a script
 
 To summarize, the way that AKS Engine implements Kubernetes on Azure is a collection of (1) Azure VM configuration + (2) shell script execution. Both are implemented as a single operational unit, and when #2 fails, we consider the entire VM provisioning operation to be a failure; more importantly, if only one VM in the cluster deployment fails, we consider the entire cluster operation to be a failure.
 
-### How To Debug CSE errors (Linux)
+### How to Retrieve CSE logs?
+
+Please refer to the [get-logs](../topics/get-logs.md) command documentation.
+
+### How to Debug CSE errors (Linux)
 
 In order to troubleshoot a cluster that failed in the above way(s), we need to grab the CSE logs from the host VM itself.
 
@@ -159,3 +163,7 @@ read and **write** permissions to the target Subscription.
 ## Failed upgrade
 
 Please review the [upgrade documentation](../topics/upgrade.md) for a guide on upgrading AKS Engine-created Kubernetes clusters.
+
+## Azure API Throttling
+
+See this [document](../topics/azure-api-throttling.md) for help with troubleshooting Kubernetes clusters affected by Azure API throttling.

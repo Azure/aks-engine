@@ -10,14 +10,8 @@ const (
 
 // the orchestrators supported by vlabs
 const (
-	// DCOS is the string constant for DCOS orchestrator type and defaults to DCOS188
-	DCOS string = "DCOS"
-	// Swarm is the string constant for the Swarm orchestrator type
-	Swarm string = "Swarm"
 	// Kubernetes is the string constant for the Kubernetes orchestrator type
 	Kubernetes string = "Kubernetes"
-	// SwarmMode is the string constant for the Swarm Mode orchestrator type
-	SwarmMode string = "SwarmMode"
 )
 
 // the OSTypes supported by vlabs
@@ -31,8 +25,7 @@ const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
 	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
-	RHEL              Distro = "rhel"
-	CoreOS            Distro = "coreos"            // deprecated
+	Flatcar           Distro = "flatcar"
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
 	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
@@ -95,7 +88,7 @@ const (
 
 var (
 	// NetworkPluginValues holds the valid values for network plugin implementation
-	NetworkPluginValues = [...]string{"", "kubenet", "azure", NetworkPluginCilium, NetworkPluginAntrea, "flannel"}
+	NetworkPluginValues = [...]string{"", NetworkPluginKubenet, "azure", NetworkPluginCilium, NetworkPluginAntrea, "flannel"}
 
 	// NetworkPolicyValues holds the valid values for a network policy
 	// "azure" and "none" are there for backwards-compatibility
@@ -105,7 +98,7 @@ var (
 	ContainerRuntimeValues = [...]string{"", Docker, Containerd}
 
 	// DistroValues holds the valid values for OS distros
-	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, Ubuntu1804Gen2, RHEL, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
+	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, Ubuntu1804Gen2, Flatcar, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureCustomCloudDependenciesLocationPublic, AzureCustomCloudDependenciesLocationChina, AzureCustomCloudDependenciesLocationGerman, AzureCustomCloudDependenciesLocationUSGovernment}
@@ -136,12 +129,14 @@ const (
 	NetworkPolicyAntrea = "antrea"
 	// NetworkPluginAntrea is the string expression for antrea network plugin config option
 	NetworkPluginAntrea = NetworkPolicyAntrea
-	// NetworkPluginFlannel is the string expression for flannel network plugin config option
-	NetworkPluginFlannel = "flannel"
+	// NetworkPluginFlannel is the string expression for flannel network plugin config option // Deprecated
+	NetworkPluginFlannel = "flannel" // Deprecated
 	// NetworkModeBridge is the string expression for bridge network mode config option
 	NetworkModeBridge = "bridge"
 	// NetworkModeTransparent is the string expression for transparent network mode config option
 	NetworkModeTransparent = "transparent"
+	// NetworkPluginKubenet is the string expression for kubenet network plugin config option
+	NetworkPluginKubenet = "kubenet"
 )
 
 const (

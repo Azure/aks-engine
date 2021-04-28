@@ -59,9 +59,9 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 			OrchestratorType:    Kubernetes,
 			OrchestratorVersion: deployedVersion,
 		}
-		v, e := getKubernetesAvailableUpgradeVersions(deployedVersion, common.GetAllSupportedKubernetesVersions(false, false))
+		v, e := getKubernetesAvailableUpgradeVersions(deployedVersion, common.GetAllSupportedKubernetesVersions(false, false, false))
 		Expect(e).To(BeNil())
-		orch, e := GetOrchestratorVersionProfile(csOrch, false)
+		orch, e := GetOrchestratorVersionProfile(csOrch, false, false)
 		Expect(e).To(BeNil())
 		Expect(len(orch.Upgrades)).To(Equal(len(v)))
 	}
@@ -69,9 +69,9 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 	// The latest version is not upgradable
 	csOrch := &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
-		OrchestratorVersion: common.GetMaxVersion(common.GetAllSupportedKubernetesVersions(false, false), true),
+		OrchestratorVersion: common.GetMaxVersion(common.GetAllSupportedKubernetesVersions(false, false, false), true),
 	}
-	orch, e := GetOrchestratorVersionProfile(csOrch, false)
+	orch, e := GetOrchestratorVersionProfile(csOrch, false, false)
 	Expect(e).To(BeNil())
 	Expect(len(orch.Upgrades)).To(Equal(0))
 }
@@ -79,11 +79,11 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 func TestGetOrchestratorVersionProfileList(t *testing.T) {
 	RegisterTestingT(t)
 	// kubernetes only
-	list, e := GetOrchestratorVersionProfileList(common.Kubernetes, "", false)
+	list, e := GetOrchestratorVersionProfileList(common.Kubernetes, "", false, "")
 	Expect(e).To(BeNil())
-	Expect(len(list)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false))))
+	Expect(len(list)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false, false))))
 	for _, v := range list {
-		Expect(common.GetAllSupportedKubernetesVersions(false, false)).Should(ContainElement(v.OrchestratorProfile.OrchestratorVersion))
+		Expect(common.GetAllSupportedKubernetesVersions(false, false, false)).Should(ContainElement(v.OrchestratorProfile.OrchestratorVersion))
 	}
 }
 
@@ -107,95 +107,10 @@ func TestKubernetesInfo(t *testing.T) {
 			OrchestratorVersion: v,
 		}
 
-		_, e := kubernetesInfo(csOrch, false)
+		_, e := kubernetesInfo(csOrch, false, false)
 		Expect(e).NotTo(BeNil())
 	}
 
-}
-
-func TestDcosInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"invalid number",
-		"invalid.number",
-		"a4.b7.c3",
-		"31.29.",
-		".17.02",
-		"43.156.89.",
-		"1.2.a"}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    DCOS,
-			OrchestratorVersion: v,
-		}
-
-		_, e := dcosInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    DCOS,
-		OrchestratorVersion: common.DCOSDefaultVersion,
-	}
-
-	_, e := dcosInfo(csOrch, false)
-	Expect(e).To(BeNil())
-}
-
-func TestSwarmInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"swarm:1.1.1",
-		"swarm:1.1.2",
-	}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    Swarm,
-			OrchestratorVersion: v,
-		}
-
-		_, e := swarmInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    Swarm,
-		OrchestratorVersion: common.SwarmVersion,
-	}
-
-	_, e := swarmInfo(csOrch, false)
-	Expect(e).To(BeNil())
-}
-
-func TestDockerceInfoInfo(t *testing.T) {
-	RegisterTestingT(t)
-	invalid := []string{
-		"17.02.1",
-		"43.156.89",
-	}
-
-	for _, v := range invalid {
-		csOrch := &OrchestratorProfile{
-			OrchestratorType:    SwarmMode,
-			OrchestratorVersion: v,
-		}
-
-		_, e := dockerceInfo(csOrch, false)
-		Expect(e).NotTo(BeNil())
-	}
-
-	// test good value
-	csOrch := &OrchestratorProfile{
-		OrchestratorType:    SwarmMode,
-		OrchestratorVersion: common.DockerCEVersion,
-	}
-
-	_, e := dockerceInfo(csOrch, false)
-	Expect(e).To(BeNil())
 }
 
 func TestGetKubernetesAvailableUpgradeVersions(t *testing.T) {

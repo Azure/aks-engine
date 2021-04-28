@@ -1,13 +1,11 @@
 {
-    "env": {},
-    "options": {
-        "allowedOrchestratorVersions": ["1.15", "1.16", "1.17", "1.18"]
+    "env": {
+        "GINKGO_SKIP": "should be able to rotate docker logs"
     },
     "apiModel": {
         "apiVersion": "vlabs",
         "properties": {
             "orchestratorProfile": {
-                "orchestratorType": "Kubernetes",
                 "kubernetesConfig": {
                     "addons": [
                         {
@@ -32,6 +30,13 @@
                     "vmSize": "Standard_DS2_v2",
                     "availabilityProfile": "VirtualMachineScaleSets",
                     "scalesetPriority": "Spot"
+                },
+                {
+                    "name": "agentwin",
+                    "count": 2,
+                    "vmSize": "Standard_D2_v3",
+                    "availabilityProfile": "VirtualMachineScaleSets",
+                    "osType": "Windows"
                 }
             ],
             "linuxProfile": {
@@ -44,9 +49,11 @@
                     ]
                 }
             },
-            "servicePrincipalProfile": {
-                "clientId": "",
-                "secret": ""
+            "windowsProfile": {
+                "adminUsername": "azureuser",
+                "adminPassword": "replacepassword1234$",
+                "enableAutomaticUpdates": false,
+                "sshEnabled": true
             }
         }
     }

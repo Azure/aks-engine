@@ -19,6 +19,10 @@ spec:
       env:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: "/etc/kubernetes/azurestackcloud.json"
+  {{- if IsAzureStackCloud}}
+      - name: AZURE_GO_SDK_LOG_LEVEL
+        value: INFO
+  {{end}}
 {{end}}
       volumeMounts:
         - name: etc-kubernetes
@@ -26,6 +30,9 @@ spec:
 {{- if IsKubernetesVersionGe "1.17.0"}}
         - name: etc-ssl
           mountPath: /etc/ssl
+          readOnly: true
+        - name: ca-certificates
+          mountPath: /usr/local/share/ca-certificates
           readOnly: true
 {{end}}
         - name: var-lib-kubelet
@@ -44,6 +51,9 @@ spec:
     - name: etc-ssl
       hostPath:
         path: /etc/ssl
+    - name: ca-certificates
+      hostPath:
+        path: /usr/local/share/ca-certificates
 {{end}}
     - name: var-lib-kubelet
       hostPath:

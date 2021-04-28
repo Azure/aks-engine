@@ -11,18 +11,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/kubernetes"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Upgrader holds information on upgrading an AKS cluster
@@ -35,6 +40,7 @@ type Upgrader struct {
 	stepTimeout        *time.Duration
 	cordonDrainTimeout *time.Duration
 	AKSEngineVersion   string
+	CurrentVersion     string
 	ControlPlaneOnly   bool
 }
 
@@ -44,7 +50,8 @@ const (
 	defaultTimeout                     = time.Minute * 20
 	defaultCordonDrainTimeout          = time.Minute * 20
 	nodePropertiesCopyTimeout          = time.Minute * 5
-	clusterUpgradeTimeout              = time.Minute * 180
+	getResourceTimeout                 = time.Minute * 1
+	perNodeUpgradeTimeout              = time.Minute * 20
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
 	vmStatusIgnored
@@ -70,22 +77,91 @@ func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clus
 
 // RunUpgrade runs the upgrade pipeline
 func (ku *Upgrader) RunUpgrade() error {
-	ctx, cancel := context.WithTimeout(context.Background(), clusterUpgradeTimeout)
-	defer cancel()
-	if err := ku.upgradeMasterNodes(ctx); err != nil {
+	controlPlaneUpgradeTimeout := perNodeUpgradeTimeout
+	if ku.ClusterTopology.DataModel.Properties.MasterProfile.Count > 0 {
+		controlPlaneUpgradeTimeout = perNodeUpgradeTimeout * time.Duration(ku.ClusterTopology.DataModel.Properties.MasterProfile.Count)
+	}
+	ctxControlPlane, cancelControlPlane := context.WithTimeout(context.Background(), controlPlaneUpgradeTimeout)
+	defer cancelControlPlane()
+	if err := ku.upgradeMasterNodes(ctxControlPlane); err != nil {
 		return err
 	}
+
+	ku.handleUnreconcilableAddons()
 
 	if ku.ControlPlaneOnly {
 		return nil
 	}
 
-	if err := ku.upgradeAgentScaleSets(ctx); err != nil {
+	var numNodesToUpgrade int
+	for _, pool := range ku.ClusterTopology.AgentPoolScaleSetsToUpgrade {
+		numNodesToUpgrade += len(pool.VMsToUpgrade)
+	}
+	nodesUpgradeTimeout := perNodeUpgradeTimeout
+	if numNodesToUpgrade > 0 {
+		nodesUpgradeTimeout = perNodeUpgradeTimeout * time.Duration(numNodesToUpgrade)
+	}
+	ctxNodes, cancelNodes := context.WithTimeout(context.Background(), nodesUpgradeTimeout)
+	defer cancelNodes()
+	if err := ku.upgradeAgentScaleSets(ctxNodes); err != nil {
 		return err
 	}
 
 	//This is handling VMAS VMs only, not VMSS
-	return ku.upgradeAgentPools(ctx)
+	return ku.upgradeAgentPools(ctxNodes)
+}
+
+// handleUnreconcilableAddons ensures addon upgrades that addon-manager cannot handle by itself.
+// This method fails silently otherwide it would break test "Should not fail if a Kubernetes client cannot be created" (upgradecluster_test.go)
+func (ku *Upgrader) handleUnreconcilableAddons() {
+	upgradeVersion := ku.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
+	// kube-proxy upgrade fails from v1.15 to 1.16: https://github.com/Azure/aks-engine/issues/3557
+	// deleting daemonset so addon-manager recreates instead of patching
+	if !common.IsKubernetesVersionGe(ku.CurrentVersion, "1.16.0") && common.IsKubernetesVersionGe(upgradeVersion, "1.16.0") {
+		ku.logger.Infof("Attempting to delete kube-proxy daemonset.")
+		client, err := ku.getKubernetesClient(getResourceTimeout)
+		if err != nil {
+			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
+			return
+		}
+		err = client.DeleteDaemonSet(&appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "kube-system",
+				Name:      common.KubeProxyAddonName,
+			},
+		})
+		if err != nil {
+			ku.logger.Errorf("Error deleting kube-proxy daemonset: %v", err)
+		}
+		ku.logger.Infof("Deleted kube-proxy daemonset. Addon-manager will recreate it.")
+	}
+	// metrics-server upgrade fails from v1.15 to 1.16 as the addon mode is EnsureExists for pre-v1.16 cluster
+	if !common.IsKubernetesVersionGe(ku.CurrentVersion, "1.16.0") && common.IsKubernetesVersionGe(upgradeVersion, "1.16.0") {
+		ku.logger.Infof("Attempting to delete metrics-server deployment.")
+		client, err := ku.getKubernetesClient(getResourceTimeout)
+		if err != nil {
+			ku.logger.Errorf("Error getting Kubernetes client: %v", err)
+			return
+		}
+		err = client.DeleteClusterRole(&rbacv1.ClusterRole{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "system:metrics-server",
+			},
+		})
+		if err != nil {
+			ku.logger.Errorf("Error deleting metrics-server cluster role: %v", err)
+		}
+		err = client.DeleteDeployment(&appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "kube-system",
+				Name:      common.MetricsServerAddonName,
+			},
+		})
+		if err != nil {
+			ku.logger.Errorf("Error deleting metrics-server deployment: %v", err)
+		}
+		ku.logger.Infof("Deleted metrics-server deployment. Addon-manager will recreate it.")
+	}
 }
 
 // Validate will run validation post upgrade
@@ -123,7 +199,14 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
 		}
 	}
-	//TODO: rename this as it's not only touching master resources
+
+	if to.Bool(ku.DataModel.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
+		err = transformer.RemoveKMSResourcesFromTemplate(ku.logger, templateMap)
+		if err != nil {
+			return ku.Translator.Errorf("error removing KMS resources from template: %s", err.Error())
+		}
+	}
+
 	if err = transformer.NormalizeResourcesForK8sMasterUpgrade(ku.logger, templateMap, ku.DataModel.Properties.MasterProfile.IsManagedDisks(), nil); err != nil {
 		ku.logger.Error(err.Error())
 		return err
@@ -499,9 +582,7 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			}
 		}
 
-		// TODO: rename this!
-		// This is not called in scaling scenarios. only in this upgrade scenario!
-		if err = transformer.NormalizeMasterResourcesForScaling(ku.logger, templateMap); err != nil {
+		if err = transformer.NormalizeMasterResourcesForVMSSPoolUpgrade(ku.logger, templateMap); err != nil {
 			return err
 		}
 
@@ -517,9 +598,9 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		deploymentSuffix := random.Int31()
-		deploymentName := fmt.Sprintf("agentscaleset-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
+		deploymentName := fmt.Sprintf("k8s-upgrade-update-vmss-pools-%s-%d", time.Now().Format("06-01-02T15.04.05"), deploymentSuffix)
 
-		ku.logger.Infof("Deploying the agent scale sets ARM template...")
+		ku.logger.Infof("Deploying ARM template to update all VMSS node pools...")
 		_, err = ku.Client.DeployTemplate(
 			ctx,
 			ku.ClusterTopology.ResourceGroup,
@@ -532,6 +613,8 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			return err
 		}
 	}
+
+	ku.logger.Infof("Will now perform a rolling upgrade of each VMSS, one node (VM instance) at a time...")
 
 	for _, vmssToUpgrade := range ku.ClusterTopology.AgentPoolScaleSetsToUpgrade {
 		ku.logger.Infof("Upgrading VMSS %s", vmssToUpgrade.Name)
@@ -717,7 +800,7 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 	return lastVMName, nil
 }
 
-func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesClient, oldNodeName string, newNodeName string) error {
+func (ku *Upgrader) copyCustomPropertiesToNewNode(client kubernetes.Client, oldNodeName string, newNodeName string) error {
 	// The new node is created without any taints, Kubernetes might schedule some pods on this newly created node before the taints/annotations/labels
 	// are copied over from corresponding old node. So drain the new node first before copying over the node properties.
 	// Note: SafelyDrainNodeWithClient() sets the Unschedulable of the node to true, set Unschedulable to false in copyCustomNodeProperties
@@ -772,7 +855,7 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	}
 }
 
-func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
+func (ku *Upgrader) copyCustomNodeProperties(client kubernetes.Client, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
 	// copy additional custom annotations from old node to new node
 	if oldNode.Annotations != nil {
 		if newNode.Annotations == nil {
@@ -819,12 +902,8 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	return err
 }
 
-func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (armhelpers.KubernetesClient, error) {
+func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (kubernetes.Client, error) {
 	apiserverURL := ku.DataModel.Properties.GetMasterFQDN()
-	if ku.DataModel.Properties.HostedMasterProfile != nil {
-		apiServerListeningPort := 443
-		apiserverURL = fmt.Sprintf("https://%s:%d", apiserverURL, apiServerListeningPort)
-	}
 
 	return ku.Client.GetKubernetesClient(
 		apiserverURL,
@@ -850,15 +929,4 @@ func getAvailableIndex(vms map[int]*vmInfo) int {
 	}
 
 	return maxIndex + 1
-}
-
-// isNodeReady returns true if a node is ready; false otherwise.
-// Copied from: https://github.com/kubernetes/kubernetes/blob/886e04f1fffbb04faf8a9f9ee141143b2684ae68/pkg/api/v1/node/util.go#L40
-func isNodeReady(node *v1.Node) bool {
-	for _, c := range node.Status.Conditions {
-		if c.Type == v1.NodeReady {
-			return c.Status == v1.ConditionTrue
-		}
-	}
-	return false
 }

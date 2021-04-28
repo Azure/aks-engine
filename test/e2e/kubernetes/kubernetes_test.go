@@ -7,10 +7,14 @@ package kubernetes
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"math/rand"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,6 +32,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/daemonset"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/event"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
@@ -55,11 +60,9 @@ const (
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
 	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
-	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
-	validateDNSTimeout                        = 2 * time.Minute
-	firstMasterRegexStr                       = "^k8s-master-"
 	podLookupRetries                          = 5
+	sigPublishingTimeout                      = 8 * time.Hour // :(
 )
 
 var (
@@ -76,9 +79,11 @@ var (
 	clusterAutoscalerAddon          api.KubernetesAddon
 	deploymentReplicasCount         int
 	dnsAddonName                    string
+	singleCommandTimeout            time.Duration
 	stabilityCommandTimeout         time.Duration
 	env                             azure.Environment
 	azureClient                     *armhelpers.AzureClient
+	firstMasterRegexStr             = fmt.Sprintf("^%s-.*-0", common.LegacyControlPlaneVMPrefix)
 )
 
 var _ = BeforeSuite(func() {
@@ -107,10 +112,20 @@ var _ = BeforeSuite(func() {
 		deploymentReplicasCount += profile.Count
 	}
 
+	var getNodeByRegexError error
+	masterNodes, getNodeByRegexError = node.GetByRegexWithRetry(fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix), 3*time.Minute, cfg.Timeout)
+	Expect(getNodeByRegexError).NotTo(HaveOccurred())
+	var getKubeConfigError error
+	kubeConfig, getKubeConfigError = GetConfigWithRetry(3*time.Second, cfg.Timeout)
+	Expect(getKubeConfigError).NotTo(HaveOccurred())
+
+	if cfg.RebootControlPlaneNodes {
+		cfg.BlockSSHPort = true
+		cfg.StabilityIterations = 0
+	}
+
 	if !cfg.BlockSSHPort {
 		var err error
-		masterNodes, err = node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
-		Expect(err).NotTo(HaveOccurred())
 		masterName := masterNodes[0].Metadata.Name
 		if strings.Contains(masterName, "vmss") {
 			masterSSHPort = "50001"
@@ -118,8 +133,6 @@ var _ = BeforeSuite(func() {
 			masterSSHPort = "22"
 		}
 		masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
-		kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
-		Expect(err).NotTo(HaveOccurred())
 		sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 		success := false
@@ -137,18 +150,18 @@ var _ = BeforeSuite(func() {
 		Expect(success).To(BeTrue())
 		firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
 		Expect(err).NotTo(HaveOccurred())
-		if hasAddon, addon := eng.HasAddon("cluster-autoscaler"); hasAddon {
-			clusterAutoscalerAddon = addon
-			if len(addon.Pools) > 0 {
-				for _, pool := range addon.Pools {
-					p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
-					maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
-					minNodes, _ := strconv.Atoi(pool.Config["min-nodes"])
-					if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count &&
-						minNodes <= eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
-						clusterAutoscalerEngaged = true
-						break
-					}
+	}
+	if hasAddon, addon := eng.HasAddon(common.ClusterAutoscalerAddonName); hasAddon {
+		clusterAutoscalerAddon = addon
+		if len(addon.Pools) > 0 {
+			for _, pool := range addon.Pools {
+				p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
+				maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
+				minNodes, _ := strconv.Atoi(pool.Config["min-nodes"])
+				if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count &&
+					minNodes <= eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
+					clusterAutoscalerEngaged = true
+					break
 				}
 			}
 		}
@@ -159,11 +172,10 @@ var _ = BeforeSuite(func() {
 	if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
 		dnsAddonName = common.CoreDNSAddonName
 	}
-	stabilityCommandTimeout = 3 * time.Second
-	if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == api.NetworkPolicyCalico {
-		stabilityCommandTimeout = 10 * time.Second
-	}
 	Expect(dnsAddonName).NotTo(Equal(""))
+
+	singleCommandTimeout = time.Duration(cfg.SingleCommandTimeoutMinutes) * time.Minute
+	stabilityCommandTimeout = time.Duration(cfg.StabilityTimeoutSeconds) * time.Second
 
 	if !cfg.IsCustomCloudProfile() {
 		env, err = azure.EnvironmentFromName("AzurePublicCloud") // TODO get this programmatically
@@ -198,7 +210,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should check for cluster-init pod", func() {
 			if cfg.ClusterInitPodName != "" {
 				By(fmt.Sprintf("Ensuring that cluster-init Pod \"%s\" is Running", cfg.ClusterInitPodName))
-				running, err := pod.WaitOnSuccesses(cfg.ClusterInitPodName, "default", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(cfg.ClusterInitPodName, "default", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			}
@@ -226,7 +238,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
 						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+filesystemValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						envString = fmt.Sprintf("MASTER_NODE=%t", n.HasSubstring([]string{"k8s-master"}))
+						envString = fmt.Sprintf("MASTER_NODE=%t", n.HasSubstring([]string{common.LegacyControlPlaneVMPrefix}))
 						filesystemValidationCommand = fmt.Sprintf("%s /tmp/%s", envString, filesystemValidateScript)
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, filesystemValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
@@ -289,7 +301,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				var cloudproviderEnabledPrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
-					cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, "k8s-master-")
+					cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix))
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 					if profile.RequiresCloudproviderConfig() {
@@ -320,8 +332,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the expected k8s version", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" &&
-				eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL == "" {
+			customHyperkubeImage := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+			customWindowsPackageURL := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL
+			if customHyperkubeImage == "" && customWindowsPackageURL == "" {
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
@@ -331,6 +344,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(n.Version()))
 				}
+			} else if customHyperkubeImage != "" {
+				customHyperkubeValidateScript := "custom-hyperkube-validate.sh"
+				err := sshConn.CopyTo(customHyperkubeValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				envString := fmt.Sprintf("CUSTOM_HYPERKUBE_IMAGE=%s", customHyperkubeImage)
+				customHyperkubeValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, customHyperkubeValidateScript)
+				err = sshConn.Execute(customHyperkubeValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("This is a cluster built from source")
 			}
@@ -407,7 +428,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				for key, val := range eng.ExpandedDefinition.Properties.MasterProfile.SysctlDConfig {
 					for _, n := range nodes {
-						if n.HasSubstring([]string{"k8s-master"}) && n.IsUbuntu() {
+						if n.HasSubstring([]string{common.LegacyControlPlaneVMPrefix}) && n.IsUbuntu() {
 							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("sysctl %s | grep '= %s'", key, val), false, sleepBetweenRetriesRemoteSSHCommand, singleCommandTimeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -436,7 +457,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					var largeSKUPrefixes []string
 					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 						if util.IsLargeVMSKU(eng.ExpandedDefinition.Properties.MasterProfile.VMSize) {
-							largeSKUPrefixes = append(largeSKUPrefixes, "k8s-master-")
+							largeSKUPrefixes = append(largeSKUPrefixes, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix))
 						}
 					}
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
@@ -454,7 +475,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if n.HasSubstring(largeSKUPrefixes) && n.IsUbuntu() {
 							gt8CoreSKU = "true"
 						}
-						netConfigValidationCommand := fmt.Sprintf("\"GT_8_CORE_SKU=%s /tmp/%s\"", gt8CoreSKU, netConfigValidateScript)
+						expectedEth0MTU := 1500
+						if eng.ExpandedDefinition.Properties.OrchestratorProfile.IsAzureCNI() && eng.ExpandedDefinition.Properties.LinuxProfile.Eth0MTU != 0 {
+							expectedEth0MTU = eng.ExpandedDefinition.Properties.LinuxProfile.Eth0MTU
+						}
+						netConfigValidationCommand := fmt.Sprintf("\"GT_8_CORE_SKU=%s ETH0_MTU=%d /tmp/%s\"", gt8CoreSKU, expectedEth0MTU, netConfigValidateScript)
 						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
 							err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+netConfigValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
@@ -620,7 +645,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				var nonRegularPriVMSSPrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
+						auditDNodePrefixes = append(auditDNodePrefixes, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix))
 					}
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
@@ -670,15 +695,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have node labels and annotations added by E2E test runner", func() {
 			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
-				cfg.AddNodePoolInput == "" {
+				cfg.AddNodePoolInput == "" && !cfg.RebootControlPlaneNodes {
 				totalNodeCount := eng.NodeCount()
 				nodes := totalNodeCount - len(masterNodes)
-				nodeList, err := node.GetByLabel("foo")
+				_, err := node.WaitForNodesWithAnnotation(nodes, "foo", "bar", 5*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(len(nodeList)).To(Equal(nodes))
-				nodeList, err = node.GetByAnnotations("foo", "bar")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(nodeList)).To(Equal(nodes))
 			} else {
 				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
 			}
@@ -695,32 +716,103 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 				coreComponents = append(coreComponents, common.CloudControllerManagerComponentName)
 			}
-			if hasAddon, _ := eng.HasAddon(common.AzureDiskCSIDriverAddonName); hasAddon {
-				coreComponents = append(coreComponents, "csi-azuredisk-controller", "csi-azuredisk-node")
-				if eng.HasWindowsAgents() {
-					coreComponents = append(coreComponents, "csi-azuredisk-node-windows")
-				}
-				if eng.AnyAgentIsLinux() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-					coreComponents = append(coreComponents, "csi-snapshot-controller")
-				}
-			}
-			if hasAddon, _ := eng.HasAddon(common.AzureFileCSIDriverAddonName); hasAddon {
-				coreComponents = append(coreComponents, "csi-azurefile-controller", "csi-azurefile-node")
-				if eng.HasWindowsAgents() {
-					coreComponents = append(coreComponents, "csi-azurefile-node-windows")
-				}
-			}
-			if hasAddon, _ := eng.HasAddon(common.CloudNodeManagerAddonName); hasAddon {
-				coreComponents = append(coreComponents, common.CloudNodeManagerAddonName)
-				if eng.HasWindowsAgents() {
-					coreComponents = append(coreComponents, common.CloudNodeManagerAddonName+"-windows")
-				}
+			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
+				coreComponents = append(coreComponents, common.AzureKMSProviderComponentName)
 			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
-				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
+			}
+
+			customHyperkubeImage := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+			if customHyperkubeImage != "" {
+				hyperkubeComponents := []string{
+					common.APIServerComponentName,
+					common.ControllerManagerComponentName,
+					common.KubeProxyAddonName,
+					common.SchedulerComponentName,
+				}
+
+				for _, hyperkubeComponent := range hyperkubeComponents {
+					pods, err := pod.GetAllByPrefixWithRetry(hyperkubeComponent, "kube-system", 3*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					for _, pod := range pods {
+						Expect(pod.Spec.Containers[0].Image).To(Equal(customHyperkubeImage))
+					}
+				}
+			}
+		})
+
+		It("should be able to schedule a pod to a control plane node", func() {
+			By("Creating a Job with control plane nodeSelector")
+			for i := 1; i <= 3; i++ {
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, 3*time.Minute)
+				if err != nil {
+					fmt.Printf("unable to create job: %s\n", err)
+					continue
+				}
+				ready, err := j.WaitOnSucceeded(30*time.Second, 3*time.Minute)
+				if err != nil {
+					fmt.Printf("timed out waiting for pod success: %s\n", err)
+					continue
+				}
+				Expect(ready).To(Equal(true))
+				fmt.Printf("successfully scheduled a pod to the control plane in %d attempts\n", i)
+				break
+			}
+		})
+
+		It("should be able to schedule a pod to a Linux node", func() {
+			if eng.AnyAgentIsLinux() {
+				By("Creating a Job with agent nodeSelector")
+				for i := 1; i <= 3; i++ {
+					j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, 3*time.Minute)
+					if err != nil {
+						fmt.Printf("unable to create job: %s\n", err)
+						continue
+					}
+					ready, err := j.WaitOnSucceeded(30*time.Second, 3*time.Minute)
+					if err != nil {
+						fmt.Printf("timed out waiting for pod success: %s\n", err)
+						continue
+					}
+					Expect(ready).To(Equal(true))
+					fmt.Printf("successfully scheduled a pod to a Linux node in %d attempts\n", i)
+					break
+				}
+			} else {
+				Skip("agent nodeSelector test Job is currently Linux-only")
+			}
+		})
+
+		It("should be able to schedule a pod to a Windows node", func() {
+			if eng.HasWindowsAgents() {
+				windowsImages, err := eng.GetWindowsTestImages()
+				Expect(err).NotTo(HaveOccurred())
+				p, err := pod.RunWindowsWithRetry(windowsImages.ServerCore, "windows-schedule-test", "default", "powershell", true, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				succeeded, err := p.WaitOnSucceeded(10*time.Second, cfg.Timeout)
+				Expect(succeeded).To(Equal(true))
+				//err = pod.Delete(util.DefaultDeleteRetries)
+				//Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("no Windows nodes")
+			}
+		})
+
+		It("should have core kube-system addons running the correct version", func() {
+			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage == "" {
+				By(fmt.Sprintf("Ensuring that the %s addon image matches orchestrator version", common.KubeProxyAddonName))
+				ds, err := daemonset.Get(common.KubeProxyAddonName, "kube-system", 3)
+				Expect(err).NotTo(HaveOccurred())
+				log.Printf("Image: %s", ds.Spec.Template.TemplateSpec.Containers[0].Image)
+				log.Printf("OrchestratorVersion: %s", eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion)
+				version := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
+				Expect(strings.Contains(ds.Spec.Template.TemplateSpec.Containers[0].Image, version)).To(Equal(true))
+			} else {
+				Skip("Skipping as testing custom kube-proxy image")
 			}
 		})
 
@@ -734,7 +826,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
 					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
 					tooManyRestarts := 5
-					if strings.Contains(currentPod.Metadata.Name, "cluster-autoscaler") {
+					if strings.Contains(currentPod.Metadata.Name, common.ClusterAutoscalerAddonName) {
 						log.Print("need to investigate cluster-autoscaler restarts!")
 						tooManyRestarts = 10
 					}
@@ -754,9 +846,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have DNS pod running", func() {
+		It("should have DNS resolver pod running", func() {
 			By(fmt.Sprintf("Ensuring that %s is running", dnsAddonName))
-			running, err := pod.WaitOnSuccesses(dnsAddonName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			running, err := pod.WaitOnSuccesses(dnsAddonName, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			pod.PrintPodsLogs(dnsAddonName, "kube-system", 5*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
@@ -766,9 +858,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have functional DNS resolution from a linux container")
 			validateDNSLinuxName := "validate-dns-linux"
 			validateDNSLinuxNamespace := "default"
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
+			j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
+			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			if err != nil {
 				pod.PrintPodsLogs(validateDNSLinuxName, validateDNSLinuxNamespace, 5*time.Second, 1*time.Minute)
 				pods, err := pod.GetAllByPrefixWithRetry(validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
@@ -802,9 +894,19 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(ready).To(Equal(true))
 			}
 
+			By("Ensuring that we have stable and responsive DNS resolution")
+			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
+			out, err := p.Exec("--", "dns-loop", "100", "google.com", "0.3", "5")
+			log.Printf("%s\n", string(out))
+			Expect(err).NotTo(HaveOccurred())
+
 			By("Ensuring that we have stable external DNS resolution as we recycle a bunch of pods")
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
-			command := fmt.Sprintf("nc -vz bbc.co.uk 80 || nc -vz google.com 443 || nc -vz microsoft.com 80")
+			command := fmt.Sprintf("time nc -vz bbc.co.uk 80 || nc -vz google.com 443 || nc -vz microsoft.com 80")
 			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to make external connections or resolve dns", command)
 			// Ensure across all nodes
 			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
@@ -815,64 +917,69 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
 
+		It("should be able to create and connect to a hostPort-configured pod", func() {
+			if eng.AnyAgentIsLinux() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				var numNodes int
+				controlPlaneNodeRegexString := fmt.Sprintf("^%s-.*", common.LegacyControlPlaneVMPrefix)
+				controlPlaneNodeRegexp, err := regexp.Compile(controlPlaneNodeRegexString)
+				Expect(err).NotTo(HaveOccurred())
+				for _, n := range nodes {
+					if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
+						numNodes++
+					}
+				}
+				By("Creating a httpbin DaemonSet")
+				httpbinName := "httpbin"
+				httpbinNamespace := "default"
+				d, err := daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", httpbinName)), httpbinName, httpbinNamespace, "app", httpbinName, 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = pod.WaitForMinRunningByLabelWithRetry(numNodes, "app", httpbinName, httpbinNamespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				By("Ensuring that we have can connect locally using the configured httpbin container hostPort")
+				hostPortTestName := "hostport-test"
+				hostPortTestNamespace := "default"
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", hostPortTestName)), hostPortTestName, hostPortTestNamespace, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(5*time.Second, 1*time.Minute)
+				if err != nil {
+					pod.PrintPodsLogs(hostPortTestName, hostPortTestNamespace, 5*time.Second, cfg.Timeout)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+				By("Cleaning up after ourselves")
+				err = j.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = d.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("hostPort test requires a Linux node")
+			}
+		})
+
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
 			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
 		})
 
-		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
-			By("Creating a php-apache deployment")
-			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Ensuring that php-apache pod is running")
-			running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(running).To(Equal(true))
-
-			By("Ensuring that the php-apache pod has outbound internet access")
-			pods, err := phpApacheDeploy.PodsRunning()
-			Expect(err).NotTo(HaveOccurred())
-			for _, p := range pods {
-				pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-				Expect(outboundErr).NotTo(HaveOccurred())
-				Expect(pass).To(BeTrue())
-			}
-
-			By("Exposing TCP 80 internally on the php-apache deployment")
-			err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("should be able to schedule a pod to a master node", func() {
-			By("Creating a Job with master nodeSelector")
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ready).To(Equal(true))
-		})
-
-		It("should be able to schedule a pod to an agent node", func() {
-			if eng.AnyAgentIsLinux() {
-				By("Creating a Job with agent nodeSelector")
-				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, cfg.Timeout)
+		It("should be able to run a node reboot daemonset", func() {
+			if cfg.RebootControlPlaneNodes {
+				_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "reboot-control-plane-node.yaml"), "reboot-test", "default", 5*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				pods, err := pod.GetAllRunningByLabelWithRetry("app", "reboot-test", "default", 5*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ready).To(Equal(true))
-			} else {
-				Skip("agent nodeSelector test Job is currently Linux-only")
+				Expect(pods).NotTo(BeEmpty())
 			}
 		})
 
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
 			// Test for basic UDP networking
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
-			command := fmt.Sprintf("nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
+			command := fmt.Sprintf("time nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
 			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect externally against known listeners", command)
 			// Ensure across all nodes
 			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
@@ -885,7 +992,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 			// Use curl to test responsive DNS lookup + TCP 443 connectivity
 			name = fmt.Sprintf("alpine-%s", cfg.Name)
-			command = fmt.Sprintf("curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
+			command = fmt.Sprintf("time curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
 			deploymentCommand = fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to curl externally against known endpoints", command)
 			// Ensure across all nodes
 			successes, err = deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "byrnedo/alpine-curl", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
@@ -899,8 +1006,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have stable internal container networking as we recycle a bunch of pods", func() {
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
-			command := fmt.Sprintf("nc -vz kubernetes 443 && nc -vz kubernetes.default.svc 443 && nc -vz kubernetes.default.svc.cluster.local 443")
-			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to reach internal kubernetes endpoints", command)
+			command := fmt.Sprintf("time nc -vz kubernetes 443 && nc -vz kubernetes.default.svc 443 && nc -vz kubernetes.default.svc.cluster.local 443")
+			deploymentCommand := fmt.Sprintf("time %s && while true; do sleep 1; done || echo unable to reach internal kubernetes endpoints", command)
 			// Ensure across all nodes
 			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -914,10 +1021,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have stable pod-to-pod networking", func() {
 			if eng.AnyAgentIsLinux() {
 				By("Creating a php-apache deployment")
-				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring that php-apache pod is running")
-				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				By("Ensuring that the php-apache pod has outbound internet access")
@@ -933,7 +1040,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				By("Creating another pod that will connect to the php-apache pod")
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				commandString := fmt.Sprintf("nc -vz %s.default.svc.cluster.local 80", longRunningApacheDeploymentName)
+				commandString := fmt.Sprintf("time nc -vz %s.default.svc.cluster.local 80", longRunningApacheDeploymentName)
 				consumerPodName := fmt.Sprintf("consumer-pod-%s-%v", cfg.Name, r.Intn(99999))
 				deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect to in-cluster web listener", commandString)
 				// Ensure across all nodes
@@ -949,41 +1056,84 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have addons running", func() {
-			for _, addonName := range []string{"tiller", "aci-connector", "cluster-autoscaler", "blobfuse-flexvolume", "smb-flexvolume", "keyvault-flexvolume", "kubernetes-dashboard", "rescheduler", "metrics-server", "nvidia-device-plugin", "container-monitoring", "azure-cni-networkmonitor", "azure-npm-daemonset", "ip-masq-agent", "azure-policy", "node-problem-detector"} {
+		It("should have addon pods running", func() {
+			timeout := cfg.Timeout
+			for _, addonName := range []string{common.CoreDNSAddonName, common.TillerAddonName, common.AADPodIdentityAddonName,
+				common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName, common.CloudNodeManagerAddonName, common.ClusterAutoscalerAddonName,
+				common.BlobfuseFlexVolumeAddonName, common.SMBFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName, common.DashboardAddonName,
+				common.MetricsServerAddonName, common.NVIDIADevicePluginAddonName, common.ContainerMonitoringAddonName,
+				common.CalicoAddonName, common.AzureNetworkPolicyAddonName, common.IPMASQAgentAddonName,
+				common.AzurePolicyAddonName, common.NodeProblemDetectorAddonName, common.AntreaAddonName, common.FlannelAddonName,
+				common.ScheduledMaintenanceAddonName, common.SecretsStoreCSIDriverAddonName} {
 				var addonPods = []string{addonName}
 				var addonNamespace = "kube-system"
 				switch addonName {
-				case "blobfuse-flexvolume":
+				case common.BlobfuseFlexVolumeAddonName:
 					addonPods = []string{"blobfuse-flexvol-installer"}
-				case "smb-flexvolume":
+				case common.SMBFlexVolumeAddonName:
 					addonPods = []string{"smb-flexvol-installer"}
-				case "container-monitoring":
-					addonPods = []string{"omsagent"}
-				case "azure-npm-daemonset":
+				case common.ContainerMonitoringAddonName:
+					addonPods = []string{"omsagent", "omsagent-rs"}
+					if eng.HasWindowsAgents() {
+						addonPods = append(addonPods, "omsagent-win")
+					}
+					timeout = 60 * time.Minute
+				case common.AzureNetworkPolicyAddonName:
 					addonPods = []string{"azure-npm"}
-				case "kubernetes-dashboard":
-					addonPods = []string{"kubernetes-dashboard", "dashboard-metrics-scraper"}
-					addonNamespace = "kubernetes-dashboard"
+				case common.DashboardAddonName:
+					addonPods = []string{common.DashboardAddonName, "dashboard-metrics-scraper"}
+					addonNamespace = common.DashboardAddonName
+				case common.AADPodIdentityAddonName:
+					addonPods = []string{"nmi", "mic"}
+				case common.AzureDiskCSIDriverAddonName:
+					addonPods = []string{"csi-azuredisk-node", "csi-azuredisk-controller"}
+					if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+						addonPods = append(addonPods, "csi-azuredisk-node-windows")
+					}
+					if eng.AnyAgentIsLinux() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+						addonPods = append(addonPods, "csi-snapshot-controller")
+					}
+				case common.AzureFileCSIDriverAddonName:
+					addonPods = []string{"csi-azurefile-node", "csi-azurefile-controller"}
+					if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+						addonPods = append(addonPods, "csi-azurefile-node-windows")
+					}
+				case common.CloudNodeManagerAddonName:
+					addonPods = []string{common.CloudNodeManagerAddonName}
+					if eng.HasWindowsAgents() {
+						addonPods = append(addonPods, common.CloudNodeManagerAddonName+"-windows")
+					}
+				case common.CoreDNSAddonName:
+					addonPods = []string{common.CoreDNSAddonName, common.CoreDNSAddonName + "-autoscaler"}
+				case common.IPMASQAgentAddonName:
+					addonPods = []string{"azure-ip-masq-agent"}
+				case common.CalicoAddonName:
+					addonPods = []string{"calico-node", "calico-typha", "calico-typha-horizontal-autoscaler"}
+				case common.AzurePolicyAddonName:
+					addonPods = []string{common.AzurePolicyAddonName, "gatekeeper-controller-manager"}
+				case common.AntreaAddonName:
+					addonPods = []string{common.AntreaAddonName + "-agent", common.AntreaAddonName + "-controller"}
+				case common.FlannelAddonName:
+					addonPods = []string{"kube-flannel-ds"}
+				case common.ScheduledMaintenanceAddonName:
+					addonPods = []string{"drainsafe-controller-manager", "drainsafe-controller-scheduledevent-manager"}
+				case common.SecretsStoreCSIDriverAddonName:
+					addonPods = []string{"csi-secrets-store", "csi-secrets-store-provider-azure"}
 				}
 				if hasAddon, addon := eng.HasAddon(addonName); hasAddon {
 					for _, addonPod := range addonPods {
-						By(fmt.Sprintf("Ensuring that the %s addon is Running", addonName))
-						running, err := pod.WaitOnSuccesses(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+						if addon.Name == common.AzurePolicyAddonName {
+							switch addonPod {
+							case common.AzurePolicyAddonName:
+								addonNamespace = "kube-system"
+							case "gatekeeper-controller-manager":
+								addonNamespace = "gatekeeper-system"
+							}
+						}
+						By(fmt.Sprintf("Ensuring that the %s pod(s) in the %s addon is Running", addonPod, addonName))
+						running, err := pod.WaitOnSuccesses(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
-						By(fmt.Sprintf("Ensuring that the correct resources have been applied for %s", addonPod))
-						pods, err := pod.GetAllRunningByPrefixWithRetry(addonPod, addonNamespace, 3*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						for i, c := range addon.Containers {
-							pod := pods[0]
-							if len(pod.Spec.Containers) == i {
-								break
-							}
-							container := pod.Spec.Containers[i]
-							err := container.ValidateResources(c)
-							Expect(err).NotTo(HaveOccurred())
-						}
 					}
 				} else {
 					fmt.Printf("%s disabled for this cluster, will not test\n", addonName)
@@ -992,11 +1142,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have a working node-problem-detector configuration", func() {
-			if hasNpd, _ := eng.HasAddon("node-problem-detector"); hasNpd {
-				running, err := pod.WaitOnSuccesses("node-problem-detector", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			if hasNpd, _ := eng.HasAddon(common.NodeProblemDetectorAddonName); hasNpd {
+				running, err := pod.WaitOnSuccesses(common.NodeProblemDetectorAddonName, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err := pod.GetAllRunningByPrefixWithRetry("node-problem-detector", "kube-system", 3*time.Second, cfg.Timeout)
+				pods, err := pod.GetAllRunningByPrefixWithRetry(common.NodeProblemDetectorAddonName, "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pods).NotTo(BeEmpty())
 				nodeName := pods[0].Spec.NodeName
@@ -1018,8 +1168,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the correct tiller configuration", func() {
-			if hasTiller, tillerAddon := eng.HasAddon("tiller"); hasTiller {
-				running, err := pod.WaitOnSuccesses("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			if hasTiller, tillerAddon := eng.HasAddon(common.TillerAddonName); hasTiller {
+				running, err := pod.WaitOnSuccesses(common.TillerAddonName, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err := pod.GetAllRunningByPrefixWithRetry("tiller-deploy", "kube-system", 3*time.Second, cfg.Timeout)
@@ -1036,9 +1186,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the expected omsagent cluster footprint", func() {
-			if hasContainerMonitoring, _ := eng.HasAddon("container-monitoring"); hasContainerMonitoring {
+			if hasContainerMonitoring, _ := eng.HasAddon(common.ContainerMonitoringAddonName); hasContainerMonitoring {
 				By("Validating the omsagent replicaset")
-				running, err := pod.WaitOnSuccesses("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err := pod.GetAllRunningByPrefixWithRetry("omsagent-rs", "kube-system", 3*time.Second, cfg.Timeout)
@@ -1052,7 +1202,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pass).To(BeTrue())
 				By("Validating the omsagent daemonset")
-				running, err = pod.WaitOnSuccesses("omsagent", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses("omsagent", "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err = pod.GetAllRunningByPrefixWithRetry("omsagent", "kube-system", 3*time.Second, cfg.Timeout)
@@ -1074,9 +1224,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
 			} else {
-				if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
+				if hasDashboard, _ := eng.HasAddon(common.DashboardAddonName); hasDashboard {
 					By("Ensuring that the kubernetes-dashboard service is Running")
-					s, err := service.Get("kubernetes-dashboard", "kubernetes-dashboard")
+					s, err := service.Get(common.DashboardAddonName, common.DashboardAddonName)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(s).NotTo(BeNil())
 					By("Ensuring that the dashboard responds to requests")
@@ -1183,7 +1333,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to kubectl port-forward to a running pod", func() {
 			deploymentNamespace := "default"
 			testPortForward := func(deploymentName string) {
-				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(podWaitErr).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				d, err := deployment.GetWithRetry(deploymentName, deploymentNamespace, 5*time.Second, cfg.Timeout)
@@ -1195,7 +1345,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					func() {
 						By("Ensuring that the pod is running")
 						var running bool
-						running, err = p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+						running, err = p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
 						By("Running kubectl port-forward")
@@ -1314,20 +1464,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 				By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
-				Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+				Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
 
 				// Validate CSI node pod
 				addonPod = fmt.Sprintf("csi-%s-node", shortenedAddonName)
 				containers = []string{"liveness-probe", "node-driver-registrar", shortenedAddonName}
 				By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
-				Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+				Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
 
 				// Validate CSI node windows pod
 				if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
 					addonPod = fmt.Sprintf("csi-%s-node-windows", shortenedAddonName)
 					containers = []string{"liveness-probe", "node-driver-registrar", shortenedAddonName}
 					By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
-					Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+					Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
 				}
 
 				// Validate CSI snapshot controller pod
@@ -1337,16 +1487,69 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						addonPod = "csi-snapshot-controller"
 						containers = []string{"csi-snapshot-controller"}
 						By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
-						Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+						Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
 					}
 				}
 			}
+		})
+
+		It("should have the correct service account issuer when consuming a projected service account token", func() {
+			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") {
+				Skip("Service account token volume projection is not available prior to Kubernetes 1.20")
+			}
+
+			By("Launching a pod with a projected service account token")
+			p, err := pod.CreatePodFromFileWithRetry(filepath.Join(WorkloadDir, "pod-projected-svc-token.yaml"), "nginx", "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+
+			ready, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+
+			By("Obtaining the projected service account token")
+			tokenPath := "/var/run/secrets/tokens/token"
+			nodeList, err := node.Get()
+			for _, n := range nodeList.Nodes {
+				if n.Metadata.Name == p.Spec.NodeName && n.IsWindows() {
+					tokenPath = "C:\\var\\run\\secrets\\tokens\\token"
+					break
+				}
+			}
+			out, err := p.Exec("--", "cat", tokenPath)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Decoding the service account token")
+			// out is a JWT token, which has 3 parts joined by "."
+			s := strings.Split(string(out), ".")
+			Expect(s).To(HaveLen(3))
+			// the payload is the second element
+			data, err := base64.StdEncoding.WithPadding(base64.NoPadding).DecodeString(s[1])
+			Expect(err).NotTo(HaveOccurred())
+
+			var payload struct {
+				Issuer string `json:"iss"`
+			}
+			err = json.Unmarshal(data, &payload)
+			Expect(err).NotTo(HaveOccurred())
+
+			svcIssuer := eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig["--service-account-issuer"]
+			By("Ensuring that the service account issuer matches the token issuer")
+			Expect(payload.Issuer).To(Equal(svcIssuer))
+
+			By("Ensuring that the service account issuer has a https scheme")
+			u, err := url.Parse(svcIssuer)
+			Expect(err).NotTo(HaveOccurred())
+			// Service account issuer for OIDC requires https scheme to work.
+			// See https://github.com/Azure/aks-engine/pull/4262 for more detail.
+			Expect(u.Scheme).To(Equal("https"))
 		})
 	})
 
 	Describe("with a windows agent pool", func() {
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.HasWindowsAgents() {
 					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.GetSSHEnabled() {
 						nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
@@ -1424,6 +1627,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create a curl pod to connect to the service")
 				ilbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
@@ -1433,9 +1637,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can connect to the ELB service on the service IP")
 				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
 				By("Ensuring we can connect to the ELB service from another pod")
 				elbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring we can donwnload files through the ELB")
+				pods, err := pod.GetAllByPrefixWithRetry(deploymentPrefix, "default", 3*time.Second, cfg.Timeout)
+				for _, p := range pods {
+					out, err := p.Exec("--", "/bin/bash", "-c", "base64 /dev/urandom | head -c 500000 | tee -a /usr/share/nginx/html/index.html > /dev/null")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+				}
+				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
 				err = sILB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = sELB.Delete(util.DefaultDeleteRetries)
@@ -1452,27 +1668,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to get nodes metrics", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
-				success := false
-				var err error
-				var out []byte
-				// TODO make a 1st class go func retry implementation of this
-				for i := 0; i < 10; i++ {
-					cmd := exec.Command("k", "top", "nodes")
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					if err == nil {
-						success = true
-						break
-					}
-					time.Sleep(1 * time.Minute)
-				}
-				if err != nil {
-					pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
-					log.Println(string(out))
-				}
-				Expect(success).To(BeTrue())
-			}
+			err := node.TopNodesWithRetry(1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
@@ -1482,7 +1679,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cfg.TestPVC {
 				By("Creating a persistent volume claim")
 				pvcName := "azure-disk" // should be the same as in pvc-azuredisk.yaml
-				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default")
+				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFileWithRetry(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				// Azure Disk CSI driver in zone-enabled clusters uses 'WaitForFirstConsumer' volume binding mode
 				// thus, pvc won't be available until a pod consumes it
@@ -1495,9 +1692,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Launching a pod using the volume claim")
 				podName := "pv-pod" // should be the same as in pod-pvc.yaml
-				testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+				testPod, err := pod.CreatePodFromFileWithRetry(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				ready, err := testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				ready, err := testPod.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ready).To(Equal(true))
 
@@ -1554,7 +1751,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with a GPU-enabled agent pool", func() {
 		It("should be able to run a nvidia-gpu job", func() {
 			if eng.ExpandedDefinition.Properties.HasNSeriesSKU() {
-				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
+				if hasAddon, _ := eng.HasAddon("nvidia-device-plugin"); !hasAddon {
+					By("Installing nvidia gpu-operator helm chart")
+					commandArgsSlice := []string{"upgrade", "--install", "--wait", "gpu-operator", "--repo", "https://nvidia.github.io/gpu-operator", "gpu-operator"}
+					if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", "operator.defaultRuntime=containerd"}...)
+					}
+					ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel()
+					cmd := exec.CommandContext(ctx, "helm", commandArgsSlice...)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+				}
+				By("Running a CUDA vector job")
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 				delErr := j.Delete(util.DefaultDeleteRetries)
@@ -1573,7 +1784,44 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with a DC-series SKU agent pool", func() {
 		It("should be able to run an SGX job", func() {
 			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
-				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "sgx-test.yaml"), "sgx-test", "default", 3*time.Second, cfg.Timeout)
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "sgx-test.yaml"), "sgx-test", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				delErr := j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			} else {
+				Skip("This cluster does not have a DC-series SKU agent pool")
+			}
+		})
+
+		It("should be able to run an SGX job with sgx-device-plugin", func() {
+			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
+
+				sgx_device_plugin := ""
+				sgx_device_plugin_name := "sgx-device-plugin"
+				sgx_device_plugin_namespace := "kube-system"
+				sgx_device_plugin_label_key := "app"
+				sgx_device_plugin_label_value := "sgx-device-plugin"
+
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+					sgx_device_plugin = "sgx-device-plugin.yaml"
+				} else {
+					sgx_device_plugin = "sgx-device-plugin-before-k8s-1-17.yaml"
+				}
+
+				_, err := daemonset.CreateDaemonsetFromFile(filepath.Join(WorkloadDir, sgx_device_plugin), sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
+				pods, err := pod.GetAllRunningByLabelWithRetry(sgx_device_plugin_label_key, sgx_device_plugin_label_value, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pods).NotTo(BeEmpty())
+
+				j, err := job.CreateJobFromFileWithRetry(filepath.Join(WorkloadDir, "sgx-test-with-plugin.yaml"), "sgx-test-with-plugin", "default", 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 				delErr := j.Delete(util.DefaultDeleteRetries)
@@ -1595,7 +1843,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					role := n.Metadata.Labels["kubernetes.io/role"]
+					var role string
+					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						role = n.Metadata.Labels["kubernetes.azure.com/role"]
+					} else {
+						role = n.Metadata.Labels["kubernetes.io/role"]
+					}
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
 						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
@@ -1615,7 +1868,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					role := n.Metadata.Labels["kubernetes.io/role"]
+					var role string
+					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						role = n.Metadata.Labels["kubernetes.azure.com/role"]
+					} else {
+						role = n.Metadata.Labels["kubernetes.io/role"]
+					}
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
 						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
@@ -1650,16 +1908,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				randInt := r.Intn(99999)
 				frontendProdDeploymentName := fmt.Sprintf("frontend-prod-%s-%v", cfg.Name, randInt)
-				frontendProdDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendProdDeploymentName, nsProd, "webapp", "frontend")
+				frontendProdDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendProdDeploymentName, nsProd, "webapp", "frontend", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				frontendDevDeploymentName := fmt.Sprintf("frontend-dev-%s-%v", cfg.Name, randInt+100000)
-				frontendDevDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendDevDeploymentName, nsDev, "webapp", "frontend")
+				frontendDevDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendDevDeploymentName, nsDev, "webapp", "frontend", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt+200000)
-				backendDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", backendDeploymentName, nsDev, "webapp", "backend")
+				backendDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", backendDeploymentName, nsDev, "webapp", "backend", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+300000)
-				nwpolicyDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", nwpolicyDeploymentName, nsDev, "", "")
+				nwpolicyDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", nwpolicyDeploymentName, nsDev, "", "", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a running frontend-prod pod")
@@ -1806,7 +2064,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on pod to be Ready")
-				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -1841,7 +2099,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on 5 pods to be Ready")
-				running, err = pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(deploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				iisPods, err = iisDeploy.PodsRunning()
@@ -1887,6 +2145,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(pass).To(BeTrue())
 				}
 
+				By("Ensuring we can donwnload files through the ELB")
+				for _, iisPod := range iisPods {
+					fileGenCmd := "(1..(500kb/34)).foreach({-join ('4489bfc5648d4ab58c7129a1d5f2f061') }) | Add-Content C:\\inetpub\\wwwroot\\iisstart.htm"
+					out, err := iisPod.Exec("--", "powershell", "-command", fileGenCmd)
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+				}
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
 				By("Verifying pods & services can be deleted")
 				err = iisDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
@@ -1899,6 +2167,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to resolve DNS across windows and linux deployments", func() {
 			if eng.HasWindowsAgents() {
+				if eng.HasNetworkPlugin(api.NetworkPluginKubenet) {
+					Skip("This tests is not enabled for kubenet CNI on windows")
+				}
+
 				windowsImages, err := eng.GetWindowsTestImages()
 				Expect(err).NotTo(HaveOccurred())
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -1915,12 +2187,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a Running nginx pod")
-				running, err := pod.WaitOnSuccesses(nginxDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(nginxDeploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
 				By("Ensure there is a Running iis pod")
-				running, err = pod.WaitOnSuccesses(windowsDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(windowsDeploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -2001,6 +2273,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			})*/
 		It("should be able to attach azure file", func() {
 			if eng.HasWindowsAgents() && !eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
+				useCloudControllerManager := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
+				if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity) && useCloudControllerManager {
+					Skip("cloud-controller-manager storageclass doesn't work w/ MSI")
+				}
 				orchestratorVersion := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
 				if orchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
@@ -2016,11 +2292,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Creating an AzureFile storage class")
 					storageclassName := "azurefile" // should be the same as in storageclass-azurefile.yaml
 					scFilename := "storageclass-azurefile.yaml"
-					useCloudControllerManager := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
 					if useCloudControllerManager && common.IsKubernetesVersionGe(orchestratorVersion, "1.16.0") {
 						scFilename = "storageclass-azurefile-external.yaml"
 					}
-					sc, err := storageclass.CreateStorageClassFromFile(filepath.Join(WorkloadDir, scFilename), storageclassName)
+					sc, err := storageclass.CreateStorageClassFromFileWithRetry(filepath.Join(WorkloadDir, scFilename), storageclassName, 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err := sc.WaitOnReady(5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2028,7 +2303,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Creating a persistent volume claim")
 					pvcName := "pvc-azurefile" // should be the same as in pvc-azurefile.yaml
-					pvc, err := persistentvolumeclaims.CreatePVCFromFileDeleteIfExist(filepath.Join(WorkloadDir, "pvc-azurefile.yaml"), pvcName, "default")
+					pvc, err := persistentvolumeclaims.CreatePVCFromFileDeleteIfExist(filepath.Join(WorkloadDir, "pvc-azurefile.yaml"), pvcName, "default", 3*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err = pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2036,9 +2311,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Launching an IIS pod using the volume claim")
 					podName := "iis-azurefile" // should be the same as in iis-azurefile.yaml
-					iisPod, err := pod.CreatePodFromFile(iisAzurefileYaml, podName, "default", 1*time.Second, cfg.Timeout)
+					iisPod, err := pod.CreatePodFromFileWithRetry(iisAzurefileYaml, podName, "default", 1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					ready, err = iisPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+					ready, err = iisPod.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(ready).To(Equal(true))
 
@@ -2069,6 +2344,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				}
 
+				if eng.HasNetworkPlugin(api.NetworkPluginKubenet) {
+					Skip("This tests is not enabled for kubenet CNI on windows")
+				}
+
 				windowsImages, err := eng.GetWindowsTestImages()
 				Expect(err).NotTo(HaveOccurred())
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -2079,7 +2358,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting on pod to be Ready")
-				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -2163,22 +2442,111 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("No windows agent was provisioned for this Cluster Definition")
 			}
 		})
-	})
 
-	Describe("after the cluster has been up for awhile", func() {
-		It("dns-liveness pod should not have any restarts", func() {
-			pod, err := pod.Get("dns-liveness", "default", podLookupRetries)
+		// verifies that the pod logs continue to flow even during rotation
+		// https://github.com/Azure/aks-engine/issues/3573
+		It("should be able to rotate docker logs", func() {
+			if !eng.HasWindowsAgents() {
+				Skip("No windows agent was provisioned for this Cluster Definition")
+			}
+
+			if !eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
+				Skip("Skip docker validations on non-docker-backed clusters")
+			}
+
+			windowsImages, err := eng.GetWindowsTestImages()
+			loggingPodFile, err := pod.ReplaceContainerImageFromFile(filepath.Join(WorkloadDir, "validate-windows-logging.yaml"), windowsImages.ServerCore)
 			Expect(err).NotTo(HaveOccurred())
-			running, err := pod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, 3*time.Minute)
+			defer os.Remove(loggingPodFile)
+
+			By("launching a pod that logs too much")
+			podName := "validate-windows-logging" // should be the same as in iis-azurefile.yaml
+			loggingPod, err := pod.CreatePodFromFileWithRetry(loggingPodFile, podName, "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			ready, err := loggingPod.WaitOnReady(false, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+
+			By("validating the logs continue to flow")
+			logsRotated, err := loggingPod.ValidateLogsRotate(20*time.Second, 2*time.Minute)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(logsRotated).To(Equal(true))
+		})
+
+		// metrics endpoints failing in 1.18+
+		// https://github.com/kubernetes/kubernetes/issues/95735
+		It("windows should be able to get node metrics when high cpu", func() {
+			if !eng.HasWindowsAgents() || !cfg.ValidateCPULoad {
+				Skip("Will not validate effects of CPU load against nodes")
+			}
+
+			windowsImages, err := eng.GetWindowsTestImages()
+			cpuConsumptionDeploymentFile, err := pod.ReplaceContainerImageFromFile(filepath.Join(WorkloadDir, "validate-windows-cpu-consumption.yaml"), windowsImages.ServerCore)
+			Expect(err).NotTo(HaveOccurred())
+			defer os.Remove(cpuConsumptionDeploymentFile)
+
+			By("launching a deployment that consumes too much CPU")
+			deploymentName := "validate-windows-cpu-consumption" // should be the same as in yaml
+			cpuDeployment, err := deployment.CreateDeploymentFromFileWithRetry(cpuConsumptionDeploymentFile, deploymentName, "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
-			restarts := pod.Status.ContainerStatuses[0].RestartCount
-			if cfg.SoakClusterName == "" {
-				err = pod.Delete(util.DefaultDeleteRetries)
+
+			By("Scaling deployment to consuming allocatable")
+			nodeList, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+			cpuCapacity := 0
+			for _, n := range nodeList {
+				if n.IsWindows() {
+					c, err := strconv.Atoi(n.Status.Capacity.CPU)
+					Expect(err).NotTo(HaveOccurred())
+					cpuCapacity = cpuCapacity + c
+				}
+			}
+
+			// scale over allocatable for windows to make sure it's packed (.25 is limit on deployment)
+			deployCount := int(math.Round((float64(cpuCapacity) / 0.25)))
+			err = cpuDeployment.ScaleDeployment(deployCount * 2)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("should be able to get nodes metrics")
+			checkMetrics := func() error {
+				log.Printf("running top nodes")
+				err = node.TopNodes()
+				return err
+			}
+			_, err = cpuDeployment.WaitForReplicasWithAction(deployCount, deployCount*2, 2*time.Second, cfg.Timeout, checkMetrics)
+			Expect(err).NotTo(HaveOccurred())
+			cpuPods, err := cpuDeployment.PodsRunning()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(cpuPods)).To(BeNumerically(">=", deployCount))
+
+			By("should be able to get nodes metrics")
+			err = node.TopNodesWithRetry(1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Verifying pods & services can be deleted")
+			err = cpuDeployment.Delete(util.DefaultDeleteRetries)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Describe("after the cluster has been up for a while", func() {
+		It("dns-liveness pod should not have any restarts", func() {
+			if !cfg.RebootControlPlaneNodes {
+				pod, err := pod.Get("dns-liveness", "default", podLookupRetries)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(restarts).To(Equal(0))
-			} else {
-				log.Printf("%d DNS livenessProbe restarts since this cluster was created...\n", restarts)
+				running, err := pod.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, 3*time.Minute)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				restarts := pod.Status.ContainerStatuses[0].RestartCount
+				if cfg.SoakClusterName == "" {
+					err = pod.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(restarts).To(Equal(0))
+				} else {
+					log.Printf("%d DNS livenessProbe restarts since this cluster was created...\n", restarts)
+				}
 			}
 		})
 
@@ -2211,30 +2579,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var numCoreDNSPods int
 			var testCoreDNSScaleOut bool
 			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-				numNodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				if hasAddon, addon := eng.HasAddon("coredns"); hasAddon {
-					nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"])
-					minReplicas, _ := strconv.Atoi(addon.Config["min-replicas"])
-					if nodesPerReplica >= (len(numNodes) * minReplicas) {
-						testCoreDNSScaleOut = true
-						By("Getting the number of coredns pods prior to scaling out")
-						d, err := deployment.GetWithRetry("coredns", "kube-system", 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						pods, err := d.PodsRunning()
-						Expect(err).NotTo(HaveOccurred())
-						numCoreDNSPods = len(pods)
-						log.Printf("%d coredns pods before scaling out\n", numCoreDNSPods)
-					}
-				}
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
-				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring that the php-apache pod is running")
-				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 
@@ -2255,6 +2607,30 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Apply autoscale characteristics to deployment
 				var cpuTarget, totalMaxPods int
 				if clusterAutoscalerEngaged {
+					nodeList, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					if hasAddon, addon := eng.HasAddon("coredns"); hasAddon {
+						nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"])
+						corednsPods, err := pod.GetAllByPrefixWithRetry("coredns", "kube-system", 3*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						corednsAutoscalerPods, err := pod.GetAllByPrefixWithRetry("coredns-autoscaler", "kube-system", 3*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						numCoreDNSPods = len(corednsPods) - len(corednsAutoscalerPods)
+						coreDNSNodesOverhead := nodesPerReplica - (len(nodeList) * numCoreDNSPods)
+						var clusterAutoscalerNodesOverhead int
+						for _, pool := range clusterAutoscalerAddon.Pools {
+							p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
+							maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
+							if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
+								clusterAutoscalerNodesOverhead += (maxNodes - eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count)
+							}
+						}
+						if coreDNSNodesOverhead >= 0 && coreDNSNodesOverhead < clusterAutoscalerNodesOverhead {
+							testCoreDNSScaleOut = true
+							By("Validating that coredns pods scale out with nodes")
+							log.Printf("%d coredns pods before scaling out\n", numCoreDNSPods)
+						}
+					}
 					cpuTarget = 50
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 						// TODO enable cluster-autoscaler tests for Windows
@@ -2306,15 +2682,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						By("Ensuring at least one more coredns pod was added by coredns-autoscaler")
 						d, err := deployment.GetWithRetry("coredns", "kube-system", 5*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						_, err = d.WaitForReplicas(numCoreDNSPods+1, -1, 5*time.Second, cfg.Timeout)
+						numCoreDNSAutoscalerPods := 1
+						_, err = d.WaitForReplicas(numCoreDNSPods+numCoreDNSAutoscalerPods+1, -1, 5*time.Second, cfg.Timeout)
 						if err != nil {
 							pod.PrintPodsLogs("coredns-autoscaler", "kube-system", 5*time.Second, 1*time.Minute)
 						}
 						Expect(err).NotTo(HaveOccurred())
-						pods, err := d.PodsRunning()
-						log.Printf("%d coredns pods after scaling out\n", len(pods))
+						corednsPods, err := pod.GetAllByPrefixWithRetry("coredns", "kube-system", 3*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(len(pods) > numCoreDNSPods).To(BeTrue())
+						corednsAutoscalerPods, err := pod.GetAllByPrefixWithRetry("coredns-autoscaler", "kube-system", 3*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						newNumCoreDNSPods := len(corednsPods) - len(corednsAutoscalerPods)
+						log.Printf("%d coredns pods after scaling out\n", newNumCoreDNSPods)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(newNumCoreDNSPods > numCoreDNSPods).To(BeTrue())
 					}
 				}
 
@@ -2351,31 +2732,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should be able to cleanup the long running php-apache stuff", func() {
-			if cfg.SoakClusterName == "" {
-				phpApacheDeploy, err := deployment.GetWithRetry(longRunningApacheDeploymentName, "default", 3*time.Second, 1*time.Minute)
-				if err != nil {
-					fmt.Println(err)
-				}
-				Expect(err).NotTo(HaveOccurred())
-				s, err := service.Get(longRunningApacheDeploymentName, "default")
-				Expect(err).NotTo(HaveOccurred())
-
-				err = s.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = phpApacheDeploy.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("Keep long-running php-apache workloads running for soak clusters")
-			}
-		})
-
 		It("should have node labels specific to masters or agents", func() {
 			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			for _, n := range nodes {
 				role := "master"
-				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
+				if !strings.HasPrefix(n.Metadata.Name, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix)) {
 					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 						continue
 					} else {
@@ -2412,6 +2774,239 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(labels).To(HaveKeyWithValue("beta.kubernetes.io/instance-type", instanceType))
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/instance-type", instanceType))
 				}
+			}
+		})
+
+		It("should have arc agents running", func() {
+			if hasArc, _ := eng.HasAddon(common.AzureArcOnboardingAddonName); hasArc {
+				By("Checking the onboarding job succeeded")
+				succeeded, err := job.WaitOnSucceeded("azure-arc-onboarding", "azure-arc-onboarding", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(succeeded).To(Equal(true))
+
+				By("Checking ready status of each pod in namespace azure-arc")
+				pods, err := pod.GetAll("azure-arc")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods.Pods)).ToNot(BeZero())
+				for _, currentPod := range pods.Pods {
+					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
+					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
+					tooManyRestarts := 5
+					Expect(currentPod.Status.ContainerStatuses[0].RestartCount).To(BeNumerically("<", tooManyRestarts))
+				}
+			} else {
+				Skip("Onboarding connected cluster was not requested")
+			}
+		})
+
+		It("should have resilient kubelet and docker systemd services", func() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				systemdValidateScript := "systemd-validate.sh"
+				err = sshConn.CopyTo(systemdValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				systemdValidationCommand := fmt.Sprintf("/tmp/%s", systemdValidateScript)
+				err = sshConn.Execute(systemdValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
+				for _, n := range nodes {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+systemdValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						systemdValidationCommand = fmt.Sprintf("/tmp/%s", systemdValidateScript)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, systemdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
+		It("should be able to install vmss node prototype", func() {
+			if cfg.RunVMSSNodePrototype {
+				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
+					By("Installing kured with node annotations configuration")
+					_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "kured-annotations.yaml"), "kured", "kube-system", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					var numAgentNodes int
+					controlPlaneNodeRegexStr := fmt.Sprintf("^%s-.*", common.LegacyControlPlaneVMPrefix)
+					controlPlaneNodeRegexp, err := regexp.Compile(controlPlaneNodeRegexStr)
+					Expect(err).NotTo(HaveOccurred())
+					for _, n := range nodes {
+						if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
+							numAgentNodes++
+						}
+					}
+					var largeContainerDaemonset *daemonset.Daemonset
+					var numLargeContainerPods int
+					if !cfg.KaminoVMSSPrototypeDryRun {
+						By("Creating a DaemonSet with a large container")
+						var err error
+						largeContainerDaemonset, err = daemonset.CreateDaemonsetDeleteIfExists(filepath.Join(WorkloadDir, "large-container-daemonset.yaml"), "large-container-daemonset", "default", "app", "large-container-daemonset", 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						start := time.Now()
+						pods, err := pod.WaitForMinRunningByLabelWithRetry(numAgentNodes, "app", "large-container-daemonset", "default", 1*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						numLargeContainerPods = len(pods)
+						Expect(pods).NotTo(BeEmpty())
+						elapsed := time.Since(start)
+						log.Printf("Took %s to schedule %d Pods with large containers via DaemonSet\n", elapsed, numLargeContainerPods)
+					}
+					By("Marking all nodes as needing reboots")
+					for _, n := range nodes {
+						if n.IsLinux() && !controlPlaneNodeRegexp.MatchString(n.Metadata.Name) {
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("\"sudo touch /var/run/reboot-required\""), false, 30*time.Second, cfg.Timeout)
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+					By("Waiting for one node to be marked as SchedulingDisabled by kured")
+					ready := node.WaitOnReadyMax(len(nodes)-1, 5*time.Second, cfg.Timeout)
+					Expect(ready).To(BeTrue())
+					By("Waiting for nodes to be be rebooted and annotated correctly")
+					_, err = node.WaitForNodesWithAnnotation(numAgentNodes, "weave.works/kured-most-recent-reboot-needed", "", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					_, err = node.WaitForNodesWithAnnotation(0, "weave.works/kured-reboot-in-progress", "", 1*time.Minute, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					By("Waiting for all nodes to be Ready again")
+					ready = node.WaitOnReady(len(nodes), 30*time.Second, cfg.Timeout)
+					Expect(ready).To(Equal(true))
+					By("Choosing a target VMSS node to use as the prototype")
+					var targetNode string
+					for _, n := range nodes {
+						// Pick the first VMSS-backed node we find
+						if strings.Contains(n.Spec.ProviderID, "virtualMachineScaleSets") {
+							targetNode = n.Metadata.Name
+						}
+					}
+					Expect(targetNode).NotTo(BeEmpty())
+					ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel()
+					// Getting vmss for the vm
+					vmssPage, err := azureClient.ListVirtualMachineScaleSets(ctx, cfg.ResourceGroup)
+					vmssList := vmssPage.Values()
+					// Name of VMSS of nodeName
+					var vmssName string
+					var vmssSku *compute.Sku
+					for _, vmss := range vmssList {
+						if !strings.Contains(targetNode, *vmss.Name) {
+							continue
+						}
+						vmssName = *vmss.Name
+						vmssSku = vmss.Sku
+					}
+					Expect(vmssName).NotTo(BeEmpty())
+					originalCapacity := *vmssSku.Capacity
+					var timeToAddNewNodeBaseline, timeToLargeContainerDaemonsetRunningBaseline time.Duration
+					if !cfg.KaminoVMSSPrototypeDryRun {
+						By("Adding one new node to get a baseline")
+						ctx2, cancel2 := context.WithTimeout(context.Background(), cfg.Timeout)
+						defer cancel2()
+						start := time.Now()
+						err = azureClient.SetVirtualMachineScaleSetCapacity(
+							ctx2,
+							cfg.ResourceGroup,
+							vmssName,
+							compute.Sku{
+								Name:     vmssSku.Name,
+								Capacity: to.Int64Ptr(originalCapacity + 1),
+							},
+							eng.ExpandedDefinition.Location,
+						)
+						By("Waiting for the new node to become Ready")
+						ready := node.WaitOnReadyMin(numAgentNodes+1, 500*time.Millisecond, cfg.Timeout)
+						Expect(ready).To(BeTrue())
+						timeToAddNewNodeBaseline = time.Since(start)
+						log.Printf("Took %s to add 1 node\n", timeToAddNewNodeBaseline)
+						By("Ensuring that we have one additional large container pod after scaling out by one")
+						start = time.Now()
+						_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+1, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						timeToLargeContainerDaemonsetRunningBaseline = time.Since(start)
+						log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
+					}
+					cmd := exec.Command("helm", "status", "vmss-prototype")
+					out, err := cmd.CombinedOutput()
+					if err == nil {
+						By("Found pre-existing 'vmss-prototype' helm release, deleting it...")
+						cmd := exec.Command("helm", "delete", "vmss-prototype")
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
+					commandArgsSlice := []string{"upgrade", "--install"}
+					if cfg.KaminoVMSSPrototypeLocalChartPath == "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--repo", "https://jackfrancis.github.io/kamino/", "vmss-prototype", "vmss-prototype"}...)
+					} else {
+						commandArgsSlice = append(commandArgsSlice, []string{"vmss-prototype", cfg.KaminoVMSSPrototypeLocalChartPath}...)
+					}
+					commandArgsSlice = append(commandArgsSlice, []string{"--namespace", "default", "--set", "kamino.scheduleOnControlPlane=true", "--set", "kamino.newUpdatedNodes=2", "--set", "kamino.logLevel=DEBUG", "--set", fmt.Sprintf("kamino.targetVMSS=%s", vmssName), "--set", "kamino.auto.lastPatchAnnotation=weave.works/kured-most-recent-reboot-needed", "--set", "kamino.auto.pendingRebootAnnotation=weave.works/kured-reboot-in-progress", "--set", "kamino.auto.minimumReadyTime=1s"}...)
+					if cfg.KaminoVMSSPrototypeImageRegistry != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRegistry=%s", cfg.KaminoVMSSPrototypeImageRegistry)}...)
+					}
+					if cfg.KaminoVMSSPrototypeImageRepository != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRepository=%s", cfg.KaminoVMSSPrototypeImageRepository)}...)
+					}
+					if cfg.KaminoVMSSPrototypeImageTag != "" {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageTag=%s", cfg.KaminoVMSSPrototypeImageTag), "--set", "kamino.container.pullByHash=false"}...)
+					}
+					if cfg.KaminoVMSSPrototypeDryRun {
+						commandArgsSlice = append(commandArgsSlice, []string{"--set", "kamino.auto.dryRun=true"}...)
+					}
+					cmd = exec.Command("helm", commandArgsSlice...)
+					util.PrintCommand(cmd)
+					start := time.Now()
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+					By("Ensuring that the kamino-vmss-prototype pod runs to completion")
+					succeededPods, getSucceededErr := pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", timeToLargeContainerDaemonsetRunningBaseline, sigPublishingTimeout)
+					jobs, err := job.GetAllByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(len(jobs)).To(Equal(1))
+					err = jobs[0].Describe()
+					Expect(err).NotTo(HaveOccurred())
+					pods, err := pod.GetAllByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(len(pods)).To(Equal(1))
+					err = pods[0].Describe()
+					Expect(err).NotTo(HaveOccurred())
+					err = pods[0].Logs()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(getSucceededErr).NotTo(HaveOccurred())
+					Expect(len(succeededPods)).To(Equal(1))
+					elapsed := time.Since(start)
+					log.Printf("Took %s to run kamino-vmss-prototype Job to completion\n", elapsed)
+					if !cfg.KaminoVMSSPrototypeDryRun {
+						nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						By("Waiting for the 2 new nodes created from prototype to become Ready")
+						start := time.Now()
+						ready := node.WaitOnReadyMin(len(nodes)+2, 30*time.Second, timeToAddNewNodeBaseline)
+						Expect(ready).To(BeTrue())
+						elapsed = time.Since(start)
+						log.Printf("Took %s to add 2 nodes derived from peer node prototype\n", elapsed)
+						By("Ensuring that we have one additional large container pod after scaling out by one")
+						start = time.Now()
+						_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+2, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						By("Ensuring that the daemonset pod achieved a Running state quicker compared to a pre-vmss-prototype-built node")
+						elapsed = time.Since(start)
+						log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node built from prototype\n", elapsed)
+						Expect(elapsed < timeToLargeContainerDaemonsetRunningBaseline).To(BeTrue())
+						By("Deleting large container DaemonSet")
+						err = largeContainerDaemonset.Delete(util.DefaultDeleteRetries)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				} else {
+					Skip("no VMSS node pools")
+				}
+			} else {
+				Skip("InstallVMSSNodePrototype disabled")
 			}
 		})
 	})

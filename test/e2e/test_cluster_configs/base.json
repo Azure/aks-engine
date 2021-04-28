@@ -1,29 +1,29 @@
 {
 	"env": {
 		"SCALE_CLUSTER": true,
+		"UPDATE_NODE_POOLS": true,
 		"UPGRADE_CLUSTER": true,
 		"GET_CLUSTER_LOGS": true,
 		"GINKGO_SKIP_AFTER_SCALE_DOWN": "should report all nodes in a Ready state",
+		"GINKGO_SKIP_AFTER_UPGRADE": "dns-liveness pod",
 		"SKIP_TESTS": "false",
 		"SKIP_TESTS_AFTER_ADD_POOL": "true",
 		"SKIP_TESTS_AFTER_SCALE_DOWN": "true",
 		"SKIP_TESTS_AFTER_UPGRADE": "true",
-		"SKIP_TESTS_AFTER_SCALE_UP": "false"
+		"SKIP_TESTS_AFTER_SCALE_UP": "false",
+		"STABILITY_ITERATIONS": "0"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
-			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes"
-			},
 			"masterProfile": {
-				"count": 1,
+				"count": 3,
 				"dnsPrefix": "",
 				"vmSize": "Standard_D2_v3"
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "poollinux",
+					"name": "poollinux1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3"
 				},
@@ -49,24 +49,29 @@
 				"adminPassword": "replacepassword1234$",
 				"enableAutomaticUpdates": false,
 				"sshEnabled": true
-			},
-			"servicePrincipalProfile": {
-				"clientId": "",
-				"secret": ""
 			}
 		}
 	},
-	"addNodePool": {
-		"name": "pooladded",
-		"count": 1,
-		"vmSize": "Standard_D2_v3",
-		"availabilityProfile": "VirtualMachineScaleSets",
-		"kubernetesConfig": {
-			"kubeletConfig": {
-				"--cloud-provider": "",
-				"--cloud-config": "",
-				"--azure-container-registry-config": ""
+	"addNodePool": [
+		{
+			"name": "poollinux2",
+			"count": 1,
+			"vmSize": "Standard_D2_v3",
+			"availabilityProfile": "VirtualMachineScaleSets",
+			"kubernetesConfig": {
+				"kubeletConfig": {
+					"--cloud-provider": "",
+					"--cloud-config": "",
+					"--azure-container-registry-config": ""
+				}
 			}
+		},
+		{
+			"name": "poolwin2",
+			"count": 1,
+			"vmSize": "Standard_D2_v3",
+			"osType": "Windows",
+			"availabilityProfile": "VirtualMachineScaleSets"
 		}
-	}
+	]
 }

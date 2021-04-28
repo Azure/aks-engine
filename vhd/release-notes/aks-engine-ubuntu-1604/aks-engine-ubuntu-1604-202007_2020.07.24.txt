@@ -1,0 +1,160 @@
+Starting build on  Wed Jul 22 23:58:11 UTC 2020
+Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):
+  - apache2-utils
+  - apt-transport-https
+  - auditd
+  - blobfuse
+  - ca-certificates
+  - ceph-common
+  - cgroup-lite
+  - cifs-utils
+  - conntrack
+  - cracklib-runtime
+  - dkms
+  - dbus
+  - ebtables
+  - ethtool
+  - fuse
+  - gcc
+  - git
+  - glusterfs-client
+  - init-system-helpers
+  - iproute2
+  - ipset
+  - iptables
+  - jq
+  - libpam-pwquality
+  - libpwquality-tools
+  - linux-headers-4.15.0-1091-azure
+  - make
+  - mount
+  - nfs-common
+  - pigz socat
+  - traceroute
+  - util-linux
+  - xz-utils
+  - zip
+  - apmz v0.5.1
+  - bpftrace
+  - moby v19.03.12
+  - nvidia-docker2 nvidia-container-runtime
+  - etcd v3.3.22
+  - bcc-tools
+  - libbcc-examples
+  - Azure CNI version 1.1.3
+  - Azure CNI version 1.1.2
+  - Azure CNI version 1.1.0
+  - CNI plugin version 0.8.6
+  - img
+Docker images pre-pulled:
+  - mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.3
+  - mcr.microsoft.com/oss/kubernetes/metrics-scraper:v1.0.4
+  - k8s.gcr.io/addon-resizer:1.8.7
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/addon-resizer:1.8.7
+  - k8s.gcr.io/addon-resizer:1.8.4
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/addon-resizer:1.8.4
+  - k8s.gcr.io/metrics-server-amd64:v0.3.6
+  - mcr.microsoft.com/oss/kubernetes/metrics-server:v0.3.6
+  - k8s.gcr.io/metrics-server-amd64:v0.3.5
+  - mcr.microsoft.com/oss/kubernetes/metrics-server:v0.3.5
+  - k8s.gcr.io/metrics-server-amd64:v0.3.4
+  - mcr.microsoft.com/oss/kubernetes/metrics-server:v0.3.4
+  - k8s.gcr.io/metrics-server-amd64:v0.2.1
+  - mcr.microsoft.com/oss/kubernetes/metrics-server:v0.2.1
+  - k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4
+  - mcr.microsoft.com/oss/kubernetes/k8s-dns-kube-dns:1.15.4
+  - k8s.gcr.io/kube-addon-manager-amd64:v9.1.1
+  - mcr.microsoft.com/oss/kubernetes/kube-addon-manager:v9.1.1
+  - k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.15.4
+  - mcr.microsoft.com/oss/kubernetes/k8s-dns-dnsmasq-nanny:1.15.4
+  - mcr.microsoft.com/oss/kubernetes/pause:1.4.0
+  - k8s.gcr.io/pause-amd64:3.1
+  - gcr.io/kubernetes-helm/tiller:v2.13.1
+  - mcr.microsoft.com/oss/kubernetes/tiller:v2.13.1
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v1.18.1
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v1.17.2
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.5
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.6
+  - k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.10
+  - mcr.microsoft.com/oss/kubernetes/k8s-dns-sidecar:1.14.10
+  - mcr.microsoft.com/oss/kubernetes/coredns:1.7.0
+  - mcr.microsoft.com/oss/kubernetes/coredns:1.6.9
+  - mcr.microsoft.com/oss/kubernetes/coredns:1.6.7
+  - k8s.gcr.io/rescheduler:v0.4.0
+  - mcr.microsoft.com/oss/kubernetes/rescheduler:v0.4.0
+  - microsoft/virtual-kubelet:latest
+  - mcr.microsoft.com/containernetworking/networkmonitor:v0.0.8
+  - mcr.microsoft.com/containernetworking/azure-npm:v1.1.4
+  - mcr.microsoft.com/oss/nvidia/k8s-device-plugin:1.0.0-beta6
+  - mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.16
+  - mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8
+  - k8s.gcr.io/ip-masq-agent-amd64:v2.5.0
+  - mcr.microsoft.com/oss/kubernetes/ip-masq-agent:v2.5.0
+  - mcr.microsoft.com/k8s/kms/keyvault:v0.0.9
+  - quay.io/coreos/flannel:v0.10.0-amd64
+  - quay.io/coreos/flannel:v0.8.0-amd64
+  - busybox
+  - mcr.microsoft.com/oss/kubernetes/kube-apiserver:v1.19.0-beta.2
+  - mcr.microsoft.com/oss/kubernetes/kube-controller-manager:v1.19.0-beta.2
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.19.0-beta.2
+  - mcr.microsoft.com/oss/kubernetes/kube-scheduler:v1.19.0-beta.2
+  - mcr.microsoft.com/oss/kubernetes/kube-apiserver:v1.18.6
+  - mcr.microsoft.com/oss/kubernetes/kube-controller-manager:v1.18.6
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.18.6
+  - mcr.microsoft.com/oss/kubernetes/kube-scheduler:v1.18.6
+  - mcr.microsoft.com/oss/kubernetes/kube-apiserver:v1.18.5
+  - mcr.microsoft.com/oss/kubernetes/kube-controller-manager:v1.18.5
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.18.5
+  - mcr.microsoft.com/oss/kubernetes/kube-scheduler:v1.18.5
+  - mcr.microsoft.com/oss/kubernetes/kube-apiserver:v1.17.9
+  - mcr.microsoft.com/oss/kubernetes/kube-controller-manager:v1.17.9
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.17.9
+  - mcr.microsoft.com/oss/kubernetes/kube-scheduler:v1.17.9
+  - mcr.microsoft.com/oss/kubernetes/kube-apiserver:v1.17.9-azs
+  - mcr.microsoft.com/oss/kubernetes/kube-controller-manager:v1.17.9-azs
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.17.9-azs
+  - mcr.microsoft.com/oss/kubernetes/kube-scheduler:v1.17.9-azs
+  - mcr.microsoft.com/oss/kubernetes/kube-apiserver:v1.17.8
+  - mcr.microsoft.com/oss/kubernetes/kube-controller-manager:v1.17.8
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.17.8
+  - mcr.microsoft.com/oss/kubernetes/kube-scheduler:v1.17.8
+  - mcr.microsoft.com/oss/kubernetes/hyperkube:v1.16.13
+  - mcr.microsoft.com/oss/kubernetes/hyperkube:v1.16.13-azs
+  - mcr.microsoft.com/oss/kubernetes/hyperkube:v1.16.12
+  - mcr.microsoft.com/oss/kubernetes/hyperkube:v1.15.12
+  - mcr.microsoft.com/oss/kubernetes/cloud-controller-manager:v1.15.12
+  - mcr.microsoft.com/oss/kubernetes/hyperkube:v1.15.12-azs
+  - mcr.microsoft.com/oss/kubernetes/hyperkube:v1.15.11
+  - mcr.microsoft.com/oss/kubernetes/cloud-controller-manager:v1.15.11
+  - mcr.microsoft.com/oss/kubernetes/hyperkube:v1.15.11-azs
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.16.13
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.16.12
+  - mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.16.11
+  - mcr.microsoft.com/oss/kubernetes/azure-cloud-controller-manager:v0.5.1
+  - mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v0.5.1
+  - mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.7.0
+  - mcr.microsoft.com/k8s/csi/azurefile-csi:v0.6.0
+  - mcr.microsoft.com/oss/kubernetes-csi/csi-attacher:v1.2.0
+  - mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.0
+  - mcr.microsoft.com/oss/kubernetes-csi/csi-provisioner:v1.4.0
+  - mcr.microsoft.com/oss/kubernetes-csi/csi-provisioner:v1.5.0
+  - mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v1.1.0
+  - mcr.microsoft.com/oss/kubernetes-csi/csi-resizer:v0.3.0
+  - mcr.microsoft.com/oss/kubernetes-csi/csi-snapshotter:v1.1.0
+  - mcr.microsoft.com/oss/kubernetes-csi/csi-snapshotter:v2.0.0
+  - mcr.microsoft.com/oss/kubernetes-csi/snapshot-controller:v2.0.0
+  - k8s.gcr.io/node-problem-detector:v0.8.2
+  - mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.6
+  - mcr.microsoft.com/k8s/csi/secrets-store/driver:v0.0.11
+  - mcr.microsoft.com/k8s/aad-pod-identity/mic:1.6.1
+  - mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.6.1
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1
+  - mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.1.2-r2
+  - registry:2.7.1
+Using kernel:
+Linux version 4.15.0-1091-azure (buildd@lcy01-amd64-002) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.12)) #101~16.04.1-Ubuntu SMP Fri Jun 26 01:14:12 UTC 2020
+Install completed successfully on  Thu Jul 23 00:18:18 UTC 2020
+VSTS Build NUMBER: 20200722.3
+VSTS Build ID: 33129841
+Commit: 0d7aaec98600f5ca194ab5a1f4ca82efe3350034
+Feature flags:

@@ -121,7 +121,6 @@ func (vmc *SkusCmd) run(cmd *cobra.Command, args []string) error {
 				skus = append(skus, helpers.VMSku{
 					Name:                  name,
 					AcceleratedNetworking: acceleratedNetworking,
-					StorageAccountType:    storageAccountType(name),
 				})
 			}
 		}
@@ -155,23 +154,22 @@ package helpers
 
 type VMSku struct {
 	Name                  string
-	StorageAccountType    string
 	AcceleratedNetworking bool
 }
 
 var VMSkus = []VMSku{
 `)
-		formatStr := "\t{\n\t\tName:                  \"%s\",\n\t\tStorageAccountType:    \"%s\",\n\t\tAcceleratedNetworking: %t,\n\t},\n"
+		formatStr := "\t{\n\t\tName:                  \"%s\",\n\t\tAcceleratedNetworking: %t,\n\t},\n"
 		for _, s := range skus {
-			b.WriteString(fmt.Sprintf(formatStr, s.Name, s.StorageAccountType, s.AcceleratedNetworking))
+			b.WriteString(fmt.Sprintf(formatStr, s.Name, s.AcceleratedNetworking))
 		}
 		b.WriteString("}")
 		fmt.Println(b.String())
 	case "human":
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.FilterHTML)
-		fmt.Fprintln(w, "Name\tStorage Account Type\tAccelerated Networking Support")
+		fmt.Fprintln(w, "Name\tAccelerated Networking Support")
 		for _, sku := range skus {
-			fmt.Fprintf(w, "%s\t%s\t%t\n", sku.Name, sku.StorageAccountType, sku.AcceleratedNetworking)
+			fmt.Fprintf(w, "%s\t%t\n", sku.Name, sku.AcceleratedNetworking)
 		}
 		w.Flush()
 	}
@@ -179,14 +177,4 @@ var VMSkus = []VMSku{
 	log.Debugf("Done listing VM SKUs")
 
 	return err
-}
-
-func storageAccountType(skuName string) string {
-	parts := strings.Split(skuName, "_")
-	if len(parts) > 1 {
-		if strings.Contains(strings.ToUpper(parts[1]), "S") {
-			return "Premium_LRS"
-		}
-	}
-	return "Standard_LRS"
 }

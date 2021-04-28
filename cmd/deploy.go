@@ -95,7 +95,7 @@ func newDeployCmd() *cobra.Command {
 	f := deployCmd.Flags()
 	f.StringVarP(&dc.apimodelPath, "api-model", "m", "", "path to your cluster definition file")
 	f.StringVarP(&dc.dnsPrefix, "dns-prefix", "p", "", "dns prefix (unique name for the cluster)")
-	f.BoolVar(&dc.autoSuffix, "auto-suffix", false, "automatically append a compressed timestamp to the dnsPrefix to ensure unique cluster name automatically")
+	f.BoolVar(&dc.autoSuffix, "auto-suffix", false, "automatically append a compressed timestamp to the dnsPrefix to ensure cluster name uniqueness")
 	f.StringVarP(&dc.outputDirectory, "output-directory", "o", "", "output directory (derived from FQDN if absent)")
 	f.StringVar(&dc.caCertificatePath, "ca-certificate-path", "", "path to the CA certificate to use for Kubernetes PKI assets")
 	f.StringVar(&dc.caPrivateKeyPath, "ca-private-key-path", "", "path to the CA private key to use for Kubernetes PKI assets")
@@ -193,6 +193,10 @@ func (dc *deployCmd) loadAPIModel() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
+	if dc.containerService.Properties.MasterProfile == nil {
+		return errors.New("MasterProfile can't be nil")
+	}
+
 	// consume dc.caCertificatePath and dc.caPrivateKeyPath
 	if (dc.caCertificatePath != "" && dc.caPrivateKeyPath == "") || (dc.caCertificatePath == "" && dc.caPrivateKeyPath != "") {
 		return errors.New("--ca-certificate-path and --ca-private-key-path must be specified together")
@@ -255,7 +259,6 @@ func (dc *deployCmd) loadAPIModel() error {
 }
 
 func autofillApimodel(dc *deployCmd) error {
-
 	if dc.containerService.Properties.LinuxProfile != nil {
 		if dc.containerService.Properties.LinuxProfile.AdminUsername == "" {
 			log.Warnf("apimodel: no linuxProfile.adminUsername was specified. Will use 'azureuser'.")
@@ -270,21 +273,17 @@ func autofillApimodel(dc *deployCmd) error {
 		if dc.dnsPrefix == "" {
 			return errors.New("apimodel: missing masterProfile.dnsPrefix and --dns-prefix was not specified")
 		}
-		log.Warnf("apimodel: missing masterProfile.dnsPrefix will use %q", dc.dnsPrefix)
 		dc.containerService.Properties.MasterProfile.DNSPrefix = dc.dnsPrefix
 	}
 
 	if dc.autoSuffix {
 		suffix := strconv.FormatInt(time.Now().Unix(), 16)
 		dc.containerService.Properties.MasterProfile.DNSPrefix += "-" + suffix
+		log.Infof("Generated random suffix %s, DNS Prefix is %s", suffix, dc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
 	if dc.outputDirectory == "" {
-		if dc.containerService.Properties.MasterProfile != nil {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
-		} else {
-			dc.outputDirectory = path.Join("_output", dc.containerService.Properties.HostedMasterProfile.DNSPrefix)
-		}
+		dc.outputDirectory = path.Join("_output", dc.containerService.Properties.MasterProfile.DNSPrefix)
 	}
 
 	if _, err := os.Stat(dc.outputDirectory); !dc.forceOverwrite && err == nil {
@@ -324,7 +323,7 @@ func autofillApimodel(dc *deployCmd) error {
 
 	k8sConfig := dc.containerService.Properties.OrchestratorProfile.KubernetesConfig
 
-	useManagedIdentity := k8sConfig != nil && k8sConfig.UseManagedIdentity
+	useManagedIdentity := k8sConfig != nil && to.Bool(k8sConfig.UseManagedIdentity)
 
 	if !useManagedIdentity {
 		spp := dc.containerService.Properties.ServicePrincipalProfile
@@ -406,8 +405,10 @@ func (dc *deployCmd) run() error {
 		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", dc.apimodelPath)
 	}
 
-	if err = dc.validateOSBaseImage(); err != nil {
-		return errors.Wrapf(err, "validating OS base images required by %s", dc.apimodelPath)
+	if dc.containerService.Properties.IsAzureStackCloud() {
+		if err = dc.validateOSBaseImage(); err != nil {
+			return errors.Wrapf(err, "validating OS base images required by %s", dc.apimodelPath)
+		}
 	}
 
 	template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
@@ -541,12 +542,10 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 
 // validateOSBaseImage checks if the OS image is available on the target cloud (ATM, Azure Stack only)
 func (dc *deployCmd) validateOSBaseImage() error {
-	if dc.containerService.Properties.IsAzureStackCloud() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client); err != nil {
-			return errors.Wrap(err, "OS base image not available in target cloud")
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client); err != nil {
+		return errors.Wrap(err, "OS base image not available in target cloud")
 	}
 	return nil
 }

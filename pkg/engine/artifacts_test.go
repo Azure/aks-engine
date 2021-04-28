@@ -22,7 +22,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedMetricsServer          kubernetesComponentFileSpec
 		expectedTiller                 kubernetesComponentFileSpec
 		expectedAADPodIdentity         kubernetesComponentFileSpec
-		expectedACIConnector           kubernetesComponentFileSpec
 		expectedAzureDiskCSIDriver     kubernetesComponentFileSpec
 		expectedAzureFileCSIDriver     kubernetesComponentFileSpec
 		expectedClusterAutoscaler      kubernetesComponentFileSpec
@@ -30,7 +29,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedSMBFlexVolume          kubernetesComponentFileSpec
 		expectedKeyVaultFlexVolume     kubernetesComponentFileSpec
 		expectedDashboard              kubernetesComponentFileSpec
-		expectedRescheduler            kubernetesComponentFileSpec
 		expectedNvidia                 kubernetesComponentFileSpec
 		expectedContainerMonitoring    kubernetesComponentFileSpec
 		expectedIPMasqAgent            kubernetesComponentFileSpec
@@ -74,10 +72,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Data: base64Data,
 							},
 							{
-								Name: common.ACIConnectorAddonName,
-								Data: base64Data,
-							},
-							{
 								Name: common.AzureDiskCSIDriverAddonName,
 								Data: base64Data,
 							},
@@ -106,10 +100,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Data: base64Data,
 							},
 							{
-								Name: common.ReschedulerAddonName,
-								Data: base64Data,
-							},
-							{
 								Name: common.NVIDIADevicePluginAddonName,
 								Data: base64Data,
 							},
@@ -119,10 +109,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.IPMASQAgentAddonName,
-								Data: base64Data,
-							},
-							{
-								Name: common.AzureCNINetworkMonitorAddonName,
 								Data: base64Data,
 							},
 							{
@@ -208,11 +194,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      base64Data,
 				destinationFile: aadPodIdentityAddonDestinationFilename,
 			},
-			expectedACIConnector: kubernetesComponentFileSpec{
-				sourceFile:      aciConnectorAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: aciConnectorAddonDestinationFilename,
-			},
 			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
 				sourceFile:      azureDiskCSIAddonSourceFilename,
 				base64Data:      base64Data,
@@ -248,11 +229,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      base64Data,
 				destinationFile: dashboardAddonDestinationFilename,
 			},
-			expectedRescheduler: kubernetesComponentFileSpec{
-				sourceFile:      reschedulerAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: reschedulerAddonDestinationFilename,
-			},
 			expectedNvidia: kubernetesComponentFileSpec{
 				sourceFile:      nvidiaAddonSourceFilename,
 				base64Data:      base64Data,
@@ -267,11 +243,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      ipMasqAgentAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: ipMasqAgentAddonDestinationFilename,
-			},
-			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
-				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
@@ -372,9 +343,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.AADPodIdentityAddonName,
 							},
 							{
-								Name: common.ACIConnectorAddonName,
-							},
-							{
 								Name: common.AzureDiskCSIDriverAddonName,
 							},
 							{
@@ -396,9 +364,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.DashboardAddonName,
 							},
 							{
-								Name: common.ReschedulerAddonName,
-							},
-							{
 								Name: common.NVIDIADevicePluginAddonName,
 							},
 							{
@@ -406,9 +371,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.IPMASQAgentAddonName,
-							},
-							{
-								Name: common.AzureCNINetworkMonitorAddonName,
 							},
 							{
 								Name: common.CalicoAddonName,
@@ -477,11 +439,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: aadPodIdentityAddonDestinationFilename,
 			},
-			expectedACIConnector: kubernetesComponentFileSpec{
-				sourceFile:      aciConnectorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: aciConnectorAddonDestinationFilename,
-			},
 			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
 				sourceFile:      azureDiskCSIAddonSourceFilename,
 				base64Data:      "",
@@ -517,11 +474,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: dashboardAddonDestinationFilename,
 			},
-			expectedRescheduler: kubernetesComponentFileSpec{
-				sourceFile:      reschedulerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: reschedulerAddonDestinationFilename,
-			},
 			expectedNvidia: kubernetesComponentFileSpec{
 				sourceFile:      nvidiaAddonSourceFilename,
 				base64Data:      "",
@@ -536,11 +488,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      ipMasqAgentAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: ipMasqAgentAddonDestinationFilename,
-			},
-			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
-				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
@@ -641,11 +588,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: aadPodIdentityAddonDestinationFilename,
 			},
-			expectedACIConnector: kubernetesComponentFileSpec{
-				sourceFile:      aciConnectorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: aciConnectorAddonDestinationFilename,
-			},
 			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
 				sourceFile:      azureDiskCSIAddonSourceFilename,
 				base64Data:      "",
@@ -681,11 +623,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: dashboardAddonDestinationFilename,
 			},
-			expectedRescheduler: kubernetesComponentFileSpec{
-				sourceFile:      reschedulerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: reschedulerAddonDestinationFilename,
-			},
 			expectedNvidia: kubernetesComponentFileSpec{
 				sourceFile:      nvidiaAddonSourceFilename,
 				base64Data:      "",
@@ -700,11 +637,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      ipMasqAgentAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: ipMasqAgentAddonDestinationFilename,
-			},
-			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
-				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
@@ -826,16 +758,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					if c.expectedAADPodIdentity.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAADPodIdentity.destinationFile)
 					}
-				case common.ACIConnectorAddonName:
-					if c.expectedACIConnector.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedACIConnector.sourceFile)
-					}
-					if c.expectedACIConnector.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedACIConnector.base64Data)
-					}
-					if c.expectedACIConnector.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedACIConnector.destinationFile)
-					}
 				case common.AzureDiskCSIDriverAddonName:
 					if c.expectedAzureDiskCSIDriver.sourceFile != componentFileSpec[addon].sourceFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureDiskCSIDriver.sourceFile)
@@ -906,16 +828,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					if c.expectedDashboard.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedDashboard.destinationFile)
 					}
-				case common.ReschedulerAddonName:
-					if c.expectedRescheduler.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedRescheduler.sourceFile)
-					}
-					if c.expectedRescheduler.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedRescheduler.base64Data)
-					}
-					if c.expectedRescheduler.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedRescheduler.destinationFile)
-					}
 				case common.NVIDIADevicePluginAddonName:
 					if c.expectedNvidia.sourceFile != componentFileSpec[addon].sourceFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedNvidia.sourceFile)
@@ -945,16 +857,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedIPMasqAgent.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedIPMasqAgent.destinationFile)
-					}
-				case common.AzureCNINetworkMonitorAddonName:
-					if c.expectedAzureCNINetworkMonitor.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureCNINetworkMonitor.sourceFile)
-					}
-					if c.expectedAzureCNINetworkMonitor.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzureCNINetworkMonitor.base64Data)
-					}
-					if c.expectedAzureCNINetworkMonitor.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureCNINetworkMonitor.destinationFile)
 					}
 				case common.CalicoAddonName:
 					if c.expectedCalico.sourceFile != componentFileSpec[addon].sourceFile {

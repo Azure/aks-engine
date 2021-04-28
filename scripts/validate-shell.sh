@@ -12,7 +12,7 @@ if [ -f /.dockerenv ]; then
 fi
 
 # All shell scripts, except those that support deprecated orchestrators or are in vendored code.
-files=$(find . -type f -name "*.sh" -not -path './vendor/*' -not -path './hack/tools/*' -not -path './test/e2e/vendor/*' -not -path "*dcos*" -not -path "*swarm*")
+files=$(find . -type f -name "*.sh" -not -path './vendor/*' -not -path './hack/tools/*' -not -path './test/e2e/vendor/*')
 
 IGNORED="
 SC1127

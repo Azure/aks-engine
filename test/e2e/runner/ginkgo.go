@@ -39,11 +39,25 @@ func (g *Ginkgo) Run() error {
 	g.Point.SetTestStart()
 	// use the test bin rather than compile the directory b/c the compile will happen in a sub dir which is another module
 	testFile := fmt.Sprintf("test/e2e/%s/%s.test", g.Config.Orchestrator, g.Config.Orchestrator)
-	failFastFlag := ""
-	if g.Config.GinkgoFailFast {
-		failFastFlag = "--failFast"
+
+	args := []string{"-slowSpecThreshold", "180", "-r", "-v"}
+	if g.Config.GinkgoParallel {
+		args = append(args, "-p")
 	}
-	var cmd = exec.Command("ginkgo", "-slowSpecThreshold", "180", failFastFlag, "-r", "-v", "--focus", g.Config.GinkgoFocus, "--skip", g.Config.GinkgoSkip, testFile)
+	if g.Config.GinkgoFailFast {
+		args = append(args, "-failFast")
+	}
+	if g.Config.GinkgoFocus != "" {
+		args = append(args, "-focus")
+		args = append(args, g.Config.GinkgoFocus)
+	}
+	if g.Config.GinkgoSkip != "" {
+		args = append(args, "-skip")
+		args = append(args, g.Config.GinkgoSkip)
+	}
+	args = append(args, testFile)
+	var cmd = exec.Command("ginkgo", args...)
+
 	util.PrintCommand(cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -57,14 +71,12 @@ func (g *Ginkgo) Run() error {
 	err = cmd.Wait()
 	if err != nil {
 		g.Point.RecordTestError()
-		if g.Config.IsKubernetes() {
-			kubectl := exec.Command("k", "get", "all", "--all-namespaces", "-o", "wide")
-			util.PrintCommand(kubectl)
-			kubectl.CombinedOutput()
-			kubectl = exec.Command("k", "get", "nodes", "-o", "wide")
-			util.PrintCommand(kubectl)
-			kubectl.CombinedOutput()
-		}
+		kubectl := exec.Command("k", "get", "all", "--all-namespaces", "-o", "wide")
+		util.PrintCommand(kubectl)
+		kubectl.CombinedOutput()
+		kubectl = exec.Command("k", "get", "nodes", "-o", "wide")
+		util.PrintCommand(kubectl)
+		kubectl.CombinedOutput()
 		return err
 	}
 	g.Point.RecordTestSuccess()
