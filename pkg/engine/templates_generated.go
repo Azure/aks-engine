@@ -8460,6 +8460,7 @@ spec:
         - name: docker-windows-containers
           hostPath:
             path: C:\ProgramData\docker\containers
+            type: DirectoryOrCreate
         - name: settings-vol-config
           configMap:
             name: container-azm-ms-agentconfig
