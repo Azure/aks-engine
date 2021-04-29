@@ -6052,9 +6052,9 @@ func ExampleContainerService_setOrchestratorDefaults() {
 	mockCS.setOrchestratorDefaults(false, false)
 
 	// Output:
-	// level=warning msg="Moby will be upgraded to version 20.10.5\n"
+	// level=warning msg="Moby will be upgraded to version 19.03.14\n"
 	// level=warning msg="containerd will be upgraded to version 1.4.4\n"
-	// level=warning msg="Any new nodes will have Moby version 20.10.5\n"
+	// level=warning msg="Any new nodes will have Moby version 19.03.14\n"
 	// level=warning msg="Any new nodes will have containerd version 1.4.4\n"
 }
 
