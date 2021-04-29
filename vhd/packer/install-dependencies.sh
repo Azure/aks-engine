@@ -82,8 +82,8 @@ echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="19.03.14"
-CONTAINERD_VERSION="1.3.9"
+MOBY_VERSION="20.10.5"
+CONTAINERD_VERSION="1.4.4"
 installMoby
 systemctl_restart 100 5 30 docker || exit 1
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
