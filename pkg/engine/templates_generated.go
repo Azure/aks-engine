@@ -13059,7 +13059,11 @@ mobyPkgVersion() {
   dpkg -s "${1}" | grep "Version:" | awk '{ print $2 }' | cut -d '+' -f 1
 }
 installRunc() {
-  apt_get_install 20 30 120 moby-runc=1.0.0~rc92* --allow-downgrades || exit 27
+  local v
+  v=$(runc --version | head -n 1 | cut -d" " -f3)
+  if [[ $v != "1.0.0-rc92" ]]; then
+    apt_get_install 20 30 120 moby-runc=1.0.0~rc92* --allow-downgrades || exit 27
+  fi
 }
 installMoby() {
   local install_pkgs="" v cli_ver="${MOBY_VERSION}"
