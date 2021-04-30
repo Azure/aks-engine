@@ -207,7 +207,7 @@
       }
     },
     "mobyVersion": {
-      "defaultValue": "20.10.5",
+      "defaultValue": "19.03.14",
       "metadata": {
         "description": "The Azure Moby build version"
       },
