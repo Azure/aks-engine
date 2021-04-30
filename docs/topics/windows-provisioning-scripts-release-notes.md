@@ -1,3 +1,7 @@
+## v0.0.13
+
+- [fix: Force restart kubeproxy to avoid getting stuck #4375](https://github.com/Azure/aks-engine/pull/4375)
+
 ## v0.0.12
 
 - [feat: Use NSSM for containerd and collect containerd logs #4219](https://github.com/Azure/aks-engine/pull/4219)
