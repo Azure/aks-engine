@@ -8019,6 +8019,7 @@ spec:
                 - /opt/livenessprobe.sh
             initialDelaySeconds: 60
             periodSeconds: 60
+            timeoutSeconds: 15
           ports:
             - containerPort: 25225
               protocol: TCP
@@ -8111,6 +8112,10 @@ spec:
           secret:
             secretName: omsagent-adx-secret
             optional: true
+        - name: osm-settings-vol-config
+          configMap:
+            name: container-azm-ms-osmconfig
+            optional: true
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
@@ -8168,6 +8173,8 @@ spec:
             # Update this with the user assigned msi client id for omsagent addon (if exists)
             - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
               value: ""
+            - name: SIDECAR_SCRAPING_ENABLED
+              value: "false"
           securityContext:
             privileged: true
           ports:
@@ -8196,6 +8203,9 @@ spec:
             - mountPath: /etc/config/settings/adx
               name: omsagent-adx-secret
               readOnly: true
+            - mountPath: /etc/config/osm-settings
+              name: osm-settings-vol-config
+              readOnly: true
           livenessProbe:
             exec:
               command:
@@ -8204,6 +8214,7 @@ spec:
                 - /opt/livenessprobe.sh
             initialDelaySeconds: 60
             periodSeconds: 60
+            timeoutSeconds: 15
       affinity:
         nodeAffinity:
           # affinity to schedule on to ephemeral os node if its available
@@ -8261,6 +8272,10 @@ spec:
           secret:
             secretName: omsagent-adx-secret
             optional: true
+        - name: osm-settings-vol-config
+          configMap:
+            name: container-azm-ms-osmconfig
+            optional: true
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -8313,10 +8328,16 @@ spec:
               valueFrom:
                  fieldRef:
                    fieldPath: spec.nodeName
+            - name: PODNAME
+              valueFrom:
+                 fieldRef:
+                   fieldPath: metadata.name
             - name: NODE_IP
               valueFrom:
                  fieldRef:
                    fieldPath: status.hostIP
+            - name: SIDECAR_SCRAPING_ENABLED
+              value: "false"
           volumeMounts:
             - mountPath: C:\ProgramData\docker\containers
               name: docker-windows-containers
