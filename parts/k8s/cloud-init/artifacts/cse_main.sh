@@ -109,6 +109,7 @@ time_metric "InstallContainerd" installContainerd
 {{else}}
 time_metric "installMoby" installMoby
 {{end}}
+time_metric "installRunc" installRunc
 {{- if HasLinuxMobyURL}}
   LINUX_MOBY_URL={{GetLinuxMobyURL}}
   if [[ -n "${LINUX_MOBY_URL:-}" ]]; then

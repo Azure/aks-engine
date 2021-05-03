@@ -13079,6 +13079,13 @@ removeContainerd() {
 mobyPkgVersion() {
   dpkg -s "${1}" | grep "Version:" | awk '{ print $2 }' | cut -d '+' -f 1
 }
+installRunc() {
+  local v
+  v=$(runc --version | head -n 1 | cut -d" " -f3)
+  if [[ $v != "1.0.0-rc92" ]]; then
+    apt_get_install 20 30 120 moby-runc=1.0.0~rc92* --allow-downgrades || exit 27
+  fi
+}
 installMoby() {
   local install_pkgs="" v cli_ver="${MOBY_VERSION}"
   v="$(mobyPkgVersion moby-containerd)"
@@ -13358,6 +13365,7 @@ time_metric "InstallContainerd" installContainerd
 {{else}}
 time_metric "installMoby" installMoby
 {{end}}
+time_metric "installRunc" installRunc
 {{- if HasLinuxMobyURL}}
   LINUX_MOBY_URL={{GetLinuxMobyURL}}
   if [[ -n "${LINUX_MOBY_URL:-}" ]]; then
@@ -16451,12 +16459,13 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "19.03.11",
          "19.03.12",
          "19.03.13",
-         "19.03.14"
+         "19.03.14",
+         "20.10.5"
        ],
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.3.9",
+      "defaultValue": "1.4.4",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -16468,7 +16477,8 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "1.3.6",
          "1.3.7",
          "1.3.8",
-         "1.3.9"
+         "1.3.9",
+         "1.4.4"
        ],
       "type": "string"
     },
