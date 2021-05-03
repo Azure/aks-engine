@@ -223,6 +223,7 @@ loadContainerImage "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.22.0-alpha.1
 1.21.0
 1.20.6
 1.19.10
