@@ -30,6 +30,14 @@ Once the cluster logs were successfully retrieved, AKS Engine can persist them t
 
 *Note: storage accounts on custom clouds using the `AD FS` identity provider are not yet supported*
 
+### Nodes unable to join the cluster
+
+By default, `aks-engine get-logs` collects logs from nodes that succesfully joined the cluster. To collect logs from VMs that were not able to join the cluster, set flag `--vm-names`:
+
+```console
+--vm-name k8s-pool-01,k8s-pool-02
+```
+
 ## Usage
 
 Assuming that you have a cluster deployed and the API model originally used to deploy that cluster is stored at `_output/<dnsPrefix>/apimodel.json`, then you can collect logs running a command like:
@@ -55,5 +63,6 @@ $ aks-engine get-logs \
 |--linux-script|no|Custom log collection bash script. Required only when the Linux node distro is not `aks-ubuntu`. The script should produce file `/tmp/logs.zip`.|
 |--windows-script|no|Custom log collection powershell script. Required only when the Windows node distro is not `aks-windows`. The script should produce file `%TEMP%\{NodeName}.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
-|--control-plane-only|no|Only collect logs from master nodes.|
+|--control-plane-only|no|Only collect logs from master nodes (unless --vm-names is set).|
+|--vm-names|no|Only collect logs from the specified VMs (comma-separated names).|
 |--upload-sas-url|no|Azure Storage Account SAS URL to upload the collected logs.|

@@ -147,7 +147,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				location:               "southcentralus",
 				uploadSASURL:           "https://blob-service-uri/?sas-token",
 			},
-			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
+			expectedErr: errors.New("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
 			name:        "InvalidSASURLNoPath",
 		},
 		{
@@ -160,7 +160,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				location:               "southcentralus",
 				uploadSASURL:           "https://blob-service-uri//?sas-token",
 			},
-			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
+			expectedErr: errors.New("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
 			name:        "InvalidSASURLEmptyPath",
 		},
 		{
@@ -173,7 +173,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				location:               "southcentralus",
 				uploadSASURL:           "https://blob-service-uri//folder-name?sas-token",
 			},
-			expectedErr: errors.Errorf("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
+			expectedErr: errors.New("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'"),
 			name:        "InvalidSASURLNoContainerName",
 		},
 		{
@@ -197,7 +197,21 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				windowsScriptPath:      existingFile,
 				sshHostURI:             "server.example.com",
 				location:               "southcentralus",
+				nodeNames:              []string{},
+			},
+			expectedErr: errors.New("--vm-names cannot be empty"),
+			name:        "EmptyVMList",
+		},
+		{
+			glc: &getLogsCmd{
+				apiModelPath:           existingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
+				windowsScriptPath:      existingFile,
+				sshHostURI:             "server.example.com",
+				location:               "southcentralus",
 				uploadSASURL:           "https://blob-service-uri/container-name?sas-token",
+				nodeNames:              []string{"vm1,vm2"},
 			},
 			expectedErr: nil,
 			name:        "IsValid",

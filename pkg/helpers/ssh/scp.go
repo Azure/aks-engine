@@ -5,6 +5,7 @@ package ssh
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -13,9 +14,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CopyToRemote copies a file to a remote host
-func CopyToRemote(host *RemoteHost, file *RemoteFile) (combinedOutput string, err error) {
-	c, err := clientWithRetry(host)
+// CopyToRemote copies a file to a remote host.
+//
+// Context ctx is only enforced during the process that stablishes
+// the SSH connection and creates the SSH client.
+func CopyToRemote(ctx context.Context, host *RemoteHost, file *RemoteFile) (combinedOutput string, err error) {
+	c, err := clientWithRetry(ctx, host)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
@@ -34,14 +38,17 @@ func CopyToRemote(host *RemoteHost, file *RemoteFile) (combinedOutput string, er
 	return "", nil
 }
 
-// CopyFromRemote copies a remote file to the local host
-func CopyFromRemote(host *RemoteHost, remoteFile *RemoteFile, destinationPath string) (stderr string, err error) {
+// CopyFromRemote copies a remote file to the local host.
+//
+// Context ctx is only enforced during the process that stablishes
+// the SSH connection and creates the SSH client.
+func CopyFromRemote(ctx context.Context, host *RemoteHost, remoteFile *RemoteFile, destinationPath string) (stderr string, err error) {
 	f, err := os.OpenFile(destinationPath, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return "", errors.Wrap(err, "opening destination file")
 	}
 	defer f.Close()
-	c, err := clientWithRetry(host)
+	c, err := clientWithRetry(ctx, host)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
