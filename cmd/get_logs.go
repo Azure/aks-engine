@@ -92,7 +92,7 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required if distro is not aks-ubuntu)")
 	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes (required if distro is not aks-windows)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
-	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only (unless --vm-names is set)")
+	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	command.Flags().StringVarP(&glc.uploadSASURL, "upload-sas-url", "", "", "Azure Storage Account SAS URL to upload the collected logs")
 	command.Flags().StringSliceVar(&glc.nodeNames, "vm-names", nil, "get logs from the VM name list only (comma-separated names)")
 	_ = command.MarkFlagRequired("location")
@@ -154,6 +154,9 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	}
 	if glc.nodeNames != nil && len(glc.nodeNames) == 0 {
 		return errors.New("--vm-names cannot be empty")
+	}
+	if glc.nodeNames != nil && glc.controlPlaneOnly {
+		return errors.New("--control-plane-only and --vm-names are mutually exclusive")
 	}
 	return nil
 }

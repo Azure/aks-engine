@@ -63,6 +63,6 @@ $ aks-engine get-logs \
 |--linux-script|no|Custom log collection bash script. Required only when the Linux node distro is not `aks-ubuntu`. The script should produce file `/tmp/logs.zip`.|
 |--windows-script|no|Custom log collection powershell script. Required only when the Windows node distro is not `aks-windows`. The script should produce file `%TEMP%\{NodeName}.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
-|--control-plane-only|no|Only collect logs from master nodes (unless --vm-names is set).|
+|--control-plane-only|no|Only collect logs from master nodes.|
 |--vm-names|no|Only collect logs from the specified VMs (comma-separated names).|
 |--upload-sas-url|no|Azure Storage Account SAS URL to upload the collected logs.|
