@@ -2,7 +2,7 @@
   "apiVersion": "vlabs",
   "properties": {
     "masterProfile": {
-      "count": 1,
+      "count": 3,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v3"
     },
@@ -14,6 +14,7 @@
       }
     ],
     "linuxProfile": {
+      "runUnattendedUpgradesOnBootstrap": false,
       "adminUsername": "azureuser",
       "ssh": {
         "publicKeys": [

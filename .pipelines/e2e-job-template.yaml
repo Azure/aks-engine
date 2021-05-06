@@ -22,12 +22,13 @@ jobs:
     GOROOT: '/usr/local/go' # Go installation path
     GOPATH: '$(Agent.TempDirectory)/go' # Go workspace path
     TIMEOUT: 30m
-    CLUSTER_DEFINITION: ${{ parameters.apimodel }}
+    CLUSTER_DEFINITION: 'examples/kubernetes.json'
     ORCHESTRATOR_RELEASE: ${{ parameters.k8sRelease }}
-    CREATE_VNET: ${{ parameters.createVNET }}
+    CREATE_VNET: false
     CLEANUP_ON_EXIT: true
     CLEANUP_IF_FAIL: true
     GINKGO_SKIP: ${{ parameters.skipTests }}
+    GINKGO_FOCUS: 'should have running static pods with ephemeral-storage requirements'
     STABILITY_ITERATIONS: $(E2E_STABILITY_ITERATIONS)
     RETAIN_SSH: false
     ENABLE_KMS_ENCRYPTION: ${{ parameters.enableKMSEncryption }}

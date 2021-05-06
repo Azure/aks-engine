@@ -709,6 +709,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetKMSKeyvaultKeyCSEScriptFilepath": func() string {
 			return kmsKeyvaultKeyCSEScriptFilepath
 		},
+		"GetStaticPodManifests": func() []string {
+			return helpers.GetStaticPodManifests()
+		},
 		"HasPrivateAzureRegistryServer": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer != ""
 		},

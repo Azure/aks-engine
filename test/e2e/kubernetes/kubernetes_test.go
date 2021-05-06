@@ -30,6 +30,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/daemonset"
@@ -3008,6 +3009,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				Skip("InstallVMSSNodePrototype disabled")
 			}
+		})
+
+		It("should have running static pods with ephemeral-storage requirements", func() {
+			numPods := len(helpers.GetStaticPodManifests()) * len(masterNodes)
+			log.Printf("Waiting for %d static pods to be Running\n", numPods)
+			start := time.Now()
+			_, err := pod.WaitForMinRunningByLabelWithRetry(numPods, "test", "static-pod", "default", 5*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			timeToValidateStaticPodsWithEphemeralStorage := time.Since(start)
+			log.Printf("Took %s for static pods w/ ephemeral-storage requirements to reach Running state\n", timeToValidateStaticPodsWithEphemeralStorage)
 		})
 	})
 })

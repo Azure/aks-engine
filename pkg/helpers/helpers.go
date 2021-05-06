@@ -235,3 +235,11 @@ func GetEnglishOrderedQuotedListWithOxfordCommas(l []string) string {
 	}
 	return ret
 }
+
+func GetStaticPodManifests() []string {
+	ret := []string{}
+	for i := 1; i <= 20; i++ {
+		ret = append(ret, fmt.Sprintf("pod-manifest-%d", i))
+	}
+	return ret
+}

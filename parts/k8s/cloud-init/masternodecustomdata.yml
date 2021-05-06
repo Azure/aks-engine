@@ -401,6 +401,30 @@ write_files:
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
 
+{{- range $i, $e := GetStaticPodManifests}}
+- path: /etc/kubernetes/manifests/{{$e}}.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      labels:
+        test: static-pod
+      name: {{$e}}
+    spec:
+      containers:
+      - name: {{$e}}
+        image: busybox:1.31.1
+        args:
+        - /bin/sh
+        - -c
+        - while true; do sleep 600; done
+        resources:
+          requests:
+            ephemeral-storage: 100Mi
+{{- end}}
+
 MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
