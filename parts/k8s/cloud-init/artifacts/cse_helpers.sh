@@ -12,15 +12,14 @@ if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
 fi
 DOCKER=/usr/bin/docker
 if [[ $UBUNTU_RELEASE == "18.04" ]]; then
-  export GPU_DV=450.80.02
+  export GPU_DV=450.51.06
 else
   export GPU_DV=418.40.04
 fi
 export GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
-NVIDIA_CONTAINER_RUNTIME_VER=2.0.0
-NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
+NVIDIA_CONTAINER_RUNTIME_VER='3.4.2*'
 PRIVATE_IP=$( (ip -br -4 addr show eth0 || ip -br -4 addr show azure0) | grep -Po '\d+\.\d+\.\d+\.\d+')
 if ! [[ $(echo -n "$PRIVATE_IP" | grep -c '^') == 1 ]]; then
   PRIVATE_IP=$(hostname -i)
