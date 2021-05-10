@@ -349,6 +349,7 @@ type KubernetesConfig struct {
 	DockerEngineVersion                 string                `json:"dockerEngineVersion,omitempty"` // Deprecated
 	MobyVersion                         string                `json:"mobyVersion,omitempty"`
 	LinuxMobyURL                        string                `json:"linuxMobyURL,omitempty"`
+	LinuxRuncURL                        string                `json:"linuxRuncURL,omitempty"`
 	ContainerdVersion                   string                `json:"containerdVersion,omitempty"`
 	LinuxContainerdURL                  string                `json:"linuxContainerdURL,omitempty"`
 	CustomCcmImage                      string                `json:"customCcmImage,omitempty"`

@@ -126,6 +126,14 @@ time_metric "installRunc" installRunc
     dpkg_install 20 30 /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
   fi
 {{end}}
+{{- if HasLinuxRuncURL}}
+  LINUX_RUNC_URL={{GetLinuxRuncURL}}
+  if [[ -n "${LINUX_RUNC_URL:-}" ]]; then
+    DEB="${LINUX_RUNC_URL##*/}"
+    retrycmd_no_stats 120 5 25 curl -fsSL ${LINUX_RUNC_URL} >/tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_DOWNLOAD_TIMEOUT"}}
+    dpkg_install 20 30 /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
+  fi
+{{end}}
 fi
 
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then

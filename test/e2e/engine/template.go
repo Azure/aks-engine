@@ -77,6 +77,7 @@ type Config struct {
 	LinuxContainerdURL               string `envconfig:"LINUX_CONTAINERD_URL"`
 	WindowsContainerdURL             string `envconfig:"WINDOWS_CONTAINERD_URL"`
 	LinuxMobyURL                     string `envconfig:"LINUX_MOBY_URL"`
+	LinuxRuncURL                     string `envconfig:"LINUX_RUNC_URL"`
 	WindowsProvisioningScriptsURL    string `envconfig:"WINDOWS_PROVISIONING_SCRIPTS_URL" default:""`
 	ArcClientID                      string `envconfig:"ARC_CLIENT_ID" default:""`
 	ArcClientSecret                  string `envconfig:"ARC_CLIENT_SECRET" default:""`
@@ -251,7 +252,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			}
 		}
 	}
-	
+
 	if config.ContainerRuntime != "" {
 		prop.OrchestratorProfile.KubernetesConfig.ContainerRuntime = config.ContainerRuntime
 	}
@@ -443,6 +444,9 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.LinuxMobyURL != "" {
 		prop.OrchestratorProfile.KubernetesConfig.LinuxMobyURL = config.LinuxMobyURL
+	}
+	if config.LinuxRuncURL != "" {
+		prop.OrchestratorProfile.KubernetesConfig.LinuxRuncURL = config.LinuxRuncURL
 	}
 
 	if config.Eth0MTU != 0 {
