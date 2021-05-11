@@ -200,9 +200,9 @@ function Install-WindowsPatches {
             # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-            # KB5001342 contains April 13, 2021 cumulative updates for Windows Server 2019
-            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB5000822
-            $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/secu/2021/04/windows10.0-kb5001342-x64_ddf38137b7616d101d9f82dcf7b9c6b2ae6be327.msu")
+            # KB5003171 contains May 11, 2021 cumulative updates for Windows Server 2019
+            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB5003171
+            $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/secu/2021/05/windows10.0-kb5003171-x64_30162051d5376b7a19c4c25157347c522e804bbb.msu")
         }
         '2004' {
             # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932
