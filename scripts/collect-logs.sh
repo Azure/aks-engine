@@ -50,6 +50,7 @@ collectDaemonLogs() {
     local DIR=${OUTDIR}/daemons
     mkdir -p ${DIR}
     if systemctl list-units --no-pager | grep -q ${1}; then
+        timeout 15 systemctl status ${1} &> ${DIR}/${1}.status
         timeout 15 journalctl --utc -o short-iso --no-pager -r -u ${1} &> /tmp/${1}.log
         tac /tmp/${1}.log > ${DIR}/${1}.log
     fi

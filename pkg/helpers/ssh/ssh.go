@@ -4,6 +4,7 @@
 package ssh
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -14,9 +15,12 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
-// ExecuteRemote executes a script in a remote host
-func ExecuteRemote(host *RemoteHost, script string) (combinedOutput string, err error) {
-	c, err := clientWithRetry(host)
+// ExecuteRemote executes a script in a remote host.
+//
+// Context ctx is only enforced during the process that stablishes
+// the SSH connection and creates the SSH client.
+func ExecuteRemote(ctx context.Context, host *RemoteHost, script string) (combinedOutput string, err error) {
+	c, err := clientWithRetry(ctx, host)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
@@ -58,9 +62,16 @@ func ValidateConfig(host *JumpBox) error {
 	return nil
 }
 
-func clientWithRetry(host *RemoteHost) (*ssh.Client, error) {
+func clientWithRetry(ctx context.Context, host *RemoteHost) (*ssh.Client, error) {
 	// TODO Granular retry func
-	retryFunc := func(err error) bool { return true }
+	retryFunc := func(err error) bool {
+		select {
+		case <-ctx.Done():
+			return false
+		default:
+			return true
+		}
+	}
 	backoff := wait.Backoff{Steps: 300, Duration: 10 * time.Second}
 	var c *ssh.Client
 	var err error

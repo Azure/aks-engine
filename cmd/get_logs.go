@@ -52,6 +52,7 @@ type getLogsCmd struct {
 	outputDirectory        string
 	controlPlaneOnly       bool
 	uploadSASURL           string
+	nodeNames              []string
 	// computed
 	cs                  *api.ContainerService
 	locale              *gotext.Locale
@@ -93,6 +94,7 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	command.Flags().StringVarP(&glc.uploadSASURL, "upload-sas-url", "", "", "Azure Storage Account SAS URL to upload the collected logs")
+	command.Flags().StringSliceVar(&glc.nodeNames, "vm-names", nil, "get logs from the VM name list only (comma-separated names)")
 	_ = command.MarkFlagRequired("location")
 	_ = command.MarkFlagRequired("api-model")
 	_ = command.MarkFlagRequired("ssh-host")
@@ -149,6 +151,12 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 		if !exp.MatchString(sasURL.Path) {
 			return errors.New("invalid upload SAS URL format, expected 'https://{blob-service-uri}/{container-name}?{sas-token}'")
 		}
+	}
+	if glc.nodeNames != nil && len(glc.nodeNames) == 0 {
+		return errors.New("--vm-names cannot be empty")
+	}
+	if glc.nodeNames != nil && glc.controlPlaneOnly {
+		return errors.New("--control-plane-only and --vm-names are mutually exclusive")
 	}
 	return nil
 }
@@ -248,6 +256,24 @@ func (glc *getLogsCmd) run() error {
 
 // getClusterNodes returns the target node list
 func getClusterNodes(glc *getLogsCmd, kubeClient kubernetes.NodeLister) (nodes []*ssh.RemoteHost) {
+	if glc.nodeNames != nil {
+		for _, nodeName := range glc.nodeNames {
+			if strings.HasPrefix(nodeName, api.DefaultOrchestratorName) {
+				log.Infof("Treating node %s as a Linux agent node", nodeName)
+				nodes = append(nodes, &ssh.RemoteHost{
+					URI: nodeName, Port: 22, OperatingSystem: api.Linux, AuthConfig: glc.linuxAuthConfig, Jumpbox: glc.jumpbox})
+			} else {
+				log.Infof("Treating node %s as a Windows agent node", nodeName)
+				if glc.windowsAuthConfig != nil {
+					nodes = append(nodes, &ssh.RemoteHost{
+						URI: nodeName, Port: 22, OperatingSystem: api.Windows, AuthConfig: glc.windowsAuthConfig, Jumpbox: glc.jumpbox})
+				} else {
+					log.Infof("Skipping node %s, WindowsProfile was not provided", nodeName)
+				}
+			}
+		}
+		return nodes
+	}
 	nodeList, err := kubeClient.ListNodes()
 	if err != nil {
 		log.Warnf("Error retrieving node list from apiserver: %s", err)
@@ -326,21 +352,24 @@ func getClusterNodeScripts(glc *getLogsCmd, nodes []*ssh.RemoteHost) map[*ssh.Re
 
 // collectLogs uploads the log collection script (if needed), executes the script and downloads the collected logs
 func collectLogs(glc *getLogsCmd, node *ssh.RemoteHost, script *ssh.RemoteFile) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
 	log.Infof("Processing node: %s", node.URI)
 	if script.Content != nil {
-		stdout, err := ssh.CopyToRemote(node, script)
+		stdout, err := ssh.CopyToRemote(ctx, node, script)
 		if err != nil {
 			return errors.Wrap(err, stdout)
 		}
 	}
 	isAzureStack := glc.cs.Properties.IsAzureStackCloud()
-	stdout, err := ssh.ExecuteRemote(node, collectLogsScript(script, node.OperatingSystem, isAzureStack))
+	stdout, err := ssh.ExecuteRemote(ctx, node, collectLogsScript(script, node.OperatingSystem, isAzureStack))
 	if err != nil {
 		return errors.Wrap(err, stdout)
 	}
 	src := fileToDownload(node.OperatingSystem, node.URI)
 	dst := path.Join(glc.outputDirectory, fmt.Sprintf("%s.zip", node.URI))
-	stdout, err = ssh.CopyFromRemote(node, src, dst)
+	stdout, err = ssh.CopyFromRemote(ctx, node, src, dst)
 	if err != nil {
 		return errors.Wrap(err, stdout)
 	}

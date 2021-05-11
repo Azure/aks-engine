@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -370,7 +371,7 @@ func (rcc *rotateCertsCmd) distributeCerts() (err error) {
 	upload := func(files fileMap, node *ssh.RemoteHost) error {
 		for _, file := range files {
 			var co string
-			if co, err = ssh.CopyToRemote(node, file); err != nil {
+			if co, err = ssh.CopyToRemote(context.Background(), node, file); err != nil {
 				log.Debugf("Remote command output: %s", co)
 				return errors.Wrap(err, "uploading certificate")
 			}
@@ -554,7 +555,7 @@ func execStepsSequence(cond nodeCondition, node *ssh.RemoteHost, steps ...func(n
 
 func execRemoteFunc(script string) func(node *ssh.RemoteHost) error {
 	return func(node *ssh.RemoteHost) error {
-		out, err := ssh.ExecuteRemote(node, script)
+		out, err := ssh.ExecuteRemote(context.Background(), node, script)
 		if err != nil {
 			log.Debugf("Remote command output: %s", out)
 		}
