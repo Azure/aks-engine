@@ -103,6 +103,8 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetLinuxContainerdURL",
 		"HasLinuxMobyURL",
 		"GetLinuxMobyURL",
+		"HasLinuxRuncURL",
+		"GetLinuxRuncURL",
 		// TODO validate that the remaining func strings in getTemplateFuncMap are thinly wrapped and unit tested
 	}
 
@@ -160,6 +162,18 @@ func TestGetTemplateFuncMap(t *testing.T) {
 			ret := v.Call(rargs)
 			if ret[0].Interface() != "" {
 				t.Fatalf("Got unexpected GetLinuxMobyURL response")
+			}
+		case "HasLinuxRuncURL":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != false {
+				t.Fatalf("Got unexpected HasLinuxRuncURL response")
+			}
+		case "GetinuxRuncURL":
+			rargs := make([]reflect.Value, 0)
+			ret := v.Call(rargs)
+			if ret[0].Interface() != "" {
+				t.Fatalf("Got unexpected GetLinuxRuncURL response")
 			}
 		}
 	}

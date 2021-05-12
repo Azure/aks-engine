@@ -262,6 +262,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.DockerBridgeSubnet = vlabs.DockerBridgeSubnet
 	api.MobyVersion = vlabs.MobyVersion
 	api.LinuxMobyURL = vlabs.LinuxMobyURL
+	api.LinuxRuncURL = vlabs.LinuxRuncURL
 	api.ContainerdVersion = vlabs.ContainerdVersion
 	api.LinuxContainerdURL = vlabs.LinuxContainerdURL
 	api.CloudProviderBackoff = vlabs.CloudProviderBackoff

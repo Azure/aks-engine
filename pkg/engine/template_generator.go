@@ -603,6 +603,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetLinuxContainerdURL": func() string {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxContainerdURL
 		},
+		"HasLinuxRuncURL": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxRuncURL != ""
+		},
+		"GetLinuxRuncURL": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.LinuxRuncURL
+		},
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
 		},
