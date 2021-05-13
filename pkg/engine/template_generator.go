@@ -630,23 +630,16 @@ version = 2
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
     sandbox_image = "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
-
     [plugins."io.containerd.grpc.v1.cri".cni]
-
     [plugins."io.containerd.grpc.v1.cri".containerd]
-	  default_runtime_name = "nvidia"
-
+      default_runtime_name = "nvidia"
       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-
-	  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
-	    runtime_type = "io.containerd.runc.v2"
-
-		[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-		  BinaryName = "/usr/local/nvidia/toolkit/nvidia-container-runtime"
-
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+        runtime_type = "io.containerd.runc.v2"
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+          BinaryName = "/usr/bin/nvidia-container-runtime"
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
           runtime_type = "io.containerd.runc.v2"
-
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
           runtime_type = "io.containerd.runc.v2"
 `
