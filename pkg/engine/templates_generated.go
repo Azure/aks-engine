@@ -15865,7 +15865,11 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
+  {{- if IsNSeriesSKU .VMSize}}
+{{IndentString GetNvidiaContainerdConfig 4}}
+  {{else}}
 {{IndentString GetContainerdConfig 4}}
+  {{- end}}
     #EOF
 
   {{if IsKubenet }}
