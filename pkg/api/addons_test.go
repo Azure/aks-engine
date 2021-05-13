@@ -1440,34 +1440,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.15.4"),
 		},
 		{
-			name: "containerd w/ N series SKU",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.20.5",
-						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
-							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet:    DefaultKubernetesSubnet,
-							ProxyMode:        KubeProxyModeIPTables,
-							NetworkPlugin:    NetworkPluginAzure,
-							ContainerRuntime: Containerd,
-						},
-					},
-					AgentPoolProfiles: []*AgentPoolProfile{
-						{
-							VMSize: "Standard_NC6",
-						},
-					},
-				},
-			},
-			isUpgrade:      false,
-			expectedAddons: getDefaultAddons("1.20.5", "", common.KubernetesImageBaseTypeMCR),
-		},
-		{
 			name: "container-monitoring addon enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
