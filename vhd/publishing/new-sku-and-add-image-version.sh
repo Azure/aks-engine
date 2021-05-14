@@ -38,9 +38,16 @@ pretty_date=$(date +"%b %Y")
 
 sku_id="${SKU_PREFIX}-${short_date}"
 
+echo "Get access token for use with pub"
+az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID} --allow-no-subscriptions
+token=$(az account get-access-token --resource https://cloudpartner.azure.com --query "accessToken" -o tsv)
+export AZURE_TOKEN=$token
+
 echo "Checking if offer contains SKU: $sku_id"
 # Check if SKU already exists in offer
-(set -x; hack/tools/bin/pub skus list -p $PUBLISHER -o $OFFER | jq ".[] | .planId" | tr -d '"' | tee skus.txt)
+set -x 
+hack/tools/bin/pub skus list -p $PUBLISHER -o $OFFER | jq ".[] | .planId" | tr -d '"' | tee skus.txt
+set +x
 echo ""
 
 if grep -q "^$sku_id$" skus.txt; then
@@ -70,4 +77,6 @@ fi
 
 published_date=$(date +"%m/%d/%Y")
 
-(set -x ; hack/tools/bin/pub versions put corevm -p $PUBLISHER -o $OFFER -s $sku_id --version $image_version --vhd-uri $vhd_url --media-name $media_name --label "AKS Base Image for Windows" --desc "AKS Base Image for Windows" --published-date "$published_date")
+set -x
+hack/tools/bin/pub versions put corevm -p $PUBLISHER -o $OFFER -s $sku_id --version $image_version --vhd-uri $vhd_url --media-name $media_name --label "AKS Base Image for Windows" --desc "AKS Base Image for Windows" --published-date "$published_date"
+set +x
