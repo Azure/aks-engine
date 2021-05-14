@@ -122,7 +122,7 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.17/windowszip/v1.17.17-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.18/windowszip/v1.18.18-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.10/windowszip/v1.19.10-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.6/windowszip/v1.20.6-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.7/windowszip/v1.20.7-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.1/windowszip/v1.21.1-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.0-alpha.1/windowszip/v1.22.0-alpha.1-1int.zip"
         );
@@ -202,8 +202,8 @@ function Install-WindowsPatches {
 
             # KB5003171 contains May 11, 2021 cumulative updates for Windows Server 2019
             # https://www.catalog.update.microsoft.com/Search.aspx?q=KB5003171
-            # 
-            # You must install the May 11, 2021 servicing stack update (SSU) (KB5003243) or later before installing the latest cumulative update (LCU). 
+            #
+            # You must install the May 11, 2021 servicing stack update (SSU) (KB5003243) or later before installing the latest cumulative update (LCU).
             $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/secu/2021/05/windows10.0-kb5003243-x64_81350c4efec5a183725fda73091c9ee9d4577bc3.msu",
                            "http://download.windowsupdate.com/c/msdownload/update/software/secu/2021/05/windows10.0-kb5003171-x64_30162051d5376b7a19c4c25157347c522e804bbb.msu")
         }
