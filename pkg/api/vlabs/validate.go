@@ -1815,12 +1815,17 @@ func validateContainerdVersion(containerdVersion string) error {
 
 // Check that distro has a valid value
 func validateDistro(distro Distro, distroValues []Distro) bool {
+	var ret bool
 	for _, d := range distroValues {
 		if distro == d {
-			return true
+			ret = true
 		}
 	}
-	return false
+	switch distro {
+	case AKSUbuntu1604, Ubuntu:
+		log.Warnf("The '%s' distro uses Ubuntu 16.04-LTS, which is End of Life (EOL) and will no longer receive security updates", distro)
+	}
+	return ret
 }
 
 func (i *ImageReference) validateImageNameAndGroup() error {

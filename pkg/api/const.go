@@ -17,7 +17,7 @@ const (
 
 // Distro string consts
 const (
-	Ubuntu            Distro = "ubuntu"
+	Ubuntu            Distro = "ubuntu" // Ubuntu 16.04-LTS is at EOL, TODO deprecate this distro
 	Ubuntu1804        Distro = "ubuntu-18.04"
 	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	Flatcar           Distro = "flatcar"
