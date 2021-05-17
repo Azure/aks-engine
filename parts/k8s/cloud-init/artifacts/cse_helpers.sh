@@ -141,12 +141,12 @@ apt_get_update() {
 apt_get_download() {
   retries=$1; wait_sleep=$2; shift && shift;
   local d=${PWD} ret=0
-  cd /var/cache/apt/archives/
+  pushd /var/cache/apt/archives/ || return 1
   for i in $(seq 1 $retries); do
     wait_for_apt_locks; apt-get -o Dpkg::Options::=--force-confold download -y "${1}" && break
     if [ $i -eq $retries ]; then ret=1; else sleep $wait_sleep; fi
   done
-  cd $d
+  popd
   return $ret
 }
 dpkg_install() {
