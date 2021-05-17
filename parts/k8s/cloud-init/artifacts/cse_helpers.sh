@@ -138,12 +138,16 @@ apt_get_update() {
   done
   echo Executed apt-get update $i times
 }
-dpkg_download() {
+apt_get_download() {
   retries=$1; wait_sleep=$2; shift && shift;
+  local d=${PWD} ret=0
+  cd /var/cache/apt/archives/
   for i in $(seq 1 $retries); do
     wait_for_apt_locks; apt-get -o Dpkg::Options::=--force-confold download -y "${1}" && break
-    if [ $i -eq $retries ]; then return 1; fi; sleep $wait_sleep
+    if [ $i -eq $retries ]; then ret=1; else sleep $wait_sleep; fi
   done
+  cd $d
+  return $ret
 }
 dpkg_install() {
   retries=$1; wait_sleep=$2; shift && shift;

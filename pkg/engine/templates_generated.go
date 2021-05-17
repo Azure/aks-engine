@@ -12840,12 +12840,16 @@ apt_get_update() {
   done
   echo Executed apt-get update $i times
 }
-dpkg_download() {
+apt_get_download() {
   retries=$1; wait_sleep=$2; shift && shift;
+  local d=${PWD} ret=0
+  cd /var/cache/apt/archives/
   for i in $(seq 1 $retries); do
     wait_for_apt_locks; apt-get -o Dpkg::Options::=--force-confold download -y "${1}" && break
-    if [ $i -eq $retries ]; then return 1; fi; sleep $wait_sleep
+    if [ $i -eq $retries ]; then ret=1; else sleep $wait_sleep; fi
   done
+  cd $d
+  return $ret
 }
 dpkg_install() {
   retries=$1; wait_sleep=$2; shift && shift;
@@ -13047,7 +13051,6 @@ installDeps() {
   fi
 }
 downloadGPUDrivers() {
-  local d=${PWD}
   mkdir -p $GPU_DEST/tmp
   retrycmd_no_stats 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey >$GPU_DEST/tmp/aptnvidia.gpg || exit 85
   wait_for_apt_locks
@@ -13059,9 +13062,7 @@ downloadGPUDrivers() {
   apt_get_update
   retrycmd 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit 85
   tmpDir=$GPU_DEST/tmp
-  cd /var/cache/apt/archives/
-  dpkg_download 20 30 libnvidia-container1=1.4.0* libnvidia-container-tools=1.4.0* nvidia-container-toolkit=1.5.0* nvidia-container-runtime=3.5.0*
-  cd $d
+  apt_get_download 20 30 libnvidia-container1=1.4.0* libnvidia-container-tools=1.4.0* nvidia-container-toolkit=1.5.0* nvidia-container-runtime=3.5.0*
 }
 removeMoby() {
   apt_get_purge moby-engine moby-cli || exit 27
