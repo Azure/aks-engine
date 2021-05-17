@@ -998,11 +998,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-always-fail", "default", podLookupRetries)
 			restarts = p.Status.ContainerStatuses[0].RestartCount
-			if !(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() && !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0")) {
-				By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
-				p.Describe()
-				Expect(restarts > 0).To(BeTrue())
-				err = p.Delete(util.DefaultDeleteRetries)
+			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
+			p.Describe()
+			Expect(restarts > 0).To(BeTrue())
+			err = p.Delete(util.DefaultDeleteRetries)
+			// exec probe timeout is broken entirely for containerd prior to 1.20, and/or if ExecProbeTimeout=false, so we can't test it
+			if !(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() &&
+				(!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") || strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false"))) {
 				_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(30 * time.Second) // Wait for probe to take effect
