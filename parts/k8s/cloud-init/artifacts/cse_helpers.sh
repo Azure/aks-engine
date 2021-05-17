@@ -146,7 +146,7 @@ apt_get_download() {
     wait_for_apt_locks; apt-get -o Dpkg::Options::=--force-confold download -y "${1}" && break
     if [ $i -eq $retries ]; then ret=1; else sleep $wait_sleep; fi
   done
-  popd
+  popd || return 1
   return $ret
 }
 dpkg_install() {
