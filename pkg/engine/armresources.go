@@ -135,7 +135,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 	agentVMASNIC := createAgentVMASNetworkInterface(cs, profile)
 	agentVMASResources = append(agentVMASResources, agentVMASNIC)
 
-	if profile.IsManagedDisks() {
+	if profile.IsManagedDisks() || profile.IsEphemeral() {
 		agentAvSet := createAgentAvailabilitySets(profile)
 		agentVMASResources = append(agentVMASResources, agentAvSet)
 	} else if profile.IsStorageAccount() {
