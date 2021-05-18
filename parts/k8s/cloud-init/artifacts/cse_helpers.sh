@@ -17,14 +17,12 @@ else
   export GPU_DV=418.40.04
 fi
 export GPU_DEST=/usr/local/nvidia
-NVIDIA_DOCKER_VERSION=2.0.3
-DOCKER_VERSION=1.13.1-1
-NVIDIA_CONTAINER_RUNTIME_VER='3.5.0*'
 PRIVATE_IP=$( (ip -br -4 addr show eth0 || ip -br -4 addr show azure0) | grep -Po '\d+\.\d+\.\d+\.\d+')
 if ! [[ $(echo -n "$PRIVATE_IP" | grep -c '^') == 1 ]]; then
   PRIVATE_IP=$(hostname -i)
 fi
 export PRIVATE_IP
+APT_CACHE_DIR=/var/cache/apt/archives/
 
 configure_prerequisites() {
   ip_forward_path=/proc/sys/net/ipv4/ip_forward
@@ -140,8 +138,8 @@ apt_get_update() {
 }
 apt_get_download() {
   retries=$1; wait_sleep=$2; shift && shift;
-  local d=${PWD} ret=0
-  pushd /var/cache/apt/archives/ || return 1
+  local ret=0
+  pushd $APT_CACHE_DIR || return 1
   for i in $(seq 1 $retries); do
     wait_for_apt_locks; apt-get -o Dpkg::Options::=--force-confold download -y "${1}" && break
     if [ $i -eq $retries ]; then ret=1; else sleep $wait_sleep; fi
