@@ -5,15 +5,9 @@
       "count": 1,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v3",
-      "distro": "ubuntu"
+      "distro": "ubuntu-18.04"
     },
     "agentPoolProfiles": [
-      {
-        "name": "pool1604",
-        "count": 1,
-        "vmSize": "Standard_D2_v3",
-        "distro": "ubuntu"
-      },
       {
         "name": "pool1804",
         "count": 1,

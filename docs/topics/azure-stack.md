@@ -102,7 +102,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Specifies a valid [Azure Stack Hub VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
-| distro                          | yes      | Specifies the control plane's Linux distribution. The supported values are `"aks-ubuntu-16.04"` and `"aks-ubuntu-18.04"`. These are custom images based on UbuntuServer that come with pre-installed software necessary for Kubernetes deployments. |
+| distro                          | yes      | Specifies the control plane's Linux distribution. `"aks-ubuntu-18.04"` is supported. This is a custom image based on UbuntuServer that come with pre-installed software necessary for Kubernetes deployments. |
 
 ### agentPoolProfiles
 
@@ -112,7 +112,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Describes a valid [Azure Stack Hub VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
 | osType                          | no       | Specifies the agent pool's Operating System. Supported values are `"Windows"` and `"Linux"`. Defaults to `"Linux"`. |
-| distro                          | yes      | Specifies the control plane's Linux distribution. The supported values are `"aks-ubuntu-16.04"` and `"aks-ubuntu-18.04"`. These are custom images based on UbuntuServer that come with pre-installed software necessary for Kubernetes deployments. |
+| distro                          | yes      | Specifies the control plane's Linux distribution. `"aks-ubuntu-18.04"` is supported. This is a custom image based on UbuntuServer that come with pre-installed software necessary for Kubernetes deployments. |
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"false"`. |
 
@@ -126,7 +126,7 @@ By default, the AKS Engine provisioning process relies on an internet connection
 
 If your Azure Stack Hub instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
 
-To overcome these issues, you should set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"` or `"aks-ubuntu-18.04"`. This will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won't be required during the provisioning process.
+To overcome these issues, you should set the `distro` property of your cluster definition to `"aks-ubuntu-18.04"`. This will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won't be required during the provisioning process.
 
 The `AKS Base Image` marketplace item has to be available in your Azure Stack Hub's Marketplace before it could be used by AKS Engine. Your Azure Stack Hub administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
 

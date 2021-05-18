@@ -89,7 +89,7 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
 	command.Flags().StringVar(&glc.sshHostURI, "ssh-host", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
 	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes (required)")
-	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required if distro is not aks-ubuntu)")
+	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required if distro is not aks-ubuntu-18.04)")
 	command.Flags().StringVar(&glc.windowsScriptPath, "windows-script", "", "path to the log collection script to execute on the cluster's Windows nodes (required if distro is not aks-windows)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
@@ -341,7 +341,7 @@ func getClusterNodeScripts(glc *getLogsCmd, nodes []*ssh.RemoteHost) map[*ssh.Re
 	}
 	for pool, hasScript := range poolHasScript {
 		if !hasScript {
-			log.Warnf("Skipping node pool '%s' as flag '--linux-script' is not set and the pool distro is not aks-ubuntu", pool)
+			log.Warnf("Skipping node pool '%s' as flag '--linux-script' is not set and the pool distro is not aks-ubuntu-18.04", pool)
 		}
 	}
 	if isWindowsSkipped {

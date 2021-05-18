@@ -673,11 +673,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "ubuntu 16.04",
-			apiModelPath: "../examples/ubuntu-1604/kubernetes.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "ubuntu 18.04",
 			apiModelPath: "../examples/ubuntu-1804/kubernetes.json",
 			setArgs:      defaultSet,

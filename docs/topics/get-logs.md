@@ -18,7 +18,7 @@ A valid SSH private key is always required to stablish a SSH session to the clus
 
 ### Log Collection Scripts
 
-To collect Linux nodes logs, specify the path to the script-to-execute on each node by setting [parameter](#Parameters) `--linux-script` if the node distro is not `aks-ubuntu`. A sample script can be found [here](/scripts/collect-logs.sh).
+To collect Linux nodes logs, specify the path to the script-to-execute on each node by setting [parameter](#Parameters) `--linux-script` if the node distro is not `aks-ubuntu-18.04`. A sample script can be found [here](/scripts/collect-logs.sh).
 
 To collect Windows nodes logs, specify the path to the script-to-execute on each node by setting [parameter](#Parameters) `--windows-script` if the node distro is not `aks-windows`. A sample script can be found [here](/scripts/collect-windows-logs.ps1).
 
@@ -60,7 +60,7 @@ $ aks-engine get-logs \
 |--api-model|yes|Path to the generated API model for the cluster.|
 |--ssh-host|yes|FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster.|
 |--linux-ssh-private-key|yes|Path to a SSH private key that can be use to create a remote session on the cluster Linux nodes.|
-|--linux-script|no|Custom log collection bash script. Required only when the Linux node distro is not `aks-ubuntu`. The script should produce file `/tmp/logs.zip`.|
+|--linux-script|no|Custom log collection bash script. Required only when the Linux node distro is not `aks-ubuntu-18.04`. The script should produce file `/tmp/logs.zip`.|
 |--windows-script|no|Custom log collection powershell script. Required only when the Windows node distro is not `aks-windows`. The script should produce file `%TEMP%\{NodeName}.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|
 |--control-plane-only|no|Only collect logs from master nodes.|

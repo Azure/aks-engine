@@ -869,6 +869,20 @@ func Test_Properties_ValidateDistro(t *testing.T) {
 	}
 }
 
+func ExamplevalidateDistro() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	_ = validateDistro(Ubuntu, DistroValues)
+	_ = validateDistro(AKSUbuntu1604, DistroValues)
+
+	// Output:
+	// level=warning msg="The 'ubuntu' distro uses Ubuntu 16.04-LTS, which is End of Life (EOL) and will no longer receive security updates"
+	// level=warning msg="The 'aks-ubuntu-16.04' distro uses Ubuntu 16.04-LTS, which is End of Life (EOL) and will no longer receive security updates"
+}
+
 func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}

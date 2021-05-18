@@ -13,13 +13,6 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "pool1604vhd",
-					"count": 1,
-					"vmSize": "Standard_D2_v3",
-					"availabilityProfile": "VirtualMachineScaleSets",
-					"distro": "aks-ubuntu-16.04"
-				},
-				{
 					"name": "pool1804vhd",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
