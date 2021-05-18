@@ -79,6 +79,7 @@ downloadGPUDrivers() {
   apt_get_update
   retrycmd 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit 85
   tmpDir=$GPU_DEST/tmp
+  apt_get_download 20 30 libnvidia-container1=1.4.0* libnvidia-container-tools=1.4.0* nvidia-container-toolkit=1.5.0* nvidia-container-runtime=3.5.0*
 }
 removeMoby() {
   apt_get_purge moby-engine moby-cli || exit 27
