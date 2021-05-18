@@ -32,11 +32,11 @@ import (
 )
 
 const (
-	upgradeName             		= "upgrade"
-	upgradeShortDescription 		= "Upgrade an existing AKS Engine-created Kubernetes cluster"
-	upgradeLongDescription  		= "Upgrade an existing AKS Engine-created Kubernetes cluster, one node at a time"
-	smalldiskWindowsImageIdentifier	= "smalldisk"
-	ctrdWindowsImageIdentifier		= "ctrd"
+	upgradeName                     = "upgrade"
+	upgradeShortDescription         = "Upgrade an existing AKS Engine-created Kubernetes cluster"
+	upgradeLongDescription          = "Upgrade an existing AKS Engine-created Kubernetes cluster, one node at a time"
+	smalldiskWindowsImageIdentifier = "smalldisk"
+	ctrdWindowsImageIdentifier      = "ctrd"
 )
 
 type upgradeCmd struct {
