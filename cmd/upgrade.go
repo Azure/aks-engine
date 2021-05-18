@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -31,9 +32,11 @@ import (
 )
 
 const (
-	upgradeName             = "upgrade"
-	upgradeShortDescription = "Upgrade an existing AKS Engine-created Kubernetes cluster"
-	upgradeLongDescription  = "Upgrade an existing AKS Engine-created Kubernetes cluster, one node at a time"
+	upgradeName             		= "upgrade"
+	upgradeShortDescription 		= "Upgrade an existing AKS Engine-created Kubernetes cluster"
+	upgradeLongDescription  		= "Upgrade an existing AKS Engine-created Kubernetes cluster, one node at a time"
+	smalldiskWindowsImageIdentifier	= "smalldisk"
+	ctrdWindowsImageIdentifier		= "ctrd"
 )
 
 type upgradeCmd struct {
@@ -192,10 +195,10 @@ func (uc *upgradeCmd) loadCluster() error {
 	// Use the Windows VHD associated with the aks-engine version if upgradeWindowsVHD is set to "true"
 	if uc.upgradeWindowsVHD && uc.containerService.Properties.WindowsProfile != nil {
 		windowsProfile := uc.containerService.Properties.WindowsProfile
-		if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019ContainerDOSImageConfig) {
+		if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019ContainerDOSImageConfig) && strings.Contains(windowsProfile.WindowsSku, ctrdWindowsImageIdentifier) {
 			windowsProfile.ImageVersion = api.AKSWindowsServer2019ContainerDOSImageConfig.ImageVersion
 			windowsProfile.WindowsSku = api.AKSWindowsServer2019ContainerDOSImageConfig.ImageSku
-		} else if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019OSImageConfig) {
+		} else if api.ImagePublisherAndOfferMatch(windowsProfile, api.AKSWindowsServer2019OSImageConfig) && strings.Contains(windowsProfile.WindowsSku, smalldiskWindowsImageIdentifier) {
 			windowsProfile.ImageVersion = api.AKSWindowsServer2019OSImageConfig.ImageVersion
 			windowsProfile.WindowsSku = api.AKSWindowsServer2019OSImageConfig.ImageSku
 		} else if api.ImagePublisherAndOfferMatch(windowsProfile, api.WindowsServer2019OSImageConfig) {
