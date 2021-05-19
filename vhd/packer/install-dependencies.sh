@@ -128,7 +128,7 @@ systemctl status docker --no-pager || exit 1
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
 METRICS_SERVER_VERSIONS="
-0.3.7
+0.4.4
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-server:v${METRICS_SERVER_VERSION}"
