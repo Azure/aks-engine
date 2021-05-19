@@ -971,16 +971,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err := pod.Get("exec-liveness", "default", podLookupRetries)
+			Expect(err).NotTo(HaveOccurred())
 			restarts := p.Status.ContainerStatuses[0].RestartCount
 			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
 			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
-			err = p.Delete(util.DefaultDeleteRetries)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
 			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-assume-1-second-default-timeout.yaml"), "exec-liveness-assume-1-second-default-timeout", "default", 1*time.Second, 2*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-assume-1-second-default-timeout", "default", podLookupRetries)
+			Expect(err).NotTo(HaveOccurred())
 			restarts = p.Status.ContainerStatuses[0].RestartCount
 			p.Describe()
 			if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false") ||
@@ -991,12 +992,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Validating that the exec livenessProbe caused at least one pod restart due to the enforcement of a default 1 second timeout ")
 				Expect(restarts > 0).To(BeTrue())
 			}
-			err = p.Delete(util.DefaultDeleteRetries)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
 			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 2*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-always-fail", "default", podLookupRetries)
+			Expect(err).NotTo(HaveOccurred())
 			restarts = p.Status.ContainerStatuses[0].RestartCount
 			By("Validating that the exec livenessProbe caused at least one pod restart due to probe command failure")
 			p.Describe()
@@ -1009,6 +1010,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(30 * time.Second) // Wait for probe to take effect
 				p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
+				Expect(err).NotTo(HaveOccurred())
 				restarts = p.Status.ContainerStatuses[0].RestartCount
 				if strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false") ||
 					!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") {
@@ -1018,7 +1020,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				p.Describe()
 				Expect(restarts > 0).To(BeTrue())
-				err = p.Delete(util.DefaultDeleteRetries)
+				Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
 			}
 		})
 
