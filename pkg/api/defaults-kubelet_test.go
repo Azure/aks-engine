@@ -961,7 +961,7 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "ExecProbeTimeout=false,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "ExecProbeTimeout=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
@@ -969,9 +969,9 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	// test user-overrides
 	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	k["--feature-gates"] = "DynamicKubeletConfig=true,ExecProbeTimeout=true"
+	k["--feature-gates"] = "DynamicKubeletConfig=true,ExecProbeTimeout=false"
 	cs.setKubeletConfig(false)
-	if k["--feature-gates"] != "DynamicKubeletConfig=true,ExecProbeTimeout=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "DynamicKubeletConfig=true,ExecProbeTimeout=false,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}

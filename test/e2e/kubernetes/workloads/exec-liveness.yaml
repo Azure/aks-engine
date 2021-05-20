@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: exec-liveness
+spec:
+  terminationGracePeriodSeconds: 0
+  containers:
+  - name: exec-liveness
+    image: busybox:1.31.1
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 5; rm -rf /tmp/healthy; while true; do sleep 5; done
+    livenessProbe:
+      exec:
+        command: ['sh', '-c', 'cat /tmp/healthy']
+      initialDelaySeconds: 1
+      periodSeconds: 1
+      failureThreshold: 1
+  nodeSelector:
+    kubernetes.io/os: linux
