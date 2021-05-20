@@ -2829,7 +2829,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					By("Installing kured 1.7.0 with node annotations configuration")
-					cmd := exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--version", "1.7.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
+					cmd := exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
 					util.PrintCommand(cmd)
 					out, err := cmd.CombinedOutput()
 					log.Printf("%s\n", out)
