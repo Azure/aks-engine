@@ -2886,8 +2886,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to install vmss node prototype", func() {
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
-					By("Installing kured with node annotations configuration")
-					_, err := daemonset.CreateDaemonsetFromFileWithRetry(filepath.Join(WorkloadDir, "kured-annotations.yaml"), "kured", "kube-system", 5*time.Second, cfg.Timeout)
+					By("Installing kured 1.7.0 with node annotations configuration")
+					cmd := exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
+					util.PrintCommand(cmd)
+					out, err := cmd.CombinedOutput()
+					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
@@ -2987,8 +2990,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						timeToLargeContainerDaemonsetRunningBaseline = time.Since(start)
 						log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
 					}
-					cmd := exec.Command("helm", "status", "vmss-prototype")
-					out, err := cmd.CombinedOutput()
+					cmd = exec.Command("helm", "status", "vmss-prototype")
+					out, err = cmd.CombinedOutput()
 					if err == nil {
 						By("Found pre-existing 'vmss-prototype' helm release, deleting it...")
 						cmd := exec.Command("helm", "delete", "vmss-prototype")
