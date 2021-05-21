@@ -539,8 +539,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasVHDDistroNodes": func() bool {
 			return cs.Properties.HasVHDDistroNodes()
 		},
-		"IsVHDDistroForAllLinuxNodes": func() bool {
-			return cs.Properties.IsVHDDistroForAllLinuxNodes()
+		"IsVHDDistroForAllNodes": func() bool {
+			return cs.Properties.IsVHDDistroForAllNodes()
 		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager
