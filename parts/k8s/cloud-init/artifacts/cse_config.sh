@@ -585,10 +585,10 @@ configGPUDrivers() {
   echo blacklist nouveau >>/etc/modprobe.d/blacklist.conf
   retrycmd_no_stats 120 5 25 update-initramfs -u || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   wait_for_apt_locks
-  dpkg -i $(ls ${APT_CACHE_DIR}libnvidia-container1*) \
-  $(ls ${APT_CACHE_DIR}libnvidia-container-tools*) \
-  $(ls ${APT_CACHE_DIR}nvidia-container-toolkit*) \
-  $(ls ${APT_CACHE_DIR}nvidia-container-runtime*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  dpkg -i $(ls ${APT_CACHE_DIR}libnvidia-container1*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  dpkg -i $(ls ${APT_CACHE_DIR}libnvidia-container-tools*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  dpkg -i $(ls ${APT_CACHE_DIR}nvidia-container-toolkit*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  dpkg -i $(ls ${APT_CACHE_DIR}nvidia-container-runtime*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
   retrycmd 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   export -f installNvidiaDrivers

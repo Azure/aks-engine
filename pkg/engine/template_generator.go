@@ -539,8 +539,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasVHDDistroNodes": func() bool {
 			return cs.Properties.HasVHDDistroNodes()
 		},
-		"IsVHDDistroForAllNodes": func() bool {
-			return cs.Properties.IsVHDDistroForAllNodes()
+		"IsVHDDistroForAllLinuxNodes": func() bool {
+			return cs.Properties.IsVHDDistroForAllLinuxNodes()
 		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager
@@ -635,7 +635,7 @@ version = 2
 
 [plugins]
   [plugins."io.containerd.grpc.v1.cri"]
-    sandbox_image = "mcr.microsoft.com/oss/kubernetes/pause:1.4.0"
+    sandbox_image = "mcr.microsoft.com/oss/kubernetes/pause:3.4.1"
     [plugins."io.containerd.grpc.v1.cri".cni]
     [plugins."io.containerd.grpc.v1.cri".containerd]
       default_runtime_name = "nvidia"
