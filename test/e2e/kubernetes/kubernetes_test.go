@@ -475,11 +475,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if n.HasSubstring(largeSKUPrefixes) && n.IsUbuntu() {
 							gt8CoreSKU = "true"
 						}
-						expectedEth0MTU := 1500
+						var netConfigValidationCommand string
 						if eng.ExpandedDefinition.Properties.OrchestratorProfile.IsAzureCNI() && eng.ExpandedDefinition.Properties.LinuxProfile.Eth0MTU != 0 {
-							expectedEth0MTU = eng.ExpandedDefinition.Properties.LinuxProfile.Eth0MTU
+							expectedEth0MTU := eng.ExpandedDefinition.Properties.LinuxProfile.Eth0MTU
+							netConfigValidationCommand = fmt.Sprintf("\"GT_8_CORE_SKU=%s ETH0_MTU=%d /tmp/%s\"", gt8CoreSKU, expectedEth0MTU, netConfigValidateScript)
+						} else {
+							netConfigValidationCommand = fmt.Sprintf("\"GT_8_CORE_SKU=%s /tmp/%s\"", gt8CoreSKU, netConfigValidateScript)
 						}
-						netConfigValidationCommand := fmt.Sprintf("\"GT_8_CORE_SKU=%s ETH0_MTU=%d /tmp/%s\"", gt8CoreSKU, expectedEth0MTU, netConfigValidateScript)
 						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
 							err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+netConfigValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
