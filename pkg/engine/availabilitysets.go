@@ -66,7 +66,7 @@ func createAgentAvailabilitySets(profile *api.AgentPoolProfile) AvailabilitySetA
 		AvailabilitySetProperties: &compute.AvailabilitySetProperties{},
 	}
 
-	if profile.IsManagedDisks() {
+	if profile.IsManagedDisks() || profile.IsEphemeral() {
 		if profile.PlatformFaultDomainCount != nil {
 			p := int32(*profile.PlatformFaultDomainCount)
 			avSet.PlatformFaultDomainCount = to.Int32Ptr(p)
