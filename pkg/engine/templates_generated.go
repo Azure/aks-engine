@@ -3826,6 +3826,7 @@ spec:
       serviceAccountName: csi-azuredisk-controller-sa
       nodeSelector:
         kubernetes.io/os: linux
+        kubernetes.io/role: master
       priorityClassName: system-cluster-critical
       tolerations:
         - key: "node-role.kubernetes.io/master"
@@ -4009,6 +4010,7 @@ spec:
       serviceAccountName: csi-snapshot-controller-sa
       nodeSelector:
         kubernetes.io/os: linux
+        kubernetes.io/role: master
       priorityClassName: system-cluster-critical
       tolerations:
         - key: "node-role.kubernetes.io/master"
@@ -5224,6 +5226,7 @@ spec:
       serviceAccountName: csi-azurefile-controller-sa
       nodeSelector:
         kubernetes.io/os: linux
+        kubernetes.io/role: master
       priorityClassName: system-cluster-critical
       tolerations:
         - key: "node-role.kubernetes.io/master"
