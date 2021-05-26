@@ -2889,7 +2889,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					By("Installing kured 1.7.0 with node annotations configuration")
-					cmd := exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
+					cmd := exec.Command("helm", "upgrade", "--install", "--repo", "https://weaveworks.github.io/kured", "kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
 					util.PrintCommand(cmd)
 					out, err := cmd.CombinedOutput()
 					log.Printf("%s\n", out)
@@ -2909,6 +2909,31 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					var numLargeContainerPods int
 					var timeToAddNewNodeBaseline, timeToLargeContainerDaemonsetRunningBaseline time.Duration
 					var vmssName string
+					By("Choosing a target VMSS node to use as the prototype")
+					var targetNode string
+					for _, n := range nodes {
+						// Pick the first VMSS-backed node we find
+						if strings.Contains(n.Spec.ProviderID, "virtualMachineScaleSets") {
+							targetNode = n.Metadata.Name
+						}
+					}
+					fmt.Printf("resource group: %s\n", cfg.ResourceGroup)
+					Expect(targetNode).NotTo(BeEmpty())
+					ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+					defer cancel()
+					// Getting vmss for the vm
+					vmssPage, err := azureClient.ListVirtualMachineScaleSets(ctx, cfg.ResourceGroup)
+					Expect(err).NotTo(HaveOccurred())
+					vmssList := vmssPage.Values()
+					var vmssSku *compute.Sku
+					for _, vmss := range vmssList {
+						if !strings.Contains(targetNode, *vmss.Name) {
+							continue
+						}
+						vmssName = *vmss.Name
+						vmssSku = vmss.Sku
+					}
+					Expect(vmssName).NotTo(BeEmpty())
 					if cfg.SoakClusterName == "" {
 						if !cfg.KaminoVMSSPrototypeDryRun {
 							By("Creating a DaemonSet with a large container")
@@ -2941,29 +2966,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						By("Waiting for all nodes to be Ready again")
 						ready = node.WaitOnReady(len(nodes), 30*time.Second, cfg.Timeout)
 						Expect(ready).To(Equal(true))
-						By("Choosing a target VMSS node to use as the prototype")
-						var targetNode string
-						for _, n := range nodes {
-							// Pick the first VMSS-backed node we find
-							if strings.Contains(n.Spec.ProviderID, "virtualMachineScaleSets") {
-								targetNode = n.Metadata.Name
-							}
-						}
-						Expect(targetNode).NotTo(BeEmpty())
-						ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
-						defer cancel()
-						// Getting vmss for the vm
-						vmssPage, err := azureClient.ListVirtualMachineScaleSets(ctx, cfg.ResourceGroup)
-						vmssList := vmssPage.Values()
-						var vmssSku *compute.Sku
-						for _, vmss := range vmssList {
-							if !strings.Contains(targetNode, *vmss.Name) {
-								continue
-							}
-							vmssName = *vmss.Name
-							vmssSku = vmss.Sku
-						}
-						Expect(vmssName).NotTo(BeEmpty())
 						originalCapacity := *vmssSku.Capacity
 						if !cfg.KaminoVMSSPrototypeDryRun {
 							By("Adding one new node to get a baseline")
@@ -3031,44 +3033,46 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					out, err = cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
-					By("Ensuring that the kamino-vmss-prototype pod runs to completion")
-					succeededPods, getSucceededErr := pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", timeToLargeContainerDaemonsetRunningBaseline, sigPublishingTimeout)
-					jobs, err := job.GetAllByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(len(jobs)).To(Equal(1))
-					err = jobs[0].Describe()
-					Expect(err).NotTo(HaveOccurred())
-					pods, err := pod.GetAllByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(len(pods)).To(Equal(1))
-					err = pods[0].Describe()
-					Expect(err).NotTo(HaveOccurred())
-					err = pods[0].Logs()
-					Expect(err).NotTo(HaveOccurred())
-					Expect(getSucceededErr).NotTo(HaveOccurred())
-					Expect(len(succeededPods)).To(Equal(1))
-					elapsed := time.Since(start)
-					log.Printf("Took %s to run kamino-vmss-prototype Job to completion\n", elapsed)
-					if !cfg.KaminoVMSSPrototypeDryRun {
-						nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+					if cfg.SoakClusterName == "" {
+						By("Ensuring that the kamino-vmss-prototype pod runs to completion")
+						succeededPods, getSucceededErr := pod.GetAllSucceededByLabelWithRetry("app", "kamino-vmss-prototype", "default", timeToLargeContainerDaemonsetRunningBaseline, sigPublishingTimeout)
+						jobs, err := job.GetAllByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						By("Waiting for the 2 new nodes created from prototype to become Ready")
-						start := time.Now()
-						ready := node.WaitOnReadyMin(len(nodes)+2, 30*time.Second, timeToAddNewNodeBaseline)
-						Expect(ready).To(BeTrue())
-						elapsed = time.Since(start)
-						log.Printf("Took %s to add 2 nodes derived from peer node prototype\n", elapsed)
-						By("Ensuring that we have one additional large container pod after scaling out by one")
-						start = time.Now()
-						_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+2, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+						Expect(len(jobs)).To(Equal(1))
+						err = jobs[0].Describe()
 						Expect(err).NotTo(HaveOccurred())
-						By("Ensuring that the daemonset pod achieved a Running state quicker compared to a pre-vmss-prototype-built node")
-						elapsed = time.Since(start)
-						log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node built from prototype\n", elapsed)
-						Expect(elapsed < timeToLargeContainerDaemonsetRunningBaseline).To(BeTrue())
-						By("Deleting large container DaemonSet")
-						err = largeContainerDaemonset.Delete(util.DefaultDeleteRetries)
+						pods, err := pod.GetAllByLabelWithRetry("app", "kamino-vmss-prototype", "default", 5*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
+						Expect(len(pods)).To(Equal(1))
+						err = pods[0].Describe()
+						Expect(err).NotTo(HaveOccurred())
+						err = pods[0].Logs()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(getSucceededErr).NotTo(HaveOccurred())
+						Expect(len(succeededPods)).To(Equal(1))
+						elapsed := time.Since(start)
+						log.Printf("Took %s to run kamino-vmss-prototype Job to completion\n", elapsed)
+						if !cfg.KaminoVMSSPrototypeDryRun {
+							nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+							Expect(err).NotTo(HaveOccurred())
+							By("Waiting for the 2 new nodes created from prototype to become Ready")
+							start := time.Now()
+							ready := node.WaitOnReadyMin(len(nodes)+2, 30*time.Second, timeToAddNewNodeBaseline)
+							Expect(ready).To(BeTrue())
+							elapsed = time.Since(start)
+							log.Printf("Took %s to add 2 nodes derived from peer node prototype\n", elapsed)
+							By("Ensuring that we have one additional large container pod after scaling out by one")
+							start = time.Now()
+							_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods+2, "app", "large-container-daemonset", "default", 5*time.Second, cfg.Timeout)
+							Expect(err).NotTo(HaveOccurred())
+							By("Ensuring that the daemonset pod achieved a Running state quicker compared to a pre-vmss-prototype-built node")
+							elapsed = time.Since(start)
+							log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node built from prototype\n", elapsed)
+							Expect(elapsed < timeToLargeContainerDaemonsetRunningBaseline).To(BeTrue())
+							By("Deleting large container DaemonSet")
+							err = largeContainerDaemonset.Delete(util.DefaultDeleteRetries)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
 				} else {
 					Skip("no VMSS node pools")
