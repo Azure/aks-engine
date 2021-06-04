@@ -8536,7 +8536,10 @@ data:
     import conf.d/Corefile*
     .:53 {
         errors
-        health
+        health {
+          # this should be > readiness probe failure time
+          lameduck 35s
+        }
         ready
         kubernetes {{ContainerConfig "domain"}} in-addr.arpa ip6.arpa {
             pods insecure
@@ -8674,6 +8677,10 @@ spec:
             path: /ready
             port: 8181
             scheme: HTTP
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
