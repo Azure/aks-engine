@@ -2665,10 +2665,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Assigning hpa configuration to the php-apache deployment")
 				// Apply autoscale characteristics to deployment
-				var cpuTarget, totalMaxPods int
+				var cpuTarget, totalMaxPods, nodeCountBeforeScaling int
 				if clusterAutoscalerEngaged {
-					nodeList, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodeList, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
+					nodeCountBeforeScaling = len(nodeList)
 					if hasAddon, addon := eng.HasAddon("coredns"); hasAddon {
 						nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"])
 						corednsPods, err := pod.GetAllByPrefixWithRetry("coredns", "kube-system", 3*time.Second, cfg.Timeout)
@@ -2676,7 +2677,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						corednsAutoscalerPods, err := pod.GetAllByPrefixWithRetry("coredns-autoscaler", "kube-system", 3*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						numCoreDNSPods = len(corednsPods) - len(corednsAutoscalerPods)
-						coreDNSNodesOverhead := nodesPerReplica - (len(nodeList) * numCoreDNSPods)
+						coreDNSNodesOverhead := nodesPerReplica - (nodeCountBeforeScaling * numCoreDNSPods)
 						var clusterAutoscalerNodesOverhead int
 						for _, pool := range clusterAutoscalerAddon.Pools {
 							p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
@@ -2736,7 +2737,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				if clusterAutoscalerEngaged {
 					By("Ensuring at least one more node was added by cluster-autoscaler")
-					ready := node.WaitOnReadyMin(eng.NodeCount()+1, 10*time.Second, cfg.Timeout)
+					ready := node.WaitOnReadyMin(nodeCountBeforeScaling+1, 10*time.Second, cfg.Timeout)
 					Expect(ready).To(BeTrue())
 					if testCoreDNSScaleOut {
 						By("Ensuring at least one more coredns pod was added by coredns-autoscaler")
