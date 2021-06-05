@@ -10031,6 +10031,7 @@ spec:
         - --secure-port=4443
         - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
         - --kubelet-use-node-status-port
+        - --metric-resolution=15s
         - --kubelet-insecure-tls
         image: {{ContainerImage "metrics-server"}}
         imagePullPolicy: IfNotPresent
@@ -10052,7 +10053,12 @@ spec:
             path: /readyz
             port: https
             scheme: HTTPS
+          initialDelaySeconds: 20
           periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 200Mi
         securityContext:
           readOnlyRootFilesystem: true
           runAsNonRoot: true
