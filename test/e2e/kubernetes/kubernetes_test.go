@@ -2888,12 +2888,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to install vmss node prototype", func() {
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
-					By("Installing kured 1.7.0 with node annotations configuration")
-					cmd := exec.Command("helm", "upgrade", "--install", "--repo", "https://weaveworks.github.io/kured", "kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.lockTtl=1h", "--set", "configuration.period=1m")
-					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
-					log.Printf("%s\n", out)
-					Expect(err).NotTo(HaveOccurred())
+					_, err := daemonset.Get("kured", "default", 3)
+					if err != nil {
+						By("Installing kured 1.7.0 with node annotations configuration")
+						cmd := exec.Command("helm", "upgrade", "--install", "--repo", "https://weaveworks.github.io/kured", "kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.lockTtl=1h", "--set", "configuration.period=1m")
+						util.PrintCommand(cmd)
+						out, err := cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					var numAgentNodes int
@@ -2995,14 +2998,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
 						}
 					}
-					cmd = exec.Command("helm", "status", "vmss-prototype")
-					out, err = cmd.CombinedOutput()
-					if err == nil {
-						By("Found pre-existing 'vmss-prototype' helm release, deleting it...")
-						cmd := exec.Command("helm", "delete", "vmss-prototype")
-						out, err := cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).NotTo(HaveOccurred())
+					if cfg.SoakClusterName == "" {
+						cmd := exec.Command("helm", "status", "vmss-prototype")
+						_, err := cmd.CombinedOutput()
+						if err == nil {
+							By("Found pre-existing 'vmss-prototype' helm release, deleting it...")
+							cmd := exec.Command("helm", "delete", "vmss-prototype")
+							out, err := cmd.CombinedOutput()
+							log.Printf("%s\n", out)
+							Expect(err).NotTo(HaveOccurred())
+						}
 					}
 					commandArgsSlice := []string{"upgrade", "--install"}
 					if cfg.KaminoVMSSPrototypeLocalChartPath == "" {
@@ -3027,10 +3032,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if cfg.KaminoVMSSPrototypeDryRun {
 						commandArgsSlice = append(commandArgsSlice, []string{"--set", "kamino.auto.dryRun=true"}...)
 					}
-					cmd = exec.Command("helm", commandArgsSlice...)
+					cmd := exec.Command("helm", commandArgsSlice...)
 					util.PrintCommand(cmd)
 					start := time.Now()
-					out, err = cmd.CombinedOutput()
+					out, err := cmd.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 					if cfg.SoakClusterName == "" {
