@@ -63,7 +63,7 @@ func TestAddPoolCmdValidate(t *testing.T) {
 				location:          "centralus",
 				resourceGroupName: "testRG",
 			},
-			expectedErr: errors.New("--nodepool must be specified"),
+			expectedErr: errors.New("--node-pool must be specified"),
 			name:        "NoNodePool",
 		},
 		{

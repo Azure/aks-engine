@@ -107,7 +107,7 @@ func (apc *addPoolCmd) validate(cmd *cobra.Command) error {
 
 	if apc.nodePoolPath == "" {
 		_ = cmd.Usage()
-		return errors.New("--nodepool must be specified")
+		return errors.New("--node-pool must be specified")
 	}
 	return nil
 }
