@@ -45,7 +45,7 @@ jobs:
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: True
+          SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: Validate 1.19 no-egress scenario
@@ -58,7 +58,7 @@ jobs:
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: True
+          SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: Validate 1.20 no-egress scenario
@@ -71,7 +71,7 @@ jobs:
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: True
+          SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: Validate 1.21 no-egress scenario
@@ -84,7 +84,7 @@ jobs:
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: True
+          SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: Validate 1.20 + containerd E2E
