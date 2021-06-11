@@ -107,7 +107,6 @@ jobs:
           STABILITY_ITERATIONS: "0"
           RETAIN_SSH: false
           CONTAINER_RUNTIME: "containerd"
-          RUN_VMSS_NODE_PROTOTYPE: true
           BLOCK_SSH: false
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
