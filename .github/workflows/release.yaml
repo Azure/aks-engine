@@ -20,8 +20,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
-      - name: Install ginkgo
-        run: go get -u github.com/onsi/ginkgo/ginkgo
       - name: Install helm
         run: |
           curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
@@ -106,7 +104,6 @@ jobs:
           RUN_VMSS_NODE_PROTOTYPE: true
           BLOCK_SSH: false
           SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: Build Artifacts
