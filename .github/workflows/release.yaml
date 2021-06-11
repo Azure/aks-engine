@@ -104,7 +104,6 @@ jobs:
           RUN_VMSS_NODE_PROTOTYPE: true
           BLOCK_SSH: false
           SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: Build Artifacts
