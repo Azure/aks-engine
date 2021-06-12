@@ -657,22 +657,22 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssStorageProfile := compute.VirtualMachineScaleSetStorageProfile{}
 
-	if profile.IsWindows() {
-		vmssStorageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
-		vmssStorageProfile.DataDisks = getVMSSDataDisks(profile)
-	} else {
-		if profile.HasImageRef() {
-			imageRef := profile.ImageRef
-			if profile.HasImageGallery() {
-				v := fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', variables('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', variables('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)
-				vmssStorageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(v),
-				}
-			} else {
-				vmssStorageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
-				}
+	if profile.HasImageRef() {
+		imageRef := profile.ImageRef
+		if profile.HasImageGallery() {
+			v := fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', variables('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', variables('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)
+			vmssStorageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(v),
 			}
+		} else {
+			vmssStorageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+			}
+		}
+	} else {
+		if profile.IsWindows() {
+			vmssStorageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
+			vmssStorageProfile.DataDisks = getVMSSDataDisks(profile)
 		} else {
 			vmssStorageProfile.ImageReference = &compute.ImageReference{
 				Offer:     to.StringPtr(fmt.Sprintf("[variables('%sosImageOffer')]", profile.Name)),

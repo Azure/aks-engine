@@ -501,23 +501,24 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	storageProfile := compute.StorageProfile{}
 
-	if profile.IsWindows() {
-		storageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
+	imageRef := profile.ImageRef
 
-		if profile.HasDisks() {
-			storageProfile.DataDisks = getArmDataDisks(profile)
+	if profile.HasImageRef() {
+		if profile.HasImageGallery() {
+			storageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
+			}
+		} else {
+			storageProfile.ImageReference = &compute.ImageReference{
+				ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
+			}
 		}
 	} else {
-		imageRef := profile.ImageRef
-		if profile.HasImageRef() {
-			if profile.HasImageGallery() {
-				storageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[concat('/subscriptions/', '%s', '/resourceGroups/', parameters('%sosImageResourceGroup'), '/providers/Microsoft.Compute/galleries/', '%s', '/images/', parameters('%sosImageName'), '/versions/', '%s')]", imageRef.SubscriptionID, profile.Name, imageRef.Gallery, profile.Name, imageRef.Version)),
-				}
-			} else {
-				storageProfile.ImageReference = &compute.ImageReference{
-					ID: to.StringPtr(fmt.Sprintf("[resourceId(variables('%[1]sosImageResourceGroup'), 'Microsoft.Compute/images', variables('%[1]sosImageName'))]", profile.Name)),
-				}
+		if profile.IsWindows() {
+			storageProfile.ImageReference = createWindowsImageReference(profile.Name, cs.Properties.WindowsProfile)
+
+			if profile.HasDisks() {
+				storageProfile.DataDisks = getArmDataDisks(profile)
 			}
 		} else {
 			storageProfile.ImageReference = &compute.ImageReference{
