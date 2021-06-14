@@ -7695,7 +7695,7 @@ data:
       type kubepodinventory
       tag oms.containerinsights.KubePodInventory
       run_interval 60
-      log_level debug
+      log_level debug     
      </source>
 
      #Kubernetes Persistent Volume inventory
@@ -7755,7 +7755,7 @@ data:
      </source>
 
      <filter mdm.kubenodeinventory**>
-      type filter_inventory2mdm
+      type filter_inventory2mdm     
       log_level info
      </filter>
 
@@ -7985,10 +7985,10 @@ spec:
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: omsagent
-      dnsConfig:
+      dnsConfig:    
         options:
           - name: ndots
-            value: "3"
+            value: "3"  
       containers:
         - name: omsagent
           image: {{ContainerImage "omsagent"}}
@@ -8310,10 +8310,10 @@ spec:
         schema-versions:  {{ContainerConfig "schema-versions"}}
     spec:
       serviceAccountName: omsagent
-      dnsConfig:
+      dnsConfig:    
         options:
           - name: ndots
-            value: "3"
+            value: "3"  
       containers:
         - name: omsagent-win
           image: {{ContainerImage "omsagent-win"}}
@@ -14977,7 +14977,7 @@ func k8sCloudInitArtifactsSysFsBpfMount() (*asset, error) {
 var _k8sCloudInitArtifactsSysctlD60CisConf = []byte(`# 3.1.2 Ensure packet redirect sending is disabled
 net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
-# 3.2.1 Ensure source routed packets are not accepted
+# 3.2.1 Ensure source routed packets are not accepted 
 net.ipv4.conf.all.accept_source_route = 0
 net.ipv4.conf.default.accept_source_route = 0
 # 3.2.2 Ensure ICMP redirects are not accepted
@@ -17538,7 +17538,7 @@ try
         Set-Explorer
 
         # if multple LB policies are included for same endpoint then HNS hangs.
-        # this fix forces an error
+        # this fix forces an error  
         Write-Host "Enable a HNS fix in 2021-2C+"
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
 
@@ -18040,10 +18040,10 @@ function Update-CACertificate {
 
 function Update-KubeConfig {
     Write-Log "Write kube config"
-    $ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
+    $ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string) 
     $MasterIP = $ClusterConfiguration.Kubernetes.ControlPlane.IpAddress
 
-    $CloudProviderConfig = ConvertFrom-Json ((Get-Content "c:\k\azure.json" -ErrorAction Stop) | out-string)
+    $CloudProviderConfig = ConvertFrom-Json ((Get-Content "c:\k\azure.json" -ErrorAction Stop) | out-string) 
     $MasterFQDNPrefix = $CloudProviderConfig.ResourceGroup
 
     $AgentKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Raw $AgentKeyPath)))
@@ -18311,7 +18311,7 @@ Set-AzureCNIConfig
     if ($IsAzureStack) {
         Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
     }
-
+    
     $aclRule1 = [PSCustomObject]@{
         Type = 'ACL'
         Protocols = '6'
@@ -18930,7 +18930,7 @@ function CreateHypervisorRuntimes {
     [Parameter(Mandatory = $true)][string]
     $image
   )
-
+  
   Write-Host "Adding hyperv runtimes $builds"
   $hypervRuntimes = ""
   ForEach ($buildNumber in $builds) {
@@ -18960,7 +18960,7 @@ function Select-Windows-Version {
     "18363" { return "1909" }
     "19041" { return "2004" }
     "19042" { return "20H2" }
-    Default { return "" }
+    Default { return "" } 
   }
 }
 
@@ -18994,7 +18994,7 @@ function Install-Containerd {
   }
 
   # TODO: check if containerd is already installed and is the same version before this.
-
+  
   # Extract the package
   if ($ContainerdUrl.endswith(".zip")) {
     $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
@@ -19003,7 +19003,7 @@ function Install-Containerd {
     del $zipfile
   }
   elseif ($ContainerdUrl.endswith(".tar.gz")) {
-    # upstream containerd package is a tar
+    # upstream containerd package is a tar 
     $tarfile = [Io.path]::Combine($ENV:TEMP, "containerd.tar.gz")
     DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $tarfile
     mkdir -Force $global:ContainerdInstallLocation
@@ -19037,7 +19037,7 @@ function Install-Containerd {
     $sandboxIsolation = 1
   }
 
-  $template = Get-Content -Path "c:\AzureData\k8s\containerdtemplate.toml"
+  $template = Get-Content -Path "c:\AzureData\k8s\containerdtemplate.toml" 
   if ($sandboxIsolation -eq 0 -And $hypervHandlers.Count -eq 0) {
     # remove the value hypervisor place holder
     $template = $template | Select-String -Pattern 'hypervisors' -NotMatch | Out-String
@@ -19165,7 +19165,7 @@ func k8sWindowshostsconfigagentfuncPs1() (*asset, error) {
 var _k8sWindowsinstallopensshfuncPs1 = []byte(`function
 Install-OpenSSH {
     Param(
-        [Parameter(Mandatory = $true)][string[]]
+        [Parameter(Mandatory = $true)][string[]] 
         $SSHKeys
     )
 
@@ -19213,7 +19213,7 @@ Install-OpenSSH {
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
 
-    # Confirm the Firewall rule is configured. It should be created automatically by setup.
+    # Confirm the Firewall rule is configured. It should be created automatically by setup. 
     $firewall = Get-NetFirewallRule -Name *ssh*
 
     if (!$firewall) {
