@@ -89,6 +89,16 @@ func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
 			cm["--feature-gates"])
 	}
 
+	// test 1.19.0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.19.0"
+	cs.setControllerManagerConfig()
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true\": %s",
+			cm["--feature-gates"])
+	}
+
 	// test user-overrides
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
