@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -81,7 +82,10 @@ func (cs *ContainerService) setControllerManagerConfig() {
 	}
 
 	// Enables Node Exclusion from Services (toggled on agent nodes by the alpha.service-controller.kubernetes.io/exclude-balancer label).
-	addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.9.0", "ServiceNodeExclusion=true")
+	// ServiceNodeExclusion feature gate is GA in 1.19, removed in 1.22 (xref: https://github.com/kubernetes/kubernetes/pull/100776)
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.19.0") {
+		addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.9.0", "ServiceNodeExclusion=true")
+	}
 
 	// Enable the consumption of local ephemeral storage and also the sizeLimit property of an emptyDir volume.
 	addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.10.0", "LocalStorageCapacityIsolation=true")
