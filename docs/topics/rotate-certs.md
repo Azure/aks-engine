@@ -76,7 +76,7 @@ For example,
 
 ## Under The Hood
 
-A Kubernetes cluster relies on multiple PKIs to secure the communication between its components (apiserver, kubelet, etcd, etc). On an AKS Engine cluster, these multiple PKIs share a single certificate authoritiy (CA). On control plane nodes, `aks-engine rotate-certs` rotates all these PKIs at once and reboots the virtual machine. On agent nodes, only `kubelet` and `kube-proxy` are restarted once the node certificates are replaced.
+A Kubernetes cluster relies on multiple PKIs to secure the communication between its components (apiserver, kubelet, etcd, etc). An AKS Engine cluster uses 2 certificate authorities (CA), one for the front-proxy PKI and another one for the remaining PKIs. On control plane nodes, `aks-engine rotate-certs` rotates the non-front-proxy PKIs first, reboots the virtual machines, and finally rotates the front-proxy PKI. On agent nodes, `kubelet` and `kube-proxy` are restarted once the node certificates are replaced.
 
 If the certificate rotation process halts before completion due to a failure or transient issue (e.x.: network connectivity), it is safe to rerun `aks-engine rotate-certs` using the `--force` flag.
 
@@ -85,8 +85,10 @@ At a high level, the `aks-engine rotate-certs` command performs the following ta
 - backup current set of certificates in directory `_rotate_certs_backup/` (relative to the `--api-model` path)
 - generate/load new set of certificate and persist them in local directory `_rotate_certs_output/` (relative to the `--api-model` path)
 - distribute certificates to the cluster nodes over SSH
-- rotate control plane certificates
+- rotate control plane certificates (except front-proxy PKI)
 - reboot control plane nodes
+- wait for the cluster to reach a healthy state
+- rotate front-proxy certificates
 - rotate agent certificates
 - update input `apimodel.json` with new certificates information
 
