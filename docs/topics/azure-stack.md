@@ -298,9 +298,21 @@ By default, `aks-engine get-versions` shows which Kubernetes versions are suppor
 
 There is no official support for private-preview Kubernetes cluster with Windows nodes created with AKS Engine v0.43.1 to upgrade with AKS Engine v0.55.0. Users are encouraged to deploy new Kubernetes cluster with Windows nodes with the latest AKS Engine version.
 
-### Upgrade from Kubernetes cluster created with Ubuntu 16.04
+### Upgrading Kubernetes clusters created with the Ubuntu 16.04 distro
 
-In AKS Engine release v0.63.0, we deprecate the support for Ubuntu 16.04 image. For users that would like to upgrade Kubernetes clusters previously created with Ubutnu 16.04, there is a requirement to update the masterProfile.distro and agentPoolProfiles.distro (for Linux) in the API model from "aks-ubuntu-16.04" to "aks-ubuntu-18.04", otherwise the upgrade will fail.
+Starting with AKS Engine v0.63.0, the Ubuntu 16.04 distro is not longer a supported option as the OS reached its end-of-life. In order to upgrade a cluster, make sure to set the OS distro to aks-ubuntu-18.04 in your input API Model.
+ 
+```json
+"masterProfile": 
+{
+  "distro": "aks-ubuntu-18.04"
+},
+
+"agentPoolProfiles": [
+{
+  "distro": "aks-ubuntu-18.04"
+}
+```
 
 ## Frequently Asked Questions
 
