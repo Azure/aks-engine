@@ -3,8 +3,8 @@
     "location": "",
     "properties": {
         "orchestratorProfile": {
-            "orchestratorRelease": "1.17",
-            "orchestratorVersion": "1.17.11",
+            "orchestratorRelease": "1.19",
+            "orchestratorVersion": "1.19.10",
             "kubernetesConfig": {
                 "cloudProviderBackoff": true,
                 "cloudProviderBackoffRetries": 1,
@@ -35,7 +35,7 @@
         },
         "masterProfile": {
             "dnsPrefix": "",
-            "distro": "aks-ubuntu-16.04",
+            "distro": "aks-ubuntu-18.04",
             "count": 3,
             "vmSize": "Standard_DS2_v2"
         },
