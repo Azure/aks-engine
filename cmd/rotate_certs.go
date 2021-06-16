@@ -492,6 +492,7 @@ func (rcc *rotateCertsCmd) rotateMasters() error {
 	}
 	log.Info("Rotating proxy certificates")
 	step = "cp_proxy"
+	// cp_proxy execution has to remain serial, otherwise it will break the front-proxy PKI rotation
 	for _, node := range rcc.nodes {
 		log.Debugf("Node: %s. Step: %s", node.URI, step)
 		if err := execStepsSequence(isMaster, node, execRemoteFunc(remoteBashScript(step))); err != nil {
