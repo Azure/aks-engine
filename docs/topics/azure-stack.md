@@ -300,7 +300,7 @@ There is no official support for private-preview Kubernetes cluster with Windows
 
 ### Upgrade from Kubernetes cluster created with Ubuntu 16.04
 
-In AKS Engine release v0.63.0, we deprecate the support for Ubuntu 16.04 image. For users that would like to upgrade Kubernetes clusters previously created with Ubutnu 16.04, there is a requirement to update the masterProfile.distro in the API model from "aks-ubuntu-16.04" to "aks-ubuntu-18.04", otherwise the upgrade will fail.
+In AKS Engine release v0.63.0, we deprecate the support for Ubuntu 16.04 image. For users that would like to upgrade Kubernetes clusters previously created with Ubutnu 16.04, there is a requirement to update the masterProfile.distro and agentPoolProfiles.distro (for Linux) in the API model from "aks-ubuntu-16.04" to "aks-ubuntu-18.04", otherwise the upgrade will fail.
 
 ## Frequently Asked Questions
 
