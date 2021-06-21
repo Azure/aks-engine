@@ -37,6 +37,11 @@ cp_certs() {
 
 cp_proxy() {
   source /etc/environment
+  local NODE_INDEX
+  NODE_INDEX=$(hostname | tail -c 2)
+  if [[ $NODE_INDEX == 0 ]]; then
+    export OVERRIDE_PROXY_CERTS="true"
+  fi
   /etc/kubernetes/generate-proxy-certs.sh
 }
 
