@@ -18,14 +18,14 @@ jobs:
       -e AZURE_LOCATION=${AZURE_LOCATION} \
       -e AZURE_VM_SIZE=${PACKER_VM_SIZE} \
       -e GIT_BRANCH=$(Build.SourceBranchName) \
-      -e GIT_REPO=$(Build.Repository.Uri) \      
+      -e GIT_REPO=$(Build.Repository.Uri) \
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
       -e CONTAINER_RUNTIME=docker \
       -e WINDOWS_SERVER_VERSION=2004 \
       ${CONTAINER_IMAGE} make run-packer-windows
-    displayName: Building windows VHD      
+    displayName: Building windows VHD
 
   - script: |
       docker run --rm \
@@ -81,7 +81,7 @@ jobs:
 
   - script: |
       OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
-      VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \  
+      VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
@@ -94,7 +94,7 @@ jobs:
       ${CONTAINER_IMAGE} make windows-vhd-publishing-info
     displayName: Generating publishing info for Windows VHD
     condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
-    
+
   - task: PublishPipelineArtifact@1
     inputs:
       artifact: 'publishing_info_2004_docker'
@@ -119,4 +119,4 @@ jobs:
   - script: |
       sudo chown -R $USER:$USER .
     displayName: cleanup - chown all files in work directory
-    condition: always()      
+    condition: always()
