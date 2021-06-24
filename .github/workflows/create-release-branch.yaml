@@ -10,7 +10,7 @@ on:
         required: false
         default: 'master'
 jobs:
-  generate-release-changelog:
+  create-release-branch:
     runs-on: ubuntu-latest
     steps:
       - name: validate version
@@ -62,3 +62,38 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           branch: '${{ env.RELEASE_BRANCH }}'
+  generate-release-changelog:
+    needs: create-release-branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.inputs.release_branch}}
+          fetch-depth: 0
+      - name: set env
+        run: |
+          export CURRENT_BRANCH=$(git branch --show-current)
+          echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - name: install git-chglog
+        run: go get -u github.com/git-chglog/git-chglog/cmd/git-chglog # TODO don't do this
+      - name: reset go mod
+        run: |
+          git checkout -- go.mod
+          git checkout -- go.sum
+      - name: generate release notes
+        run: |
+          git tag ${{ env.RELEASE_VERSION }}
+          git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md ${{ env.RELEASE_VERSION }}
+          git tag -d ${{ env.RELEASE_VERSION }}
+          git add releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'release: ${{ env.RELEASE_VERSION }} CHANGELOG'
+          title: 'release: ${{ env.RELEASE_VERSION }} CHANGELOG'
+          body: Add CHANGELOG for upcoming ${{ env.RELEASE_VERSION }} release
+          branch: CHANGELOG-${{ env.RELEASE_VERSION }}
