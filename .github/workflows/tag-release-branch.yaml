@@ -21,4 +21,4 @@ jobs:
       - name: push release tag
         run: |
           git tag ${{ env.RELEASE_VERSION }}
-          git push ${{ env.RELEASE_VERSION }}
+          git push origin ${{ env.RELEASE_VERSION }}
