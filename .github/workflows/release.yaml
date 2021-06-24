@@ -14,6 +14,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: set env
+        run: |
+          export CURRENT_BRANCH=$(git branch --show-current)
+          echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
       - name: Setup SSH Keys and known_hosts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -21,7 +25,7 @@ jobs:
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
       - name: Validate CHANGELOG # We require a pre-existing CHANGELOG specific for this release in order to proceed
         run: |
-          [ -s releases/CHANGELOG-${{ github.ref }}.md ]
+          [ -s releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md ]
       - name: Install go
         uses: actions/setup-go@v2
         with:
@@ -122,6 +126,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: _dist/aks-engine*-*-*.*
-          body_path: releases/CHANGELOG-${{ github.ref }}.md
+          body_path: releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
