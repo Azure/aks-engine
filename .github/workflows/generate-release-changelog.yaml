@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{github.event.inputs.release_branch}}
+          fetch-depth: 0
       - name: set env
         run: |
           export CURRENT_BRANCH=$(git branch --show-current)
@@ -22,6 +23,10 @@ jobs:
           go-version: '^1.16'
       - name: install git-chglog
         run: go get -u github.com/git-chglog/git-chglog/cmd/git-chglog
+      - name: reset go mod
+        run: |
+          git checkout -- go.mod
+          git checkout -- go.sum
       - name: generate release notes
         run: |
           git tag ${{ env.RELEASE_VERSION }}
