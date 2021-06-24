@@ -68,12 +68,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: ${{github.event.inputs.release_branch}}
+          ref: release-${{github.event.inputs.release_version}}
           fetch-depth: 0
-      - name: set env
-        run: |
-          export CURRENT_BRANCH=$(git branch --show-current)
-          echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
       - name: install go
         uses: actions/setup-go@v2
         with:
@@ -86,14 +82,14 @@ jobs:
           git checkout -- go.sum
       - name: generate release notes
         run: |
-          git tag ${{ env.RELEASE_VERSION }}
-          git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md ${{ env.RELEASE_VERSION }}
-          git tag -d ${{ env.RELEASE_VERSION }}
-          git add releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md
+          git tag ${{github.event.inputs.release_version}}
+          git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{github.event.inputs.release_version}}.md ${{github.event.inputs.release_version}}
+          git tag -d ${{github.event.inputs.release_version}}
+          git add releases/CHANGELOG-${{github.event.inputs.release_version}}.md
       - name: create pull request
         uses: peter-evans/create-pull-request@v3
         with:
-          commit-message: 'release: ${{ env.RELEASE_VERSION }} CHANGELOG'
-          title: 'release: ${{ env.RELEASE_VERSION }} CHANGELOG'
-          body: Add CHANGELOG for upcoming ${{ env.RELEASE_VERSION }} release
-          branch: CHANGELOG-${{ env.RELEASE_VERSION }}
+          commit-message: 'release: ${{github.event.inputs.release_version}} CHANGELOG'
+          title: 'release: ${{github.event.inputs.release_version}} CHANGELOG'
+          body: Add CHANGELOG for upcoming ${{github.event.inputs.release_version}} release
+          branch: CHANGELOG-${{github.event.inputs.release_version}}
