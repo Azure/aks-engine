@@ -1,0 +1,24 @@
+name: Tag Release Branch
+
+on:
+  push:
+    branches:
+      - release-*
+      - patch-release-*
+    paths:
+      - 'releases/CHANGELOG*.md'
+
+jobs:
+  tag-release-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: set env
+        run: |
+          export CURRENT_BRANCH=$(git branch --show-current)
+          echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
+      - name: push release tag
+        run: |
+          git tag ${{ env.RELEASE_VERSION }}
+          git push ${{ env.RELEASE_VERSION }}
