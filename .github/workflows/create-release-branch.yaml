@@ -1,0 +1,64 @@
+name: Create Release Branch
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Which version are we creating a release branch for?'
+        required: true
+      from_branch:
+        description: 'Which branch to source release branch from? (default: master)'
+        required: false
+        default: 'master'
+jobs:
+  generate-release-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: validate version
+        run: echo "${{github.event.inputs.release_version}}" | grep -E 'v\d+\.\d+\.\d+$'
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.inputs.from_branch}}
+      - name: set env
+        run: |
+          echo "RELEASE_BRANCH=release-${{github.event.inputs.release_version}}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
+      - name: Setup SSH Keys and known_hosts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15'
+      - name: Install helm
+        run: |
+          curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+          sudo apt-get install apt-transport-https --yes
+          echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update
+          sudo apt-get install helm
+      - name: Install k
+        run: |
+          sudo curl -o /usr/local/bin/k https://raw.githubusercontent.com/jakepearson/k/master/k
+          sudo chmod +x /usr/local/bin/k
+      - name: Build aks-engine binary
+        run: make build-binary
+      - name: Validate 1.20 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: create branch
+        uses: peterjgrainger/action-create-branch@v2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: '${{ env.RELEASE_BRANCH }}'
