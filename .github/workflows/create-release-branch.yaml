@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: validate version
-        run: echo "${{github.event.inputs.release_version}}" | grep -E 'v\d+\.\d+\.\d+$'
+        run: echo "${{github.event.inputs.release_version}}" | grep -E 'v[0-9]+\.[0-9]+\.[0-9]+$'
       - uses: actions/checkout@v2
         with:
           ref: ${{github.event.inputs.from_branch}}
