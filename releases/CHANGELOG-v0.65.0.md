@@ -10,7 +10,6 @@
 - setup SSH client in release CI ([#4457](https://github.com/Azure/aks-engine/issues/4457))
 - don't install ginkgo ([#4456](https://github.com/Azure/aks-engine/issues/4456))
 - use go 1.16 to build release artifacts ([#4454](https://github.com/Azure/aks-engine/issues/4454))
-- v0.64.0 changelog ([#4453](https://github.com/Azure/aks-engine/issues/4453))
 
 ### Documentation 📘
 - add v0.63.0 to Azure Stack topic page ([#4452](https://github.com/Azure/aks-engine/issues/4452))
