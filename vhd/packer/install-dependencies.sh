@@ -103,6 +103,7 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.4.0
 1.2.7
 1.2.2
 "
