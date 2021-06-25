@@ -332,7 +332,7 @@ function New-ExternalHnsNetwork
 
     Write-Log "Creating new HNS network `"ext`""
     $externalNetwork = "ext"
-    $na = @(Get-NetAdapter -Physical)
+    $na = @(Get-NetAdapter -Physical | Where-Object {$_.InterfaceDescription -Notlike "*Mellanox*"})
 
     if ($na.Count -eq 0) {
         throw "Failed to find any physical network adapters"
