@@ -2,8 +2,10 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - release-*
+    paths:
+      - 'releases/CHANGELOG*.md'
 
 jobs:
   build:
@@ -13,7 +15,8 @@ jobs:
         uses: actions/checkout@v2
       - name: set env
         run: |
-          echo "RELEASE_VERSION=$(git describe --tags)" >> $GITHUB_ENV
+          export CURRENT_BRANCH=$(git branch --show-current)
+          echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
       - name: Setup SSH Keys and known_hosts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -119,9 +122,9 @@ jobs:
           -w /go/src/github.com/Azure/aks-engine \
           mcr.microsoft.com/oss/azcu/go-dev:v1.32.1 make dist
       - name: Publish Release
-        uses: softprops/action-gh-release@v1
+        uses: ncipollo/release-action@v1
         with:
-          files: _dist/aks-engine*-*-*.*
-          body_path: releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: _dist/aks-engine*-*-*.*
+          bodyFile: releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.RELEASE_VERSION }}
