@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GIT_PUSH_PAT }}
       - name: set env
         run: |
           export CURRENT_BRANCH=$(git branch --show-current)
