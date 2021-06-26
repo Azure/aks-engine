@@ -115,12 +115,16 @@ jobs:
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
+      - name: Add local tag
+        run: git tag ${{ env.RELEASE_VERSION }}
       - name: Build Artifacts
         run: |
           docker run --rm \
           -v ${GITHUB_WORKSPACE}:/go/src/github.com/Azure/aks-engine \
           -w /go/src/github.com/Azure/aks-engine \
           mcr.microsoft.com/oss/azcu/go-dev:v1.32.1 make dist
+      - name: Remove local tag
+        run: git tag -d ${{ env.RELEASE_VERSION }}
       - name: Publish Release
         uses: ncipollo/release-action@v1
         with:
