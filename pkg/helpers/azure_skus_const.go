@@ -1365,6 +1365,10 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_HB120rs_v3",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_HB60rs",
 		AcceleratedNetworking: false,
 	},

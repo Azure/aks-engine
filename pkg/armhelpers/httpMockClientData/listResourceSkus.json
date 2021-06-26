@@ -1037,6 +1037,11 @@
       "AcceleratedNetworking": false
     },
     {
+      "Name": "Standard_HB120rs_v3",
+      "StorageAccountType": "Premium_LRS",
+      "AcceleratedNetworking": false
+    },
+    {
       "Name": "Standard_HB60rs",
       "StorageAccountType": "Premium_LRS",
       "AcceleratedNetworking": false
