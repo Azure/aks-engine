@@ -182,9 +182,7 @@ try
     # c:\AzureData\CustomDataSetupScript.log, and then you can RDP
     # to the windows machine, and run the script manually to watch
     # the output.
-    if ($true) {
-        Write-Log "Workaround AN ICM 245223040 issue: Get-NetAdapterRsc | Disable-NetAdapterRsc"
-        Get-NetAdapterRsc | Disable-NetAdapterRsc
+    if ($true) {        
         Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret -NetworkAPIVersion $NetworkAPIVersion -TargetEnvironment $TargetEnvironment"
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
