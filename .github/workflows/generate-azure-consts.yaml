@@ -34,6 +34,7 @@ jobs:
         with:
           commit_message: Apply generated constants changes
           branch: apply-generated-consts
+          file_pattern: pkg/helpers/*.go
       - name: create pull request
         if: ${{ failure() }}
         uses: peter-evans/create-pull-request@v3
@@ -42,3 +43,4 @@ jobs:
           title: 'chore: Update Azure constants'
           body: Automated update of Azure constants
           branch: apply-generated-consts
+          base: master
