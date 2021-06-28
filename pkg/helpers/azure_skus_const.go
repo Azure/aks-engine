@@ -1257,6 +1257,26 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_FX12mds",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_FX24mds",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_FX36mds",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_FX48mds",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_FX4mds",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_G1",
 		AcceleratedNetworking: false,
 	},
@@ -1361,8 +1381,28 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_HB120-16rs_v3",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_HB120-32rs_v3",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_HB120-64rs_v3",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_HB120-96rs_v3",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_HB120rs_v2",
 		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_HB120rs_v3",
+		AcceleratedNetworking: true,
 	},
 	{
 		Name:                  "Standard_HB60rs",
@@ -1727,6 +1767,10 @@ var VMSkus = []VMSku{
 	{
 		Name:                  "Standard_ND6s",
 		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_ND96asr_v4",
+		AcceleratedNetworking: true,
 	},
 	{
 		Name:                  "Standard_NP10s",
