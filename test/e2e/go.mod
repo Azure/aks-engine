@@ -1,6 +1,6 @@
 module github.com/Azure/aks-engine/test/e2e
 
-go 1.14
+go 1.16
 
 require (
 	github.com/Azure/aks-engine v0.43.0
