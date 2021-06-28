@@ -28,3 +28,10 @@ jobs:
         with:
           commit_message: Apply generated constants changes
           branch: apply-generated-consts
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'chore: Update Azure constants'
+          title: 'chore: Update Azure constants'
+          body: Automated update of Azure constants
+          branch: apply-generated-consts
