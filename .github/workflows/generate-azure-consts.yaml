@@ -12,24 +12,16 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
-      - name: Build aks-engine binary
-        run: make build-binary
       - name: create generated constants
         env:
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-        run: scripts/azure-const.sh
-      - name: reset go mod
-        if: ${{ failure() }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
         run: |
-          git checkout -- go.mod
-          git checkout -- go.sum
-          git checkout -- hack/tools/go.mod
-          git checkout -- hack/tools/go.sum
+          make generate-azure-constants
+          git diff-index --quiet HEAD -- || echo "MAKE_PR=true" >> $GITHUB_ENV
       - name: create pull request
-        if: ${{ failure() }}
+        if: ${{ env.MAKE_PR == "true" }}
         uses: peter-evans/create-pull-request@v3
         with:
           commit-message: 'chore: Update Azure constants'
