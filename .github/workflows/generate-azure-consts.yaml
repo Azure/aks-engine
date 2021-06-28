@@ -14,16 +14,21 @@ jobs:
           go-version: '^1.16'
       - name: Build aks-engine binary
         run: make build-binary
-      - name: set env
-        run: |
-          echo "CLIENT_ID=${{ secrets.TEST_AZURE_SP_ID }} >> $GITHUB_ENV
-          echo "CLIENT_SECRET=${{ secrets.TEST_AZURE_SP_PW }} >> $GITHUB_ENV
-          echo "TENANT_ID=${{ secrets.TEST_AZURE_TENANT_ID }} >> $GITHUB_ENV
-          echo "SUBSCRIPTION_ID=${{ secrets.TEST_AZURE_SUB_ID }} >> $GITHUB_ENV
       - name: create generated constants
+        env:
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
         run: scripts/azure-const.sh
-      - name: push changes
+      - name: create branch
         if: ${{ failure() }}
+        uses: peterjgrainger/action-create-branch@v2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: apply-generated-consts
+      - name: push changes]
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Apply generated constants changes
