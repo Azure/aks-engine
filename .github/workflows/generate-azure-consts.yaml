@@ -1,0 +1,39 @@
+name: Generate Azure Constants
+on:
+  schedule:
+    - cron: '0 8 * * *' # Every day at 8:00 a.m.
+  workflow_dispatch:
+jobs:
+  generate-azure-consts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - name: Build aks-engine binary
+        run: make build-binary
+      - name: create generated constants
+        env:
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+        run: scripts/azure-const.sh
+      - name: reset go mod
+        if: ${{ failure() }}
+        run: |
+          git checkout -- go.mod
+          git checkout -- go.sum
+          git checkout -- hack/tools/go.mod
+          git checkout -- hack/tools/go.sum
+      - name: create pull request
+        if: ${{ failure() }}
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'chore: Update Azure constants'
+          title: 'chore: Update Azure constants'
+          body: Automated update of Azure constants
+          branch: apply-generated-consts
+          base: master
