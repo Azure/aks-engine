@@ -84,10 +84,10 @@ generate: bootstrap
 	go generate $(GOFLAGS) -v ./... > /dev/null 2>&1
 
 .PHONY: generate-azure-constants
-generate-azure-constants:
-	aks-engine get-locations -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+generate-azure-constants: build-binary
+	$(BINARY_DEST_DIR)/aks-engine get-locations -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
 	  > pkg/helpers/azure_locations.go
-	aks-engine get-skus -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+	$(BINARY_DEST_DIR)/aks-engine get-skus -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
 	  > pkg/helpers/azure_skus_const.go
 
 .PHONY: build
