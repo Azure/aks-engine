@@ -28,12 +28,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           branch: apply-generated-consts
-      - name: push changes]
+      - name: push changes
+        if: ${{ failure() }}
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Apply generated constants changes
           branch: apply-generated-consts
       - name: create pull request
+        if: ${{ failure() }}
         uses: peter-evans/create-pull-request@v3
         with:
           commit-message: 'chore: Update Azure constants'
