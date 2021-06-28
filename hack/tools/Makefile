@@ -22,9 +22,6 @@ $(LOCALBIN)/golangci-lint:
 $(LOCALBIN)/pub:
 	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...@v0.2.6
 
-$(LOCALBIN)/goveralls:
-	GOBIN=$(LOCALBIN) $(GO) get github.com/mattn/goveralls
-
 $(LOCALBIN)/mockgen:
 	GOBIN=$(LOCALBIN) $(GO) get github.com/golang/mock/mockgen@v1.2.0
 
