@@ -21,7 +21,7 @@ jobs:
           make generate-azure-constants
           git diff-index --quiet HEAD -- || echo "MAKE_PR=true" >> $GITHUB_ENV
       - name: create pull request
-        if: ${{ env.MAKE_PR == "true" }}
+        if: ${{ env.MAKE_PR == 'true' }}
         uses: peter-evans/create-pull-request@v3
         with:
           commit-message: 'chore: Update Azure constants'
