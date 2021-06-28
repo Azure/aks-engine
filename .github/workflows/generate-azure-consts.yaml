@@ -27,19 +27,6 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
         run: scripts/azure-const.sh
-      - name: create branch
-        if: ${{ failure() }}
-        uses: peterjgrainger/action-create-branch@v2.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          branch: apply-generated-consts
-      - name: push changes
-        if: ${{ failure() }}
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Apply generated constants changes
-          branch: apply-generated-consts
       - name: create pull request
         if: ${{ failure() }}
         uses: peter-evans/create-pull-request@v3
