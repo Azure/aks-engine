@@ -12,6 +12,12 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
+      - name: reset go mod
+        run: |
+          git checkout -- go.mod
+          git checkout -- go.sum
+          git checkout -- hack/tools/go.mod
+          git checkout -- hack/tools/go.sum
       - name: Build aks-engine binary
         run: make build-binary
       - name: create generated constants
@@ -34,7 +40,6 @@ jobs:
         with:
           commit_message: Apply generated constants changes
           branch: apply-generated-consts
-          file_pattern: pkg/helpers/*.go
       - name: create pull request
         if: ${{ failure() }}
         uses: peter-evans/create-pull-request@v3
