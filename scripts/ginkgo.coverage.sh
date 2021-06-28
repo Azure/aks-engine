@@ -30,10 +30,6 @@ generate_cover_data() {
   grep -h -v "^mode:" "$coverdir"/*.coverprofile >>"$profile"
 }
 
-push_to_coveralls() {
-  goveralls -coverprofile="${profile}" -service=circle-ci -repotoken "$COVERALLS_REPO_TOKEN" || echo "push to coveralls failed"
-}
-
 push_to_codecov() {
   bash <(curl -s https://codecov.io/bash) || echo "push to codecov failed"
 }
@@ -44,14 +40,6 @@ go tool cover -func "${profile}"
 case "${1-}" in
   --html)
     go tool cover -html "${profile}"
-    ;;
-  --coveralls)
-		if [ -z "$COVERALLS_REPO_TOKEN" ]; then
-			# shellcheck disable=SC2016
-			echo '$COVERALLS_REPO_TOKEN not set. Skipping pushing coverage report to coveralls.io'
-			exit
-		fi
-    push_to_coveralls
     ;;
   --codecov)
     push_to_codecov
