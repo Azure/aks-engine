@@ -12,12 +12,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '^1.16'
-      - name: reset go mod
-        run: |
-          git checkout -- go.mod
-          git checkout -- go.sum
-          git checkout -- hack/tools/go.mod
-          git checkout -- hack/tools/go.sum
       - name: Build aks-engine binary
         run: make build-binary
       - name: create generated constants
@@ -27,6 +21,12 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
         run: scripts/azure-const.sh
+      - name: reset go mod
+        run: |
+          git checkout -- go.mod
+          git checkout -- go.sum
+          git checkout -- hack/tools/go.mod
+          git checkout -- hack/tools/go.sum
       - name: create pull request
         if: ${{ failure() }}
         uses: peter-evans/create-pull-request@v3
