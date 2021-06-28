@@ -100,7 +100,6 @@ go-build:
 .PHONY: tidy
 tidy:
 	$(GO) mod tidy
-	make -C ./hack/tools tidy
 	make -C ./test/e2e tidy
 
 .PHONY: vendor
