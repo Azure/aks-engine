@@ -1,0 +1,29 @@
+name: Update Tools
+on:
+  schedule:
+    - cron: '0 9 * * *' # Every day at 9:00 a.m.
+  workflow_dispatch:
+jobs:
+  generate-azure-consts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - name: Build aks-engine binary
+        run: make build-binary
+      - name: update hack/tools
+        run: make tools-reload
+      - name: validate no changes
+        run: git diff-index --quiet HEAD --
+      - name: create pull request
+        if: ${{ failure() }}
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'chore: Update hack/tools dependencies'
+          title: 'chore: Update hack/tools dependencies'
+          body: Automated update of hack/tools dependencies
+          branch: apply-hack-tools-updates
+          base: master
