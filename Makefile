@@ -105,6 +105,7 @@ tidy:
 .PHONY: vendor
 vendor: tidy
 	$(GO) mod vendor
+	make -C ./test/e2e vendor
 
 build-binary: generate
 	go build $(GOFLAGS) -v -ldflags "$(LDFLAGS)" -o $(BINARY_DEST_DIR)/aks-engine .
