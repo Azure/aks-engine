@@ -156,7 +156,7 @@ endif
 ginkgoBuild: generate
 	make -C ./test/e2e ginkgo-build
 
-test: generate ginkgoBuild
+test: generate
 	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v -tags=fast -ldflags '$(LDFLAGS)' .
 
 .PHONY: test-style
@@ -190,10 +190,6 @@ tools-install:
 .PHONY: tools-clean
 tools-clean:
 	make -C hack/tools/ clean
-
-.PHONY: coverage
-coverage:
-	LDFLAGS="$(LDFLAGS)" ./scripts/ginkgo.coverage.sh --codecov
 
 include versioning.mk
 include test.mk
