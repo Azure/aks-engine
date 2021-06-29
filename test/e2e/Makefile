@@ -25,7 +25,3 @@ clean:
 .PHONY: tidy
 tidy:
 	$(GO) mod tidy
-
-.PHONY: vendor
-vendor:
-	$(GO) mod vendor
