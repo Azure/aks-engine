@@ -4,7 +4,7 @@ on:
     - cron: '0 9 * * *' # Every day at 9:00 a.m.
   workflow_dispatch:
 jobs:
-  udpate-go-mod-vendor:
+  update-go-mod-vendor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -23,5 +23,5 @@ jobs:
           commit-message: 'chore: Update go mod vendor directories'
           title: 'chore: Update go mod vendor directories'
           body: Automated update of go mod vendor directories
-          branch: apply-hack-tools-updates
+          branch: apply-go-mod-vendor-updates
           base: master
