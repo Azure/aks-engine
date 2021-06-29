@@ -60,10 +60,8 @@ jobs:
     displayName: Build cross-architectural binaries
   - script: make validate-dependencies
     displayName: Check if go mod is up-to-date
-  - script: |
-        export CODECOV_TOKEN=$(CODECOV_TOKEN)
-        make coverage
-    displayName: Run unit tests and calculate coverage
+  - script: make test
+    displayName: Run unit tests
 
 - template: e2e-job-template.yaml
   parameters:
