@@ -52,92 +52,48 @@ We will use **v0.65.0** as an example herein. You should replace this with the n
 
 ### Prepare a Release Branch
 
-First ensure that all the commits to be included in the release are ready in your local repository.
+For a minor release, we will release from master. For a patch, we will create a new branch at the `Azure/` git origin from the previous release branch and use `git cherry-pick` to apply specific commits.
 
-For a major or minor release, create a branch from master. For a patch, create a branch from the previous release tag and use `git cherry-pick` to apply specific commits. Ensure that the CHANGELOG file that corresponds to this release is present in the release branch.
+Once your source branch is prepared for a release, we run the "Create Release Branch" GitHub Action to automatically validate and create the destination release branch:
 
-```sh
-$ git checkout master
-Switched to branch 'master'
-Your branch is up to date with 'origin/master'.
-$ git fetch upstream
-$ git merge upstream/master
-Already up to date.
-$ export RELEASE=v0.65.0 && git checkout -b release-$RELEASE && git push upstream release-$RELEASE
-Switched to a new branch 'release-v0.65.0'
-Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
-remote:
-remote: Create a pull request for 'release-v0.65.0' on GitHub by visiting:
-remote:      https://github.com/Azure/aks-engine/pull/new/release-v0.65.0
-remote:
-To https://github.com/Azure/aks-engine.git
- * [new branch]          release-v0.65.0 -> release-v0.65.0
-```
+- https://github.com/Azure/aks-engine/actions/workflows/create-release-branch.yaml
 
-### Generate Release Notes
+Use the full "v"-prefixed semver release string in the field with the description "Which branch to source release branch from?", for example `v0.65.0`.
 
-First, create a branch on your fork that you will use to push a release notes PR for approval by the maintainers:
+Use the source branch (`master` for minor releases, or a curated branch with cherry-picked commits for patch releases, for example `patch-release-v0.64.1`) in the field with the description "Which branch to source release branch from?".
 
-```sh
-$ git checkout -b CHANGELOG-$RELEASE && git push origin CHANGELOG-$RELEASE
-Switched to a new branch 'CHANGELOG-v0.65.0'
-Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
-remote:
-remote: Create a pull request for 'CHANGELOG-v0.65.0' on GitHub by visiting:
-remote:      https://github.com/jackfrancis/aks-engine/pull/new/CHANGELOG-v0.65.0
-remote:
-To https://github.com/jackfrancis/aks-engine.git
- * [new branch]          CHANGELOG-v0.65.0 -> CHANGELOG-v0.65.0
-```
+Click "Run Workflow" to initiate the process of validating and creating our release branch. This automation will perform the following:
 
-Now, create a temporary local tag that correlates with the release version to allow `git-chglog` to create human-readable release notes:
+- Checkout the source commit.
+- Run well-known "no egress" tests to validate that the base set of default components are pre-installed onto the default Linux and Windows VHDs.
+- Create a new branch at the `Azure/` git origin named "release-<release version>", for example `release-v0.65.0` for the `v0.65.0` release.
+- Generate automated release notes using the `git-chglog` tool.
+- Create a PR with the generated release notes as a potential commit to the destination release branch.
 
-```sh
-$ export RELEASE=v0.65.0 && git tag $RELEASE && git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-$RELEASE.md $RELEASE && git tag -d $RELEASE
-```
+### Review Release Notes
 
-You may now review the generated release notes, and possibly add some manual curation if appropriate. After the CHANGELOG looks good, push the changes to your fork + branch:
+If the "Create Release Branch" GitHub Action ran successfully, there will be a new PR in the `Azure/aks-engine` queue named "release: <release version> CHANGELOG", for example `release: v0.65.0 CHANGELOG` for the `v0.65.0` release.
 
-```sh
-$ git add releases/CHANGELOG-$RELEASE.md
-$ git commit -m "release: $RELEASE CHANGELOG"
-[CHANGELOG-v0.65.0 f8d86fbdb] release: v0.65.0 CHANGELOG
- 1 file changed, 31 insertions(+)
- create mode 100644 releases/CHANGELOG-v0.65.0.md
-$ git push --set-upstream origin CHANGELOG-$RELEASE
-Enumerating objects: 6, done.
-Counting objects: 100% (6/6), done.
-Delta compression using up to 8 threads
-Compressing objects: 100% (4/4), done.
-Writing objects: 100% (4/4), 1000 bytes | 111.00 KiB/s, done.
-Total 4 (delta 2), reused 0 (delta 0), pack-reused 0
-remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
-To https://github.com/jackfrancis/aks-engine.git
-   e6ca055c4..f8d86fbdb  CHANGELOG-v0.65.0 -> CHANGELOG-v0.65.0
-Branch 'CHANGELOG-v0.65.0' set up to track remote branch 'CHANGELOG-v0.65.0' from 'origin'.
-```
+At this time project maintainers should review the CHANGELOG PR for the following:
 
-And now create a PR and get a couple maintainers to review and lgtm.
+- Does the generated list of changes meet with the desired set of changes to include in this release?
+- Is there anything that can be improved with manual, human changes to the CHANGELOG markdown?
+  - If so, edit the `.md` file in-place in the PR
 
-### Add CHANGELOG to release branch
+Ensure that at least two maintainers lgtm the final proposed CHANGELOG. Once this PR is merged to the release branch, a GitHub Action will perform the actual release publication.
 
-After the CHANGELOG PR merges, you now want to add it to your release branch to enable the automated release CI to progress.
+### Publish the Release
 
-```
-$ git checkout release-$RELEASE
-Switched to branch 'release-v0.65.0'
-$ git cherry-pick <commit SHA of CHANGELOG commit in master branch>
-```
+By merging the CHANGELOG PR, you will initiate the final stage in the release process:
 
-Tag the release commit and push it to GitHub:
+- Validate that the release branch has the expected CHANGELOG.
+- Validate well-known "no egress" tests against the final release commit build.
+- Validate well-known E2E tests against the final release commit build.
+- Tag the release commit (for example, `v0.65.0` for the `v0.65.0` release).
+- Build binaries for Linux, MacOS, and Windows.
+- Create the release using the generated CHANGELOG, and upload the binaries.
 
-```
-$ git tag $RELEASE && git push upstream $RELEASE
-```
-
-### Automated Release CI
-
-When you push a new tag that matches the pattern `v*.*.*`, a GitHub Actions job will run automatically and create a new release from that tag, build and publish release artifacts, and populate the release body with the CHANGELOG created earlier for this release. Before actually publishing the release a series of release-gating E2E scenarios will run. It will take 2-3 hours for the entire process to complete.
+Note: because the test validations above may be subject to environmental failures, it may be appropriate to retry the "Release" GitHub Action job if it fails for this reason. It's critical to investigate the failure and ensure that it's appropriate for retrying — failures that indicate a regression in the AKS Engine-generated ARM template should definitely block a release!
 
 ### Update Package Managers
 
