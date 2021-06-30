@@ -25,10 +25,6 @@
             }
           },
           {
-            "name": "aad-pod-identity",
-            "enabled": true
-          },
-          {
             "name": "coredns",
             "enabled": true,
             "config": {
