@@ -91,7 +91,7 @@ echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 downloadGPUDrivers
 echo "  - nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
-ETCD_VERSION="3.3.22"
+ETCD_VERSION="3.3.25"
 ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
