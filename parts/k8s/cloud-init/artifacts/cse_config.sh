@@ -387,14 +387,30 @@ ensureKubelet() {
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" $f
   fi
   wait_for_file 1200 1 /opt/azure/containers/kubelet.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  {{- if HasKubeReservedCgroup}}
+{{- if HasKubeReservedCgroup}}
   wait_for_file 1200 1 /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}
   wait_for_file 1200 1 /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
-  {{- end}}
-  systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
+  if [[ -n ${MASTER_NODE} ]]; then
+    systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  else
+{{- if not RunUnattendedUpgrades}}
+    systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{else}}
+    retrycmd 120 5 25 systemctl enable kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
+  fi
 {{- if HasKubeletHealthZPort}}
   wait_for_file 1200 1 /etc/systemd/system/kubelet-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  if [[ -n ${MASTER_NODE} ]]; then
+    systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  else
+  {{- if not RunUnattendedUpgrades}}
+    systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  {{else}}
+    retrycmd 120 5 25 systemctl enable kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  {{- end}}
+  fi
 {{- end}}
 }
 
@@ -407,8 +423,8 @@ ensureAddons() {
 {{- end}}
 {{- if not HasCustomPodSecurityPolicy}}
   retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
-  rm -Rf ${ADDONS_DIR}/init
 {{- end}}
+  rm -Rf ${ADDONS_DIR}/init
   replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
   retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
@@ -483,7 +499,7 @@ installKubeletAndKubectl() {
   rm -rf ${binPath}/kubelet-* ${binPath}/kubectl-* /home/hyperkube-downloads &
 }
 ensureK8sControlPlane() {
-  if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
+  if [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
   retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}} $GET_KUBELET_LOGS
