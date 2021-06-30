@@ -127,11 +127,11 @@ const (
 	// DefaultClusterAutoscalerAddonEnabled determines the aks-engine provided default for enabling cluster autoscaler addon
 	DefaultClusterAutoscalerAddonEnabled = false
 	// DefaultBlobfuseFlexVolumeAddonEnabled determines the aks-engine provided default for enabling blobfuse flexvolume addon
-	DefaultBlobfuseFlexVolumeAddonEnabled = true
+	DefaultBlobfuseFlexVolumeAddonEnabled = false
 	// DefaultSMBFlexVolumeAddonEnabled determines the aks-engine provided default for enabling smb flexvolume addon
 	DefaultSMBFlexVolumeAddonEnabled = false
 	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
-	DefaultKeyVaultFlexVolumeAddonEnabled = true
+	DefaultKeyVaultFlexVolumeAddonEnabled = false
 	// DefaultDashboardAddonEnabled // Deprecated
 	DefaultDashboardAddonEnabled = false // Deprecated
 	// DefaultReschedulerAddonEnabled // Deprecated
@@ -145,7 +145,7 @@ const (
 	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
 	DefaultKubeProxyAddonEnabled = true
 	// DefaultSecretStoreCSIDriverAddonEnabled determines the aks-engine provided default for enabling secrets-store-csi-driver addon
-	DefaultSecretStoreCSIDriverAddonEnabled = true
+	DefaultSecretStoreCSIDriverAddonEnabled = false
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
