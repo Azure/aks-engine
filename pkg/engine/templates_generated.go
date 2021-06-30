@@ -1864,7 +1864,7 @@ volumeBindingMode: Immediate
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: default
@@ -1876,7 +1876,7 @@ provisioner: kubernetes.io/azure-disk
 parameters:
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: unmanaged-premium
@@ -1889,7 +1889,7 @@ parameters:
   storageaccounttype: Premium_LRS
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: unmanaged-standard
@@ -1917,7 +1917,7 @@ parameters:
   {{- end}}
   {{- if NeedsManagedDiskStorageClasses}}
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: default
@@ -1931,7 +1931,7 @@ parameters:
   storageaccounttype: Standard_LRS
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: managed-premium
@@ -1944,7 +1944,7 @@ parameters:
   storageaccounttype: Premium_LRS
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: managed-standard
