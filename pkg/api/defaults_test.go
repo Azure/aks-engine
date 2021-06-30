@@ -1564,7 +1564,7 @@ func TestStorageProfile(t *testing.T) {
 // TestMasterProfileDefaults covers tests for setMasterProfileDefaults
 func TestMasterProfileDefaults(t *testing.T) {
 	// this validates default masterProfile configuration
-	mockCS := getMockBaseContainerService("1.13.12")
+	mockCS := getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
@@ -1606,7 +1606,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default VMSS masterProfile configuration
-	mockCS = getMockBaseContainerService("1.13.12")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
@@ -1641,7 +1641,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default masterProfile configuration and kubenet
-	mockCS = getMockBaseContainerService("1.13.12")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
@@ -1685,7 +1685,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default vmas masterProfile configuration, AzureCNI, and custom vnet
-	mockCS = getMockBaseContainerService("1.10.3")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.MasterProfile.VnetSubnetID = "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleMasterSubnet"
 	properties.MasterProfile.VnetCidr = "10.239.0.0/16"
@@ -1708,7 +1708,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default VMSS masterProfile configuration, AzureCNI, and custom VNET
-	mockCS = getMockBaseContainerService("1.10.3")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.MasterProfile.VnetSubnetID = "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME/providers/Microsoft.Network/virtualNetworks/ExampleCustomVNET/subnets/ExampleMasterSubnet"
 	properties.MasterProfile.VnetCidr = "10.239.0.0/16"
@@ -1729,7 +1729,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for LoadBalancerSku and ExcludeMasterFromStandardLB
-	mockCS = getMockBaseContainerService("1.13.12")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -1747,7 +1747,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for MaximumLoadBalancerRuleCount.
-	mockCS = getMockBaseContainerService("1.13.12")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
@@ -1762,44 +1762,8 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount, DefaultMaximumLoadBalancerRuleCount)
 	}
 
-	// this validates cluster subnet default configuration for dual stack feature with 1.16
-	mockCS = getMockBaseContainerService("1.16.0")
-	properties = mockCS.Properties
-	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
-		IsScale:    false,
-		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
-	})
-	if err != nil {
-		t.Error(err)
-	}
-	expectedClusterSubnet := strings.Join([]string{DefaultKubernetesClusterSubnet, "fc00::/8"}, ",")
-	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
-		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
-	}
-
-	// this validates cluster subnet default configuration for dual stack feature in 1.16 when only ipv4 subnet provided
-	mockCS = getMockBaseContainerService("1.16.0")
-	properties = mockCS.Properties
-	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
-		IsScale:    false,
-		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
-	})
-	if err != nil {
-		t.Error(err)
-	}
-	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, "fc00::/8"}, ",")
-	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
-		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
-	}
-
 	// this validates cluster subnet default configuration for dual stack feature.
-	mockCS = getMockBaseContainerService("1.17.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
 	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -1810,14 +1774,14 @@ func TestMasterProfileDefaults(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+	expectedClusterSubnet := strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
 	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
 	// this validates cluster subnet default configuration for dual stack feature when only ipv4 subnet provided
-	mockCS = getMockBaseContainerService("1.17.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.244.0.0/16"
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
@@ -1836,7 +1800,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for dual stack feature when only ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.17.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "ace:cab:deca::/8"
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
@@ -1854,47 +1818,8 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
-	// this validates cluster subnet default configuration for azure cni dual stack feature.
-	mockCS = getMockBaseContainerService("1.16.0")
-	properties = mockCS.Properties
-	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
-	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
-		IsScale:    false,
-		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
-	})
-	if err != nil {
-		t.Error(err)
-	}
-	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, "fc00::/8"}, ",")
-	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
-		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
-	}
-
-	// this validates cluster subnet default configuration for azure cni dual stack feature when only ipv4 subnet provided
-	mockCS = getMockBaseContainerService("1.16.0")
-	properties = mockCS.Properties
-	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
-	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.240.1.0/24"
-	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
-		IsScale:    false,
-		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
-	})
-	if err != nil {
-		t.Error(err)
-	}
-	expectedClusterSubnet = strings.Join([]string{"10.240.1.0/24", "fc00::/8"}, ",")
-	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
-		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
-	}
-
 	// this validates cluster subnet default configuration for azure cni dual stack feature when only ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.16.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "ace:cab:deca::/8"
@@ -1914,7 +1839,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for azure cni dual stack feature when both ipv4 and ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.16.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.240.1.0/24,ace:cab:deca::/8"
@@ -1934,7 +1859,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for azure cni dual stack feature for k8s 1.17 version
-	mockCS = getMockBaseContainerService("1.17.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
@@ -1953,7 +1878,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates service cidr default configuration for dual stack feature when both ipv4 and ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.16.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
 	properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR = "192.168.0.0/16,ace:cab:deca::/8"
@@ -1973,7 +1898,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates service cidr default configuration for dual stack feature when ipv4 provided
-	mockCS = getMockBaseContainerService("1.16.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
 	properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR = "192.168.0.0/16"
@@ -1993,7 +1918,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates service cidr default configuration for dual stack feature when ipv6 provided
-	mockCS = getMockBaseContainerService("1.16.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
 	properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR = "ace:cab:deca::/8"
@@ -2013,7 +1938,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates service cidr default configuration for dual stack feature when servicecidr not provided
-	mockCS = getMockBaseContainerService("1.16.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
@@ -2032,7 +1957,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for OutboundRuleIdleTimeoutInMinutes.
-	mockCS = getMockBaseContainerService("1.18.2")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -2049,7 +1974,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for single stack IPv6 only cluster
-	mockCS = getMockBaseContainerService("1.18.0")
+	mockCS = getMockBaseContainerService(common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false))
 	properties = mockCS.Properties
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
 	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -3610,15 +3535,6 @@ func TestEnableAggregatedAPIs(t *testing.T) {
 	if !properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 		t.Fatalf("got unexpected EnableAggregatedAPIs config value for EnableRbac=true: %t",
 			properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs)
-	}
-}
-
-func TestCloudControllerManagerEnabled(t *testing.T) {
-	// test that 1.17 defaults to false
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.17", "", false, false, false), 3, 2, false)
-	cs.setOrchestratorDefaults(false, false)
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
-		t.Fatal("expected UseCloudControllerManager to default to false")
 	}
 }
 

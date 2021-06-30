@@ -1235,7 +1235,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 	}{
 		{
 			name:       "Valid WindowsProfile",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "AzureUser",
 				AdminPassword: "replacePassword1234$",
@@ -1244,7 +1244,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "No username",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "",
 				AdminPassword: "replacePassword1234$",
@@ -1253,7 +1253,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "No password",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "AzureUser",
 				AdminPassword: "",
@@ -1262,7 +1262,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "CSI proxy enabled",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.18", "", false, false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
@@ -1270,17 +1270,6 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 				CSIProxyURL:    "http://some/url",
 			},
 			expectedError: nil,
-		},
-		{
-			name:       "CSI Proxy unsupported version",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
-			wp: &WindowsProfile{
-				AdminUsername:  "AzureUser",
-				AdminPassword:  "replacePassword1234$",
-				EnableCSIProxy: &trueVar,
-				CSIProxyURL:    "http://some/url",
-			},
-			expectedError: errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater"),
 		},
 		{
 			name:       "Invalid Windows version",
