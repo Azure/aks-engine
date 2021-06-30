@@ -722,7 +722,7 @@ func (a *Properties) validateAddons(isUpdate bool) error {
 				case "keyvault-flexvolume":
 					keyvaultFlexvolumeEnabled = true
 					if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						log.Warnf("%s add-on will be DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
+						log.Warnf("%s add-on is DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
 					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
