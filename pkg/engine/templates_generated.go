@@ -16530,7 +16530,7 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.4.4",
+      "defaultValue": "1.4.6",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -16543,7 +16543,8 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "1.3.7",
          "1.3.8",
          "1.3.9",
-         "1.4.4"
+         "1.4.4",
+         "1.4.6"
        ],
       "type": "string"
     },
