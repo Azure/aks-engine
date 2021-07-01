@@ -61,9 +61,9 @@ const (
 	// KubernetesDefaultReleaseWindows is the default Kubernetes release for Windows
 	KubernetesDefaultReleaseWindows string = "1.18"
 	// KubernetesDefaultReleaseAzureStack is the default Kubernetes release on Azure Stack
-	KubernetesDefaultReleaseAzureStack string = "1.17"
+	KubernetesDefaultReleaseAzureStack string = "1.18"
 	// KubernetesDefaultReleaseWindowsAzureStack is the default Kubernetes release for Windows on Azure Stack
-	KubernetesDefaultReleaseWindowsAzureStack string = "1.17"
+	KubernetesDefaultReleaseWindowsAzureStack string = "1.18"
 )
 
 const LegacyControlPlaneVMPrefix string = "k8s-master"

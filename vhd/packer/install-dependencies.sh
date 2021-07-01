@@ -235,8 +235,6 @@ K8S_VERSIONS="
 1.19.10-azs
 1.18.20
 1.18.18-azs
-1.17.17
-1.17.17-azs
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do

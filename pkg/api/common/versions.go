@@ -198,7 +198,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.14":        false, // disabled, see https://github.com/kubernetes/kubernetes/pull/96623
 	"1.17.15":        false, // replaced by 1.17.16 due to k8s release engineering issues
 	"1.17.16":        false,
-	"1.17.17":        true,
+	"1.17.17":        false,
 	"1.18.0-alpha.1": false,
 	"1.18.0-alpha.2": false,
 	"1.18.0-alpha.3": false,
@@ -296,7 +296,7 @@ var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.17.7":  false,
 	"1.17.9":  false,
 	"1.17.11": false,
-	"1.17.17": true,
+	"1.17.17": false,
 	"1.18.10": false,
 	"1.18.15": false,
 	"1.18.18": true,
@@ -321,7 +321,7 @@ var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
 	"1.17.7":  false,
 	"1.17.9":  false,
 	"1.17.11": false,
-	"1.17.17": true,
+	"1.17.17": false,
 	"1.18.10": false,
 	"1.18.15": false,
 	"1.18.18": true,
