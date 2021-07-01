@@ -1,0 +1,7 @@
+*       @jackfrancis @jadarsie @Michael-Sinz
+
+/cmd/rotate_certs* @jadarsie
+/cmd/get_logs* @jadarsie
+/cmd/get_skus* @mboersma
+/pkg/armhelpers/azurestack/ @jadarsie
+/docs/topics/azure-stack.md @jadarsie
