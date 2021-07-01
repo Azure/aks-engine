@@ -464,7 +464,7 @@ const (
 	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
 	DefaultWindowsSSHEnabled = true
 	// DefaultWindowsContainerdURL is the URL for the default containerd package on Windows
-	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.3+azure/windows/windows_amd64/moby-containerd-1.4.3+azure-1.amd64.zip"
+	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.6+azure/windows/windows_amd64/moby-containerd-1.4.6+azure-1.amd64.zip"
 )
 
 // WindowsProfile defaults
