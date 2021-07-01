@@ -44,8 +44,8 @@ jobs:
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
-      ${DEIS_GO_DEV_IMAGE} make all
-    displayName: Build aks-engine-test - make all
+      ${DEIS_GO_DEV_IMAGE} make build
+    displayName: Build aks-engine-test - make build
     condition: succeeded()
 
   - script: |

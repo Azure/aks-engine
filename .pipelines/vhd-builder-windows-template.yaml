@@ -34,8 +34,8 @@ jobs:
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
-      ${DEIS_GO_DEV_IMAGE} make all
-    displayName: build aks-engine-test - make all
+      ${DEIS_GO_DEV_IMAGE} make build
+    displayName: build aks-engine-test - make build
     condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
 
   - script: |
