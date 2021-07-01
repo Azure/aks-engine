@@ -294,10 +294,12 @@ if [ -f /var/run/reboot-required ]; then
     aptmarkWALinuxAgent unhold &
   fi
 else
+{{- if RunUnattendedUpgrades}}
   if [[ -z ${MASTER_NODE} ]]; then
     systemctl_restart 100 5 30 kubelet
     systemctl_restart 100 5 30 kubelet-monitor
   fi
+{{- end}}
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
     /usr/lib/apt/apt.systemd.daily &
     aptmarkWALinuxAgent unhold &
