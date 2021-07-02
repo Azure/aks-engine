@@ -453,6 +453,8 @@ const (
 	DefaultKubernetesMaxPodsAzureCNI = "30"
 	// DefaultKubernetesAPIServerEnableProfiling is the config that enables profiling via web interface host:port/debug/pprof/
 	DefaultKubernetesAPIServerEnableProfiling = "false"
+	// DefaultKubernetesAPIServerVerbosity is the default verbosity setting for the apiserver
+	DefaultKubernetesAPIServerVerbosity = "2"
 	// DefaultKubernetesCtrMgrEnableProfiling is the config that enables profiling via web interface host:port/debug/pprof/
 	DefaultKubernetesCtrMgrEnableProfiling = "false"
 	// DefaultKubernetesSchedulerEnableProfiling is the config that enables profiling via web interface host:port/debug/pprof/
