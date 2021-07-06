@@ -31,7 +31,7 @@ const (
 
 const (
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "20.10.5"
+	KubernetesWindowsDockerVersion = "20.10.7"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
@@ -442,7 +442,7 @@ const (
 	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "19.03.14"
+	DefaultMobyVersion = "20.10.7"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.4.6"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
