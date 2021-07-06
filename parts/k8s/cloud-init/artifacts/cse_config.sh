@@ -397,7 +397,7 @@ ensureKubelet() {
 {{- if not RunUnattendedUpgrades}}
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 {{else}}
-    retrycmd 120 5 25 systemctl enable kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+    systemctl_enable 100 5 30 kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 {{- end}}
   fi
 {{- if HasKubeletHealthZPort}}
@@ -408,7 +408,7 @@ ensureKubelet() {
   {{- if not RunUnattendedUpgrades}}
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{else}}
-    retrycmd 120 5 25 systemctl enable kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+    systemctl_enable 100 5 30 kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{- end}}
   fi
 {{- end}}

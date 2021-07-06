@@ -12217,7 +12217,7 @@ ensureKubelet() {
 {{- if not RunUnattendedUpgrades}}
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 {{else}}
-    retrycmd 120 5 25 systemctl enable kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+    systemctl_enable 100 5 30 kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 {{- end}}
   fi
 {{- if HasKubeletHealthZPort}}
@@ -12228,7 +12228,7 @@ ensureKubelet() {
   {{- if not RunUnattendedUpgrades}}
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{else}}
-    retrycmd 120 5 25 systemctl enable kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+    systemctl_enable 100 5 30 kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{- end}}
   fi
 {{- end}}
@@ -13005,6 +13005,18 @@ systemctl_restart() {
   for i in $(seq 1 $retries); do
     timeout $timeout systemctl daemon-reload
     timeout $timeout systemctl restart $svcname && break ||
+      if [ $i -eq $retries ]; then
+        return 1
+      else
+        sleep $wait_sleep
+      fi
+  done
+}
+systemctl_enable() {
+  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
+  for i in $(seq 1 $retries); do
+    timeout $timeout systemctl daemon-reload
+    timeout $timeout systemctl enable $svcname && break ||
       if [ $i -eq $retries ]; then
         return 1
       else
