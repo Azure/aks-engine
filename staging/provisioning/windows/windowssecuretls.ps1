@@ -7,7 +7,7 @@
 #   *   RC4 is disabled
 #***************************************************************************************************************
 
-#******************* FUNCTION THAT ACTUALLY UPDATES KEYS; WILL RETURN REBOOT FLAG IF CHANGES ***********************
+#******************* FUNCTION THAT ACTUALLY UPDATES KEYS ***********************
 function Set-CryptoSetting {
     param ( 
         $regKeyName, 
@@ -189,7 +189,6 @@ function Get-BaseCipherSuitesWin10Above()
     $cipherorder = @()
     if ($isExcellenceOrder -eq $true)
     {
-        
         $cipherorder += "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
         $cipherorder += "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
         $cipherorder += "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
