@@ -174,7 +174,7 @@ function Install-ContainerD {
 }
 
 function Install-Docker {
-    $defaultDockerVersion = "20.10.5"
+    $defaultDockerVersion = "20.10.6"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
