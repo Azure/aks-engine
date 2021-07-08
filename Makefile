@@ -117,7 +117,7 @@ build-cross:
 	CGO_ENABLED=0 gox -output="_dist/aks-engine-$(GITTAG)-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
 
 .PHONY: dist
-dist: build-cross compress-binaries
+dist: build-cross
 	( \
 		cd _dist && \
 		$(DIST_DIRS) cp ../LICENSE {} \; && \
@@ -125,11 +125,6 @@ dist: build-cross compress-binaries
 		$(DIST_DIRS) tar -zcf {}.tar.gz {} \; && \
 		$(DIST_DIRS) zip -r {}.zip {} \; \
 	)
-
-.PHONY: compress-binaries
-compress-binaries:
-	@which upx || (echo "Please install the upx executable packer tool. See https://upx.github.io/" && exit 1)
-	find _dist -type f \( -name "aks-engine" -o -name "aks-engine.exe" \) -exec upx -9 {} +
 
 .PHONY: checksum
 checksum:
