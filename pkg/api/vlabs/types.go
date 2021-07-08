@@ -497,7 +497,7 @@ type Extension struct {
 // AgentPoolProfile represents an agent pool definition
 type AgentPoolProfile struct {
 	Name                                string               `json:"name" validate:"required"`
-	Count                               int                  `json:"count" validate:"required,min=1,max=100"`
+	Count                               int                  `json:"count" validate:"required,min=1,max=1000"`
 	VMSize                              string               `json:"vmSize" validate:"required"`
 	OSDiskSizeGB                        int                  `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	DNSPrefix                           string               `json:"dnsPrefix,omitempty"`
