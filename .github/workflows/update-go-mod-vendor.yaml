@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   update-go-mod-vendor:
+    if: github.repository == 'Azure/aks-engine'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

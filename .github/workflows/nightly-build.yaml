@@ -6,28 +6,23 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
+    if: github.repository == 'Azure/aks-engine'
     name: build
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v2
-
       - name: Make releases
         run: |
           docker run --rm \
           -v ${GITHUB_WORKSPACE}:/go/src/github.com/Azure/aks-engine \
           -w /go/src/github.com/Azure/aks-engine \
           mcr.microsoft.com/oss/azcu/go-dev:v1.32.2 make dist
-
       - name: Rename outputs
         run: |
           mkdir ./outputs
           cp _dist/aks-engine-*-linux-amd64.tar.gz outputs/aks-engine-nightly-linux-amd64.tar.gz
-
       - name: Update nightly release
         uses: eine/tip@master
         with:

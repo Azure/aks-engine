@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   generate-azure-consts:
+    if: github.repository == 'Azure/aks-engine'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
