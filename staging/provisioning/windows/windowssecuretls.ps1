@@ -1,5 +1,4 @@
 ﻿#***************************************************************************************************************
-# Below functions are modified from TLSSettings.ps1
 # It does the following:
 #   *   Disable TLS 1.O, TLS 1.1, SSLv2, SSLv3 and enables TLS1.2
 #   *   The CipherSuite order is set to the SDL approved version.
