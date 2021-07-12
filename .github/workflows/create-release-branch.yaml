@@ -18,9 +18,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{github.event.inputs.from_branch}}
-      - name: set env
-        run: |
-          echo "RELEASE_BRANCH=release-${{github.event.inputs.release_version}}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
       - name: Setup SSH Keys and known_hosts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -96,11 +93,9 @@ jobs:
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: create branch
-        uses: peterjgrainger/action-create-branch@v2.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          branch: '${{ env.RELEASE_BRANCH }}'
+        run: |
+          git branch release-${{github.event.inputs.release_version}}
+          git push
   generate-release-changelog:
     needs: create-release-branch
     runs-on: ubuntu-latest
