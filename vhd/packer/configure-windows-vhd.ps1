@@ -200,7 +200,9 @@ function Install-WindowsPatches {
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
             # Find a specific patch at https://www.catalog.update.microsoft.com/Search.aspx?q=<KB-number>
-            $patchUrls = @()
+            # Cumulative updates for WS 2019 from July 13, 2021 
+            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB5004244
+            $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2021/07/windows10.0-kb5004244-x64_5685623313a6de061e0c42fed3391c29750a6b1b.msu")
         }
         '2004' {
             # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932
