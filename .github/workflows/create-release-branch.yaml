@@ -94,8 +94,9 @@ jobs:
         run: make test-kubernetes
       - name: create branch
         run: |
-          git branch release-${{github.event.inputs.release_version}}
-          git push
+          git remote -v
+          git checkout -b release-${{github.event.inputs.release_version}}
+          git push origin release-${{github.event.inputs.release_version}}
   generate-release-changelog:
     needs: create-release-branch
     runs-on: ubuntu-latest
