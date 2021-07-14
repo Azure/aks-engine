@@ -42,6 +42,10 @@ jobs:
           sudo chmod +x /usr/local/bin/k
       - name: Build aks-engine binary
         run: make build-binary
+      - name: validate clean
+        run: |
+          git status
+          test -z "$(git status --porcelain)"
       - name: Validate 1.18 no-egress scenario
         env:
           ORCHESTRATOR_RELEASE: "1.18"
