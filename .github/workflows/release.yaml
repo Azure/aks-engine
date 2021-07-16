@@ -42,10 +42,9 @@ jobs:
           sudo chmod +x /usr/local/bin/k
       - name: Build aks-engine binary
         run: make build-binary
-      - name: validate clean
+      - name: print git status after build
         run: |
           git status
-          test -z "$(git status --porcelain)"
       - name: Validate 1.18 no-egress scenario
         env:
           ORCHESTRATOR_RELEASE: "1.18"
@@ -121,6 +120,12 @@ jobs:
         run: make test-kubernetes
       - name: Add local tag
         run: git tag ${{ env.RELEASE_VERSION }}
+      - name: print git status before producing binaries
+        run: |
+          git status
+      - name: clean all unstaged changes
+        run: |
+          git checkout -- .
       - name: Build Artifacts
         run: |
           docker run --rm \
