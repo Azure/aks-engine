@@ -1169,14 +1169,13 @@ func (cs *ContainerService) getDefaultKubernetesClusterSubnetIPv6() string {
 func (cs *ContainerService) setCSIProxyDefaults() {
 	p := cs.Properties
 	useCloudControllerManager := p.OrchestratorProfile.KubernetesConfig != nil && to.Bool(p.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
-	k8sVersion := p.OrchestratorProfile.OrchestratorVersion
 	w := p.WindowsProfile
 	// We should enable CSI proxy if:
 	// 1. enableCSIProxy is not defined and cloud-controller-manager
-	//    is being used on a Windows cluster with K8s >= 1.18.0 or
+	//    is being used on a Windows cluster or
 	// 2. enabledCSIProxy is true
 	// 3. csiProxyURL is defined
-	shouldEnableCSIProxy := (w.EnableCSIProxy == nil && useCloudControllerManager && common.IsKubernetesVersionGe(k8sVersion, "1.18.0")) ||
+	shouldEnableCSIProxy := (w.EnableCSIProxy == nil && useCloudControllerManager) ||
 		w.IsCSIProxyEnabled() ||
 		w.CSIProxyURL != ""
 

@@ -638,6 +638,7 @@ func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 	provisioningScriptsPackageURL := ""
 	windowsPauseImageURL := ""
 	alwaysPullWindowsPauseImage := false
+	windowsSecureTLSEnabled := false
 
 	if wp != nil {
 		enableCSIProxy = wp.IsCSIProxyEnabled()
@@ -645,6 +646,7 @@ func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 		provisioningScriptsPackageURL = wp.ProvisioningScriptsPackageURL
 		windowsPauseImageURL = wp.WindowsPauseImageURL
 		alwaysPullWindowsPauseImage = (wp.AlwaysPullWindowsPauseImage != nil && *wp.AlwaysPullWindowsPauseImage)
+		windowsSecureTLSEnabled = (wp.WindowsSecureTLSEnabled != nil && *wp.WindowsSecureTLSEnabled)
 	}
 	vars := map[string]interface{}{
 		"windowsEnableCSIProxy":                enableCSIProxy,
@@ -652,6 +654,7 @@ func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 		"windowsProvisioningScriptsPackageURL": provisioningScriptsPackageURL,
 		"windowsPauseImageURL":                 windowsPauseImageURL,
 		"alwaysPullWindowsPauseImage":          strconv.FormatBool(alwaysPullWindowsPauseImage),
+		"windowsSecureTLSEnabled":              strconv.FormatBool(windowsSecureTLSEnabled),
 	}
 	return vars
 }

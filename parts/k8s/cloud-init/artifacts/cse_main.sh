@@ -254,11 +254,7 @@ if [[ -n ${MASTER_NODE} ]]; then
     time_metric "EnsureEtcd" ensureEtcd
   fi
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
-  if [ -f /var/run/reboot-required ]; then
-    time_metric "ReplaceAddonsInit" replaceAddonsInit
-  else
-    time_metric "EnsureAddons" ensureAddons
-  fi
+  time_metric "EnsureAddons" ensureAddons
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
@@ -298,6 +294,12 @@ if [ -f /var/run/reboot-required ]; then
     aptmarkWALinuxAgent unhold &
   fi
 else
+{{- if RunUnattendedUpgrades}}
+  if [[ -z ${MASTER_NODE} ]]; then
+    systemctl_restart 100 5 30 kubelet
+    systemctl_restart 100 5 30 kubelet-monitor
+  fi
+{{- end}}
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
     /usr/lib/apt/apt.systemd.daily &
     aptmarkWALinuxAgent unhold &

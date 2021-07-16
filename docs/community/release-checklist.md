@@ -21,7 +21,7 @@ necessary to release a product such as AKS Engine, which depends on several exte
 AKS Engine releases new versions when the team of maintainers determine it is needed. This usually
 amounts to one or more releases each month.
 
-Minor versions—for example, v0.**64**.0—are created from the master branch whenever
+Minor versions—for example, v0.**65**.0—are created from the master branch whenever
 important features or changes have been merged and CI testing shows it to be stable over time.
 
 Patch versions—for example, v0.64.**1**—are based on the previous release and created on demand
@@ -48,42 +48,52 @@ to a patch or to a minor release will not break anything.
 
 Let's go through the process of creating a new release of the [aks-engine][] binary.
 
-We will use **v0.63.0** as an example herein. You should replace this with the new version you're releasing.
+We will use **v0.65.0** as an example herein. You should replace this with the new version you're releasing.
 
-```
-$ export TAG=v0.63.0
-```
-### Generate Release Notes
+### Prepare a Release Branch
 
-Use the [`git-chglog`][git-chglog] tool to generate release notes:
+For a minor release, we will release from master. For a patch, we will create a new branch at the `Azure/` git origin from the previous release branch and use `git cherry-pick` to apply specific commits.
 
-```
-$ git-chglog $TAG
-```
+Once your source branch is prepared for a release, we run the "Create Release Branch" GitHub Action to automatically validate and create the destination release branch:
 
-Be sure to proofread the output and verify that the intended commits appear. If a commit made it to master that didn't have a [conventional commit message][conventional-commit], you'll need to add it to the appropriate section by hand.
+- https://github.com/Azure/aks-engine/actions/workflows/create-release-branch.yaml
 
-Save the markdown to a new file under the `releases/` directory, and name it `CHANGELOG-$TAG.md`. For example, for this release we would create a new file:
+Use the full "v"-prefixed semver release string in the field with the description "Which branch to source release branch from?", for example `v0.65.0`.
 
-- `releases/CHANGELOG-v0.63.0.md`
+Use the source branch (`master` for minor releases, or a curated branch with cherry-picked commits for patch releases, for example `patch-release-v0.64.1`) in the field with the description "Which branch to source release branch from?".
 
-If it is helpful to manually curate the CHANGELOG with more human readable language, please do. This will be the first thing a user encounters when evaluating whether or not to use this release. Create a PR with just the new CHANGELOG file, get it reviewed by maintainers, and ensure it is merged to the master branch.
+Click "Run Workflow" to initiate the process of validating and creating our release branch. This automation will perform the following:
 
-### Prepare and Tag a Branch
+- Checkout the source commit.
+- Run well-known "no egress" tests to validate that the base set of default components are pre-installed onto the default Linux and Windows VHDs.
+- Create a new branch at the `Azure/` git origin named "release-<release version>", for example `release-v0.65.0` for the `v0.65.0` release.
+- Generate automated release notes using the `git-chglog` tool.
+- Create a PR with the generated release notes as a potential commit to the destination release branch.
 
-First ensure that all the commits to be included in the release are ready in your local repository.
+### Review Release Notes
 
-For a major or minor release, create a branch from master. For a patch, create a branch from the previous release tag and use `git cherry-pick` to apply specific commits. Ensure that the CHANGELOG file that corresponds to this release is present in the release branch.
+If the "Create Release Branch" GitHub Action ran successfully, there will be a new PR in the `Azure/aks-engine` queue named "release: <release version> CHANGELOG", for example `release: v0.65.0 CHANGELOG` for the `v0.65.0` release.
 
-Tag the release commit and push it to GitHub:
+At this time project maintainers should review the CHANGELOG PR for the following:
 
-```
-$ git tag $TAG && git push upstream $TAG
-```
+- Does the generated list of changes meet with the desired set of changes to include in this release?
+- Is there anything that can be improved with manual, human changes to the CHANGELOG markdown?
+  - If so, edit the `.md` file in-place in the PR
 
-### Automated Release CI
+Ensure that at least two maintainers lgtm the final proposed CHANGELOG. Once this PR is merged to the release branch, a GitHub Action will perform the actual release publication.
 
-When you push a new tag that matches the pattern `v*.*.*`, a GitHub Actions job will run automatically and create a new release from that tag, build and publish release artifacts, and populate the release body with the CHANGELOG created earlier for this release. Before actually publishing the release a series of release-gating E2E scenarios will run. It will take 2-3 hours for the entire process to complete.
+### Publish the Release
+
+By merging the CHANGELOG PR, you will initiate the final stage in the release process:
+
+- Validate that the release branch has the expected CHANGELOG.
+- Validate well-known "no egress" tests against the final release commit build.
+- Validate well-known E2E tests against the final release commit build.
+- Tag the release commit (for example, `v0.65.0` for the `v0.65.0` release).
+- Build binaries for Linux, MacOS, and Windows.
+- Create the release using the generated CHANGELOG, and upload the binaries.
+
+Note: because the test validations above may be subject to environmental failures, it may be appropriate to retry the "Release" GitHub Action job if it fails for this reason. It's critical to investigate the failure and ensure that it's appropriate for retrying — failures that indicate a regression in the AKS Engine-generated ARM template should definitely block a release!
 
 ### Update Package Managers
 
@@ -94,7 +104,7 @@ Finally, let's make the new aks-engine release easy to install.
 Create a pull request to add the new release to [brew][] through our [homebrew tap repository][brew-tap]. Update the macOS sha256 checksum with this command:
 
 ```
-$ shasum -a 256  _dist/aks-engine-$TAG-darwin-amd64.tar.gz
+$ shasum -a 256  _dist/aks-engine-$RELEASE-darwin-amd64.tar.gz
 ```
 
 The PR will look very similar to [this one][brew-pr].

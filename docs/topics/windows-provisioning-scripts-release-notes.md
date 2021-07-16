@@ -1,3 +1,7 @@
+## v0.0.14
+
+- [fix: chore: Add windowssecuretls.ps1 #4567](https://github.com/Azure/aks-engine/pull/4567)
+
 ## v0.0.13
 
 - [fix: Force restart kubeproxy to avoid getting stuck #4375](https://github.com/Azure/aks-engine/pull/4375)

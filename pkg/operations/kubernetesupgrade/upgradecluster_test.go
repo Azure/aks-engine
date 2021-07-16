@@ -56,19 +56,19 @@ func TestUpgradeCluster(t *testing.T) {
 }
 
 var _ = Describe("Upgrade Kubernetes cluster tests", func() {
-	defaultVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
-	versionSplit := strings.Split(defaultVersion, ".")
+	initialVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
+	versionSplit := strings.Split(initialVersion, ".")
 	minorVersion, _ := strconv.Atoi(versionSplit[1])
-	minorVersionLessOne := minorVersion - 1
-	priorVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, versionSplit[0]+"."+strconv.Itoa(minorVersionLessOne), "", false, false, false)
-	mockK8sVersionOneLessThanDefault := fmt.Sprintf("Kubernetes:%s", priorVersion)
+	minorVersionPlusOne := minorVersion + 1
+	upgradeVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, versionSplit[0]+"."+strconv.Itoa(minorVersionPlusOne), "", false, false, false)
+	mockK8sVersionInitial := fmt.Sprintf("Kubernetes:%s", initialVersion)
 	AfterEach(func() {
 		// delete temp template directory
 		os.RemoveAll("_output")
 	})
 
 	It("Should succeed when cluster VMs are missing expected tags during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -94,7 +94,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to list VMs during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -120,7 +120,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete VMs during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -143,7 +143,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to deploy template during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -166,7 +166,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to get a virtual machine during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 1, 6, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 1, 6, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -189,7 +189,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to get storage client during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 5, 1, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 5, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -212,7 +212,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete network interface during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 3, 2, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -235,7 +235,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete role assignment during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", upgradeVersion, 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = to.BoolPtr(true)
 		uc := UpgradeCluster{
@@ -269,7 +269,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		BeforeEach(func() {
 			mockClient = armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
-			cs = api.CreateMockContainerService("testcluster", "", 3, 3, false)
+			cs = api.CreateMockContainerService("testcluster", upgradeVersion, 3, 3, false)
 			uc = UpgradeCluster{
 				Translator: &i18n.Translator{},
 				Logger:     log.NewEntry(log.New()),
@@ -298,10 +298,10 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should skip VMs that are already on desired version", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", upgradeVersion)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", upgradeVersion)),
 				}
 			}
 			uc.Force = false
@@ -369,17 +369,17 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should use kubernetes api to get node versions for VMSS when latest model is not applied", func() {
 			trueVar := true
 			falseVar := false
-			vmWithoutLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName(fmt.Sprintf("Kubernetes:%s", defaultVersion), "vmWithoutLatestModelApplied!")
+			vmWithoutLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName(fmt.Sprintf("Kubernetes:%s", upgradeVersion), "vmWithoutLatestModelApplied!")
 			vmWithoutLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &falseVar
-			vmWithLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName(fmt.Sprintf("Kubernetes:%s", defaultVersion), "vmWithLatestModelApplied")
+			vmWithLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName(fmt.Sprintf("Kubernetes:%s", upgradeVersion), "vmWithLatestModelApplied")
 			vmWithLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &trueVar
 
 			mockClient.MockKubernetesClient.GetNodeFunc = func(name string) (*v1.Node, error) {
 				node := &v1.Node{}
-				node.Status.NodeInfo.KubeletVersion = "v" + mockK8sVersionOneLessThanDefault
+				node.Status.NodeInfo.KubeletVersion = "v" + mockK8sVersionInitial
 				node.Status = v1.NodeStatus{}
 				node.Status.NodeInfo = v1.NodeSystemInfo{
-					KubeletVersion: "v" + mockK8sVersionOneLessThanDefault,
+					KubeletVersion: "v" + mockK8sVersionInitial,
 				}
 
 				return node, nil
@@ -492,10 +492,10 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should mark scale sets as windows correctly.", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
-					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", defaultVersion)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", upgradeVersion)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
+					mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", upgradeVersion)),
 				}
 			}
 			uc.Force = false
@@ -689,16 +689,16 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		//masters
 		mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
 			return []compute.VirtualMachine{
-				mockClient.MakeFakeVirtualMachine("one", fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
-				mockClient.MakeFakeVirtualMachine("two", fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
-				mockClient.MakeFakeVirtualMachine("three", fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+				mockClient.MakeFakeVirtualMachine("one", fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
+				mockClient.MakeFakeVirtualMachine("two", fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
+				mockClient.MakeFakeVirtualMachine("three", fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
 			}
 		}
 		//agents
 		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 			return []compute.VirtualMachineScaleSetVM{
-				mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
-				mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionOneLessThanDefault)),
+				mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
+				mockClient.MakeFakeVirtualMachineScaleSetVM(fmt.Sprintf("Kubernetes:%s", mockK8sVersionInitial)),
 			}
 		}
 		uc.Client = &mockClient

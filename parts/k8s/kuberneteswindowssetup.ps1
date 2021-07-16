@@ -152,6 +152,9 @@ $global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningSc
 $global:WindowsPauseImageURL = "{{WrapAsVariable "windowsPauseImageURL" }}";
 $global:AlwaysPullWindowsPauseImage = [System.Convert]::ToBoolean("{{WrapAsVariable "alwaysPullWindowsPauseImage" }}");
 
+# Secure Windows TLS protocols
+$global:WindowsSecureTLSEnabled = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsSecureTLSEnabled" }}");
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -417,6 +420,12 @@ try
         # this fix forces an error  
         Write-Host "Enable a HNS fix in 2021-2C+"
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
+
+        if ($global:WindowsSecureTLSEnabled) {
+            Write-Host "Enable secure TLS protocols"
+            . C:\k\windowssecuretls.ps1
+            Enable-SecureTls
+        }
 
         Write-Log "Adjust pagefile size"
         Adjust-PageFileSize

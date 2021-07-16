@@ -218,6 +218,7 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 			api.WindowsRuntimes.HypervRuntimes = append(api.WindowsRuntimes.HypervRuntimes, handler)
 		}
 	}
+	api.WindowsSecureTLSEnabled = vlabs.WindowsSecureTLSEnabled
 }
 
 func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) error {

@@ -1864,7 +1864,7 @@ volumeBindingMode: Immediate
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: default
@@ -1876,7 +1876,7 @@ provisioner: kubernetes.io/azure-disk
 parameters:
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: unmanaged-premium
@@ -1889,7 +1889,7 @@ parameters:
   storageaccounttype: Premium_LRS
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: unmanaged-standard
@@ -1917,7 +1917,7 @@ parameters:
   {{- end}}
   {{- if NeedsManagedDiskStorageClasses}}
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: default
@@ -1931,7 +1931,7 @@ parameters:
   storageaccounttype: Standard_LRS
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: managed-premium
@@ -1944,7 +1944,7 @@ parameters:
   storageaccounttype: Premium_LRS
   cachingmode: ReadOnly
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.22.0-alpha.2")}}beta1{{end}}
 kind: StorageClass
 metadata:
   name: managed-standard
@@ -12207,14 +12207,30 @@ ensureKubelet() {
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" $f
   fi
   wait_for_file 1200 1 /opt/azure/containers/kubelet.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  {{- if HasKubeReservedCgroup}}
+{{- if HasKubeReservedCgroup}}
   wait_for_file 1200 1 /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}
   wait_for_file 1200 1 /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
-  {{- end}}
-  systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
+  if [[ -n ${MASTER_NODE} ]]; then
+    systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  else
+{{- if not RunUnattendedUpgrades}}
+    systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{else}}
+    systemctl_enable 100 5 30 kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+{{- end}}
+  fi
 {{- if HasKubeletHealthZPort}}
   wait_for_file 1200 1 /etc/systemd/system/kubelet-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  if [[ -n ${MASTER_NODE} ]]; then
+    systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  else
+  {{- if not RunUnattendedUpgrades}}
+    systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  {{else}}
+    systemctl_enable 100 5 30 kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+  {{- end}}
+  fi
 {{- end}}
 }
 
@@ -12227,8 +12243,8 @@ ensureAddons() {
 {{- end}}
 {{- if not HasCustomPodSecurityPolicy}}
   retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
-  rm -Rf ${ADDONS_DIR}/init
 {{- end}}
+  rm -Rf ${ADDONS_DIR}/init
   replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
   retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
@@ -12303,7 +12319,7 @@ installKubeletAndKubectl() {
   rm -rf ${binPath}/kubelet-* ${binPath}/kubectl-* /home/hyperkube-downloads &
 }
 ensureK8sControlPlane() {
-  if [ -f /var/run/reboot-required ] || [ "$NO_OUTBOUND" = "true" ]; then
+  if [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
   retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit_cse {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}} $GET_KUBELET_LOGS
@@ -12996,6 +13012,18 @@ systemctl_restart() {
       fi
   done
 }
+systemctl_enable() {
+  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
+  for i in $(seq 1 $retries); do
+    timeout $timeout systemctl daemon-reload
+    timeout $timeout systemctl enable $svcname && break ||
+      if [ $i -eq $retries ]; then
+        return 1
+      else
+        sleep $wait_sleep
+      fi
+  done
+}
 systemctl_stop() {
   retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
   for i in $(seq 1 $retries); do
@@ -13135,8 +13163,8 @@ mobyPkgVersion() {
 installRunc() {
   local v
   v=$(runc --version | head -n 1 | cut -d" " -f3)
-  if [[ $v != "1.0.0-rc92" ]]; then
-    apt_get_install 20 30 120 moby-runc=1.0.0~rc92* --allow-downgrades || exit 27
+  if [[ $v != "1.0.0" ]]; then
+    apt_get_install 20 30 120 moby-runc=1.0.0* --allow-downgrades || exit 27
   fi
 }
 installMoby() {
@@ -13563,11 +13591,7 @@ if [[ -n ${MASTER_NODE} ]]; then
     time_metric "EnsureEtcd" ensureEtcd
   fi
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
-  if [ -f /var/run/reboot-required ]; then
-    time_metric "ReplaceAddonsInit" replaceAddonsInit
-  else
-    time_metric "EnsureAddons" ensureAddons
-  fi
+  time_metric "EnsureAddons" ensureAddons
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
@@ -13607,6 +13631,12 @@ if [ -f /var/run/reboot-required ]; then
     aptmarkWALinuxAgent unhold &
   fi
 else
+{{- if RunUnattendedUpgrades}}
+  if [[ -z ${MASTER_NODE} ]]; then
+    systemctl_restart 100 5 30 kubelet
+    systemctl_restart 100 5 30 kubelet-monitor
+  fi
+{{- end}}
   if [[ $OS == $UBUNTU_OS_NAME ]]; then
     /usr/lib/apt/apt.systemd.daily &
     aptmarkWALinuxAgent unhold &
@@ -16504,7 +16534,7 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
       }
     },
     "mobyVersion": {
-      "defaultValue": "19.03.14",
+      "defaultValue": "20.10.7",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -16525,12 +16555,13 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "19.03.12",
          "19.03.13",
          "19.03.14",
-         "20.10.5"
+         "20.10.5",
+         "20.10.7"
        ],
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.4.4",
+      "defaultValue": "1.4.6",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -16543,7 +16574,8 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "1.3.7",
          "1.3.8",
          "1.3.9",
-         "1.4.4"
+         "1.4.4",
+         "1.4.6"
        ],
       "type": "string"
     },
@@ -17276,6 +17308,9 @@ $global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningSc
 $global:WindowsPauseImageURL = "{{WrapAsVariable "windowsPauseImageURL" }}";
 $global:AlwaysPullWindowsPauseImage = [System.Convert]::ToBoolean("{{WrapAsVariable "alwaysPullWindowsPauseImage" }}");
 
+# Secure Windows TLS protocols
+$global:WindowsSecureTLSEnabled = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsSecureTLSEnabled" }}");
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -17541,6 +17576,12 @@ try
         # this fix forces an error  
         Write-Host "Enable a HNS fix in 2021-2C+"
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
+
+        if ($global:WindowsSecureTLSEnabled) {
+            Write-Host "Enable secure TLS protocols"
+            . C:\k\windowssecuretls.ps1
+            Enable-SecureTls
+        }
 
         Write-Log "Adjust pagefile size"
         Adjust-PageFileSize

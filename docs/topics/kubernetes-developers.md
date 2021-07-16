@@ -76,10 +76,10 @@ After that, you will have to upload a tarball (`_output/release-tars/kubernetes-
 
 ### AKS Engine API Model
 
-* Open the AKS Engine API Model (e.g. a file from the examples directory). Set `orchestratorRelease` to 1.17 or higher so various defaults and configuration are properly applied to the ARM template and artifacts. Additionally, add the following to the `kubernetesConfig` section:
+* Open the AKS Engine API Model (e.g. a file from the examples directory). Set `orchestratorRelease` to 1.18 or higher so various defaults and configuration are properly applied to the ARM template and artifacts. Additionally, add the following to the `kubernetesConfig` section:
 
 ```
-"orchestratorRelease": "1.17",
+"orchestratorRelease": "1.18",
 "kubernetesConfig": {
     ...
     "customKubeAPIServerImage": "<your-docker-registry>/kube-apiserver-amd64:<your-custom-tag>",

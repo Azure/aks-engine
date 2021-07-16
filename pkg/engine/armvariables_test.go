@@ -198,6 +198,7 @@ func TestK8sVars(t *testing.T) {
 		"windowsProvisioningScriptsPackageURL":      "",
 		"windowsPauseImageURL":                      "",
 		"alwaysPullWindowsPauseImage":               "false",
+		"windowsSecureTLSEnabled":                   "false",
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
@@ -653,6 +654,7 @@ func TestK8sVars(t *testing.T) {
 		"windowsProvisioningScriptsPackageURL":      "",
 		"windowsPauseImageURL":                      "",
 		"alwaysPullWindowsPauseImage":               "false",
+		"windowsSecureTLSEnabled":                   "false",
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -920,6 +922,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"windowsProvisioningScriptsPackageURL":      "",
 		"windowsPauseImageURL":                      "",
 		"alwaysPullWindowsPauseImage":               "false",
+		"windowsSecureTLSEnabled":                   "false",
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
@@ -975,6 +978,7 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 				"windowsProvisioningScriptsPackageURL": "",
 				"windowsPauseImageURL":                 "",
 				"alwaysPullWindowsPauseImage":          "false",
+				"windowsSecureTLSEnabled":              "false",
 			},
 		},
 		{
@@ -986,6 +990,7 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 				"windowsProvisioningScriptsPackageURL": "",
 				"windowsPauseImageURL":                 "",
 				"alwaysPullWindowsPauseImage":          "false",
+				"windowsSecureTLSEnabled":              "false",
 			},
 		},
 		{
@@ -996,6 +1001,7 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 				ProvisioningScriptsPackageURL: "https://provisioning/package",
 				WindowsPauseImageURL:          "mcr.contoso.com/core/pause:",
 				AlwaysPullWindowsPauseImage:   &trueVar,
+				WindowsSecureTLSEnabled:       &trueVar,
 			},
 			expectedVars: map[string]interface{}{
 				"windowsEnableCSIProxy":                true,
@@ -1003,6 +1009,7 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 				"windowsProvisioningScriptsPackageURL": "https://provisioning/package",
 				"windowsPauseImageURL":                 "mcr.contoso.com/core/pause:",
 				"alwaysPullWindowsPauseImage":          "true",
+				"windowsSecureTLSEnabled":              "true",
 			},
 		},
 	}

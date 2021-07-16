@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -41,12 +39,8 @@ const (
 var defaultK8sVersionForFakeVMs string
 
 func init() {
-	defaultVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
-	versionSplit := strings.Split(defaultVersion, ".")
-	minorVersion, _ := strconv.Atoi(versionSplit[1])
-	minorVersionLessOne := minorVersion - 1
-	priorVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, versionSplit[0]+"."+strconv.Itoa(minorVersionLessOne), "", false, false, false)
-	defaultK8sVersionForFakeVMs = fmt.Sprintf("Kubernetes:%s", priorVersion)
+	initialVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
+	defaultK8sVersionForFakeVMs = fmt.Sprintf("Kubernetes:%s", initialVersion)
 }
 
 //MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
@@ -375,7 +369,7 @@ func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
 	}
 	node := &v1.Node{}
 	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
-	node.Status.NodeInfo.KubeletVersion = "1.17.5"
+	node.Status.NodeInfo.KubeletVersion = common.RationalizeReleaseAndVersion(common.Kubernetes, "", "", false, false, false)
 	return node, nil
 }
 

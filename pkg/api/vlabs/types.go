@@ -190,6 +190,7 @@ type WindowsProfile struct {
 	WindowsPauseImageURL          string            `json:"windowsPauseImageURL"`
 	AlwaysPullWindowsPauseImage   *bool             `json:"alwaysPullWindowsPauseImage,omitempty"`
 	WindowsRuntimes               *WindowsRuntimes  `json:"windowsRuntimes,omitempty"`
+	WindowsSecureTLSEnabled       *bool             `json:"windowsSecureTLSEnabled,omitempty"`
 }
 
 // WindowsRuntimes configures containerd runtimes that are available on the windows nodes
@@ -497,7 +498,7 @@ type Extension struct {
 // AgentPoolProfile represents an agent pool definition
 type AgentPoolProfile struct {
 	Name                                string               `json:"name" validate:"required"`
-	Count                               int                  `json:"count" validate:"required,min=1,max=100"`
+	Count                               int                  `json:"count" validate:"required,min=1,max=1000"`
 	VMSize                              string               `json:"vmSize" validate:"required"`
 	OSDiskSizeGB                        int                  `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	DNSPrefix                           string               `json:"dnsPrefix,omitempty"`
