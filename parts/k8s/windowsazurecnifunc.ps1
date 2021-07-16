@@ -353,7 +353,7 @@ function New-ExternalHnsNetwork
                 Write-Log "error: $a"
                 $a.Clear()
             }
-            Write-Log "No IPv4 found on the network adapter $na.Name; trying the next adapter ..."
+            Write-Log "No IPv4 found on the network adapter $($na.Name); trying the next adapter ..."
         }
     }
 
