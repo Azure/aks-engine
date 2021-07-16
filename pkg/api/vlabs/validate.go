@@ -458,16 +458,6 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
-		//if to.Bool(agentPoolProfile.AcceleratedNetworkingEnabled) || to.Bool(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
-		//	if a.IsAzureStackCloud() {
-		//		return errors.Errorf("AcceleratedNetworkingEnabled or AcceleratedNetworkingEnabledWindows shouldn't be set to true as feature is not yet supported on Azure Stack")
-		//	} else if to.Bool(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
-		//		return errors.Errorf("Accelerated Networking is currently unstable for Windows + Kubernetes, please set acceleratedNetworkingEnabledWindows to false")
-		//	} else if e := validatePoolAcceleratedNetworking(agentPoolProfile.VMSize); e != nil {
-		//		return e
-		//	}
-		//}
-
 		if to.Bool(agentPoolProfile.VMSSOverProvisioningEnabled) {
 			if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
 				return errors.Errorf("You have specified VMSS Overprovisioning in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
