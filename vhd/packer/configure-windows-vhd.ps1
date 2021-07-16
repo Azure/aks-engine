@@ -121,7 +121,7 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.6-azs/windowszip/v1.20.6-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.20/windowszip/v1.18.20-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.12/windowszip/v1.19.12-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.8/windowszip/v1.20.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.9/windowszip/v1.20.9-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.3/windowszip/v1.21.3-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.0-beta.2/windowszip/v1.22.0-beta.2-1int.zip"
         );
