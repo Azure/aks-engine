@@ -340,18 +340,28 @@ function New-ExternalHnsNetwork
 
     # If there is more than one adapter, use the first adapter that is assigned an ipaddress.
     foreach($na in $nas)
-    {        
-        $managementIP = (Get-NetIPAddress -ifIndex $na.ifIndex -AddressFamily IPv4 -ErrorAction Ignore).IPAddress
-        if ($managementIP)
+    {
+        $netIP = Get-NetIPAddress -ifIndex $na.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue -ErrorVariable a
+        if ($netIP)
         {
+            $managementIP = $netIP.IPAddress
             $adapterName = $na.Name
             break
         }
+        else {
+            if ($a) {
+                Write-Log "error: $a"
+                $a.Clear()
+            }
+            Write-Log "No IPv4 found on the network adapter $na.Name; trying the next adapter ..."
+        }
     }
+
     if(-Not $managementIP)
     {
         throw "None of the physical network adapters has an IP address"
     }
+
     Write-Log "Using adapter $adapterName with IP address $managementIP"
     $mgmtIPAfterNetworkCreate
 
