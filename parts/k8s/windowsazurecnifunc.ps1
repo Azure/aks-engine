@@ -341,7 +341,7 @@ function New-ExternalHnsNetwork
     # If there is more than one adapter, use the first adapter that is assigned an ipaddress.
     foreach($na in $nas)
     {
-        $netIP = Get-NetIPAddress -ifIndex $na.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue -ErrorVariable a
+        $netIP = Get-NetIPAddress -ifIndex $na.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue -ErrorVariable netIPErr
         if ($netIP)
         {
             $managementIP = $netIP.IPAddress
@@ -349,11 +349,11 @@ function New-ExternalHnsNetwork
             break
         }
         else {
-            if ($a) {
-                Write-Log "error: $a"
-                $a.Clear()
-            }
             Write-Log "No IPv4 found on the network adapter $($na.Name); trying the next adapter ..."
+            if ($netIPErr) {
+                Write-Log "error when retrieving IPAddress: $netIPErr"
+                $netIPErr.Clear()
+            }
         }
     }
 
