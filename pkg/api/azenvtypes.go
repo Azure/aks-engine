@@ -132,7 +132,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2021.06.22",
+		ImageVersion:   "2021.07.16",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
