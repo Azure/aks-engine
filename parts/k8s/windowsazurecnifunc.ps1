@@ -332,15 +332,26 @@ function New-ExternalHnsNetwork
 
     Write-Log "Creating new HNS network `"ext`""
     $externalNetwork = "ext"
-    $na = @(Get-NetAdapter -Physical | Where-Object {$_.InterfaceDescription -Notlike "*Mellanox*"})
+    $nas = @(Get-NetAdapter -Physical)
 
-    if ($na.Count -eq 0) {
+    if ($nas.Count -eq 0) {
         throw "Failed to find any physical network adapters"
     }
 
-    # If there is more than one adapter, use the first adapter.
-    $managementIP = (Get-NetIPAddress -ifIndex $na[0].ifIndex -AddressFamily IPv4).IPAddress
-    $adapterName = $na[0].Name
+    # If there is more than one adapter, use the first adapter that is assigned an ipaddress.
+    foreach($na in $nas)
+    {        
+        $managementIP = (Get-NetIPAddress -ifIndex $na.ifIndex -AddressFamily IPv4 -ErrorAction Ignore).IPAddress
+        if ($managementIP)
+        {
+            $adapterName = $na.Name
+            break
+        }
+    }
+    if(-Not $managementIP)
+    {
+        throw "None of the physical network adapters has an IP address"
+    }
     Write-Log "Using adapter $adapterName with IP address $managementIP"
     $mgmtIPAfterNetworkCreate
 
