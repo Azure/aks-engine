@@ -122,7 +122,7 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.20/windowszip/v1.18.20-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.12/windowszip/v1.19.12-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.8/windowszip/v1.20.8-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.2/windowszip/v1.21.2-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.3/windowszip/v1.21.3-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.0-beta.2/windowszip/v1.22.0-beta.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
@@ -201,7 +201,7 @@ function Install-WindowsPatches {
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
             # Find a specific patch at https://www.catalog.update.microsoft.com/Search.aspx?q=<KB-number>
-            # Cumulative updates for WS 2019 from July 13, 2021 
+            # Cumulative updates for WS 2019 from July 13, 2021
             # https://www.catalog.update.microsoft.com/Search.aspx?q=KB5004244
             $patchUrls = @("http://download.windowsupdate.com/d/msdownload/update/software/secu/2021/07/windows10.0-kb5004244-x64_5685623313a6de061e0c42fed3391c29750a6b1b.msu")
         }
