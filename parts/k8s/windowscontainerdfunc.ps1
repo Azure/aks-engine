@@ -50,9 +50,9 @@ function CreateHypervisorRuntime {
   )
 
   return @"
-        [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber]
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber]
           runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber.options]
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-hypervisor-$buildnumber.options]
             Debug = true
             DebugType = 2
             SandboxImage = "$image-windows-$version-amd64"

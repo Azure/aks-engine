@@ -1,3 +1,4 @@
+version = 2
 root = "C:\\ProgramData\\containerd\\root"
 state = "C:\\ProgramData\\containerd\\state"
 
@@ -21,7 +22,7 @@ state = "C:\\ProgramData\\containerd\\state"
   path = ""
 
 [plugins]
-  [plugins.cri]
+  [plugins."io.containerd.grpc.v1.cri"]
     stream_server_address = "127.0.0.1"
     stream_server_port = "0"
     enable_selinux = false
@@ -30,37 +31,41 @@ state = "C:\\ProgramData\\containerd\\state"
     systemd_cgroup = false
     enable_tls_streaming = false
     max_container_log_line_size = 16384
-    [plugins.cri.containerd]
+    [plugins."io.containerd.grpc.v1.cri".containerd]
       snapshotter = "windows"
       discard_unpacked_layers = true
       no_pivot = false
-      [plugins.cri.containerd.default_runtime]
+      [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime]
         runtime_type = "io.containerd.runhcs.v1"
-        [plugins.cri.containerd.default_runtime.options]
+        container_annotations = ["microsoft.com/hostprocess-container","microsoft.com/hostprocess-inherit-user" ]
+        pod_annotations = ["microsoft.com/hostprocess-container","microsoft.com/hostprocess-inherit-user"]
+        [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime.options]
           Debug = true
           DebugType = 2
           SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
           SandboxPlatform = "windows/amd64"
           SandboxIsolation = {{sandboxIsolation}}
-      [plugins.cri.containerd.runtimes]
-        [plugins.cri.containerd.runtimes.runhcs-wcow-process]
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process]
           runtime_type = "io.containerd.runhcs.v1"
-          [plugins.cri.containerd.runtimes.runhcs-wcow-process.options]
+          container_annotations = ["microsoft.com/hostprocess-container","microsoft.com/hostprocess-inherit-user" ]
+          pod_annotations = ["microsoft.com/hostprocess-container","microsoft.com/hostprocess-inherit-user"]
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process.options]
             Debug = true
             DebugType = 2
             SandboxImage = "{{pauseImage}}-windows-{{currentversion}}-amd64"
             SandboxPlatform = "windows/amd64"
 {{hypervisors}}
-    [plugins.cri.cni]
+    [plugins."io.containerd.grpc.v1.cri".cni]
       bin_dir = "{{cnibin}}"
       conf_dir = "{{cniconf}}"
-    [plugins.cri.registry]
-      [plugins.cri.registry.mirrors]
-        [plugins.cri.registry.mirrors."docker.io"]
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
           endpoint = ["https://registry-1.docker.io"]
-  [plugins.diff-service]
+  [plugins."io.containerd.service.v1.diff-service"]
     default = ["windows"]
-  [plugins.scheduler]
+  [plugins."io.containerd.gc.v1.scheduler"]
     pause_threshold = 0.02
     deletion_threshold = 0
     mutation_threshold = 100
