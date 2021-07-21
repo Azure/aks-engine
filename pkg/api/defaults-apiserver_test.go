@@ -536,3 +536,29 @@ func TestAPIServerAnonymousAuth(t *testing.T) {
 			a["--anonymous-auth"])
 	}
 }
+
+func TestAPIServerConfigChangeVerbosity(t *testing.T) {
+	// Test
+	// "apiServerConfig": {
+	// 	"--v": "4"
+	// },
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{
+		"--v": "4",
+	}
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--v"] != "4" {
+		t.Fatalf("got unexpected '--v' API server config value for \"--v\": \"4\": %s",
+			a["--v"])
+	}
+
+	// Test default
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--v"] != DefaultKubernetesAPIServerVerbosity {
+		t.Fatalf("got unexpected default value for '--v' API server config: %s",
+			a["--v"])
+	}
+}

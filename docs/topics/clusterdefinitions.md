@@ -614,6 +614,7 @@ Below is a list of apiserver options that AKS Engine will configure by default:
 | "--oidc-issuer-url"             | _calculated value that represents OID issuer URL_ (_if has AADProfile_)                                                                                                                                                         |
 | "--service-account-issuer"             | "https://kubernetes.default.svc.cluster.local" (Kubernetes v1.20.0 and greater only) |
 | "--service-account-signing-key-file"             | "/etc/kubernetes/certs/apiserver.key" (Kubernetes v1.20.0 and greater only) |
+| "--v"                           | "2" |
 
 `*` In Kubernetes versions 1.10.0 and later the `--admission-control` flag is deprecated and `--enable-admission-plugins` is used instead.
 
@@ -642,7 +643,6 @@ Below is a list of apiserver options that are _not_ currently user-configurable,
 | "--kubelet-client-key"                 | "/etc/kubernetes/certs/client.key"                                                      |
 | "--service-cluster-ip-range"           | _see serviceCIDR_                                                                       |
 | "--storage-backend"                    | _calculated value that represents etcd version_                                         |
-| "--v"                                  | "4"                                                                                     |
 | "--encryption-provider-config"         | "/etc/kubernetes/encryption-config.yaml" (_if enableDataEncryptionAtRest is true_)      |
 | "--encryption-provider-config"         | "/etc/kubernetes/encryption-config.yaml" (_if enableEncryptionWithExternalKms is true_) |
 | "--requestheader-client-ca-file"       | "/etc/kubernetes/certs/proxy-ca.crt" (_if enableAggregatedAPIs is true_)                |

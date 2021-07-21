@@ -34,7 +34,6 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--service-cluster-ip-range":    o.KubernetesConfig.ServiceCIDR,
 		"--storage-backend":             o.GetAPIServerEtcdAPIVersion(),
 		"--enable-bootstrap-token-auth": "true",
-		"--v":                           "4",
 	}
 
 	if cs.Properties.MasterProfile != nil {
@@ -56,6 +55,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--audit-log-maxsize":   "100",
 		"--profiling":           DefaultKubernetesAPIServerEnableProfiling,
 		"--tls-cipher-suites":   TLSStrongCipherSuitesAPIServer,
+		"--v":                   DefaultKubernetesAPIServerVerbosity,
 	}
 
 	// Data Encryption at REST configuration conditions
