@@ -1973,7 +1973,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
-							VMSize: "Standard_NC6", // to validate that Azure Stack cluster config does not get nvidia addon
+							VMSize: "Standard_D2v2",
+						},
+						{
+							VMSize: "Standard_NC6",
 						},
 					},
 					CustomCloudProfile: &CustomCloudProfile{
@@ -2067,6 +2070,20 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.PodSecurityPolicyAddonName,
 					Enabled: to.BoolPtr(true),
+				},
+				{
+					Name:    common.NVIDIADevicePluginAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.NVIDIADevicePluginAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "NVIDIAImageBase" + k8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
+						},
+					},
 				},
 			},
 		},
