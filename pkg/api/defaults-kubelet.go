@@ -72,7 +72,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	staticWindowsKubeletConfig["--cloud-config"] = "c:\\k\\azure.json"
 	staticWindowsKubeletConfig["--cgroups-per-qos"] = "false"
 	staticWindowsKubeletConfig["--enforce-node-allocatable"] = "\"\"\"\""
-	staticWindowsKubeletConfig["--system-reserved"] = "memory=2Gi"
+	staticWindowsKubeletConfig["--system-reserved"] = "memory=2Gi,cpu=500m"
 	staticWindowsKubeletConfig["--hairpin-mode"] = "promiscuous-bridge"
 	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""

@@ -13,6 +13,7 @@ require (
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
 )
 
 replace github.com/Azure/aks-engine v0.43.0 => ../..
