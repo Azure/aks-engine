@@ -58,7 +58,7 @@ Once your source branch is prepared for a release, we run the "Create Release Br
 
 - https://github.com/Azure/aks-engine/actions/workflows/create-release-branch.yaml
 
-Use the full "v"-prefixed semver release string in the field with the description "Which branch to source release branch from?", for example `v0.65.0`.
+Use the full "v"-prefixed semver release string in the field with the description "Which version are we creating a release branch for?", for example `v0.65.0`.
 
 Use the source branch (`master` for minor releases, or a curated branch with cherry-picked commits for patch releases, for example `patch-release-v0.64.1`) in the field with the description "Which branch to source release branch from?".
 
