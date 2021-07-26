@@ -31,7 +31,7 @@ const (
 
 const (
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.14"
+	KubernetesWindowsDockerVersion = "20.10.6"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
@@ -43,7 +43,7 @@ const (
 	// MinAgentCount are the minimum number of agents per agent pool
 	MinAgentCount = 1
 	// MaxAgentCount are the maximum number of agents per agent pool
-	MaxAgentCount = 100
+	MaxAgentCount = 1000
 	// MinPort specifies the minimum tcp port to open
 	MinPort = 1
 	// MaxPort specifies the maximum tcp port to open
@@ -127,11 +127,11 @@ const (
 	// DefaultClusterAutoscalerAddonEnabled determines the aks-engine provided default for enabling cluster autoscaler addon
 	DefaultClusterAutoscalerAddonEnabled = false
 	// DefaultBlobfuseFlexVolumeAddonEnabled determines the aks-engine provided default for enabling blobfuse flexvolume addon
-	DefaultBlobfuseFlexVolumeAddonEnabled = true
+	DefaultBlobfuseFlexVolumeAddonEnabled = false
 	// DefaultSMBFlexVolumeAddonEnabled determines the aks-engine provided default for enabling smb flexvolume addon
 	DefaultSMBFlexVolumeAddonEnabled = false
 	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
-	DefaultKeyVaultFlexVolumeAddonEnabled = true
+	DefaultKeyVaultFlexVolumeAddonEnabled = false
 	// DefaultDashboardAddonEnabled // Deprecated
 	DefaultDashboardAddonEnabled = false // Deprecated
 	// DefaultReschedulerAddonEnabled // Deprecated
@@ -145,7 +145,7 @@ const (
 	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
 	DefaultKubeProxyAddonEnabled = true
 	// DefaultSecretStoreCSIDriverAddonEnabled determines the aks-engine provided default for enabling secrets-store-csi-driver addon
-	DefaultSecretStoreCSIDriverAddonEnabled = true
+	DefaultSecretStoreCSIDriverAddonEnabled = false
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -318,11 +318,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.2.7"
+	AzureCniPluginVerLinux = "v1.4.0"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.2.7"
+	AzureCniPluginVerWindows = "v1.4.0"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.9.1"
@@ -402,7 +402,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.22"
+	DefaultEtcdVersion = "3.3.25"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -442,9 +442,9 @@ const (
 	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "19.03.14"
+	DefaultMobyVersion = "20.10.7"
 	// DefaultContainerdVersion specifies the default containerd version to install.
-	DefaultContainerdVersion = "1.4.4"
+	DefaultContainerdVersion = "1.4.6"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.
@@ -464,14 +464,14 @@ const (
 	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
 	DefaultWindowsSSHEnabled = true
 	// DefaultWindowsContainerdURL is the URL for the default containerd package on Windows
-	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.3+azure/windows/windows_amd64/moby-containerd-1.4.3+azure-1.amd64.zip"
+	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.6+azure/windows/windows_amd64/moby-containerd-1.4.6+azure-1.amd64.zip"
 )
 
 // WindowsProfile defaults
 // TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
 const (
 	DefaultWindowsCsiProxyVersion                   = "v0.2.2"
-	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.13"
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.14"
 )
 
 const (

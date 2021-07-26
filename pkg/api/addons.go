@@ -153,7 +153,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
 		Name: common.KeyVaultFlexVolumeAddonName,
-		// keyvault-flexvolume solution will be deprecated in favor of secrets-store-csi-driver for 1.16+
+		// keyvault-flexvolume solution is deprecated in favor of secrets-store-csi-driver for 1.16+
 		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.IsAzureStackCloud() &&
 			!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
 		Containers: []KubernetesContainerSpec{

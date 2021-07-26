@@ -4,6 +4,22 @@ info:
   title: CHANGELOG
   repository_url: https://github.com/Azure/aks-engine
 options:
+  commits:
+    filters:
+      Type:
+        - build
+        - chore
+        - ci
+        - docs
+        - feat
+        - fix
+        - perf
+        - refactor
+        - revert
+        - security
+        - style
+        - test
+    sort_by: Scope
   commit_groups:
     title_maps:
       build: Build 🏭

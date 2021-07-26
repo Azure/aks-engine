@@ -198,7 +198,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.14":        false, // disabled, see https://github.com/kubernetes/kubernetes/pull/96623
 	"1.17.15":        false, // replaced by 1.17.16 due to k8s release engineering issues
 	"1.17.16":        false,
-	"1.17.17":        true,
+	"1.17.17":        false,
 	"1.18.0-alpha.1": false,
 	"1.18.0-alpha.2": false,
 	"1.18.0-alpha.3": false,
@@ -244,7 +244,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.19.8":         false,
 	"1.19.9":         false,
 	"1.19.10":        false,
-	"1.19.11":        true,
+	"1.19.11":        false,
+	"1.19.12":        false,
+	"1.19.13":        true,
 	"1.20.0-alpha.1": false,
 	"1.20.0-alpha.2": false,
 	"1.20.0-alpha.3": false,
@@ -260,7 +262,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.20.5":         false,
 	"1.20.6":         false,
 	"1.20.7":         false,
-	"1.20.8":         true,
+	"1.20.8":         false,
+	"1.20.9":         true,
 	"1.21.0-alpha.1": false,
 	"1.21.0-alpha.2": false, // disabled, see https://github.com/kubernetes/kubernetes/issues/98419
 	"1.21.0-alpha.3": false,
@@ -269,8 +272,14 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.21.0-rc.0":    false,
 	"1.21.0":         false,
 	"1.21.1":         false,
-	"1.21.2":         true,
+	"1.21.2":         false,
+	"1.21.3":         true,
 	"1.22.0-alpha.1": true,
+	"1.22.0-alpha.2": false,
+	"1.22.0-alpha.3": false,
+	"1.22.0-beta.0":  true,
+	"1.22.0-beta.1":  true,
+	"1.22.0-beta.2":  true,
 }
 
 // AllKubernetesSupportedVersionsAzureStack is a hash table of all supported Kubernetes version strings on Azure Stack
@@ -295,7 +304,7 @@ var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.17.7":  false,
 	"1.17.9":  false,
 	"1.17.11": false,
-	"1.17.17": true,
+	"1.17.17": false,
 	"1.18.10": false,
 	"1.18.15": false,
 	"1.18.18": true,
@@ -320,7 +329,7 @@ var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
 	"1.17.7":  false,
 	"1.17.9":  false,
 	"1.17.11": false,
-	"1.17.17": true,
+	"1.17.17": false,
 	"1.18.10": false,
 	"1.18.15": false,
 	"1.18.18": true,

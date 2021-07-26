@@ -82,7 +82,7 @@ echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="19.03.14"
+MOBY_VERSION="20.10.7"
 CONTAINERD_VERSION="1.4.4"
 installMoby
 installRunc
@@ -91,7 +91,7 @@ echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 downloadGPUDrivers
 echo "  - nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
-ETCD_VERSION="3.3.22"
+ETCD_VERSION="3.3.25"
 ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -103,6 +103,7 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.4.0
 1.2.7
 1.2.2
 "
@@ -155,7 +156,7 @@ for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.20.0
+1.21.0
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -225,16 +226,14 @@ loadContainerImage "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.22.0-alpha.1
-1.21.2
-1.20.8
+1.22.0-beta.2
+1.21.3
+1.20.9
 1.20.6-azs
-1.19.11
+1.19.13
 1.19.10-azs
 1.18.20
 1.18.18-azs
-1.17.17
-1.17.17-azs
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do

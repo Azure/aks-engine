@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: mcr.microsoft.com/oss/azcu/go-dev:v1.32.1
+    image: mcr.microsoft.com/oss/azcu/go-dev:v1.32.3
 
 jobs:
 - job: unit_tests
@@ -60,10 +60,8 @@ jobs:
     displayName: Build cross-architectural binaries
   - script: make validate-dependencies
     displayName: Check if go mod is up-to-date
-  - script: |
-        export CODECOV_TOKEN=$(CODECOV_TOKEN)
-        make coverage
-    displayName: Run unit tests and calculate coverage
+  - script: make test
+    displayName: Run unit tests
 
 - template: e2e-job-template.yaml
   parameters:

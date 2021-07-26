@@ -39,7 +39,7 @@ const (
 	// MinAgentCount are the minimum number of agents per agent pool
 	MinAgentCount = 1
 	// MaxAgentCount are the maximum number of agents per agent pool
-	MaxAgentCount = 100
+	MaxAgentCount = 1000
 	// MinPort specifies the minimum tcp port to open
 	MinPort = 1
 	// MaxPort specifies the maximum tcp port to open

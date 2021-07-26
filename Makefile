@@ -27,7 +27,7 @@ ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-DEV_ENV_IMAGE := mcr.microsoft.com/oss/azcu/go-dev:v1.32.1
+DEV_ENV_IMAGE := mcr.microsoft.com/oss/azcu/go-dev:v1.32.3
 DEV_ENV_WORK_DIR := /aks-engine
 DEV_ENV_OPTS := --rm -v $(GOPATH)/pkg/mod:/go/pkg/mod -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
@@ -84,10 +84,10 @@ generate: bootstrap
 	go generate $(GOFLAGS) -v ./... > /dev/null 2>&1
 
 .PHONY: generate-azure-constants
-generate-azure-constants:
-	aks-engine get-locations -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+generate-azure-constants: build-binary
+	$(BINARY_DEST_DIR)/aks-engine get-locations -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
 	  > pkg/helpers/azure_locations.go
-	aks-engine get-skus -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+	$(BINARY_DEST_DIR)/aks-engine get-skus -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
 	  > pkg/helpers/azure_skus_const.go
 
 .PHONY: build
@@ -100,7 +100,6 @@ go-build:
 .PHONY: tidy
 tidy:
 	$(GO) mod tidy
-	make -C ./hack/tools tidy
 	make -C ./test/e2e tidy
 
 .PHONY: vendor
@@ -118,7 +117,7 @@ build-cross:
 	CGO_ENABLED=0 gox -output="_dist/aks-engine-$(GITTAG)-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
 
 .PHONY: dist
-dist: build-cross compress-binaries
+dist: build-cross
 	( \
 		cd _dist && \
 		$(DIST_DIRS) cp ../LICENSE {} \; && \
@@ -126,11 +125,6 @@ dist: build-cross compress-binaries
 		$(DIST_DIRS) tar -zcf {}.tar.gz {} \; && \
 		$(DIST_DIRS) zip -r {}.zip {} \; \
 	)
-
-.PHONY: compress-binaries
-compress-binaries:
-	@which upx || (echo "Please install the upx executable packer tool. See https://upx.github.io/" && exit 1)
-	find _dist -type f \( -name "aks-engine" -o -name "aks-engine.exe" \) -exec upx -9 {} +
 
 .PHONY: checksum
 checksum:
@@ -157,7 +151,7 @@ endif
 ginkgoBuild: generate
 	make -C ./test/e2e ginkgo-build
 
-test: generate ginkgoBuild
+test: generate
 	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v -tags=fast -ldflags '$(LDFLAGS)' .
 
 .PHONY: test-style
@@ -191,10 +185,6 @@ tools-install:
 .PHONY: tools-clean
 tools-clean:
 	make -C hack/tools/ clean
-
-.PHONY: coverage
-coverage:
-	LDFLAGS="$(LDFLAGS)" ./scripts/ginkgo.coverage.sh --codecov
 
 include versioning.mk
 include test.mk
