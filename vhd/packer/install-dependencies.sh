@@ -83,7 +83,7 @@ installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
 MOBY_VERSION="20.10.7"
-CONTAINERD_VERSION="1.4.4"
+CONTAINERD_VERSION="1.4.6"
 installMoby
 installRunc
 systemctl_restart 100 5 30 docker || exit 1
