@@ -99,6 +99,7 @@ jobs:
         run: make test-kubernetes
       - name: Validate gpu + docker scenario
         env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           ORCHESTRATOR_RELEASE: "1.20"
           CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
           GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
@@ -115,6 +116,7 @@ jobs:
         run: make test-kubernetes
       - name: Validate gpu + containerd scenario
         env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           ORCHESTRATOR_RELEASE: "1.20"
           CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
           GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
