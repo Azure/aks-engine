@@ -185,14 +185,14 @@ func (gc *generateCmd) loadAPIModel() error {
 
 	if gc.containerService.Properties.IsAzureStackCloud() {
 		if gc.containerService.Properties.MasterProfile.Distro == api.AKSUbuntu1604 {
-			log.Infoln("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting master profile distro to 'aks-ubuntu-18.04'")
-			gc.containerService.Properties.MasterProfile.Distro = api.AKSUbuntu1804
+			log.Errorln("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, please update master profile distro in api model to use 'aks-ubuntu-18.04'")
+			return errors.New("Distro value 'aks-ubuntu-16.04' of master profile is not supported on Azure Stack Hub")
 		}
 
 		for _, app := range gc.containerService.Properties.AgentPoolProfiles {
 			if app.Distro == api.AKSUbuntu1604 {
-				log.Infoln(fmt.Sprintf("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting agent profile %s distro to 'aks-ubuntu-18.04'", app.Name))
-				app.Distro = api.AKSUbuntu1804
+				log.Errorln(fmt.Sprintf("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, please update agent profile %s distro in api model to use 'aks-ubuntu-18.04'", app.Name))
+				return errors.New("Distro value 'aks-ubuntu-16.04' of master profile is not supported on Azure Stack Hub")
 			}
 		}
 	}
