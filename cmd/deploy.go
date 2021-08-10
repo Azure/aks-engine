@@ -238,6 +238,20 @@ func (dc *deployCmd) loadAPIModel() error {
 				dc.containerService.Properties.CustomCloudProfile.IdentitySystem = dc.authProvider.getAuthArgs().IdentitySystem
 			}
 		}
+
+		if dc.containerService.Properties.IsAzureStackCloud() {
+			if dc.containerService.Properties.MasterProfile.Distro == api.AKSUbuntu1604 {
+				log.Infoln("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting master profile distro to 'aks-ubuntu-18.04'")
+				dc.containerService.Properties.MasterProfile.Distro = api.AKSUbuntu1804
+			}
+
+			for _, app := range dc.containerService.Properties.AgentPoolProfiles {
+				if app.Distro == api.AKSUbuntu1604 {
+					log.Infoln(fmt.Sprintf("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting agent profile %s distro to 'aks-ubuntu-18.04'", app.Name))
+					app.Distro = api.AKSUbuntu1804
+				}
+			}
+		}
 	}
 
 	if err = dc.getAuthArgs().validateAuthArgs(); err != nil {
