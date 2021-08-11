@@ -216,7 +216,7 @@ func (uc *upgradeCmd) loadCluster() error {
 
 		for _, app := range uc.containerService.Properties.AgentPoolProfiles {
 			if app.Distro == api.AKSUbuntu1604 {
-				log.Infoln(fmt.Sprintf("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting agent profile %s distro to 'aks-ubuntu-18.04'", app.Name))
+				log.Infoln(fmt.Sprintf("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting agent pool profile %s distro to 'aks-ubuntu-18.04'", app.Name))
 				app.Distro = api.AKSUbuntu1804
 			}
 		}
