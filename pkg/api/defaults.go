@@ -703,6 +703,13 @@ func (p *Properties) setLinuxProfileDefaults() {
 	if !p.IsAzureStackCloud() && p.LinuxProfile.RunUnattendedUpgradesOnBootstrap == nil {
 		p.LinuxProfile.RunUnattendedUpgradesOnBootstrap = to.BoolPtr(DefaultRunUnattendedUpgradesOnBootstrap)
 	}
+	if p.LinuxProfile.EnableUnattendedUpgrades == nil {
+		if p.IsAzureStackCloud() {
+			p.LinuxProfile.EnableUnattendedUpgrades = to.BoolPtr(DefaultEnableUnattendedUpgradesAzureStack)
+		} else {
+			p.LinuxProfile.EnableUnattendedUpgrades = to.BoolPtr(DefaultEnableUnattendedUpgrades)
+		}
+	}
 	if p.OrchestratorProfile.IsAzureCNI() && p.LinuxProfile.Eth0MTU == 0 {
 		p.LinuxProfile.Eth0MTU = DefaultEth0MTU
 	}

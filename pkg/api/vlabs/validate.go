@@ -650,6 +650,9 @@ func (a *Properties) validateLinuxProfile() error {
 			return errors.New("KeyData in LinuxProfile.SSH.PublicKeys cannot be empty string")
 		}
 	}
+	if a.LinuxProfile.EnableUnattendedUpgrades == nil {
+		log.Warnf("linuxProfile.enableUnattendedUpgrades configuration was not declared, your cluster nodes will be configured to run unattended-upgrade by default")
+	}
 	return validateKeyVaultSecrets(a.LinuxProfile.Secrets, false)
 }
 

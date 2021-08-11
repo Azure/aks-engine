@@ -57,7 +57,7 @@ var cseErrorCodes = map[string]int{
 	"ERR_APT_UPDATE_TIMEOUT":                     99,
 	"ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT": 100,
 	"ERR_APT_DIST_UPGRADE_TIMEOUT":               101,
-	"ERR_APT_PURGE_FAIL":                         102, // Deprecated
+	"ERR_APT_PURGE_FAIL":                         102,
 	"ERR_SYSCTL_RELOAD":                          103,
 	"ERR_CIS_ASSIGN_ROOT_PW":                     111, // Deprecated
 	"ERR_CIS_ASSIGN_FILE_PERMISSION":             112,

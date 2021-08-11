@@ -394,7 +394,7 @@ ensureKubelet() {
   if [[ -n ${MASTER_NODE} ]]; then
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   else
-{{- if not RunUnattendedUpgrades}}
+{{- if not RunUnattendedUpgradesOnBootstrap}}
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 {{else}}
     systemctl_enable 100 5 30 kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
@@ -405,7 +405,7 @@ ensureKubelet() {
   if [[ -n ${MASTER_NODE} ]]; then
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   else
-  {{- if not RunUnattendedUpgrades}}
+  {{- if not RunUnattendedUpgradesOnBootstrap}}
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{else}}
     systemctl_enable 100 5 30 kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}

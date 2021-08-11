@@ -273,7 +273,11 @@ fi
 {{end}}
 
 {{- /* re-enable unattended upgrades */}}
+{{- if EnableUnattendedUpgrades}}
 rm -f /etc/apt/apt.conf.d/99periodic
+{{else}}
+apt_get_purge unattended-upgrades || exit {{GetCSEErrorCode "ERR_APT_PURGE_FAIL"}}
+{{- end}}
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
@@ -282,7 +286,7 @@ fi
 {{end}}
 
 {{- if not HasBlockOutboundInternet}}
-    {{- if RunUnattendedUpgrades}}
+    {{- if RunUnattendedUpgradesOnBootstrap}}
 apt_get_update && unattended_upgrade
     {{- end}}
 {{- end}}
@@ -294,7 +298,7 @@ if [ -f /var/run/reboot-required ]; then
     aptmarkWALinuxAgent unhold &
   fi
 else
-{{- if RunUnattendedUpgrades}}
+{{- if RunUnattendedUpgradesOnBootstrap}}
   if [[ -z ${MASTER_NODE} ]]; then
     systemctl_restart 100 5 30 kubelet
     systemctl_restart 100 5 30 kubelet-monitor
