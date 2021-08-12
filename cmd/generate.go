@@ -183,6 +183,20 @@ func (gc *generateCmd) loadAPIModel() error {
 		prop.CertificateProfile.CaPrivateKey = string(caKeyBytes)
 	}
 
+	if gc.containerService.Properties.IsAzureStackCloud() {
+		if gc.containerService.Properties.MasterProfile.Distro == api.AKSUbuntu1604 {
+			log.Errorln("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, use 'aks-ubuntu-18.04' instead")
+			return errors.New("invalid master profile distro 'aks-ubuntu-16.04'")
+		}
+
+		for _, app := range gc.containerService.Properties.AgentPoolProfiles {
+			if app.Distro == api.AKSUbuntu1604 {
+				log.Errorln("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, use 'aks-ubuntu-18.04' instead")
+				return errors.New("invalid agent pool profile distro 'aks-ubuntu-16.04'")
+			}
+		}
+	}
+
 	if err = gc.autofillApimodel(); err != nil {
 		return err
 	}
