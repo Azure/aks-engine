@@ -275,8 +275,6 @@ fi
 {{- /* re-enable unattended upgrades */}}
 {{- if EnableUnattendedUpgrades}}
 rm -f /etc/apt/apt.conf.d/99periodic
-{{else}}
-apt_get_purge unattended-upgrades || exit {{GetCSEErrorCode "ERR_APT_PURGE_FAIL"}}
 {{- end}}
 
 {{- if not IsAzureStackCloud}}
