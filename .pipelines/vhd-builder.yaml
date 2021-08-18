@@ -85,9 +85,9 @@ jobs:
       -e TENANT_ID=${TENANT_ID} \
       -e CLASSIC_SA_CONNECTION_STRING="$(CLASSIC_SA_CONNECTION_STRING)" \
       -e STORAGE_ACCT_BLOB_URL=${STORAGE_ACCT_BLOB_URL} \
-      -e EXPIRY_DATE=${EXPIRY_DATE} \	      -e VHD_NAME=${VHD_NAME} \
-      ${CONTAINER_IMAGE} make generate-sas	      ${CONTAINER_IMAGE} make windows-vhd-publishing-info
-    displayName: Getting Shared Access Signature URI	    displayName: Generating publishing info for Windows VHD
+      -e VHD_NAME=${VHD_NAME} \
+      ${CONTAINER_IMAGE} make windows-vhd-publishing-info
+    displayName: Generating publishing info for Windows VHD
     condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
   - task: PublishPipelineArtifact@1
     inputs:
