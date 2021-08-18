@@ -120,10 +120,11 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.10-azs/windowszip/v1.19.10-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.6-azs/windowszip/v1.20.6-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.20/windowszip/v1.18.20-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.13/windowszip/v1.19.13-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.10/windowszip/v1.20.10-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.3/windowszip/v1.21.3-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.0/windowszip/v1.22.0-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.11/windowszip/v1.19.11-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.5/windowszip/v1.20.5-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.8/windowszip/v1.20.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.0/windowszip/v1.21.0-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.1/windowszip/v1.21.1-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.2/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.2.zip",
