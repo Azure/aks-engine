@@ -129,6 +129,10 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
 	}
 
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0") {
+		defaultKubeletConfig["--seccomp-default"] = "true"
+	}
+
 	if o.KubernetesConfig.NeedsContainerd() {
 		defaultKubeletConfig["--container-runtime"] = "remote"
 		defaultKubeletConfig["--runtime-request-timeout"] = "15m"
@@ -144,6 +148,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.20.0-rc.0", "ExecProbeTimeout=true")
+	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.22.0", "SeccompDefault=true")
 
 	// Override default cloud-provider?
 	if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {

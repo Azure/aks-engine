@@ -171,6 +171,18 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		}
 	}
 
+	// validate 1.22 defaults
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.22", "", false, false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+
+	for key, val := range map[string]string{"--seccomp-default": "true"} {
+		if k[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, k[key], val)
+		}
+	}
+
 	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	// TODO test all default overrides
 	overrideVal := "/etc/override"
@@ -962,6 +974,15 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "ExecProbeTimeout=true,RotateKubeletServerCertificate=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test 1.22
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.22", "", false, false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "ExecProbeTimeout=true,RotateKubeletServerCertificate=true,SeccompDefault=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
