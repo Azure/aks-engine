@@ -412,7 +412,7 @@ func TestSerializeContainerService(t *testing.T) {
         "cloudProviderBackoffMode": "",
         "loadBalancerSku": "Basic",
         "excludeMasterFromStandardLB": false,
-        "azureCNIVersion": "1.1.8",
+        "azureCNIVersion": "1.4.9",
         "azureCNIURLLinux": "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
         "azureCNIURLWindows": "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
         "keyVaultSku": "Basic",
