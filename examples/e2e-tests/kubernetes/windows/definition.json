@@ -17,7 +17,8 @@
     ],
     "windowsProfile": {
       "adminUsername": "azureuser",
-      "adminPassword": "replacepassword1234$"
+      "adminPassword": "replacepassword1234$",
+      "windowsPauseImageURL": "nick5616/pause:3.6-windows-amd64-ltsc2022"
     },
     "linuxProfile": {
       "adminUsername": "azureuser",
