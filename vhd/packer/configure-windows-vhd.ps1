@@ -59,6 +59,12 @@ function Get-ContainerImages {
                 "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
                 "mcr.microsoft.com/oss/kubernetes/pause:3.4.1")
         }
+        '2022' {
+            $imagesToPull = @(
+                "mcr.microsoft.com/windows/servercore:ltsc2022",
+                "mcr.microsoft.com/windows/nanoserver:ltsc2022",
+                "nick5616/pause:3.6-windows-amd64-ltsc2022")
+        }
         default {
             $imagesToPull = @()
         }
@@ -209,6 +215,10 @@ function Install-WindowsPatches {
 
             $patchUrls = @()
         }
+        '2022' {
+
+            $patchUrls = @()
+        }
         default {
             $patchUrls = @()
         }
@@ -310,7 +320,7 @@ if (-not ($validContainerRuntimes -contains $containerRuntime)) {
 }
 
 $windowsServerVersion = $env:WindowsServerVersion
-$validWindowsServerContainers = @('2019', '2004')
+$validWindowsServerContainers = @('2019', '2004', '2022')
 if (-not ($validWindowsServerContainers -contains $windowsServerVersion)) {
     Write-Host "Unsupported Windows Server version: $windowsServerVersion"
     exit 1

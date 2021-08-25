@@ -1,0 +1,7 @@
+{
+    "image_publisher": "MicrosoftWindowsServer",
+    "image_offer": "WindowsServer",
+    "image_sku": "2022-Datacenter-Core-smalldisk",
+    "image_version": "20348.169.2108120020",
+    "windows_server_version": "2022"
+}
