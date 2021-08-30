@@ -103,9 +103,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.4.9
 1.4.0
 1.2.7
-1.2.2
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -226,11 +226,11 @@ loadContainerImage "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.22.0-beta.2
-1.21.3
-1.20.9
+1.22.1
+1.21.4
+1.20.10
 1.20.6-azs
-1.19.13
+1.19.14
 1.19.10-azs
 1.18.20
 1.18.18-azs
