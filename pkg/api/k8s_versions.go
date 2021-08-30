@@ -34,19 +34,19 @@ const (
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20201023.1"
 	gatekeeperImageReference                          string = "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.2.3"
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector/node-problem-detector:v0.8.4"
-	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.5.0"
-	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
-	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.2.0"
-	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.2.0"
-	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.1.0"
-	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.1.0"
-	csiResizerImageReference                          string = "oss/kubernetes-csi/csi-resizer:v0.3.0"
-	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v2.0.0"
-	csiSnapshotControllerImageReference               string = "oss/kubernetes-csi/snapshot-controller:v2.0.0"
-	csiAzureDiskImageReference                        string = "k8s/csi/azuredisk-csi:v0.7.0"
+	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v2.1.1"
+	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v3.1.0"
+	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.3.0"
+	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.3.0"
+	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.2.0"
+	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.2.0"
+	csiResizerImageReference                          string = "oss/kubernetes-csi/csi-resizer:v1.1.0"
+	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v3.0.3"
+	csiSnapshotControllerImageReference               string = "oss/kubernetes-csi/snapshot-controller:v3.0.3"
+	csiAzureDiskImageReference                        string = "k8s/csi/azuredisk-csi:v1.5.1"
 	csiAzureFileImageReference                        string = "k8s/csi/azurefile-csi:v0.6.0"
-	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.5.1"
-	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.5.1"
+	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v1.1.0"
+	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v1.1.0"
 	dashboardImageReference                           string = "mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.4" // deprecated
 	dashboardMetricsScraperImageReference             string = "mcr.microsoft.com/oss/kubernetes/metrics-scraper:v1.0.4"
 	kubeFlannelImageReference                         string = "quay.io/coreos/flannel:v0.8.0-amd64"
@@ -571,7 +571,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
-			common.WindowsArtifactAzureStackComponentName:     "v" + version + common.AzureStackSuffix + "/windowszip/v" + version + common.AzureStackSuffix + "-1int.zip",
+			common.WindowsArtifactAzureStackComponentName:     "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			common.DashboardMetricsScraperContainerName:       dashboardMetricsScraperImageReference,
 			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
@@ -655,7 +655,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
-			common.WindowsArtifactAzureStackComponentName:     "v" + version + common.AzureStackSuffix + "/windowszip/v" + version + common.AzureStackSuffix + "-1int.zip",
+			common.WindowsArtifactAzureStackComponentName:     "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			common.DashboardMetricsScraperContainerName:       dashboardMetricsScraperImageReference,
 			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),

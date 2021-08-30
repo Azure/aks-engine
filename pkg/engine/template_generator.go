@@ -698,7 +698,7 @@ version = 2
 			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
 			k8sComponents := api.GetK8sComponentsByVersionMap(cs.Properties.OrchestratorProfile.KubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 			hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
-			if cs.Properties.IsAzureStackCloud() {
+			if cs.Properties.IsAzureStackCloud() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
 				hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 			}
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {

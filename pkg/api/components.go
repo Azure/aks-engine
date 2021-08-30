@@ -307,7 +307,7 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 
 // componentImageSuffix returns '-azs' if target cloud is Azure Stack. Otherwise, it returns empty string.
 func componentImageSuffix(cs ContainerService) string {
-	if cs.Properties.IsAzureStackCloud() {
+	if cs.Properties.IsAzureStackCloud() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
 		return common.AzureStackSuffix
 	}
 	return ""

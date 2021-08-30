@@ -152,6 +152,7 @@ allowedTopologies:
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
+  {{- if not IsAzureStackCloud}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -165,6 +166,7 @@ parameters:
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
+  {{- end}}
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}
 ---

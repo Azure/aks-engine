@@ -1848,6 +1848,7 @@ allowedTopologies:
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
+  {{- if not IsAzureStackCloud}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -1861,6 +1862,7 @@ parameters:
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
+  {{- end}}
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}
 ---
@@ -7231,11 +7233,22 @@ spec:
         command:
         - cloud-node-manager
         - --node-name=$(NODE_NAME)
+        {{- if IsAzureStackCloud}}
+        - --use-instance-metadata=false
+        - --cloud-config=/etc/kubernetes/azure.json
+        - --kubeconfig=/var/lib/kubelet/kubeconfig
+        {{end}}
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        {{- if IsAzureStackCloud}}
+        - name: AZURE_ENVIRONMENT_FILEPATH
+          value: /etc/kubernetes/azurestackcloud.json
+        - name: AZURE_GO_SDK_LOG_LEVEL
+          value: DEBUG
+        {{end}}
         resources:
           requests:
             cpu: 50m
@@ -7243,6 +7256,27 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
+        {{- if IsAzureStackCloud}}
+        volumeMounts:
+        - name: etc-kubernetes
+          mountPath: /etc/kubernetes
+        - name: etc-ssl
+          mountPath: /etc/ssl
+          readOnly: true
+        - name: var-lib-kubelet
+          mountPath: /var/lib/kubelet
+          readOnly: true
+      volumes:
+        - name: etc-kubernetes
+          hostPath:
+            path: /etc/kubernetes
+        - name: etc-ssl
+          hostPath:
+            path: /etc/ssl
+        - name: var-lib-kubelet
+          hostPath:
+            path: /var/lib/kubelet
+        {{end}}
 {{- if and HasWindows (IsKubernetesVersionGe "1.18.0")}}
 ---
 apiVersion: apps/v1
@@ -7291,11 +7325,27 @@ spec:
         command:
         - /cloud-node-manager.exe
         - --node-name=$(NODE_NAME)
+        {{- if IsAzureStackCloud}}
+        - --use-instance-metadata=false
+        - --cloud-config=C:\k\azure.json
+        - --kubeconfig=C:\k\config
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - C:\k\addazsroot.bat
+        {{end}}
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        {{- if IsAzureStackCloud}}
+        - name: AZURE_ENVIRONMENT_FILEPATH
+          value: C:\k\azurestackcloud.json
+        - name: AZURE_GO_SDK_LOG_LEVEL
+          value: DEBUG
+        {{end}}
         resources:
           requests:
             cpu: 50m
@@ -7303,8 +7353,17 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
-{{end}}
-`)
+        {{- if IsAzureStackCloud}}
+        volumeMounts:
+        - name: azure-config
+          mountPath: C:\k
+      volumes:
+        - name: azure-config
+          hostPath:
+            path: C:\k
+            type: Directory
+        {{end}}
+{{end}}`)
 
 func k8sAddonsCloudNodeManagerYamlBytes() ([]byte, error) {
 	return _k8sAddonsCloudNodeManagerYaml, nil
@@ -17308,9 +17367,6 @@ $global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningSc
 $global:WindowsPauseImageURL = "{{WrapAsVariable "windowsPauseImageURL" }}";
 $global:AlwaysPullWindowsPauseImage = [System.Convert]::ToBoolean("{{WrapAsVariable "alwaysPullWindowsPauseImage" }}");
 
-# Secure Windows TLS protocols
-$global:WindowsSecureTLSEnabled = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsSecureTLSEnabled" }}");
-
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -17577,12 +17633,6 @@ try
         Write-Host "Enable a HNS fix in 2021-2C+"
         Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
 
-        if ($global:WindowsSecureTLSEnabled) {
-            Write-Host "Enable secure TLS protocols"
-            . C:\k\windowssecuretls.ps1
-            Enable-SecureTls
-        }
-
         Write-Log "Adjust pagefile size"
         Adjust-PageFileSize
 
@@ -17596,6 +17646,34 @@ try
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
         Update-DefenderPreferences
+
+        {{if IsAzureStackCloud}}
+            {{if UseCloudControllerManager}}
+            # Export the Azure Stack root cert for use in cloud node manager container setup.
+            $azsConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
+            if (Test-Path -Path $azsConfigFile) {
+                $azsJson = Get-Content -Raw -Path $azsConfigFile | ConvertFrom-Json
+                if (-not [string]::IsNullOrEmpty($azsJson.managementPortalURL)) {
+                    $azsARMUri = [System.Uri]$azsJson.managementPortalURL
+                    $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.DnsNameList -contains $azsARMUri.Host.Substring($azsARMUri.Host.IndexOf(".")).TrimStart(".")}
+                    if ($null -ne $azsRootCert) {
+                        $azsRootCertFilePath =  [io.path]::Combine($global:KubeDir, "azsroot.cer")
+                        Export-Certificate -Cert $azsRootCert -FilePath $azsRootCertFilePath -Type CERT
+                    }
+                }
+            }
+
+            # Copy certoc tool for use in cloud node manager container setup. [Environment]::SystemDirectory
+            $certocSourcePath = [io.path]::Combine([Environment]::SystemDirectory, "certoc.exe")
+            if (Test-Path -Path $certocSourcePath) {
+                Copy-Item -Path $certocSourcePath -Destination $global:KubeDir
+            }
+
+            # Create add cert script
+            $addRootCertFile = [io.path]::Combine($global:KubeDir, "addazsroot.bat")
+            [io.file]::WriteAllText($addRootCertFile, "${global:KubeDir}\certoc.exe -addstore root ${azsRootCertFilePath}")
+            {{end}}
+        {{end}}
 
         if (Test-Path $CacheDir)
         {
@@ -17625,8 +17703,7 @@ catch
 
     Write-Error $_
     throw $_
-}
-`)
+}`)
 
 func k8sKuberneteswindowssetupPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowssetupPs1, nil
@@ -17727,6 +17804,13 @@ spec:
     - name: cloud-controller-manager
       image: {{ContainerImage "cloud-controller-manager"}}
       imagePullPolicy: IfNotPresent
+      {{- if IsAzureStackCloud}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: /etc/kubernetes/azurestackcloud.json
+      - name: AZURE_GO_SDK_LOG_LEVEL
+        value: DEBUG
+      {{end}}
       command: [{{ContainerConfig "command"}}]
       args: [{{GetCloudControllerManagerArgs}}]
       resources:

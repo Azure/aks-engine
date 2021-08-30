@@ -13,6 +13,13 @@ spec:
     - name: cloud-controller-manager
       image: {{ContainerImage "cloud-controller-manager"}}
       imagePullPolicy: IfNotPresent
+      {{- if IsAzureStackCloud}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: /etc/kubernetes/azurestackcloud.json
+      - name: AZURE_GO_SDK_LOG_LEVEL
+        value: DEBUG
+      {{end}}
       command: [{{ContainerConfig "command"}}]
       args: [{{GetCloudControllerManagerArgs}}]
       resources:
