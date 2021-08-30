@@ -13487,9 +13487,7 @@ time_metric "InstallNetworkPlugin" installNetworkPlugin
 
 {{- if and HasNSeriesSKU IsNvidiaDevicePluginAddonEnabled}}
 if [[ ${GPU_NODE} == true ]]; then
-  if $FULL_INSTALL_REQUIRED; then
-    time_metric "DownloadGPUDrivers" downloadGPUDrivers
-  fi
+  time_metric "DownloadGPUDrivers" downloadGPUDrivers
   time_metric "EnsureGPUDrivers" ensureGPUDrivers
 fi
 {{end}}
