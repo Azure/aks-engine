@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -255,6 +256,16 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 	}
 
 	upgradedMastersIndex := make(map[int]bool)
+	for i := 0; i < expectedMasterCount; i++ {
+		upgradedMastersIndex[i] = false
+		for _, vm := range *ku.ClusterTopology.MasterVMs {
+			vmName := *vm.Name
+			if strings.Contains(vmName, strconv.Itoa(i)) {
+				upgradedMastersIndex[i] = true
+			}
+		}
+	}
+
 	mastersToCreate := expectedMasterCount - masterNodesInCluster
 	ku.logger.Infof("Expected master count: %d, Creating %d more master VMs", expectedMasterCount, mastersToCreate)
 
