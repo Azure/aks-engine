@@ -115,11 +115,12 @@ spec:
         volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
+          readOnly: true
         - name: etc-ssl
           mountPath: /etc/ssl
           readOnly: true
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
+        - name: path-kubeconfig
+          mountPath: /var/lib/kubelet/kubeconfig
           readOnly: true
       volumes:
         - name: etc-kubernetes
@@ -128,9 +129,10 @@ spec:
         - name: etc-ssl
           hostPath:
             path: /etc/ssl
-        - name: var-lib-kubelet
+        - name: path-kubeconfig
           hostPath:
-            path: /var/lib/kubelet
+            path: /var/lib/kubelet/kubeconfig
+            type: FileOrCreate
         {{end}}
 {{- if and HasWindows (IsKubernetesVersionGe "1.18.0")}}
 ---

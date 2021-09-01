@@ -453,8 +453,14 @@ try
                     if ($null -ne $azsRootCert) {
                         $azsRootCertFilePath =  [io.path]::Combine($global:KubeDir, "azsroot.cer")
                         Export-Certificate -Cert $azsRootCert -FilePath $azsRootCertFilePath -Type CERT
+                    } else {
+                        throw "$azsRootCert is null, cannot export Azure Stack root cert"
                     }
+                } else {
+                    throw "managementPortalURL is null or empty in $azsConfigFile, cannot get Azure Stack ARM uri"
                 }
+            } else {
+                throw "$azsConfigFile not exist, cannot export Azure Stack root cert"
             }
 
             # Copy certoc tool for use in cloud node manager container setup. [Environment]::SystemDirectory
@@ -465,7 +471,11 @@ try
 
             # Create add cert script
             $addRootCertFile = [io.path]::Combine($global:KubeDir, "addazsroot.bat")
-            [io.file]::WriteAllText($addRootCertFile, "${global:KubeDir}\certoc.exe -addstore root ${azsRootCertFilePath}")
+            if ($null -ne $azsRootCert) {
+                [io.file]::WriteAllText($addRootCertFile, "${global:KubeDir}\certoc.exe -addstore root ${azsRootCertFilePath}")
+            } else {
+                throw "$azsRootCertFilePath is null, cannot create add cert script"
+            }
             {{end}}
         {{end}}
 
