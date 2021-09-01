@@ -258,11 +258,11 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 	upgradedMastersIndex := make(map[int]bool)
 
 	for _, vm := range *ku.ClusterTopology.MasterVMs {
-		masterId := strings.TrimPrefix(*vm.Name, ku.ClusterTopology.DataModel.Properties.GetMasterVMPrefix())
-		index, err := strconv.Atoi(masterId)
+		masterID := strings.TrimPrefix(*vm.Name, ku.ClusterTopology.DataModel.Properties.GetMasterVMPrefix())
+		index, convertError := strconv.Atoi(masterID)
 		if err != nil {
-			ku.logger.Infof("Error converting master index %s", masterId)
-			return err
+			ku.logger.Infof("Error converting master index %s", masterID)
+			return convertError
 		}
 		upgradedMastersIndex[index] = true
 	}
