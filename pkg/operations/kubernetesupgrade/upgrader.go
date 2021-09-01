@@ -256,14 +256,15 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 	}
 
 	upgradedMastersIndex := make(map[int]bool)
-	for i := 0; i < expectedMasterCount; i++ {
-		upgradedMastersIndex[i] = false
-		for _, vm := range *ku.ClusterTopology.MasterVMs {
-			vmName := *vm.Name
-			if strings.Contains(vmName, strconv.Itoa(i)) {
-				upgradedMastersIndex[i] = true
-			}
+
+	for _, vm := range *ku.ClusterTopology.MasterVMs {
+		masterId := strings.TrimPrefix(*vm.Name, ku.ClusterTopology.DataModel.Properties.GetMasterVMPrefix())
+		index, err := strconv.Atoi(masterId)
+		if err != nil {
+			ku.logger.Infof("Error converting master index %s", masterId)
+			return err
 		}
+		upgradedMastersIndex[index] = true
 	}
 
 	mastersToCreate := expectedMasterCount - masterNodesInCluster
