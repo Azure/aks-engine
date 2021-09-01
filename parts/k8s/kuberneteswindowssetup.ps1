@@ -255,6 +255,13 @@ try
         Initialize-DataDirectories
 
         New-Item -ItemType Directory -Path "c:\k" -Force | Out-Null
+        icacls.exe "c:\k" /inheritance:r
+        icacls.exe "c:\k" /grant:r SYSTEM:`(OI`)`(CI`)`(F`)
+        icacls.exe "c:\k" /grant:r BUILTIN\Administrators:`(OI`)`(CI`)`(F`)
+        icacls.exe "c:\k" /grant:r BUILTIN\Users:`(OI`)`(CI`)`(RX`)
+        Write-Log "c:\k permissions: "
+        icacls.exe "c:\k"
+
         Get-ProvisioningScripts
 
         Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
