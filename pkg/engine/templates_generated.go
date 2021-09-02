@@ -7247,7 +7247,7 @@ spec:
         - name: AZURE_ENVIRONMENT_FILEPATH
           value: /etc/kubernetes/azurestackcloud.json
         - name: AZURE_GO_SDK_LOG_LEVEL
-          value: DEBUG
+          value: INFO
         {{end}}
         resources:
           requests:
@@ -7346,7 +7346,7 @@ spec:
         - name: AZURE_ENVIRONMENT_FILEPATH
           value: C:\k\azurestackcloud.json
         - name: AZURE_GO_SDK_LOG_LEVEL
-          value: DEBUG
+          value: INFO
         {{end}}
         resources:
           requests:
@@ -17675,7 +17675,7 @@ try
                     throw "managementPortalURL is null or empty in $azsConfigFile, cannot get Azure Stack ARM uri"
                 }
             } else {
-                throw "$azsConfigFile not exist, cannot export Azure Stack root cert"
+                throw "$azsConfigFile does not exist, cannot export Azure Stack root cert"
             }
 
             # Copy certoc tool for use in cloud node manager container setup. [Environment]::SystemDirectory
@@ -17828,7 +17828,7 @@ spec:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: /etc/kubernetes/azurestackcloud.json
       - name: AZURE_GO_SDK_LOG_LEVEL
-        value: DEBUG
+        value: INFO
       {{end}}
       command: [{{ContainerConfig "command"}}]
       args: [{{GetCloudControllerManagerArgs}}]
