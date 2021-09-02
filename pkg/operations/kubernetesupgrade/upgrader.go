@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"strconv"
 	"strings"
 	"time"
 
@@ -255,16 +254,11 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			"Found missing master VMs in the cluster. Reconstructing names of missing master VMs for recreation during upgrade...")
 	}
 
-	upgradedMastersIndex := make(map[int]bool)
+	existingMastersIndex := make(map[int]bool)
 
 	for _, vm := range *ku.ClusterTopology.MasterVMs {
-		masterID := strings.TrimPrefix(*vm.Name, ku.ClusterTopology.DataModel.Properties.GetMasterVMPrefix())
-		index, convertError := strconv.Atoi(masterID)
-		if err != nil {
-			ku.logger.Infof("Error converting master index %s", masterID)
-			return convertError
-		}
-		upgradedMastersIndex[index] = true
+		masterIndex, _ := utils.GetVMNameIndex(vm.StorageProfile.OsDisk.OsType, *vm.Name)
+		existingMastersIndex[masterIndex] = true
 	}
 
 	mastersToCreate := expectedMasterCount - masterNodesInCluster
@@ -274,7 +268,7 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 	// the OS disk has been deleted
 	for i := 0; i < mastersToCreate; i++ {
 		masterIndexToCreate := 0
-		for upgradedMastersIndex[masterIndexToCreate] {
+		for existingMastersIndex[masterIndexToCreate] {
 			masterIndexToCreate++
 		}
 
@@ -293,8 +287,10 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			return err
 		}
 
-		upgradedMastersIndex[masterIndexToCreate] = true
+		existingMastersIndex[masterIndexToCreate] = true
 	}
+
+	upgradedMastersIndex := make(map[int]bool)
 
 	for _, vm := range *ku.ClusterTopology.UpgradedMasterVMs {
 		ku.logger.Infof("Master VM: %s is upgraded to expected orchestrator version", *vm.Name)
