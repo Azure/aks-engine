@@ -7327,10 +7327,10 @@ spec:
         command:
         - /cloud-node-manager.exe
         - --node-name=$(NODE_NAME)
+        - --kubeconfig=C:\k\config
         {{- if IsAzureStackCloud}}
         - --use-instance-metadata=false
         - --cloud-config=C:\k\azure.json
-        - --kubeconfig=C:\k\config
         lifecycle:
           postStart:
             exec:
@@ -7355,7 +7355,6 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
-        {{- if IsAzureStackCloud}}
         volumeMounts:
         - name: azure-config
           mountPath: C:\k
@@ -7364,7 +7363,6 @@ spec:
           hostPath:
             path: C:\k
             type: Directory
-        {{end}}
 {{end}}`)
 
 func k8sAddonsCloudNodeManagerYamlBytes() ([]byte, error) {
