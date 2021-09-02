@@ -18,7 +18,7 @@ spec:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: /etc/kubernetes/azurestackcloud.json
       - name: AZURE_GO_SDK_LOG_LEVEL
-        value: DEBUG
+        value: INFO
       {{end}}
       command: [{{ContainerConfig "command"}}]
       args: [{{GetCloudControllerManagerArgs}}]

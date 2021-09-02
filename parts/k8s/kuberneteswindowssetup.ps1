@@ -460,7 +460,7 @@ try
                     throw "managementPortalURL is null or empty in $azsConfigFile, cannot get Azure Stack ARM uri"
                 }
             } else {
-                throw "$azsConfigFile not exist, cannot export Azure Stack root cert"
+                throw "$azsConfigFile does not exist, cannot export Azure Stack root cert"
             }
 
             # Copy certoc tool for use in cloud node manager container setup. [Environment]::SystemDirectory
