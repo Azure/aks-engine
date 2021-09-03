@@ -88,11 +88,22 @@ spec:
         command:
         - cloud-node-manager
         - --node-name=$(NODE_NAME)
+        {{- if IsAzureStackCloud}}
+        - --use-instance-metadata=false
+        - --cloud-config=/etc/kubernetes/azure.json
+        - --kubeconfig=/var/lib/kubelet/kubeconfig
+        {{end}}
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        {{- if IsAzureStackCloud}}
+        - name: AZURE_ENVIRONMENT_FILEPATH
+          value: /etc/kubernetes/azurestackcloud.json
+        - name: AZURE_GO_SDK_LOG_LEVEL
+          value: INFO
+        {{end}}
         resources:
           requests:
             cpu: 50m
@@ -100,6 +111,29 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
+        {{- if IsAzureStackCloud}}
+        volumeMounts:
+        - name: etc-kubernetes
+          mountPath: /etc/kubernetes
+          readOnly: true
+        - name: etc-ssl
+          mountPath: /etc/ssl
+          readOnly: true
+        - name: path-kubeconfig
+          mountPath: /var/lib/kubelet/kubeconfig
+          readOnly: true
+      volumes:
+        - name: etc-kubernetes
+          hostPath:
+            path: /etc/kubernetes
+        - name: etc-ssl
+          hostPath:
+            path: /etc/ssl
+        - name: path-kubeconfig
+          hostPath:
+            path: /var/lib/kubelet/kubeconfig
+            type: FileOrCreate
+        {{end}}
 {{- if and HasWindows (IsKubernetesVersionGe "1.18.0")}}
 ---
 apiVersion: apps/v1
@@ -148,11 +182,27 @@ spec:
         command:
         - /cloud-node-manager.exe
         - --node-name=$(NODE_NAME)
+        - --kubeconfig=C:\k\config
+        {{- if IsAzureStackCloud}}
+        - --use-instance-metadata=false
+        - --cloud-config=C:\k\azure.json
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - C:\k\addazsroot.bat
+        {{end}}
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        {{- if IsAzureStackCloud}}
+        - name: AZURE_ENVIRONMENT_FILEPATH
+          value: C:\k\azurestackcloud.json
+        - name: AZURE_GO_SDK_LOG_LEVEL
+          value: INFO
+        {{end}}
         resources:
           requests:
             cpu: 50m
@@ -160,4 +210,12 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
+        volumeMounts:
+        - name: azure-config
+          mountPath: C:\k
+      volumes:
+        - name: azure-config
+          hostPath:
+            path: C:\k
+            type: Directory
 {{end}}

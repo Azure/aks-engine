@@ -1919,7 +1919,7 @@ func (p *Properties) GetCustomCloudSourcesList() string {
 
 // GetKubernetesVersion returns the cluster Kubernetes version, with the Azure Stack suffix if Azure Stack Cloud.
 func (p *Properties) GetKubernetesVersion() string {
-	if p.IsAzureStackCloud() {
+	if p.IsAzureStackCloud() && !common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
 		return p.OrchestratorProfile.OrchestratorVersion + AzureStackSuffix
 	}
 	return p.OrchestratorProfile.OrchestratorVersion
@@ -1930,7 +1930,7 @@ func (p *Properties) GetKubernetesHyperkubeSpec() string {
 	var kubernetesHyperkubeSpec string
 	k8sComponents := GetK8sComponentsByVersionMap(p.OrchestratorProfile.KubernetesConfig)[p.OrchestratorProfile.OrchestratorVersion]
 	kubernetesHyperkubeSpec = p.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponents["hyperkube"]
-	if p.IsAzureStackCloud() {
+	if p.IsAzureStackCloud() && !common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
 		kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {

@@ -1848,6 +1848,7 @@ allowedTopologies:
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
+  {{- if not IsAzureStackCloud}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -1861,6 +1862,7 @@ parameters:
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 volumeBindingMode: Immediate
+  {{- end}}
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}
 ---
@@ -7231,11 +7233,22 @@ spec:
         command:
         - cloud-node-manager
         - --node-name=$(NODE_NAME)
+        {{- if IsAzureStackCloud}}
+        - --use-instance-metadata=false
+        - --cloud-config=/etc/kubernetes/azure.json
+        - --kubeconfig=/var/lib/kubelet/kubeconfig
+        {{end}}
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        {{- if IsAzureStackCloud}}
+        - name: AZURE_ENVIRONMENT_FILEPATH
+          value: /etc/kubernetes/azurestackcloud.json
+        - name: AZURE_GO_SDK_LOG_LEVEL
+          value: INFO
+        {{end}}
         resources:
           requests:
             cpu: 50m
@@ -7243,6 +7256,29 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
+        {{- if IsAzureStackCloud}}
+        volumeMounts:
+        - name: etc-kubernetes
+          mountPath: /etc/kubernetes
+          readOnly: true
+        - name: etc-ssl
+          mountPath: /etc/ssl
+          readOnly: true
+        - name: path-kubeconfig
+          mountPath: /var/lib/kubelet/kubeconfig
+          readOnly: true
+      volumes:
+        - name: etc-kubernetes
+          hostPath:
+            path: /etc/kubernetes
+        - name: etc-ssl
+          hostPath:
+            path: /etc/ssl
+        - name: path-kubeconfig
+          hostPath:
+            path: /var/lib/kubelet/kubeconfig
+            type: FileOrCreate
+        {{end}}
 {{- if and HasWindows (IsKubernetesVersionGe "1.18.0")}}
 ---
 apiVersion: apps/v1
@@ -7291,11 +7327,27 @@ spec:
         command:
         - /cloud-node-manager.exe
         - --node-name=$(NODE_NAME)
+        - --kubeconfig=C:\k\config
+        {{- if IsAzureStackCloud}}
+        - --use-instance-metadata=false
+        - --cloud-config=C:\k\azure.json
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - C:\k\addazsroot.bat
+        {{end}}
         env:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        {{- if IsAzureStackCloud}}
+        - name: AZURE_ENVIRONMENT_FILEPATH
+          value: C:\k\azurestackcloud.json
+        - name: AZURE_GO_SDK_LOG_LEVEL
+          value: INFO
+        {{end}}
         resources:
           requests:
             cpu: 50m
@@ -7303,8 +7355,15 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
-{{end}}
-`)
+        volumeMounts:
+        - name: azure-config
+          mountPath: C:\k
+      volumes:
+        - name: azure-config
+          hostPath:
+            path: C:\k
+            type: Directory
+{{end}}`)
 
 func k8sAddonsCloudNodeManagerYamlBytes() ([]byte, error) {
 	return _k8sAddonsCloudNodeManagerYaml, nil
@@ -17602,6 +17661,44 @@ try
         Register-NodeResetScriptTask
         Update-DefenderPreferences
 
+        {{if IsAzureStackCloud}}
+            {{if UseCloudControllerManager}}
+            # Export the Azure Stack root cert for use in cloud node manager container setup.
+            $azsConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
+            if (Test-Path -Path $azsConfigFile) {
+                $azsJson = Get-Content -Raw -Path $azsConfigFile | ConvertFrom-Json
+                if (-not [string]::IsNullOrEmpty($azsJson.managementPortalURL)) {
+                    $azsARMUri = [System.Uri]$azsJson.managementPortalURL
+                    $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.DnsNameList -contains $azsARMUri.Host.Substring($azsARMUri.Host.IndexOf(".")).TrimStart(".")}
+                    if ($null -ne $azsRootCert) {
+                        $azsRootCertFilePath =  [io.path]::Combine($global:KubeDir, "azsroot.cer")
+                        Export-Certificate -Cert $azsRootCert -FilePath $azsRootCertFilePath -Type CERT
+                    } else {
+                        throw "$azsRootCert is null, cannot export Azure Stack root cert"
+                    }
+                } else {
+                    throw "managementPortalURL is null or empty in $azsConfigFile, cannot get Azure Stack ARM uri"
+                }
+            } else {
+                throw "$azsConfigFile does not exist, cannot export Azure Stack root cert"
+            }
+
+            # Copy certoc tool for use in cloud node manager container setup. [Environment]::SystemDirectory
+            $certocSourcePath = [io.path]::Combine([Environment]::SystemDirectory, "certoc.exe")
+            if (Test-Path -Path $certocSourcePath) {
+                Copy-Item -Path $certocSourcePath -Destination $global:KubeDir
+            }
+
+            # Create add cert script
+            $addRootCertFile = [io.path]::Combine($global:KubeDir, "addazsroot.bat")
+            if ($null -ne $azsRootCert) {
+                [io.file]::WriteAllText($addRootCertFile, "${global:KubeDir}\certoc.exe -addstore root ${azsRootCertFilePath}")
+            } else {
+                throw "$azsRootCertFilePath is null, cannot create add cert script"
+            }
+            {{end}}
+        {{end}}
+
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
@@ -17630,8 +17727,7 @@ catch
 
     Write-Error $_
     throw $_
-}
-`)
+}`)
 
 func k8sKuberneteswindowssetupPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowssetupPs1, nil
@@ -17732,6 +17828,13 @@ spec:
     - name: cloud-controller-manager
       image: {{ContainerImage "cloud-controller-manager"}}
       imagePullPolicy: IfNotPresent
+      {{- if IsAzureStackCloud}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: /etc/kubernetes/azurestackcloud.json
+      - name: AZURE_GO_SDK_LOG_LEVEL
+        value: INFO
+      {{end}}
       command: [{{ContainerConfig "command"}}]
       args: [{{GetCloudControllerManagerArgs}}]
       resources:
