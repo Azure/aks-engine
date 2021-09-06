@@ -34,17 +34,17 @@ const (
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20201023.1"
 	gatekeeperImageReference                          string = "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.2.3"
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector/node-problem-detector:v0.8.4"
-	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.5.0"
-	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
-	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.2.0"
-	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.2.0"
-	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.1.0"
-	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.1.0"
-	csiResizerImageReference                          string = "oss/kubernetes-csi/csi-resizer:v0.3.0"
-	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v2.0.0"
-	csiSnapshotControllerImageReference               string = "oss/kubernetes-csi/snapshot-controller:v2.0.0"
-	csiAzureDiskImageReference                        string = "k8s/csi/azuredisk-csi:v0.7.0"
-	csiAzureFileImageReference                        string = "k8s/csi/azurefile-csi:v0.6.0"
+	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v2.2.0"
+	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v3.3.0"
+	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.4.0"
+	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.4.0"
+	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.3.0"
+	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.3.0"
+	csiResizerImageReference                          string = "oss/kubernetes-csi/csi-resizer:v1.3.0"
+	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v4.2.1"
+	csiSnapshotControllerImageReference               string = "oss/kubernetes-csi/snapshot-controller:v4.2.1"
+	csiAzureDiskImageReference                        string = "oss/kubernetes-csi/azuredisk-csi:v1.6.0"
+	csiAzureFileImageReference                        string = "oss/kubernetes-csi/azurefile-csi:v1.6.0"
 	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v1.1.1"
 	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v1.1.1"
 	dashboardImageReference                           string = "mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.4" // deprecated
@@ -100,8 +100,8 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 
 var csiSidecarComponentsOverrides = map[string]map[string]string{
 	common.AzureFileCSIDriverAddonName: {
-		common.CSIProvisionerContainerName: "oss/kubernetes-csi/csi-provisioner:v1.4.0",
-		common.CSISnapshotterContainerName: "oss/kubernetes-csi/csi-snapshotter:v1.1.0",
+		common.CSIProvisionerContainerName: "oss/kubernetes-csi/csi-provisioner:v2.2.2",
+		common.CSISnapshotterContainerName: "oss/kubernetes-csi/csi-snapshotter:v4.2.1",
 	},
 }
 
