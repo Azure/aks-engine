@@ -4,6 +4,7 @@
         "orchestratorProfile": {
             "kubernetesConfig": {
                 "useManagedIdentity": true,
+                "useCloudControllerManager": true,
                 "addons": [
                     {
                         "name": "cluster-autoscaler",
