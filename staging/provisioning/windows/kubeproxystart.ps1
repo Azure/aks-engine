@@ -11,6 +11,11 @@ $global:HNSModule = "c:\k\hns.psm1"
 $global:KubeDir = $Global:ClusterConfiguration.Install.Destination
 $global:KubeproxyArgList = @("--v=3", "--proxy-mode=kernelspace", "--hostname-override=$env:computername", "--kubeconfig=$KubeDir\config")
 
+if ($Global:ClusterConfiguration.Kubernetes.Kubeproxy.ConfigArgs) {
+    Write-Host "Customized args: $($Global:ClusterConfiguration.Kubernetes.Kubeproxy.ConfigArgs)"
+    $global:KubeproxyArgList += $Global:ClusterConfiguration.Kubernetes.Kubeproxy.ConfigArgs
+}
+
 $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 while (!$hnsNetwork) {
     Write-Host "$(Get-Date -Format o) Waiting for Network [$KubeNetwork] to be created . . ."
