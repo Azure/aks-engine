@@ -2753,9 +2753,9 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(false); err == nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
-			"should error when useCloudControllerManager is disabled for azuredisk-csi-driver",
+			"should not error when useCloudControllerManager is disabled for azuredisk-csi-driver",
 		)
 	}
 
@@ -2787,9 +2787,9 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		},
 	}
 
-	if err := p.validateAddons(false); err == nil {
+	if err := p.validateAddons(false); err != nil {
 		t.Errorf(
-			"should error when useCloudControllerManager is disabled for azurefile-csi-driver",
+			"should not error when useCloudControllerManager is disabled for azurefile-csi-driver",
 		)
 	}
 
