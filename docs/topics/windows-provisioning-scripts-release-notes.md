@@ -1,3 +1,7 @@
+## v0.0.15
+
+- [feat: Allow setting Kubeproxy parameters by :ClusterConfiguration.Kubernetes.Kubeproxy.ConfigArgs](https://github.com/Azure/aks-engine/pull/4640)
+
 ## v0.0.14
 
 - [fix: chore: Add windowssecuretls.ps1 #4567](https://github.com/Azure/aks-engine/pull/4567)
