@@ -43,9 +43,11 @@ function DownloadFileOverHttp {
         $ProgressPreference = 'SilentlyContinue'
 
         $downloadTimer = [System.Diagnostics.Stopwatch]::StartNew()
-        curl.exe -f --retry 5 --retry-delay 0 -L $Url -o $DestinationPath
-        if ($LASTEXITCODE) {
-            throw "Curl exited with '$LASTEXITCODE' while attemping to downlaod '$Url'"
+        try {
+            $args = @{Uri=$Url; Method="Get"; OutFile=$DestinationPath}
+            Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
+        } catch {
+            throw "Fail in downloading $Url. Error: $_"
         }
         $downloadTimer.Stop()
 
@@ -141,11 +143,15 @@ function Retry-Command {
         $RetryDelaySeconds
     )
 
-    for ($i = 0; $i -lt $Retries; $i++) {
+    for ($i = 0; ; ) {
         try {
             return & $Command @Args
         }
         catch {
+            $i++
+            if ($i -ge $Retries) {
+                throw $_
+            }
             Start-Sleep $RetryDelaySeconds
         }
     }
