@@ -9747,7 +9747,7 @@ spec:
       containers:
       - command:
         - kube-proxy
-        - --config=/var/lib/kube-proxy/config.yaml
+        - --nodeport-addresses="{{ContainerConfig "cluster-cidr"}}"
         image: {{ContainerImage "kube-proxy"}}
         imagePullPolicy: IfNotPresent
         name: kube-proxy
