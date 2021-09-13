@@ -37,7 +37,7 @@ jobs:
           sudo curl -o /usr/local/bin/k https://raw.githubusercontent.com/jakepearson/k/master/k
           sudo chmod +x /usr/local/bin/k
       - name: Install sonobuoy
-        run |
+        run: |
           sudo curl -fsSL https://github.com/vmware-tanzu/sonobuoy/releases/download/v0.53.2/sonobuoy_0.53.2_linux_amd64.tar.gz -o sonobuoy_0.53.2_linux_amd64.tar.gz
           sudo tar -xvf ./sonobuoy_0.53.2_linux_amd64.tar.gz
           sudo chmod +x ./sonobuoy
