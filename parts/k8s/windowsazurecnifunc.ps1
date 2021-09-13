@@ -206,10 +206,10 @@ function GetSubnetPrefix
     $uri = "$($ResourceManagerEndpoint)$($SubnetId)?api-version=$NetworkAPIVersion"
     $headers = @{Authorization="Bearer $Token"}
 
-    $response = Retry-Command -Command "Invoke-RestMethod" -Args @{Uri=$uri; Method="Get"; ContentType="application/json"; Headers=$headers} -Retries 5 -RetryDelaySeconds 10
-
-    if(!$response) {
-        throw 'Error getting subnet prefix'
+    try {
+        $response = Retry-Command -Command "Invoke-RestMethod" -Args @{Uri=$uri; Method="Get"; ContentType="application/json"; Headers=$headers} -Retries 5 -RetryDelaySeconds 10
+    } catch {
+        throw "Error getting subnet prefix. Error: $_"
     }
 
     $response.properties.addressPrefix
@@ -267,10 +267,10 @@ function GenerateAzureStackCNIConfig
 
     $body = "grant_type=client_credentials&client_id=$AADClientId&client_secret=$encodedSecret&resource=$($azureEnvironment.serviceManagementEndpoint)"
     $args = @{Uri=$tokenURL; Method="Post"; Body=$body; ContentType='application/x-www-form-urlencoded'}
-    $tokenResponse = Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
-
-    if(!$tokenResponse) {
-        throw 'Error generating token for Azure Resource Manager'
+    try {
+        $tokenResponse = Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
+    } catch {
+        throw "Error generating token for Azure Resource Manager. Error: $_"
     }
 
     $token = $tokenResponse | Select-Object -ExpandProperty access_token
@@ -280,10 +280,10 @@ function GenerateAzureStackCNIConfig
     $interfacesUri = "$($azureEnvironment.resourceManagerEndpoint)subscriptions/$SubscriptionId/resourceGroups/$ResourceGroup/providers/Microsoft.Network/networkInterfaces?api-version=$NetworkAPIVersion"
     $headers = @{Authorization="Bearer $token"}
     $args = @{Uri=$interfacesUri; Method="Get"; ContentType="application/json"; Headers=$headers; OutFile=$networkInterfacesFile}
-    Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
-
-    if(!$(Test-Path $networkInterfacesFile)) {
-        throw 'Error fetching network interface configuration for node'
+    try {
+        Retry-Command -Command "Invoke-RestMethod" -Args $args -Retries 5 -RetryDelaySeconds 10
+    } catch {
+        throw "Error fetching network interface configuration for node. Error: $_"
     }
 
     Write-Log "Generating Azure CNI interface file"

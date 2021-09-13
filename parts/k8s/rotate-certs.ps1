@@ -53,9 +53,10 @@ function Force-Kubelet-CertRotation {
     Remove-Item "/var/lib/kubelet/pki/kubelet.crt" -Force -ErrorAction Ignore
     Remove-Item "/var/lib/kubelet/pki/kubelet.key" -Force -ErrorAction Ignore
 
-    $err = Retry-Command -Command "c:\k\windowsnodereset.ps1" -Args @{Foo="Bar"} -Retries 3 -RetryDelaySeconds 10
-    if(!$err) {
-        Write-Error 'Error reseting Windows node'
+    try {
+        $err = Retry-Command -Command "c:\k\windowsnodereset.ps1" -Args @{Foo="Bar"} -Retries 3 -RetryDelaySeconds 10
+    } catch {
+        Write-Error "Error reseting Windows node. Error: $_"
         throw $_
     }
 }
