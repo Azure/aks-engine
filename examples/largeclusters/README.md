@@ -87,7 +87,9 @@ The cloud-controller-manager implementation of cloud-provider-azure produces man
 
 ### Tune kubelet max-pods for Azure CNI
 
-AKS Engine only supports Azure CNI for clusters with over 400 nodes. Azure CNI pre-allocates IP addresses during node bootstrapping in accordance with that node's `--max-pods` kubelet configuration. As the number of nodes in your cluster grows, so will the number of allocated IP addresses in your cluster VNET. We must, therefore, configure any large cluster to not exceed the Azure-enforced limit of 65,336 private IP addresses per VNET. Reference:
+Kubenet (an alternative solution to Azure CNI) doesn't support more than 400 nodes. Thus, to build larger clusters than that you will need to use Azure CNI.
+
+Azure CNI pre-allocates IP addresses during node bootstrapping in accordance with that node's `--max-pods` kubelet configuration. As the number of nodes in your cluster grows, so will the number of allocated IP addresses in your cluster VNET. We must, therefore, configure any large cluster to not exceed the Azure-enforced limit of 65,336 private IP addresses per VNET. Reference:
 
 - https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits?toc=/azure/virtual-network/toc.json#networking-limits
 

@@ -3058,9 +3058,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 								out, err := cmd.CombinedOutput()
 								log.Printf("%s\n", out)
 								Expect(err).NotTo(HaveOccurred())
-								nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
-								Expect(err).NotTo(HaveOccurred())
-								numBackfillNodes := newKaminoNodes - (numNodesExpected - len(nodes))
 								ctx3, cancel3 := context.WithTimeout(context.Background(), cfg.Timeout)
 								defer cancel3()
 								err = azureClient.SetVirtualMachineScaleSetCapacity(
@@ -3069,7 +3066,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 									vmssName,
 									compute.Sku{
 										Name:     vmssSku.Name,
-										Capacity: to.Int64Ptr(int64(numBackfillNodes)),
+										Capacity: to.Int64Ptr(originalCapacity + int64(1+newKaminoNodes)),
 									},
 									eng.ExpandedDefinition.Location,
 								)
