@@ -3,59 +3,60 @@
   "properties": {
     "orchestratorProfile": {
       "kubernetesConfig": {
-        "cloudProviderBackoff": true,
-        "cloudProviderBackoffRetries": 6,
-        "cloudProviderBackoffJitter": 1,
-        "cloudProviderBackoffDuration": 6,
-        "cloudProviderBackoffExponent": 1.5,
-        "cloudProviderRateLimit": true,
-        "cloudProviderRateLimitQPS": 3,
-        "cloudProviderRateLimitBucket": 10,
+        "etcdStorageLimitGB": 8,
+        "loadBalancerOutboundIPs": 5,
+        "useCloudControllerManager": true,
         "kubeletConfig": {
-          "--node-status-update-frequency": "1m"
+          "--max-pods": "12"
+        },
+        "schedulerConfig": {
+          "--kube-api-burst": "800",
+          "--kube-api-qps": "600"
         },
         "controllerManagerConfig": {
-          "--node-monitor-grace-period": "5m",
-          "--pod-eviction-timeout": "1m",
-          "--route-reconciliation-period": "1m"
+          "--kube-api-burst": "800",
+          "--kube-api-qps": "600"
+        },
+        "apiServerConfig": {
+          "--delete-collection-workers": "250"
         }
       }
     },
     "masterProfile": {
-      "count": 1,
+      "count": 5,
       "dnsPrefix": "",
-      "vmSize": "Standard_D5_v2"
+      "vmSize": "Standard_D32s_v3",
+      "kubernetesConfig": {
+        "kubeletConfig": {
+          "--max-pods": "24"
+        }
+      }
     },
     "agentPoolProfiles": [
       {
-        "name": "pool1",
-        "count": 20,
-        "vmSize": "Standard_D3_v2",
-        "availabilityProfile": "AvailabilitySet"
+        "name": "agentpool1",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3"
       },
       {
-        "name": "pool2",
-        "count": 20,
-        "vmSize": "Standard_D3_v2",
-        "availabilityProfile": "AvailabilitySet"
+        "name": "agentpool2",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3"
       },
       {
-        "name": "pool3",
-        "count": 20,
-        "vmSize": "Standard_D3_v2",
-        "availabilityProfile": "AvailabilitySet"
+        "name": "agentpool3",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3"
       },
       {
-        "name": "pool4",
-        "count": 20,
-        "vmSize": "Standard_D3_v2",
-        "availabilityProfile": "AvailabilitySet"
+        "name": "agentpool4",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3"
       },
       {
-        "name": "pool5",
-        "count": 20,
-        "vmSize": "Standard_D3_v2",
-        "availabilityProfile": "AvailabilitySet"
+        "name": "agentpool5",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3"
       }
     ],
     "linuxProfile": {
