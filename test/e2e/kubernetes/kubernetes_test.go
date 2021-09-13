@@ -3089,7 +3089,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							} else {
 								elapsed = time.Since(start)
 							}
-							log.Printf("Took %s for %d large-container-daemonset pods to reach Running state on new node built from prototype\n", elapsed, len(p))
+							log.Printf("Took %s for %d large-container-daemonset pods to reach Running state on new node built from prototype\n", elapsed, numLargeContainerPods+newKaminoNodes)
 							numLargeContainerPods += newKaminoNodes
 						}
 						By(fmt.Sprintf("Deleting '%s' helm release...", helmName))
