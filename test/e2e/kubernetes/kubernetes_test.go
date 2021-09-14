@@ -84,6 +84,7 @@ var (
 	env                             azure.Environment
 	azureClient                     *armhelpers.AzureClient
 	firstMasterRegexStr             = fmt.Sprintf("^%s-.*-0", common.LegacyControlPlaneVMPrefix)
+	vmssHealthCommand               *exec.Cmd
 )
 
 var _ = BeforeSuite(func() {
@@ -187,9 +188,15 @@ var _ = BeforeSuite(func() {
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}
+
+	vmssHealthCommand, err = RunVMSSHealthCheck(cfg)
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
+	if err := vmssHealthCommand.Process.Kill(); err != nil {
+		log.Fatal(fmt.Sprintf("failed to kill process ID %d: ", vmssHealthCommand.Process.Pid), err)
+	}
 	if cfg.DebugAfterSuite {
 		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses,podsecuritypolicy", "--all-namespaces", "-o", "wide")
 		out, err := cmd.CombinedOutput()
@@ -3051,30 +3058,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							numNodesExpected := numAgentNodes + newKaminoNodes
 							By(fmt.Sprintf("Waiting for the %s new nodes created from prototype to become Ready; waiting for %d total nodes", cfg.KaminoVMSSNewNodes, numNodesExpected))
 							start := time.Now()
-							ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, cfg.Timeout)
-							if !ready {
-								By("Attempting to clean up any failed VMSS instances")
-								cmd := exec.Command("scripts/vmss-health-check.sh")
-								cmd.Env = append(cmd.Env, fmt.Sprintf("RESOURCE_GROUP=%s", cfg.ResourceGroup))
-								out, err := cmd.CombinedOutput()
-								log.Printf("%s\n", out)
-								Expect(err).NotTo(HaveOccurred())
-								ctx3, cancel3 := context.WithTimeout(context.Background(), cfg.Timeout)
-								defer cancel3()
-								err = azureClient.SetVirtualMachineScaleSetCapacity(
-									ctx3,
-									cfg.ResourceGroup,
-									vmssName,
-									compute.Sku{
-										Name:     vmssSku.Name,
-										Capacity: to.Int64Ptr(originalCapacity + int64(1+newKaminoNodes)),
-									},
-									eng.ExpandedDefinition.Location,
-								)
-								Expect(err).NotTo(HaveOccurred())
-								By(fmt.Sprintf("Waiting for the %d total nodes", numNodesExpected))
-								ready = node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, cfg.Timeout)
-							}
+							ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, 1*time.Hour)
 							Expect(ready).To(BeTrue())
 							numAgentNodes += newKaminoNodes
 							elapsed = time.Since(start)
@@ -3112,3 +3096,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 	})
 })
+
+func RunVMSSHealthCheck(cfg config.Config) (*exec.Cmd, error) {
+	outfile, err := os.Create(fmt.Sprintf("./vmss-health-check-%s.out", cfg.ResourceGroup))
+	if err != nil {
+		return nil, err
+	}
+	defer outfile.Close()
+	cmd := exec.Command("scripts/vmss-health-check.sh")
+	cmd.Env = append(cmd.Env, fmt.Sprintf("RESOURCE_GROUP=%s", cfg.ResourceGroup))
+	cmd.Env = append(cmd.Env, "LOOP_FOREVER=true")
+	cmd.Stdout = outfile
+	err = cmd.Start()
+	return cmd, err
+}
