@@ -3051,10 +3051,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							numNodesExpected := numAgentNodes + newKaminoNodes
 							By(fmt.Sprintf("Waiting for the %s new nodes created from prototype to become Ready; waiting for %d total nodes", cfg.KaminoVMSSNewNodes, numNodesExpected))
 							start := time.Now()
-							ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, 30*time.Minute)
+							ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, cfg.Timeout)
 							if !ready {
 								By("Attempting to clean up any failed VMSS instances")
-								cmd := exec.Command(fmt.Sprintf("RESOURCE_GROUP=%s", cfg.ResourceGroup), "scripts/vmss-health-check.sh")
+								cmd := exec.Command("scripts/vmss-health-check.sh")
+								cmd.Env = append(cmd.Env, fmt.Sprintf("RESOURCE_GROUP=%s", cfg.ResourceGroup))
 								out, err := cmd.CombinedOutput()
 								log.Printf("%s\n", out)
 								Expect(err).NotTo(HaveOccurred())
@@ -3071,7 +3072,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 									eng.ExpandedDefinition.Location,
 								)
 								Expect(err).NotTo(HaveOccurred())
-								ready = node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, 30*time.Minute)
+								By(fmt.Sprintf("Waiting for the %d total nodes", numNodesExpected))
+								ready = node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, cfg.Timeout)
 							}
 							Expect(ready).To(BeTrue())
 							numAgentNodes += newKaminoNodes

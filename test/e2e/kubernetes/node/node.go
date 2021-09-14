@@ -444,7 +444,9 @@ func WaitOnReadyMin(nodeCount int, sleep time.Duration, describeIfFail bool, tim
 				return ready
 			}
 		case <-ctx.Done():
-			DescribeNodes()
+			if describeIfFail {
+				DescribeNodes()
+			}
 			return false
 		}
 	}
