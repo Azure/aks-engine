@@ -54,9 +54,9 @@ jobs:
           KAMINO_VMSS_PROTOTYPE_NEW_NODES: 98
           GINKGO_FOCUS: "should be able to install vmss node prototype"
           GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.LARGE_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.LARGE_AZURE_SP_PW }}
           LOCATION: "eastus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: false
@@ -73,9 +73,9 @@ jobs:
           LB_TIMEOUT: "30m"
           GINKGO_FOCUS: "should be able to produce working LoadBalancers"
           GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.LARGE_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.LARGE_AZURE_SP_PW }}
           LOCATION: "eastus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
