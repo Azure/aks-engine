@@ -65,6 +65,25 @@ jobs:
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
+      - name: Validate ELB with large cluster
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.22"
+          CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
+          LB_TIMEOUT: "30m"
+          GINKGO_FOCUS: "should be able to produce working LoadBalancers"
+          GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "eastus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "docker"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
       - name: Run conformance tests
         env:
           KUBERNETES_CONFIG

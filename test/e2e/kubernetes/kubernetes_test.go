@@ -1691,7 +1691,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring we can create an ILB service attachment")
 					sILB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName+"-ilb", "default")
 					Expect(err).NotTo(HaveOccurred())
-					err = sILB.WaitForIngress(24*time.Hour, 5*time.Second)
+					err = sILB.WaitForIngress(cfg.LBTimeout, 5*time.Second)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("Ensuring we can create a curl pod to connect to the service")
@@ -1708,7 +1708,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				err = sELB.WaitForIngress(24*time.Hour, 5*time.Second)
+				err = sELB.WaitForIngress(cfg.LBTimeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can connect to the ELB service on the service IP")
