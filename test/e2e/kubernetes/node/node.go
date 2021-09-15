@@ -422,7 +422,7 @@ func WaitOnReady(nodeCount int, sleep, timeout time.Duration) bool {
 }
 
 // WaitOnReadyMin will block until the minimum nodes ready count is met
-func WaitOnReadyMin(nodeCount int, sleep, timeout time.Duration) bool {
+func WaitOnReadyMin(nodeCount int, sleep time.Duration, describeIfFail bool, timeout time.Duration) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan bool)
@@ -444,7 +444,9 @@ func WaitOnReadyMin(nodeCount int, sleep, timeout time.Duration) bool {
 				return ready
 			}
 		case <-ctx.Done():
-			DescribeNodes()
+			if describeIfFail {
+				DescribeNodes()
+			}
 			return false
 		}
 	}

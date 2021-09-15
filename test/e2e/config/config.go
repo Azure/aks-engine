@@ -72,6 +72,7 @@ type Config struct {
 	KaminoVMSSPrototypeImageRepository string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_REPOSITORY" default:""`
 	KaminoVMSSPrototypeImageTag        string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_TAG" default:""`
 	KaminoVMSSPrototypeDryRun          bool   `envconfig:"KAMINO_VMSS_PROTOTYPE_DRY_RUN" default:"false"`
+	KaminoVMSSNewNodes                 string `envconfig:"KAMINO_VMSS_PROTOTYPE_NEW_NODES" default:"2"`
 }
 
 // CustomCloudConfig holds configurations for custom cloud
