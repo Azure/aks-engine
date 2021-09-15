@@ -85,8 +85,6 @@ jobs:
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
       - name: Run conformance tests
-        env:
-          KUBERNETES_CONFIG
         run: |
           export KUBECONFIG=_output/$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)/kubeconfig/kubeconfig.eastus2.json
           sonobuoy run --plugin e2e --wait --e2e-skip "Daemon set|SchedulerPreemption|validates resource limits of pods that are allowed to run|validates that NodeSelector is respected|validates that there exists conflict between pods with same hostPort and protocol" --timeout=86400
