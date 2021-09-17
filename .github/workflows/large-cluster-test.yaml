@@ -52,7 +52,7 @@ jobs:
           ORCHESTRATOR_RELEASE: "1.22"
           CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
           RUN_VMSS_NODE_PROTOTYPE: true
-          KAMINO_VMSS_PROTOTYPE_NEW_NODES: 98
+          KAMINO_VMSS_PROTOTYPE_NEW_NODES: 999
           GINKGO_FOCUS: "should be able to install vmss node prototype"
           GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
           SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
@@ -96,9 +96,7 @@ jobs:
           KUBECONFIG: ${{ env.KUBECONFIG }}
         run: |
           sonobuoy run --plugin e2e --wait --e2e-skip "\[Serial\]" --e2e-focus "\[Conformance\]" --timeout=86400
-          if ! k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"' | jq -r '.plugins[] | select(.plugin == "e2e") | ."result-counts".failed == 0'; then
-            k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"' | jq -r '.plugins[] | select(.plugin == "e2e")'
-          fi
+          k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"'
       - name: Validate ELB again after conformance
         env:
           NAME: ${{ env.RESOURCE_GROUP }}
