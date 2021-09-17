@@ -96,7 +96,9 @@ jobs:
           KUBECONFIG: ${{ env.KUBECONFIG }}
         run: |
           sonobuoy run --plugin e2e --wait --e2e-skip "\[Serial\]" --e2e-focus "\[Conformance\]" --timeout=86400
-          k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"' | jq -r '.plugins[] | select(.plugin == "e2e") | ."result-counts".failed == 0'
+          if ! k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"' | jq -r '.plugins[] | select(.plugin == "e2e") | ."result-counts".failed == 0'; then
+            k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"' | jq -r '.plugins[] | select(.plugin == "e2e")'
+          fi
       - name: Validate ELB again after conformance
         env:
           NAME: ${{ env.RESOURCE_GROUP }}
