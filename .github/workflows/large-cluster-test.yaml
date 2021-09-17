@@ -85,7 +85,7 @@ jobs:
           CLIENT_SECRET: ${{ secrets.LARGE_AZURE_SP_PW }}
           LOCATION: "eastus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CLEANUP_ON_EXIT: true
+          CLEANUP_ON_EXIT: false
           CLEANUP_IF_FAIL: true
           CONTAINER_RUNTIME: "docker"
           SKIP_LOGS_COLLECTION: true
@@ -95,5 +95,25 @@ jobs:
         env:
           KUBECONFIG: ${{ env.KUBECONFIG }}
         run: |
-          sonobuoy run --plugin e2e --wait --e2e-skip "Daemon set|SchedulerPreemption|validates resource limits of pods that are allowed to run|validates that NodeSelector is respected|validates that there exists conflict between pods with same hostPort and protocol" --timeout=86400
+          sonobuoy run --plugin e2e --wait --e2e-skip "\[Serial\]" --e2e-focus "\[Conformance\]" --timeout=86400
           k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"' | jq -r '.plugins[] | select(.plugin == "e2e") | ."result-counts".failed == 0'
+      - name: Validate ELB again after conformance
+        env:
+          NAME: ${{ env.RESOURCE_GROUP }}
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.22"
+          CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
+          LB_TIMEOUT: "30m"
+          GINKGO_FOCUS: "should be able to produce working LoadBalancers"
+          GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
+          SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.LARGE_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.LARGE_AZURE_SP_PW }}
+          LOCATION: "eastus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "docker"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
