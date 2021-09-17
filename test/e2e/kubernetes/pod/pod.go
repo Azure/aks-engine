@@ -812,6 +812,38 @@ func GetAllSucceededByLabelWithRetry(labelKey, labelVal, namespace string, sleep
 	}
 }
 
+// WaitForMinSucceededByLabelWithRetry will return all Succeeded pods in a given namespace that match a prefix, waiting for a minimum number
+func WaitForMinSucceededByLabelWithRetry(min int, labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetPodsResult)
+	var mostRecentWaitForMinSucceededByLabelWithRetry error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetAllSucceededByLabelAsync(labelKey, labelVal, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentWaitForMinSucceededByLabelWithRetry = result.Err
+			pods = result.Pods
+			if mostRecentWaitForMinSucceededByLabelWithRetry == nil && len(pods) >= min {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("WaitForMinRunningByLabelWithRetry timed out: %s\n", mostRecentWaitForMinSucceededByLabelWithRetry)
+		}
+	}
+}
+
 // GetAllSucceededByLabel will return all completed pods in a given namespace that match a label
 func GetAllSucceededByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
 	cmd := exec.Command("k", "get", "pods", "-n", namespace, "-l", fmt.Sprintf("%s=%s", labelKey, labelVal), "-o", "json")
