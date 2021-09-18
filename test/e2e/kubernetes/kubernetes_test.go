@@ -2910,6 +2910,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to install vmss node prototype", func() {
 			if cfg.RunVMSSNodePrototype {
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
+					newKaminoNodes, err := strconv.Atoi(cfg.KaminoVMSSNewNodes)
+					Expect(err).NotTo(HaveOccurred())
 					By("Installing kured 1.7.0 with node annotations configuration")
 					cmd := exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
 					util.PrintCommand(cmd)
@@ -2981,6 +2983,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(vmssName).NotTo(BeEmpty())
 						Expect(vmssSku).NotTo(BeNil())
 						originalCapacity := *vmssSku.Capacity
+						// get a pre-kamino scaling baseline against the first VMSS in the cluster
 						if !cfg.KaminoVMSSPrototypeDryRun && i == 0 {
 							By(fmt.Sprintf("Adding one new node to VMSS %s get a baseline", vmssName))
 							ctx2, cancel2 := context.WithTimeout(context.Background(), cfg.Timeout)
@@ -3000,7 +3003,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							By("Waiting for the new node to become Ready")
 							ready := node.WaitOnReadyMin(numAgentNodes+1, 500*time.Millisecond, false, cfg.Timeout)
 							Expect(ready).To(BeTrue())
-							numAgentNodes++
 							timeToAddNewNodeBaseline = time.Since(start)
 							log.Printf("Took %s to add 1 node\n", timeToAddNewNodeBaseline)
 							By("Ensuring that we have one additional large container pod after scaling out by one")
@@ -3027,7 +3029,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						} else {
 							commandArgsSlice = append(commandArgsSlice, []string{helmName, cfg.KaminoVMSSPrototypeLocalChartPath}...)
 						}
-						commandArgsSlice = append(commandArgsSlice, []string{"--namespace", "default", "--set", fmt.Sprintf("kamino.name=%s", vmssName), "--set", "kamino.scheduleOnControlPlane=true", "--set", fmt.Sprintf("kamino.newUpdatedNodes=%s", cfg.KaminoVMSSNewNodes), "--set", "kamino.logLevel=DEBUG", "--set", fmt.Sprintf("kamino.targetVMSS=%s", vmssName), "--set", "kamino.auto.lastPatchAnnotation=weave.works/kured-most-recent-reboot-needed", "--set", "kamino.auto.pendingRebootAnnotation=weave.works/kured-reboot-in-progress", "--set", "kamino.auto.minimumReadyTime=1s"}...)
+						newUpdatedNodes := newKaminoNodes
+						// account for the node we already added above to take a pre-kamino scaling baseline against the first VMSS in the cluster
+						if i == 0 {
+							newUpdatedNodes--
+						}
+						commandArgsSlice = append(commandArgsSlice, []string{"--namespace", "default", "--set", fmt.Sprintf("kamino.name=%s", vmssName), "--set", "kamino.scheduleOnControlPlane=true", "--set", fmt.Sprintf("kamino.newUpdatedNodes=%d", newUpdatedNodes), "--set", "kamino.logLevel=DEBUG", "--set", fmt.Sprintf("kamino.targetVMSS=%s", vmssName), "--set", "kamino.auto.lastPatchAnnotation=weave.works/kured-most-recent-reboot-needed", "--set", "kamino.auto.pendingRebootAnnotation=weave.works/kured-reboot-in-progress", "--set", "kamino.auto.minimumReadyTime=1s"}...)
 						if cfg.KaminoVMSSPrototypeImageRegistry != "" {
 							commandArgsSlice = append(commandArgsSlice, []string{"--set", fmt.Sprintf("kamino.container.imageRegistry=%s", cfg.KaminoVMSSPrototypeImageRegistry)}...)
 						}
@@ -3071,11 +3078,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					elapsed := time.Since(start)
 					log.Printf("Took %s to run kamino-vmss-prototype Jobs to completion\n", elapsed)
 					if !cfg.KaminoVMSSPrototypeDryRun {
-						newKaminoNodes, err := strconv.Atoi(cfg.KaminoVMSSNewNodes)
-						Expect(err).NotTo(HaveOccurred())
 						newKaminoNodes *= numVMSS
 						numNodesExpected := numAgentNodes + newKaminoNodes + numControlPlaneNodes
-						numLargeContainerPods += newKaminoNodes
+						numLargeContainerPodsExpected := numAgentNodes + newKaminoNodes
 						By(fmt.Sprintf("Waiting for the %d new nodes created from prototype(s) to become Ready; waiting for %d total nodes", newKaminoNodes, numNodesExpected))
 						start := time.Now()
 						ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, 1*time.Hour)
@@ -3084,10 +3089,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						log.Printf("Took %s to add %d nodes derived from peer node prototype(s)\n", elapsed, newKaminoNodes)
 						By("Ensuring that we have additional large container pods after scaling out")
 						start = time.Now()
-						p, err := pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods, "app", "large-container-daemonset", "default", 5*time.Second, timeToLargeContainerDaemonsetRunningBaseline)
+						p, err := pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPodsExpected, "app", "large-container-daemonset", "default", 5*time.Second, timeToLargeContainerDaemonsetRunningBaseline)
 						if err != nil {
 							log.Printf("%d large container pods were ready before %s", len(p), timeToLargeContainerDaemonsetRunningBaseline)
-							_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPods, "app", "large-container-daemonset", "default", 5*time.Second, 1*time.Hour)
+							_, err = pod.WaitForMinRunningByLabelWithRetry(numLargeContainerPodsExpected, "app", "large-container-daemonset", "default", 5*time.Second, 1*time.Hour)
 							Expect(err).NotTo(HaveOccurred())
 							elapsed = time.Since(start)
 						} else {
