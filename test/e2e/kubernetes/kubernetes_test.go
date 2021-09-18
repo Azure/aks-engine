@@ -3083,7 +3083,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						numLargeContainerPodsExpected := numAgentNodes + newKaminoNodes
 						By(fmt.Sprintf("Waiting for the %d new nodes created from prototype(s) to become Ready; waiting for %d total nodes", newKaminoNodes, numNodesExpected))
 						start := time.Now()
-						ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, 1*time.Hour)
+						ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, 2*time.Hour)
 						Expect(ready).To(BeTrue())
 						elapsed = time.Since(start)
 						log.Printf("Took %s to add %d nodes derived from peer node prototype(s)\n", elapsed, newKaminoNodes)
