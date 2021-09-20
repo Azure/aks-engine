@@ -200,7 +200,7 @@ New-InfraContainer {
     $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
     $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
-    $pauseImageVersions = @("1809", "1903", "1909", "2004", "2009", "20h2")
+    $pauseImageVersions = @("1809", "1903", "1909", "2004", "2009", "20h2", "ltsc2022")
 
     if ($pauseImageVersions -icontains $windowsVersion) {
         if ($ContainerRuntime -eq "docker") {
