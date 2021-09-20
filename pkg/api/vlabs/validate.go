@@ -494,7 +494,9 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 
 		if agentPoolProfile.ImageRef != nil {
-			return agentPoolProfile.ImageRef.validateImageNameAndGroup()
+			if e := agentPoolProfile.ImageRef.validateImageNameAndGroup(); e != nil {
+				return e
+			}
 		}
 
 		if e := agentPoolProfile.validateAvailabilityProfile(); e != nil {
