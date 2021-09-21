@@ -17,29 +17,17 @@ while true; do
     for TERMINAL_VMSS in $(az vmss show -g $RESOURCE_GROUP -n $VMSS | jq -r '. | select(.provisioningState == "Succeeded" or .provisioningState == "Failed") | .name'); do
       ((NUM_TERMINAL_VMSS++))
       echo VMSS $TERMINAL_VMSS is in a terminal state!
-      for TARGET_VMSS_INSTANCE in $(az vmss list-instances -g $RESOURCE_GROUP -n $TERMINAL_VMSS | jq -r '.[].resources[] | select(.name == "vmssCSE" and .provisioningState != "Succeeded" and .provisioningState != "Creating" and .provisioningState != "Deleting") | .id' | awk -F'/' '{print $9}'); do
-        echo Deleting VMSS $TERMINAL_VMSS instance $TARGET_VMSS_INSTANCE
-        if ! az vmss delete-instances -n $TERMINAL_VMSS -g $RESOURCE_GROUP --instance-id ${TARGET_VMSS_INSTANCE##*_}; then
-          exit 1
-        else
-          ((NUM_DELETED_INSTANCES++))
-        fi
-      done
-      for TARGET_VMSS_INSTANCE in $(az vmss list-instances -g $RESOURCE_GROUP -n $TERMINAL_VMSS | jq -r '.[].resources[] | select(.publisher == "Microsoft.AKS" and .provisioningState != "Succeeded" and .provisioningState != "Creating" and .provisioningState != "Deleting") | .id' | awk -F'/' '{print $9}'); do
-        echo Deleting VMSS $TERMINAL_VMSS instance $TARGET_VMSS_INSTANCE
-        if ! az vmss delete-instances -n $TERMINAL_VMSS -g $RESOURCE_GROUP --instance-id ${TARGET_VMSS_INSTANCE##*_}; then
-          exit 1
-        else
-          ((NUM_DELETED_INSTANCES++))
-        fi
-      done
       for TARGET_VMSS_INSTANCE in $(az vmss list-instances -g $RESOURCE_GROUP -n $TERMINAL_VMSS | jq -r '.[] | select(.provisioningState == "Failed") | .name'); do
         echo Deleting VMSS $TERMINAL_VMSS instance $TARGET_VMSS_INSTANCE
-        if ! az vmss delete-instances -n $TERMINAL_VMSS -g $RESOURCE_GROUP --instance-id ${TARGET_VMSS_INSTANCE##*_}; then
+        if ! az vmss delete-instances -n $TERMINAL_VMSS -g $RESOURCE_GROUP --instance-id ${TARGET_VMSS_INSTANCE##*_} --no-wait; then
           exit 1
         else
+          sleep 3
           ((NUM_DELETED_INSTANCES++))
         fi
+      done
+      until [[ $(az vmss show -g $RESOURCE_GROUP -n $VMSS | jq -r '. | select(.provisioningState == "Succeeded") | .name') ]]; do
+        sleep 30
       done
     done
     if [ "$NUM_DELETED_INSTANCES" -gt "0" ]; then
