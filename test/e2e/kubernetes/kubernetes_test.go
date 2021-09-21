@@ -2961,7 +2961,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Waiting for nodes to be be rebooted and annotated correctly")
 					_, err = node.WaitForNodesWithAnnotation(numAgentNodes, "weave.works/kured-most-recent-reboot-needed", "", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					_, err = node.WaitForNodesWithAnnotation(0, "weave.works/kured-reboot-in-progress", "", 1*time.Minute, cfg.Timeout)
+					_, err = node.WaitForNodesWithAnnotation(0, "weave.works/kured-reboot-in-progress", "", 1*time.Minute, time.Duration(5*numAgentNodes)*time.Minute)
 					Expect(err).NotTo(HaveOccurred())
 					By("Waiting for all nodes to be Ready again")
 					ready = node.WaitOnReady(len(nodes), 30*time.Second, cfg.Timeout)
@@ -3013,6 +3013,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							timeToLargeContainerDaemonsetRunningBaseline = time.Since(start)
 							log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
 						}
+						vmssNodes, err := node.GetByRegexWithRetry(fmt.Sprintf("^%s", vmssName), 1*time.Minute, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(len(vmssNodes)).To(BeNumerically(">", 0))
 						helmName := fmt.Sprintf("vmss-prototype-%s", vmssName)
 						cmd = exec.Command("helm", "status", helmName)
 						out, err = cmd.CombinedOutput()

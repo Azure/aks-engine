@@ -650,11 +650,21 @@ func GetByRegexWithRetry(regex string, sleep, timeout time.Duration) ([]Node, er
 			mostRecentGetByRegexWithRetryError = result.Err
 			nodes = result.Nodes
 			if mostRecentGetByRegexWithRetryError == nil {
+				allNodesAreReady := true
 				if len(nodes) > 0 {
-					return nodes, nil
+					for _, n := range nodes {
+						if !n.IsReady() {
+							allNodesAreReady = false
+							break
+						}
+					}
+					if allNodesAreReady {
+						return nodes, nil
+					}
 				}
 			}
 		case <-ctx.Done():
+			DescribeNodes()
 			return nil, errors.Errorf("GetByRegexWithRetry timed out: %s\n", mostRecentGetByRegexWithRetryError)
 		}
 	}
