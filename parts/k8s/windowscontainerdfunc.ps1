@@ -104,6 +104,21 @@ function Select-Windows-Version {
   }
 }
 
+# Danger: ReleaseId is deprecated. 
+function Get-WindowsVersion-From-ReleaseId {
+  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  $windowsVersion = ""
+
+  # Starting with 20H2 tags used to publish container images may not match the 'ReleaseId'
+  switch ($windowsReleaseId)
+  {
+    "2009" { $windowsVersion = "20H2"}
+    default  { $windowsVersion = $windowsReleaseId}
+  }
+
+  return $windowsVersion
+}
+
 function Enable-Logging {
   if ((Test-Path "$global:ContainerdInstallLocation\diag.ps1") -And (Test-Path "$global:ContainerdInstallLocation\ContainerPlatform.wprp")) {
     $logs = Join-path $pwd.drive.Root logs
@@ -161,19 +176,14 @@ function Install-Containerd {
   $formatedbin = $(($CNIBinDir).Replace("\", "/"))
   $formatedconf = $(($CNIConfDir).Replace("\", "/"))
   $sandboxIsolation = 0
-  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
   $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
-  # Starting with 20H2 tags used to publish contianer images may not match the 'ReleaseId'
-  switch ($windowsReleaseId)
-  {
-    "2009" { $windowsVersion = "20H2"}
-    default  { $windowsVersion = $windowsReleaseId}
+  $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
+
+  # Fall back on ReleaseId if Build is not recognized.
+  if($windowsVersion -eq "") {
+    $windowsVersion = Get-WindowsVersion-From-ReleaseId
   }
-  switch ($windowsCurrentBuild)
-  {
-    "20348" { $windowsVersion = "ltsc2022" }
-    default  { $windowsVersion = $windowsReleaseId}
-  }
+
   $hypervRuntimes = ""
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
