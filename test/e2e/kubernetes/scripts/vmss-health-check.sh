@@ -36,6 +36,15 @@ while true; do
           ((NUM_DELETED_INSTANCES++))
         fi
       done
+      for TARGET_VMSS_INSTANCE in $(az vmss list-instances -g $RESOURCE_GROUP -n $TERMINAL_VMSS | jq -r '.[].resources[] | select(.name == "vmssCSE" and .provisioningState == "Failed") | .id' | awk -F'/' '{print $9}'); do
+        echo $(date)    Deleting VMSS $TERMINAL_VMSS instance $TARGET_VMSS_INSTANCE
+        if ! az vmss delete-instances -n $TERMINAL_VMSS -g $RESOURCE_GROUP --instance-id ${TARGET_VMSS_INSTANCE##*_}; then
+           sleep 30
+        else
+           sleep 1
+           ((NUM_DELETED_INSTANCES++))
+        fi
+      done
       if [ "$HAS_FAILED_STATE_INSTANCE" == "true" ]; then
         echo $(date)    Waiting for $TERMINAL_VMSS to reach a terminal ProvisioningState after failed instances were deleted...
         sleep 30
