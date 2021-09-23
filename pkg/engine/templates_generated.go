@@ -19296,16 +19296,9 @@ function Select-Windows-Version {
   }
 }
 
-function Get-WindowsVersion-From-ReleaseId {
-  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
-  $windowsVersion = ""
-
-  # Starting with 20H2 tags used to publish container images may not match the 'ReleaseId'
-  switch ($windowsReleaseId)
-  {
-    "2009" { $windowsVersion = "20H2"}
-    default  { $windowsVersion = $windowsReleaseId}
-  }
+function Get-WindowsVersion {
+  $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
+  $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
 
   return $windowsVersion
 }
@@ -19367,13 +19360,7 @@ function Install-Containerd {
   $formatedbin = $(($CNIBinDir).Replace("\", "/"))
   $formatedconf = $(($CNIConfDir).Replace("\", "/"))
   $sandboxIsolation = 0
-  $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
-  $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
-
-  # Fall back on ReleaseId if Build is not recognized.
-  if($windowsVersion -eq "") {
-    $windowsVersion = Get-WindowsVersion-From-ReleaseId
-  }
+  $windowsVersion = Get-WindowsVersion
 
   $hypervRuntimes = ""
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
