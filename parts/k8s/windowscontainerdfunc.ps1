@@ -119,6 +119,17 @@ function Get-WindowsVersion-From-ReleaseId {
   return $windowsVersion
 }
 
+
+function Get-WindowsVersion {
+  $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
+  $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
+
+  # Fall back on ReleaseId if Build is not recognized.
+  if($windowsVersion -eq "") {
+    $windowsVersion = Get-WindowsVersion-From-ReleaseId
+  }
+}
+
 function Enable-Logging {
   if ((Test-Path "$global:ContainerdInstallLocation\diag.ps1") -And (Test-Path "$global:ContainerdInstallLocation\ContainerPlatform.wprp")) {
     $logs = Join-path $pwd.drive.Root logs
@@ -176,13 +187,7 @@ function Install-Containerd {
   $formatedbin = $(($CNIBinDir).Replace("\", "/"))
   $formatedconf = $(($CNIConfDir).Replace("\", "/"))
   $sandboxIsolation = 0
-  $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
-  $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
-
-  # Fall back on ReleaseId if Build is not recognized.
-  if($windowsVersion -eq "") {
-    $windowsVersion = Get-WindowsVersion-From-ReleaseId
-  }
+  $windowsVersion = Get-WindowsVersion
 
   $hypervRuntimes = ""
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
