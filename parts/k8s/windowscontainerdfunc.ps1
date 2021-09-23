@@ -104,30 +104,11 @@ function Select-Windows-Version {
   }
 }
 
-# Danger: ReleaseId is deprecated. 
-function Get-WindowsVersion-From-ReleaseId {
-  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
-  $windowsVersion = ""
-
-  # Starting with 20H2 tags used to publish container images may not match the 'ReleaseId'
-  switch ($windowsReleaseId)
-  {
-    "2009" { $windowsVersion = "20H2"}
-    default  { $windowsVersion = $windowsReleaseId}
-  }
-
-  return $windowsVersion
-}
-
-
 function Get-WindowsVersion {
   $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
   $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
 
-  # Fall back on ReleaseId if Build is not recognized.
-  if($windowsVersion -eq "") {
-    $windowsVersion = Get-WindowsVersion-From-ReleaseId
-  }
+  return $windowsVersion
 }
 
 function Enable-Logging {
