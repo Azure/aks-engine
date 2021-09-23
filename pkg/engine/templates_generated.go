@@ -19291,8 +19291,23 @@ function Select-Windows-Version {
     "18363" { return "1909" }
     "19041" { return "2004" }
     "19042" { return "20H2" }
+    "20348" { return "ltsc2022" }
     Default { return "" } 
   }
+}
+
+function Get-WindowsVersion-From-ReleaseId {
+  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+  $windowsVersion = ""
+
+  # Starting with 20H2 tags used to publish container images may not match the 'ReleaseId'
+  switch ($windowsReleaseId)
+  {
+    "2009" { $windowsVersion = "20H2"}
+    default  { $windowsVersion = $windowsReleaseId}
+  }
+
+  return $windowsVersion
 }
 
 function Enable-Logging {
@@ -19352,13 +19367,14 @@ function Install-Containerd {
   $formatedbin = $(($CNIBinDir).Replace("\", "/"))
   $formatedconf = $(($CNIConfDir).Replace("\", "/"))
   $sandboxIsolation = 0
-  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
-  # Starting with 20H2 tags used to publish contianer images may not match the 'ReleaseId'
-  switch ($windowsReleaseId)
-  {
-    "2009" { $windowsVersion = "20H2"}
-    default  { $windowsVersion = $windowsReleaseId}
+  $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
+  $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
+
+  # Fall back on ReleaseId if Build is not recognized.
+  if($windowsVersion -eq "") {
+    $windowsVersion = Get-WindowsVersion-From-ReleaseId
   }
+
   $hypervRuntimes = ""
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
@@ -19771,7 +19787,7 @@ New-InfraContainer {
     $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
     $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
-    $pauseImageVersions = @("1809", "1903", "1909", "2004", "2009", "20h2")
+    $pauseImageVersions = @("1809", "1903", "1909", "2004", "2009", "20h2", "ltsc2022")
 
     if ($pauseImageVersions -icontains $windowsVersion) {
         if ($ContainerRuntime -eq "docker") {
