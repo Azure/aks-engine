@@ -802,9 +802,15 @@ version = 2
 		"GetLinuxCSELogPath": func() string {
 			return linuxCSELogPath
 		},
-		"RunUnattendedUpgrades": func() bool {
+		"RunUnattendedUpgradesOnBootstrap": func() bool {
 			if cs.Properties.LinuxProfile != nil {
 				return to.Bool(cs.Properties.LinuxProfile.RunUnattendedUpgradesOnBootstrap)
+			}
+			return false
+		},
+		"EnableUnattendedUpgrades": func() bool {
+			if cs.Properties.LinuxProfile != nil {
+				return to.Bool(cs.Properties.LinuxProfile.EnableUnattendedUpgrades)
 			}
 			return false
 		},

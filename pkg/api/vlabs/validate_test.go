@@ -998,6 +998,24 @@ func ExampleProperties_validateAddons() {
 	// level=warning msg="The Azure CNI networkmonitor addon has been deprecated, it will be marked as disabled"
 }
 
+func ExampleProperties_validateLinuxProfile() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	p := Properties{
+		LinuxProfile: &LinuxProfile{},
+	}
+
+	if err := p.validateLinuxProfile(); err != nil {
+		fmt.Printf("error in validateLinuxProfile: %s", err)
+	}
+
+	// Output:
+	// level=warning msg="linuxProfile.enableUnattendedUpgrades configuration was not declared, your cluster nodes will be configured to run unattended-upgrade by default"
+}
+
 func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}

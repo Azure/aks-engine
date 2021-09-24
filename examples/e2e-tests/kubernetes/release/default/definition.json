@@ -98,6 +98,7 @@
       }
     ],
     "linuxProfile": {
+      "enableUnattendedUpgrades": false,
       "adminUsername": "azureuser",
       "ssh": {
         "publicKeys": [

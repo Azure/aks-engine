@@ -12443,7 +12443,7 @@ ensureKubelet() {
   if [[ -n ${MASTER_NODE} ]]; then
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   else
-{{- if not RunUnattendedUpgrades}}
+{{- if not RunUnattendedUpgradesOnBootstrap}}
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 {{else}}
     systemctl_enable 100 5 30 kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
@@ -12454,7 +12454,7 @@ ensureKubelet() {
   if [[ -n ${MASTER_NODE} ]]; then
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   else
-  {{- if not RunUnattendedUpgrades}}
+  {{- if not RunUnattendedUpgradesOnBootstrap}}
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{else}}
     systemctl_enable 100 5 30 kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
@@ -13837,7 +13837,9 @@ fi
 {{end}}
 
 {{- /* re-enable unattended upgrades */}}
+{{- if EnableUnattendedUpgrades}}
 rm -f /etc/apt/apt.conf.d/99periodic
+{{- end}}
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
@@ -13846,7 +13848,7 @@ fi
 {{end}}
 
 {{- if not HasBlockOutboundInternet}}
-    {{- if RunUnattendedUpgrades}}
+    {{- if RunUnattendedUpgradesOnBootstrap}}
 apt_get_update && unattended_upgrade
     {{- end}}
 {{- end}}
@@ -13858,7 +13860,7 @@ if [ -f /var/run/reboot-required ]; then
     aptmarkWALinuxAgent unhold &
   fi
 else
-{{- if RunUnattendedUpgrades}}
+{{- if RunUnattendedUpgradesOnBootstrap}}
   if [[ -z ${MASTER_NODE} ]]; then
     systemctl_restart 100 5 30 kubelet
     systemctl_restart 100 5 30 kubelet-monitor
