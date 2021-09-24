@@ -247,7 +247,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.19.11":        false,
 	"1.19.12":        false,
 	"1.19.13":        false,
-	"1.19.14":        true,
+	"1.19.14":        false,
+	"1.19.15":        true,
 	"1.20.0-alpha.1": false,
 	"1.20.0-alpha.2": false,
 	"1.20.0-alpha.3": false,
@@ -265,7 +266,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.20.7":         false,
 	"1.20.8":         false,
 	"1.20.9":         false,
-	"1.20.10":        true,
+	"1.20.10":        false,
+	"1.20.11":        true,
 	"1.21.0-alpha.1": false,
 	"1.21.0-alpha.2": false, // disabled, see https://github.com/kubernetes/kubernetes/issues/98419
 	"1.21.0-alpha.3": false,
@@ -284,7 +286,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.22.0-beta.1":  false,
 	"1.22.0-beta.2":  false,
 	"1.22.0":         false,
-	"1.22.1":         true,
+	"1.22.1":         false,
+	"1.22.2":         true,
 	"1.23.0-alpha.1": true,
 }
 
