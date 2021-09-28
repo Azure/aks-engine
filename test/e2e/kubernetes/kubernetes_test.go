@@ -3096,7 +3096,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							timeToWaitForNewNodes = cfg.Timeout
 						}
 						start := time.Now()
-						ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, timeToWaitForNewNodes)
+						ready := node.WaitOnReadyMin(numNodesExpected, 1*time.Minute, false, timeToWaitForNewNodes)
+						if !ready {
+							nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+							if err != nil {
+								log.Printf("Not enough Ready nodes! Expected %d, but only %d nodes are Ready", numNodesExpected, len(nodes))
+							}
+						}
 						Expect(ready).To(BeTrue())
 						elapsed = time.Since(start)
 						log.Printf("Took %s to add %d nodes derived from peer node prototype(s)\n", elapsed, newKaminoNodes)
