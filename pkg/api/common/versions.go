@@ -323,6 +323,8 @@ var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.19.15": true,
 	"1.20.6":  false,
 	"1.20.11": true,
+	"1.21.5":  true,
+	"1.22.2":  true,
 }
 
 // AllKubernetesWindowsSupportedVersionsAzureStack maintain a set of available k8s Windows versions in aks-engine on Azure Stack
@@ -350,6 +352,8 @@ var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
 	"1.19.15": true,
 	"1.20.6":  false,
 	"1.20.11": true,
+	"1.21.5":  true,
+	"1.22.2":  true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release

@@ -3553,6 +3553,10 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
+            {{- if IsAzureStackCloud}}
+            - name: AZURE_ENVIRONMENT_FILEPATH
+              value: C:\k\azurestackcloud.json
+            {{end}}
           volumeMounts:
             - name: kubelet-dir
               mountPath: "C:\\var\\lib\\kubelet"
@@ -3732,6 +3736,10 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
+            {{- if IsAzureStackCloud}}
+            - name: AZURE_ENVIRONMENT_FILEPATH
+              value: /etc/kubernetes/azurestackcloud.json
+            {{end}}
           securityContext:
             privileged: true
           volumeMounts:
@@ -3751,6 +3759,11 @@ spec:
               name: sys-devices-dir
             - mountPath: /sys/class/scsi_host/
               name: scsi-host-dir
+            {{- if IsAzureStackCloud}}
+            - mountPath: /etc/ssl/certs
+              readOnly: true
+              name: ssl
+            {{end}}
           resources:
             limits:
               cpu: {{ContainerCPULimits "azuredisk-csi"}}
@@ -3790,6 +3803,12 @@ spec:
             path: /sys/class/scsi_host/
             type: Directory
           name: scsi-host-dir
+        {{- if IsAzureStackCloud}}
+        - hostPath:
+            path: /etc/ssl/certs
+            type: Directory
+          name: ssl
+        {{end}}
 {{end}}
 ---
 # Source: azuredisk-csi-driver/templates/csi-azuredisk-controller.yaml
@@ -3954,6 +3973,10 @@ spec:
               value: "/etc/kubernetes/azure.json"
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
+            {{- if IsAzureStackCloud}}
+            - name: AZURE_ENVIRONMENT_FILEPATH
+              value: /etc/kubernetes/azurestackcloud.json
+             {{end}}
           volumeMounts:
             - mountPath: /csi
               name: socket-dir
@@ -3962,6 +3985,11 @@ spec:
             - mountPath: /var/lib/waagent/ManagedIdentity-Settings
               readOnly: true
               name: msi
+            {{- if IsAzureStackCloud}}
+            - mountPath: /etc/ssl/certs
+              readOnly: true
+              name: ssl
+            {{end}}
           resources:
             limits:
               cpu: {{ContainerCPULimits "azuredisk-csi"}}
@@ -3979,6 +4007,12 @@ spec:
         - name: msi
           hostPath:
             path: /var/lib/waagent/ManagedIdentity-Settings
+        {{- if IsAzureStackCloud}}
+        - hostPath:
+            path: /etc/ssl/certs
+            type: Directory
+          name: ssl
+        {{end}}
 {{if ShouldEnableCSISnapshotFeature "azuredisk-csi-driver"}}
 ---
 # Source: azuredisk-csi-driver/templates/csi-snapshot-controller.yaml
@@ -17847,7 +17881,7 @@ try
                 $azsJson = Get-Content -Raw -Path $azsConfigFile | ConvertFrom-Json
                 if (-not [string]::IsNullOrEmpty($azsJson.managementPortalURL)) {
                     $azsARMUri = [System.Uri]$azsJson.managementPortalURL
-                    $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.DnsNameList -contains $azsARMUri.Host.Substring($azsARMUri.Host.IndexOf(".")).TrimStart(".")}
+                    $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.DnsNameList.Unicode -contains $azsARMUri.Host.Substring($azsARMUri.Host.IndexOf(".")).TrimStart(".")}
                     if ($null -ne $azsRootCert) {
                         $azsRootCertFilePath =  [io.path]::Combine($global:KubeDir, "azsroot.cer")
                         Export-Certificate -Cert $azsRootCert -FilePath $azsRootCertFilePath -Type CERT

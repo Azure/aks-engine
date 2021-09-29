@@ -132,15 +132,15 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202007",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2021.07.26",
+		ImageVersion:   "2021.05.24",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk-2109",
+		ImageSku:       "2019-datacenter-core-smalldisk-2105",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.2183.210922",
+		ImageVersion:   "17763.1935.210520",
 	}
 
 	// AKSWindowsServer2019ContainerDOSImageConfig is the aks-engine image based on Windows Server 2019
@@ -157,7 +157,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.2183.2109130127",
+		ImageVersion:   "17763.1457.2009030514",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
