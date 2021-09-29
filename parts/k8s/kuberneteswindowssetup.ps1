@@ -456,7 +456,7 @@ try
                 $azsJson = Get-Content -Raw -Path $azsConfigFile | ConvertFrom-Json
                 if (-not [string]::IsNullOrEmpty($azsJson.managementPortalURL)) {
                     $azsARMUri = [System.Uri]$azsJson.managementPortalURL
-                    $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.DnsNameList -contains $azsARMUri.Host.Substring($azsARMUri.Host.IndexOf(".")).TrimStart(".")}
+                    $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.DnsNameList.Unicode -contains $azsARMUri.Host.Substring($azsARMUri.Host.IndexOf(".")).TrimStart(".")}
                     if ($null -ne $azsRootCert) {
                         $azsRootCertFilePath =  [io.path]::Combine($global:KubeDir, "azsroot.cer")
                         Export-Certificate -Cert $azsRootCert -FilePath $azsRootCertFilePath -Type CERT

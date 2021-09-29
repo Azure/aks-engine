@@ -270,7 +270,7 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	k8sComponents := GetK8sComponentsByVersionMap(kubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 	hyperkubeImageBase := kubernetesImageBase
 	hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
-	if cs.Properties.IsAzureStackCloud() {
+	if cs.Properties.IsAzureStackCloud() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
 		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 	}
 	controllerManagerBase := kubernetesImageBase
