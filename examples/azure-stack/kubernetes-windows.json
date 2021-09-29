@@ -3,8 +3,8 @@
     "location": "",
     "properties": {
         "orchestratorProfile": {
-            "orchestratorRelease": "1.19",
-            "orchestratorVersion": "1.19.10",
+            "orchestratorRelease": "1.21",
+            "orchestratorVersion": "1.21.5",
             "kubernetesConfig": {
                 "cloudProviderBackoff": true,
                 "cloudProviderBackoffRetries": 1,
@@ -24,7 +24,14 @@
                     "--node-monitor-grace-period": "5m",
                     "--pod-eviction-timeout": "5m",
                     "--route-reconciliation-period": "1m"
-                }
+                },
+                "useCloudControllerManager": true,
+                "addons": [
+                    {
+                      "name": "azuredisk-csi-driver",
+                      "enabled": true
+                    }
+                ]
             }
         },
         "customCloudProfile": {
