@@ -69,9 +69,7 @@ while true; do
     fi
     if [ "$NUM_DELETED_INSTANCES" -gt "0" ]; then
       echo $(date)    Instances were deleted from VMSS $VMSS, ensuring that capacity is set to $VMSS_CAPACITY
-      if ! az vmss scale --new-capacity $VMSS_CAPACITY -n $VMSS -g $RESOURCE_GROUP --no-wait; then
-          exit 1
-      fi
+      az vmss scale --new-capacity $VMSS_CAPACITY -n $VMSS -g $RESOURCE_GROUP --no-wait;
     fi
   done
   if [ "$LOOP_FOREVER" == "true" ]; then

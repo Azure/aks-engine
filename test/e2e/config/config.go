@@ -67,6 +67,7 @@ type Config struct {
 	ArcSubscriptionID                  string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
 	ArcLocation                        string `envconfig:"ARC_LOCATION" default:""`
 	ArcTenantID                        string `envconfig:"ARC_TENANT_ID" default:""`
+	KuredLocalChartPath                string `envconfig:"KURED_LOCAL_CHART_PATH" default:""`
 	KaminoVMSSPrototypeLocalChartPath  string `envconfig:"KAMINO_VMSS_PROTOTYPE_LOCAL_CHART_PATH" default:""`
 	KaminoVMSSPrototypeImageRegistry   string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_REGISTRY" default:""`
 	KaminoVMSSPrototypeImageRepository string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_REPOSITORY" default:""`

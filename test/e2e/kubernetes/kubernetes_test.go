@@ -2912,10 +2912,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					newKaminoNodes, err := strconv.Atoi(cfg.KaminoVMSSNewNodes)
 					Expect(err).NotTo(HaveOccurred())
-					By("Installing kured 1.7.0 with node annotations configuration")
-					cmd := exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
-					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
+					By("Installing kured with node annotations configuration")
+					var kuredCommand *exec.Cmd
+					if cfg.KuredLocalChartPath == "" {
+						kuredCommand = exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
+					} else {
+						kuredCommand = exec.Command("helm", "install", "--wait", "kured", cfg.KuredLocalChartPath, "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
+					}
+					util.PrintCommand(kuredCommand)
+					out, err := kuredCommand.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
@@ -3017,7 +3022,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 						Expect(len(vmssNodes)).To(BeNumerically(">", 0))
 						helmName := fmt.Sprintf("vmss-prototype-%s", vmssName)
-						cmd = exec.Command("helm", "status", helmName)
+						cmd := exec.Command("helm", "status", helmName)
 						out, err = cmd.CombinedOutput()
 						if err == nil {
 							By(fmt.Sprintf("Found pre-existing '%s' helm release, deleting it...", helmName))
@@ -3091,7 +3096,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							timeToWaitForNewNodes = cfg.Timeout
 						}
 						start := time.Now()
-						ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, timeToWaitForNewNodes)
+						ready := node.WaitOnReadyMin(numNodesExpected, 1*time.Minute, false, timeToWaitForNewNodes)
+						if !ready {
+							nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+							if err != nil {
+								log.Printf("Not enough Ready nodes! Expected %d, but only %d nodes are Ready", numNodesExpected, len(nodes))
+							}
+						}
 						Expect(ready).To(BeTrue())
 						elapsed = time.Since(start)
 						log.Printf("Took %s to add %d nodes derived from peer node prototype(s)\n", elapsed, newKaminoNodes)
