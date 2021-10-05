@@ -2,9 +2,9 @@
 <a name="v0.67.0"></a>
 # [v0.67.0] - 2021-10-05
 ### Bug Fixes 🐞
-- Use Invoke-WebRequest instead of curl.exe to download files ([#4646](https://github.com/Azure/aks-engine/issues/4646))
+- use Invoke-WebRequest instead of curl.exe to download files ([#4646](https://github.com/Azure/aks-engine/issues/4646))
 - make Azure Disk & File CSI drivers work on 1.22 ([#4638](https://github.com/Azure/aks-engine/issues/4638))
-- upgrade will now recreate the correct master ([#4637](https://github.com/Azure/aks-engine/issues/4637))
+- upgrade recreates missing control plane VMs ([#4637](https://github.com/Azure/aks-engine/issues/4637))
 - Remove 'NT AUTHORITY\AUTHENICATED USERS' write permissions on files in c:\k ([#4633](https://github.com/Azure/aks-engine/issues/4633))
 
 ### Continuous Integration 💜
@@ -25,6 +25,7 @@
 - add support for Kubernetes v1.22.2 ([#4665](https://github.com/Azure/aks-engine/issues/4665))
 - add support for Kubernetes v1.20.11 ([#4667](https://github.com/Azure/aks-engine/issues/4667))
 - add support for Kubernetes v1.23.0-alpha.1 ([#4647](https://github.com/Azure/aks-engine/issues/4647))
+- add support for Kubernetes v1.19.15 and v1.20.11 on Azure Stack ([#4671](https://github.com/Azure/aks-engine/issues/4671))
 - upgrade azure disk csi driver to v1.7.0 ([#4642](https://github.com/Azure/aks-engine/issues/4642))
 - Allow setting Kubeproxy parameters by :ClusterConfiguration.Kubernetes.Kubeproxy.ConfigArgs ([#4640](https://github.com/Azure/aks-engine/issues/4640))
 - External cloud provider support for Azure Stack Cloud ([#4635](https://github.com/Azure/aks-engine/issues/4635))
@@ -32,7 +33,6 @@
 ### Maintenance 🔧
 - update Ubuntu 18.04 VHD to 2021.09.27 ([#4683](https://github.com/Azure/aks-engine/issues/4683))
 - New Windows VHD with 9C patches ([#4677](https://github.com/Azure/aks-engine/issues/4677))
-- add support for Kubernetes v1.19.15 and v1.20.11 on Azure Stack ([#4671](https://github.com/Azure/aks-engine/issues/4671))
 - Update default Windows VHDs to Sept 2021 images ([#4673](https://github.com/Azure/aks-engine/issues/4673))
 - Update Azure CNI to v.1.4.12 ([#4656](https://github.com/Azure/aks-engine/issues/4656))
 - update cluster-autoscaler addon to v1.22.0 ([#4648](https://github.com/Azure/aks-engine/issues/4648))
