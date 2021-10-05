@@ -8,14 +8,9 @@
 - Remove 'NT AUTHORITY\AUTHENICATED USERS' write permissions on files in c:\k ([#4633](https://github.com/Azure/aks-engine/issues/4633))
 
 ### Continuous Integration 💜
-- proper new nodes config for large cluster test
-- 5k node clusters in large cluster test
-- show conformance summary in large cluster test
-- non-serial conformance for large cluster tests
-- env and longer timeout for large cluster tests
-- use large cluster Azure test sub
-- fix large-cluster-test errata ([#4652](https://github.com/Azure/aks-engine/issues/4652))
-- test large clusters ([#4649](https://github.com/Azure/aks-engine/issues/4649))
+- test large clusters
+  - ([#4649](https://github.com/Azure/aks-engine/issues/4649))
+  - ([#4652](https://github.com/Azure/aks-engine/issues/4652))
 
 ### Features 🌈
 - configurable unattended-upgrades ([#4614](https://github.com/Azure/aks-engine/issues/4614))
