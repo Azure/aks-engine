@@ -224,7 +224,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.18.17":        false,
 	"1.18.18":        false,
 	"1.18.19":        false,
-	"1.18.20":        true,
+	"1.18.20":        false,
 	"1.19.0-alpha.1": false,
 	"1.19.0-alpha.2": false,
 	"1.19.0-alpha.3": false,

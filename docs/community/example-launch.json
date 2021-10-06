@@ -20,7 +20,8 @@
         "--location=${input:location}",
         "--client-id=${env:CLIENT_ID}",
         "--client-secret=${env:CLIENT_SECRET}",
-        "--set", "linuxProfile.ssh.publicKeys[0].keyData=${env:AKSE_PUB_KEY}"
+        "--set",
+        "linuxProfile.ssh.publicKeys[0].keyData=${env:AKSE_PUB_KEY}"
       ],
       "showLog": true
     },
@@ -35,7 +36,8 @@
         "generate",
         "--debug",
         "--api-model=${workspaceRoot}/examples/kubernetes.json",
-        "--set", "linuxProfile.ssh.publicKeys[0].keyData=${env:AKSE_PUB_KEY}"
+        "--set",
+        "linuxProfile.ssh.publicKeys[0].keyData=${env:AKSE_PUB_KEY}"
       ],
       "showLog": true
     },
@@ -56,7 +58,7 @@
         "--new-node-count=${input:newNodeCount}",
         "--client-id=${env:CLIENT_ID}",
         "--client-secret=${env:CLIENT_SECRET}"
-        ]
+      ]
     },
     {
       "name": "upgrade",
@@ -93,7 +95,7 @@
       "id": "kubernetesVersion",
       "type": "promptString",
       "description": "Kubernetes version:",
-      "default": "1.18.1"
+      "default": "1.22.2"
     },
     {
       "id": "location",
