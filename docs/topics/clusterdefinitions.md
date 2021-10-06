@@ -247,7 +247,7 @@ The `calico` addon includes configurable verbosity via the `logSeverityScreen` c
     "addons": [
         ...
         {
-          "name": "calico",
+          "name": "calico-daemonset",
           "enabled": true,
           "config": {
             "logSeverityScreen": "error"
