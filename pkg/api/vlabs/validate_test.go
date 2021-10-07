@@ -4908,7 +4908,7 @@ func TestValidateAcceleratedNetworkingEnabledWindows(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("Accelerated Networking is currently unstable for Windows + Kubernetes, please set acceleratedNetworkingEnabledWindows to false"),
+			expectedErr: nil,
 		},
 	}
 
