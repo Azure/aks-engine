@@ -5711,6 +5711,7 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 }
 
 func TestDefaultIPAddressCount(t *testing.T) {
+	numHostNetworkAddonsEnabledByDefault := 2 // ip-masq-agent and kube-proxy are enabled by default
 	cases := []struct {
 		name           string
 		cs             ContainerService
@@ -5724,7 +5725,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.18.2",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginKubenet,
 						},
@@ -5750,7 +5751,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.18.2",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -5767,8 +5768,8 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				},
 			},
 			expectedMaster: DefaultKubernetesMaxPodsVNETIntegrated + 1,
-			expectedPool0:  DefaultKubernetesMaxPodsVNETIntegrated + 1,
-			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1,
+			expectedPool0:  DefaultKubernetesMaxPodsVNETIntegrated + 1 - numHostNetworkAddonsEnabledByDefault,
+			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1 - numHostNetworkAddonsEnabledByDefault,
 		},
 		{
 			name: "Azure CNI + custom IPAddressCount",
@@ -5776,7 +5777,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.18.2",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -5806,7 +5807,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.18.2",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginKubenet,
 						},
@@ -5836,7 +5837,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.18.2",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -5864,8 +5865,95 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				},
 			},
 			expectedMaster: 25,
-			expectedPool0:  129,
-			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1,
+			expectedPool0:  127,
+			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1 - numHostNetworkAddonsEnabledByDefault,
+		},
+		{
+			name: "Azure CNI + more addons",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AADPodIdentityAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.AntreaAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.AzureNetworkPolicyAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.AzureDiskCSIDriverAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.AzureFileCSIDriverAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.CalicoAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.CiliumAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.CloudNodeManagerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.FlannelAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.IPMASQAgentAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.KubeProxyAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.SecretsStoreCSIDriverAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--max-pods": "24",
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name: "pool1",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--max-pods": "128",
+								},
+							},
+						},
+						{
+							Name: "pool2",
+						},
+					},
+				},
+			},
+			expectedMaster: 25,
+			expectedPool0:  128 + 1 - 12,                                    // 12 hostNetwork pod addons enabled above
+			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1 - 12, // 12 hostNetwork pod addons enabled above
 		},
 		{
 			name: "kubenet + mixed config",
@@ -5873,7 +5961,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.18.2",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, common.KubernetesDefaultRelease, "", false, false, false),
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginKubenet,
 						},
