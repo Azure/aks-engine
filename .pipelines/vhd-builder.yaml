@@ -12,7 +12,7 @@ variables:
 phases:
 - phase: build_vhd
   queue:
-    name: Hosted Ubuntu 1604
+    name: Hosted Ubuntu 1804
     timeoutInMinutes: 120
   steps:
   - script: |
@@ -29,7 +29,7 @@ phases:
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
-      -e UBUNTU_SKU=${UBUNTU_SKU} \
+      -e UBUNTU_SKU=18.04 \
       ${CONTAINER_IMAGE} make run-packer
     displayName: Building VHD
   - task: PublishPipelineArtifact@0
