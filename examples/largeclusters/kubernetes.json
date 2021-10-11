@@ -7,7 +7,7 @@
         "loadBalancerOutboundIPs": 5,
         "useCloudControllerManager": true,
         "kubeletConfig": {
-          "--max-pods": "12"
+          "--max-pods": "16"
         },
         "schedulerConfig": {
           "--kube-api-burst": "800",
