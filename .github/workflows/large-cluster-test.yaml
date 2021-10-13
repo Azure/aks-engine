@@ -110,11 +110,11 @@ jobs:
           path: perf-tests
           ref: release-1.20
       - name: Run pod churn tests
-        working-directory: perf-tests
+        working-directory: perf-tests/clusterloader2
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ../../${{env.KUBECONFIG}}
         run: |
-          CL2_NS_COUNT=15 CL2_CLEANUP=0 CL2_REPEATS=4 CL2_POD_START_TIMEOUT_MINS=20 CL2_PODS_PER_NODE=10 CL2_TARGET_POD_CHURN=75 CL2_PODS_PER_DEPLOYMENT=32 go run clusterloader2/cmd/clusterloader.go --testconfig=../knarly/test/workloads/deployment-churn/config.yaml --provider=aks --kubeconfig=$KUBECONFIG --v=2 --enable-exec-service=false
+          CL2_NS_COUNT=15 CL2_CLEANUP=0 CL2_REPEATS=4 CL2_POD_START_TIMEOUT_MINS=20 CL2_PODS_PER_NODE=10 CL2_TARGET_POD_CHURN=75 CL2_PODS_PER_DEPLOYMENT=32 go run cmd/clusterloader.go --testconfig=../../knarly/test/workloads/deployment-churn/config.yaml --provider=aks --kubeconfig=$KUBECONFIG --v=2 --enable-exec-service=false
       - name: Validate ELB again after conformance
         env:
           NAME: ${{ env.RESOURCE_GROUP }}
