@@ -312,6 +312,7 @@ func TestSerializeContainerService(t *testing.T) {
       "vnetCidr": "10.240.0.0/8",
       "agentVnetSubnetID": "sampleAgentVnetSubnetID",
       "firstConsecutiveStaticIP": "10.240.0.0",
+      "ipAddressCount": 5,
       "storageProfile": "StorageAccount",
       "oauthEnabled": false,
       "preProvisionExtension": {
@@ -442,6 +443,7 @@ func TestSerializeContainerService(t *testing.T) {
         "osType": "Linux",
         "availabilityProfile": "",
         "storageProfile": "",
+        "ipAddressCount": 29,
         "fqdn": "blueorange.westus2.com",
         "preProvisionExtension": null,
         "extensions": [],
@@ -455,6 +457,7 @@ func TestSerializeContainerService(t *testing.T) {
         "osType": "Linux",
         "availabilityProfile": "",
         "storageProfile": "",
+        "ipAddressCount": 29,
         "imageReference": {
           "name": "testImage",
           "resourceGroup": "testRg",

@@ -147,6 +147,7 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.0/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.0.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.9/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.9.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.12/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.12.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.13/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.13.zip"
         )
     }
 

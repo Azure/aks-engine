@@ -628,7 +628,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				// Allocate IP addresses for pods if VNET integration is enabled.
 				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
 					agentPoolMaxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-					profile.IPAddressCount += agentPoolMaxPods
+					profile.IPAddressCount = getPodIPAddressCountForAzureCNI(agentPoolMaxPods, o.KubernetesConfig)
 				}
 			}
 		}
@@ -1193,4 +1193,47 @@ func (cs *ContainerService) setCSIProxyDefaults() {
 			w.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
 		}
 	}
+}
+
+func getPodIPAddressCountForAzureCNI(kubeletMaxPods int, k *KubernetesConfig) int {
+	ret := 1 // We need at least IP address for eth0
+	var numHostNetworkPods int
+	if k.IsAddonEnabled(common.AADPodIdentityAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.AntreaAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.AzureNetworkPolicyAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.AzureDiskCSIDriverAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.AzureFileCSIDriverAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.CalicoAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.CiliumAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.CloudNodeManagerAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.FlannelAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.IPMASQAgentAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.KubeProxyAddonName) {
+		numHostNetworkPods++
+	}
+	if k.IsAddonEnabled(common.SecretsStoreCSIDriverAddonName) {
+		numHostNetworkPods++
+	}
+	ret += (kubeletMaxPods - numHostNetworkPods)
+	return ret
 }
