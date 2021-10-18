@@ -3499,7 +3499,8 @@ spec:
                 - /csi-node-driver-registrar.exe
                 - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
                 - --mode=kubelet-registration-probe
-            initialDelaySeconds: 3
+            initialDelaySeconds: 30
+            timeoutSeconds: 15
           env:
             - name: CSI_ENDPOINT
               value: unix://C:\\csi\\csi.sock
@@ -3585,29 +3586,23 @@ spec:
         - name: csi-proxy-fs-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1
-            type: ""
         - name: csi-proxy-disk-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-disk-v1
-            type: ""
         - name: csi-proxy-volume-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-volume-v1
-            type: ""
         # these paths are still included for compatibility, they're used
         # only if the node has still the beta version of the CSI proxy
         - name: csi-proxy-fs-pipe-v1beta1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1beta1
-            type: ""
         - name: csi-proxy-disk-pipe-v1beta2
           hostPath:
             path: \\.\pipe\csi-proxy-disk-v1beta2
-            type: ""
         - name: csi-proxy-volume-pipe-v1beta2
           hostPath:
             path: \\.\pipe\csi-proxy-volume-v1beta2
-            type: ""
         - name: registration-dir
           hostPath:
             path: C:\var\lib\kubelet\plugins_registry\
@@ -3623,7 +3618,7 @@ spec:
         - name: azure-config
           hostPath:
             path: C:\k
-            type: Directory
+            type: DirectoryOrCreate
 {{end}}
 {{if HasLinux}}
 ---
@@ -3684,6 +3679,14 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh", "-c", "rm -rf /registration/disk.csi.azure.com-reg.sock /csi/csi.sock"]
+          livenessProbe:
+            exec:
+              command:
+                - /csi-node-driver-registrar
+                - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+                - --mode=kubelet-registration-probe
+            initialDelaySeconds: 30
+            timeoutSeconds: 15
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -3742,9 +3745,6 @@ spec:
               name: mountpoint-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
             - mountPath: /dev
               name: device-dir
             - mountPath: /sys/bus/scsi/devices
@@ -3773,11 +3773,8 @@ spec:
           name: registration-dir
         - hostPath:
             path: /etc/kubernetes/
-            type: Directory
+            type: DirectoryOrCreate
           name: azure-cred
-        - hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
-          name: msi
         - hostPath:
             path: /dev
             type: Directory
@@ -3959,9 +3956,6 @@ spec:
               name: socket-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
           resources:
             limits:
               cpu: {{ContainerCPULimits "azuredisk-csi"}}
@@ -3975,10 +3969,7 @@ spec:
         - name: azure-cred
           hostPath:
             path: /etc/kubernetes/
-            type: Directory
-        - name: msi
-          hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
+            type: DirectoryOrCreate
 {{if ShouldEnableCSISnapshotFeature "azuredisk-csi-driver"}}
 ---
 # Source: azuredisk-csi-driver/templates/csi-snapshot-controller.yaml
@@ -4225,7 +4216,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: false
+    storage: true
     subresources:
       status: {}
   - additionalPrinterColumns:
@@ -4261,6 +4252,11 @@ spec:
       name: Age
       type: date
     name: v1beta1
+    # This indicates the v1beta1 version of the custom resource is deprecated.
+    # API requests to this version receive a warning in the server response.
+    deprecated: true
+    # This overrides the default warning returned to clients making v1beta1 API requests.
+    deprecationWarning: "snapshot.storage.k8s.io/v1beta1 VolumeSnapshot is deprecated; use snapshot.storage.k8s.io/v1 VolumeSnapshot"
     schema:
       openAPIV3Schema:
         description: VolumeSnapshot is a user's request for either creating a point-in-time snapshot of a persistent volume, or binding to a pre-existing snapshot.
@@ -4324,7 +4320,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: true
+    storage: false
     subresources:
       status: {}
 status:
@@ -4395,7 +4391,7 @@ spec:
         - driver
         type: object
     served: true
-    storage: false
+    storage: true
     subresources: {}
   - additionalPrinterColumns:
     - jsonPath: .driver
@@ -4409,6 +4405,11 @@ spec:
       name: Age
       type: date
     name: v1beta1
+    # This indicates the v1beta1 version of the custom resource is deprecated.
+    # API requests to this version receive a warning in the server response.
+    deprecated: true
+    # This overrides the default warning returned to clients making v1beta1 API requests.
+    deprecationWarning: "snapshot.storage.k8s.io/v1beta1 VolumeSnapshotClass is deprecated; use snapshot.storage.k8s.io/v1 VolumeSnapshotClass"
     schema:
       openAPIV3Schema:
         description: VolumeSnapshotClass specifies parameters that a underlying storage system uses when creating a volume snapshot. A specific VolumeSnapshotClass is used by specifying its name in a VolumeSnapshot object. VolumeSnapshotClasses are non-namespaced
@@ -4438,7 +4439,7 @@ spec:
         - driver
         type: object
     served: true
-    storage: true
+    storage: false
     subresources: {}
 status:
   acceptedNames:
@@ -4491,6 +4492,10 @@ spec:
     - description: Name of the VolumeSnapshot object to which this VolumeSnapshotContent object is bound.
       jsonPath: .spec.volumeSnapshotRef.name
       name: VolumeSnapshot
+      type: string
+    - description: Namespace of the VolumeSnapshot object to which this VolumeSnapshotContent object is bound.
+      jsonPath: .spec.volumeSnapshotRef.namespace
+      name: VolumeSnapshotNamespace
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -4599,7 +4604,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: false
+    storage: true
     subresources:
       status: {}
   - additionalPrinterColumns:
@@ -4627,10 +4632,19 @@ spec:
       jsonPath: .spec.volumeSnapshotRef.name
       name: VolumeSnapshot
       type: string
+    - description: Namespace of the VolumeSnapshot object to which this VolumeSnapshotContent object is bound.
+      jsonPath: .spec.volumeSnapshotRef.namespace
+      name: VolumeSnapshotNamespace
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
     name: v1beta1
+    # This indicates the v1beta1 version of the custom resource is deprecated.
+    # API requests to this version receive a warning in the server response.
+    deprecated: true
+    # This overrides the default warning returned to clients making v1beta1 API requests.
+    deprecationWarning: "snapshot.storage.k8s.io/v1beta1 VolumeSnapshotContent is deprecated; use snapshot.storage.k8s.io/v1 VolumeSnapshotContent"
     schema:
       openAPIV3Schema:
         description: VolumeSnapshotContent represents the actual "on-disk" snapshot object in the underlying storage system
@@ -4731,7 +4745,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: true
+    storage: false
     subresources:
       status: {}
 status:
@@ -5101,7 +5115,8 @@ spec:
                 - /csi-node-driver-registrar.exe
                 - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
                 - --mode=kubelet-registration-probe
-            initialDelaySeconds: 3
+            initialDelaySeconds: 30
+            timeoutSeconds: 15
           env:
             - name: CSI_ENDPOINT
               value: unix://C:\\csi\\csi.sock
@@ -5185,21 +5200,17 @@ spec:
         - name: csi-proxy-fs-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1
-            type: ""
         - name: csi-proxy-smb-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-smb-v1
-            type: ""
         # these paths are still included for compatibility, they're used
         # only if the node has still the beta version of the CSI proxy
         - name: csi-proxy-fs-pipe-v1beta1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1beta1
-            type: ""
         - name: csi-proxy-smb-pipe-v1beta1
           hostPath:
             path: \\.\pipe\csi-proxy-smb-v1beta1
-            type: ""
         - name: registration-dir
           hostPath:
             path: C:\var\lib\kubelet\plugins_registry\
@@ -5215,7 +5226,7 @@ spec:
         - name: azure-config
           hostPath:
             path: C:\k
-            type: Directory
+            type: DirectoryOrCreate
 {{end}}
 {{if HasLinux}}
 ---
@@ -5276,6 +5287,14 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh", "-c", "rm -rf /registration/file.csi.azure.com-reg.sock /csi/csi.sock"]
+          livenessProbe:
+            exec:
+              command:
+                - /csi-node-driver-registrar
+                - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+                - --mode=kubelet-registration-probe
+            initialDelaySeconds: 30
+            timeoutSeconds: 15
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -5333,9 +5352,6 @@ spec:
               name: mountpoint-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
             - mountPath: /dev
               name: device-dir
           resources:
@@ -5360,11 +5376,8 @@ spec:
           name: registration-dir
         - hostPath:
             path: /etc/kubernetes/
-            type: Directory
+            type: DirectoryOrCreate
           name: azure-cred
-        - hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
-          name: msi
         - hostPath:
             path: /dev
             type: Directory
@@ -5534,9 +5547,6 @@ spec:
               name: socket-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
           resources:
             limits:
               cpu: {{ContainerCPULimits "azurefile-csi"}}
@@ -5550,10 +5560,7 @@ spec:
         - name: azure-cred
           hostPath:
             path: /etc/kubernetes/
-            type: Directory
-        - name: msi
-          hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
+            type: DirectoryOrCreate
 ---
 # Source: azurefile-csi-driver/templates/csi-azurefile-driver.yaml
 apiVersion: storage.k8s.io/v1
