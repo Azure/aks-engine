@@ -7931,7 +7931,7 @@ data:
       type kubepodinventory
       tag oms.containerinsights.KubePodInventory
       run_interval 60
-      log_level debug     
+      log_level debug
      </source>
 
      #Kubernetes Persistent Volume inventory
@@ -7991,7 +7991,7 @@ data:
      </source>
 
      <filter mdm.kubenodeinventory**>
-      type filter_inventory2mdm     
+      type filter_inventory2mdm
       log_level info
      </filter>
 
@@ -8221,10 +8221,10 @@ spec:
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: omsagent
-      dnsConfig:    
+      dnsConfig:
         options:
           - name: ndots
-            value: "3"  
+            value: "3"
       containers:
         - name: omsagent
           image: {{ContainerImage "omsagent"}}
@@ -8294,6 +8294,59 @@ spec:
             - mountPath: /etc/config/settings/adx
               name: omsagent-adx-secret
               readOnly: true
+        - name: omsagent-prometheus
+          image: {{ContainerImage "omsagent"}}
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "omsagent-prometheus"}}
+              memory: {{ContainerMemLimits "omsagent-prometheus"}}
+            requests:
+              cpu: {{ContainerCPUReqs "omsagent-prometheus"}}
+              memory: {{ContainerMemReqs "omsagent-prometheus"}}
+          env:
+            # azure devops pipeline uses AKS_RESOURCE_ID and AKS_REGION hence ensure to uncomment these
+            - name: ACS_RESOURCE_NAME
+              value: {{ContainerConfig "clusterName"}}
+            - name: CONTROLLER_TYPE
+              value: "DaemonSet"
+            - name: ISTEST
+              value: "true"
+            - name: CONTAINER_TYPE
+              value: "PrometheusSidecar"
+            - name: CONTROLLER_TYPE
+              value: "DaemonSet"
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
+            - name: USING_AAD_MSI_AUTH
+              value: "false"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /etc/kubernetes/host
+              name: azure-json-path
+            - mountPath: /etc/omsagent-secret
+              name: omsagent-secret
+              readOnly: true
+            - mountPath: /etc/config/settings
+              name: settings-vol-config
+              readOnly: true
+            - mountPath: /etc/config/osm-settings
+              name: osm-settings-vol-config
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /opt/livenessprobe.sh
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -8413,7 +8466,7 @@ spec:
             - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
               value: ""
             - name: SIDECAR_SCRAPING_ENABLED
-              value: "false"
+              value: "true"
           securityContext:
             privileged: true
           ports:
@@ -8546,10 +8599,10 @@ spec:
         schema-versions:  {{ContainerConfig "schema-versions"}}
     spec:
       serviceAccountName: omsagent
-      dnsConfig:    
+      dnsConfig:
         options:
           - name: ndots
-            value: "3"  
+            value: "3"
       containers:
         - name: omsagent-win
           image: {{ContainerImage "omsagent-win"}}
@@ -8576,7 +8629,7 @@ spec:
                  fieldRef:
                    fieldPath: status.hostIP
             - name: SIDECAR_SCRAPING_ENABLED
-              value: "false"
+              value: "true"
           volumeMounts:
             - mountPath: C:\ProgramData\docker\containers
               name: docker-windows-containers
@@ -8597,7 +8650,11 @@ spec:
               command:
                 - cmd
                 - /c
-                - C:\opt\omsagentwindows\scripts\cmd\livenessProbe.cmd
+                - C:\opt\omsagentwindows\scripts\cmd\livenessprobe.exe
+                - fluent-bit.exe
+                - fluentdwinaks
+                - "C:\\etc\\omsagentwindows\\filesystemwatcher.txt"
+                - "C:\\etc\\omsagentwindows\\renewcertificate.txt"
             periodSeconds: 60
             initialDelaySeconds: 180
       affinity:
