@@ -443,11 +443,11 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: {{ContainerCPULimits "omsagent"}}
-              memory: {{ContainerMemLimits "omsagent"}}
+              cpu: {{ContainerCPULimits "omsagent-prometheus"}}
+              memory: {{ContainerMemLimits "omsagent-prometheus"}}
             requests:
-              cpu: {{ContainerCPUReqs "omsagent"}}
-              memory: {{ContainerMemReqs "omsagent"}}
+              cpu: {{ContainerCPUReqs "omsagent-prometheus"}}
+              memory: {{ContainerMemReqs "omsagent-prometheus"}}
           env:
             # azure devops pipeline uses AKS_RESOURCE_ID and AKS_REGION hence ensure to uncomment these
             - name: ACS_RESOURCE_NAME

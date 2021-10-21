@@ -253,6 +253,14 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          omsagentImage,
 			},
 			{
+				Name:           "omsagent-prometheus",
+				CPURequests:    "75m",
+				MemoryRequests: "225Mi",
+				CPULimits:      "500m",
+				MemoryLimits:   "1Gi",
+				Image:          omsagentImage,
+			},
+			{
 				Name:         "omsagent-win",
 				CPULimits:    "200m",
 				MemoryLimits: "600Mi",
