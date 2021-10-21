@@ -147,7 +147,7 @@
               }
             ],
             "config": {
-              "dockerProviderVersion": "14.0.0-0",
+              "dockerProviderVersion": "16.0.0-0",
               "omsAgentVersion": "1.10.0.1"
             }
           },

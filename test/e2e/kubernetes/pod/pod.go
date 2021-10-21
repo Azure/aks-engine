@@ -1675,7 +1675,7 @@ func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, timeout time.Dur
 			case <-ctx.Done():
 				return
 			default:
-				ch <- p.ExecAsync("grep", "-i", execCmdString, "/var/opt/microsoft/omsagent/log/omsagent.log")
+				ch <- p.ExecAsync("grep", "-i", execCmdString, "/var/opt/microsoft/docker-cimprov/log/fluentd.log")
 				time.Sleep(sleep)
 			}
 		}
