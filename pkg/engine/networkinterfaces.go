@@ -81,6 +81,9 @@ func CreateMasterVMNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceA
 
 	if isAzureCNI {
 		ipConfigurations = append(ipConfigurations, getSecondaryNICIPConfigs(cs.Properties.MasterProfile.IPAddressCount)...)
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			nicProperties.EnableIPForwarding = to.BoolPtr(true)
+		}
 	} else {
 		if !cs.Properties.IsAzureStackCloud() {
 			nicProperties.EnableIPForwarding = to.BoolPtr(true)

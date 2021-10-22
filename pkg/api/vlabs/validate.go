@@ -1278,10 +1278,6 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		if k.NetworkPlugin == "azure" && k.NetworkPolicy != "" {
 			return errors.Errorf("Network policy %s is not supported for azure cni dualstack", k.NetworkPolicy)
 		}
-
-		if k.NetworkPlugin == "azure" && k.NetworkMode != NetworkModeBridge {
-			return errors.Errorf("Azure CNI requires OrchestratorProfile.KubernetesConfig.NetworkMode=bridge in dual stack configuration")
-		}
 	}
 
 	if isIPv6 {
