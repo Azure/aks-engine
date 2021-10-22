@@ -75,9 +75,9 @@ checkDesiredVersion() {
   local release_url="https://github.com/Azure/aks-engine/releases/${DESIRED_VERSION:-latest}"
   # shellcheck disable=SC2086
   if type "curl" > /dev/null; then
-    TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
+    TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep "href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 8 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
   elif type "wget" > /dev/null; then
-    TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
+    TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep "href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 8 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
   fi
   if [ "$TAG" == "" ]; then
     echo "Cannot determine ${DESIRED_VERSION} tag."
