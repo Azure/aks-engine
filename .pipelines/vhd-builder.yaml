@@ -12,8 +12,10 @@ variables:
 phases:
 - phase: build_vhd
   queue:
-    name: Hosted Ubuntu 1804
+    name: Hosted Ubuntu 1604
     timeoutInMinutes: 120
+  pool:
+    vmImage: 'Ubuntu 18.04'
   steps:
   - script: |
       docker run --rm \
