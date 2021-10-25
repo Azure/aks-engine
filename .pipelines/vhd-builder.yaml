@@ -12,7 +12,7 @@ variables:
 phases:
 - phase: build_vhd
   queue:
-    name: Hosted Ubuntu 1604
+    name: Hosted Ubuntu 1804
     timeoutInMinutes: 120
   steps:
   - script: |
