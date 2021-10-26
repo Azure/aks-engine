@@ -1,8 +1,4 @@
 {
-    "env": {
-        "GINKGO_SKIP": "should be able to rotate docker logs"
-    },
-    "apiModel": {
         "apiVersion": "vlabs",
         "properties": {
             "orchestratorProfile": {
@@ -56,5 +52,4 @@
                 "sshEnabled": true
             }
         }
-    }
-}
+ }
