@@ -52,6 +52,7 @@ jobs:
           ORCHESTRATOR_RELEASE: "1.22"
           CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
           RUN_VMSS_NODE_PROTOTYPE: true
+          RUN_VMSS_HYGIENE: true
           KAMINO_VMSS_PROTOTYPE_NEW_NODES: 998
           GINKGO_FOCUS: "should be able to install vmss node prototype"
           GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"

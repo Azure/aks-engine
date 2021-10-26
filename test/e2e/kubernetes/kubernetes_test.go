@@ -191,20 +191,24 @@ var _ = BeforeSuite(func() {
 		}
 	}
 
-	vmssHealthCommand, err = RunVMSSHealthCheck(cfg)
-	Expect(err).NotTo(HaveOccurred())
-	vmssHealthCommandStdOut = fmt.Sprintf("./vmss-health-check-%s.out", cfg.ResourceGroup)
+	if cfg.RunVMSSHygiene {
+		vmssHealthCommand, err = RunVMSSHealthCheck(cfg)
+		Expect(err).NotTo(HaveOccurred())
+		vmssHealthCommandStdOut = fmt.Sprintf("./vmss-health-check-%s.out", cfg.ResourceGroup)
+	}
 })
 
 var _ = AfterSuite(func() {
-	if err := vmssHealthCommand.Process.Kill(); err != nil {
-		log.Fatal(fmt.Sprintf("failed to kill process ID %d: ", vmssHealthCommand.Process.Pid), err)
+	if cfg.RunVMSSHygiene {
+		if err := vmssHealthCommand.Process.Kill(); err != nil {
+			log.Fatal(fmt.Sprintf("failed to kill process ID %d: ", vmssHealthCommand.Process.Pid), err)
+		}
+		stdout, err := ioutil.ReadFile(vmssHealthCommandStdOut)
+		if err != nil {
+			fmt.Printf("Unable to read file %s", vmssHealthCommandStdOut)
+		}
+		fmt.Println(string(stdout))
 	}
-	stdout, err := ioutil.ReadFile(vmssHealthCommandStdOut)
-	if err != nil {
-		fmt.Printf("Unable to read file %s", vmssHealthCommandStdOut)
-	}
-	fmt.Println(string(stdout))
 	if cfg.DebugAfterSuite {
 		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses,podsecuritypolicy", "--all-namespaces", "-o", "wide")
 		out, err := cmd.CombinedOutput()
