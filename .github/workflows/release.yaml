@@ -154,9 +154,10 @@ jobs:
         run: make test-kubernetes
       - name: Add local tag
         run: git tag ${{ env.RELEASE_VERSION }}
-      - name: print git status before producing binaries
+      - name: print and validate git status before producing binaries
         run: |
           git status
+          git status | grep 'working tree clean'
       - name: clean all unstaged changes
         run: |
           git checkout -- .
