@@ -33,11 +33,11 @@ jobs:
   run-e2e:
     runs-on: ubuntu-latest
     steps:
-      - name: validate cluster config
-        run: ls -la ${{github.event.inputs.cluster_config}}
       - uses: actions/checkout@v2
         with:
           ref: ${{github.event.inputs.from_branch}}
+      - name: validate cluster config
+        run: ls -la ${{github.event.inputs.cluster_config}}
       - name: Setup SSH Keys and known_hosts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
