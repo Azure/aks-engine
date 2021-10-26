@@ -315,7 +315,7 @@ fi
 if [ "${ROTATE_CERTS}" = "true" ]; then
   rotateCertificates
 
-  SKIP_AFTER_ROTATE_CERTS="should be able to autoscale"
+  SKIP_AFTER_ROTATE_CERTS="${GINKGO_SKIP}|should be able to autoscale"
   SKIP_AFTER_SCALE_DOWN="${SKIP_AFTER_SCALE_DOWN}|should be able to autoscale"
   SKIP_AFTER_SCALE_UP="${SKIP_AFTER_SCALE_DOWN}|should be able to autoscale"
   CLEANUP_AFTER_ROTATE_CERTS=${CLEANUP_ON_EXIT}
