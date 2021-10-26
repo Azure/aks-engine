@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: validate cluster config
-        run: ls -la "${{github.event.inputs.cluster_config}}"'
+        run: ls -la ${{github.event.inputs.cluster_config}}
       - uses: actions/checkout@v2
         with:
           ref: ${{github.event.inputs.from_branch}}
