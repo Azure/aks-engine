@@ -6,11 +6,11 @@ on:
         description: 'Path to example api model? (e.g., examples/kubernetes-gpu/kubernetes.json)'
         required: true
       ginkgo_focus:
-        description: 'E2E tests to run' (e.g., "should be able to run a nvidia-gpu job")
+        description: 'E2E tests to run' (e.g., "should be able to run a nvidia-gpu job")'
         required: false
         default: ''
       ginkgo_skip:
-        description: 'E2E tests to skip' (e.g., "should have the expected k8s version")
+        description: 'E2E tests to skip' (e.g., "should have the expected k8s version")'
         required: false
         default: ''
       kubernetes_release:
