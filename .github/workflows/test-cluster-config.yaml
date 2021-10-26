@@ -26,15 +26,15 @@ on:
         required: false
         default: 'westus2'
       from_branch:
-        description: 'Which branch to source release branch from? (default: master)'
+        description: 'Which branch to run tests from? (default: master)'
         required: false
         default: 'master'
 jobs:
-  create-release-branch:
+  run-e2e:
     runs-on: ubuntu-latest
     steps:
-      - name: validate version
-        run: echo "${{github.event.inputs.cluster_config}}" | grep -E '^gpu$'
+      - name: validate cluster config
+        run: ls -la "${{github.event.inputs.cluster_config}}"'
       - uses: actions/checkout@v2
         with:
           ref: ${{github.event.inputs.from_branch}}
