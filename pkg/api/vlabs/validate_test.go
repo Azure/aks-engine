@@ -665,8 +665,8 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
-			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
+		if err := c.Validate(k8sVersion, false, true, false, false); err != nil {
+			t.Errorf("should not error when Azure CNI + dual stack with transparent mode: %v", err)
 		}
 
 		// Azure CNI + dualstack doesn't work with transparent NetworkMode
@@ -679,8 +679,8 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
-			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
+		if err := c.Validate(k8sVersion, false, true, false, false); err != nil {
+			t.Errorf("should not error when Azure CNI + dual stack with transparent mode: %v", err)
 		}
 	}
 
