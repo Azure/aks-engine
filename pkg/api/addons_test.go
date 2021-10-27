@@ -1494,6 +1494,14 @@ func TestSetAddonsConfig(t *testing.T) {
 							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10132021",
 						},
 						{
+							Name:           "omsagent-prometheus",
+							CPURequests:    "75m",
+							MemoryRequests: "225Mi",
+							CPULimits:      "500m",
+							MemoryLimits:   "1Gi",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10132021",
+						},
+						{
 							Name:         "omsagent-win",
 							CPULimits:    "200m",
 							MemoryLimits: "600Mi",
