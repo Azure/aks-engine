@@ -15913,6 +15913,12 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
     iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
+    {{- /* Ensure that we have access to the upstream DNS via TCP */}}
+    {{- /* There is a long-standing bug where TCP is blocked for all ports */}}
+    {{- /* thus impacting DNS via TCP - https://github.com/Azure/WALinuxAgent/issues/1673 */}}
+    {{- /* This works around that bug and will not have negative impacts if it gets fixed */}}
+    iptables -t security -D OUTPUT -d 168.63.129.16/32 -p tcp -m tcp --dport 53 -j ACCEPT || true
+    iptables -t security -I OUTPUT 1 -d 168.63.129.16/32 -p tcp -m tcp --dport 53 -j ACCEPT
     #EOF
 
 {{- if not HasCosmosEtcd  }}
