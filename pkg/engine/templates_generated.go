@@ -12230,7 +12230,7 @@ ensureChrony() {
 disable1804SystemdResolved() {
   ls -ltr /etc/resolv.conf
   cat /etc/resolv.conf
-  {{/* Ingorings systemd-resolved query service but using its resolv.conf file */}}
+  {{/* Ignoring systemd-resolved query service but using its resolv.conf file */}}
   {{/* This is the simplest approach to workaround resolved issues without completely uninstall it */}}
   [ -f /run/systemd/resolve/resolv.conf ] && sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
   ls -ltr /etc/resolv.conf
