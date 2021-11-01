@@ -12227,7 +12227,11 @@ configureChrony() {
 ensureChrony() {
   systemctlEnableAndStart chrony || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
-
+disable1804SystemdResolved() {
+  {{/* Ignoring systemd-resolved query service but using its resolv.conf file */}}
+  {{/* This is the simplest approach to workaround resolved issues without completely uninstall it */}}
+  [ -f /run/systemd/resolve/resolv.conf ] && sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+}
 ensureRPC() {
   systemctlEnableAndStart rpcbind || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
   systemctlEnableAndStart rpc-statd || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
@@ -13669,6 +13673,10 @@ source {{GetCSEConfigScriptFilepath}}
 wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
+
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  disable1804SystemdResolved
+fi
 
 set +x
 ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
