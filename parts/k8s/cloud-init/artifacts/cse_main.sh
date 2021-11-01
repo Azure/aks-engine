@@ -43,6 +43,10 @@ wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEE
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  disable1804SystemdResolved
+fi
+
 set +x
 ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))

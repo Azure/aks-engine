@@ -114,7 +114,11 @@ configureChrony() {
 ensureChrony() {
   systemctlEnableAndStart chrony || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
-
+disable1804SystemdResolved() {
+  {{/* Ignoring systemd-resolved query service but using its resolv.conf file */}}
+  {{/* This is the simplest approach to workaround resolved issues without completely uninstall it */}}
+  [ -f /run/systemd/resolve/resolv.conf ] && sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+}
 ensureRPC() {
   systemctlEnableAndStart rpcbind || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
   systemctlEnableAndStart rpc-statd || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
