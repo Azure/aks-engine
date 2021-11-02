@@ -1,0 +1,138 @@
+name: Large Cluster Test
+on:
+  workflow_dispatch:
+    inputs:
+      from_branch:
+        description: 'Which branch to source release branch from? (default: master)'
+        required: false
+        default: 'master'
+jobs:
+  large-cluster-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.inputs.from_branch}}
+      - name: Setup SSH Keys and known_hosts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - name: Install helm
+        run: |
+          curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+          sudo apt-get install apt-transport-https --yes
+          echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update
+          sudo apt-get install helm
+      - name: Install jq
+        run: |
+          sudo apt-get install jq
+      - name: Install k
+        run: |
+          sudo curl -o /usr/local/bin/k https://raw.githubusercontent.com/jakepearson/k/master/k
+          sudo chmod +x /usr/local/bin/k
+      - name: Install sonobuoy
+        run: |
+          sudo curl -fsSL https://github.com/vmware-tanzu/sonobuoy/releases/download/v0.53.2/sonobuoy_0.53.2_linux_amd64.tar.gz -o sonobuoy_0.53.2_linux_amd64.tar.gz
+          sudo tar -xvf ./sonobuoy_0.53.2_linux_amd64.tar.gz
+          sudo chmod +x ./sonobuoy
+          sudo mv ./sonobuoy /usr/local/bin/sonobuoy
+          sudo rm ./sonobuoy_0.53.2_linux_amd64.tar.gz
+      - name: Build aks-engine binary
+        run: make build-binary
+      - name: Validate large cluster scenario
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.22"
+          CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
+          RUN_VMSS_NODE_PROTOTYPE: true
+          RUN_VMSS_HYGIENE: true
+          KAMINO_VMSS_PROTOTYPE_NEW_NODES: 998
+          GINKGO_FOCUS: "should be able to install vmss node prototype"
+          GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
+          SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.LARGE_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.LARGE_AZURE_SP_PW }}
+          LOCATION: "eastus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: false
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "docker"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: setup environment so we can reuse this cluster for subsequent tests
+        run: |
+          RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
+          echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> $GITHUB_ENV
+          echo "KUBECONFIG=_output/$RESOURCE_GROUP/kubeconfig/kubeconfig.eastus2.json" >> $GITHUB_ENV
+      - name: Validate ELB with large cluster
+        env:
+          NAME: ${{ env.RESOURCE_GROUP }}
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.22"
+          CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
+          LB_TIMEOUT: "30m"
+          GINKGO_FOCUS: "should be able to produce working LoadBalancers"
+          GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
+          SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.LARGE_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.LARGE_AZURE_SP_PW }}
+          LOCATION: "eastus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: false
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "docker"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Run conformance tests
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+        run: |
+          sonobuoy run --plugin e2e --wait --e2e-skip "\[Serial\]" --e2e-focus "\[Conformance\]" --timeout=86400
+          k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"'
+      - name: checkout knarly
+        uses: actions/checkout@v2
+        with:
+          repository: Azure/knarly
+          path: knarly
+          ref: main
+      - name: checkout perf-tests
+        uses: actions/checkout@v2
+        with:
+          repository: kubernetes/perf-tests
+          path: perf-tests
+          ref: release-1.20
+      - name: Run pod churn tests
+        working-directory: perf-tests
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+        run: |
+          CL2_NS_COUNT=15 CL2_CLEANUP=0 CL2_REPEATS=4 CL2_POD_START_TIMEOUT_MINS=20 CL2_PODS_PER_NODE=10 CL2_TARGET_POD_CHURN=75 CL2_PODS_PER_DEPLOYMENT=32 go run clusterloader2/cmd/clusterloader.go --testconfig=../knarly/test/workloads/deployment-churn/config.yaml --provider=aks --kubeconfig=$KUBECONFIG --v=2 --enable-exec-service=false
+      - name: Validate ELB again after conformance
+        env:
+          NAME: ${{ env.RESOURCE_GROUP }}
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.22"
+          CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
+          LB_TIMEOUT: "30m"
+          GINKGO_FOCUS: "should be able to produce working LoadBalancers"
+          GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
+          SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.LARGE_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.LARGE_AZURE_SP_PW }}
+          LOCATION: "eastus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "docker"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes

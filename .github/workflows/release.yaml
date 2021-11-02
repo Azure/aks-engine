@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - release-*
+    paths:
+      - 'releases/CHANGELOG*.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: set env
+        run: |
+          export CURRENT_BRANCH=$(git branch --show-current)
+          echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
+      - name: Setup SSH Keys and known_hosts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+      - name: Validate CHANGELOG # We require a pre-existing CHANGELOG specific for this release in order to proceed
+        run: |
+          [ -s releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md ]
+      - name: Install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - name: Install helm
+        run: |
+          curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+          sudo apt-get install apt-transport-https --yes
+          echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update
+          sudo apt-get install helm
+      - name: Install k
+        run: |
+          sudo curl -o /usr/local/bin/k https://raw.githubusercontent.com/jakepearson/k/master/k
+          sudo chmod +x /usr/local/bin/k
+      - name: Build aks-engine binary
+        run: make build-binary
+      - name: print git status after build
+        run: |
+          git status
+      - name: Validate 1.18 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.18"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.19 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.19"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.20 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate gpu + docker scenario
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
+          GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "docker"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate gpu + containerd scenario
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
+          GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "containerd"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.20 + containerd E2E
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/e2e-tests/kubernetes/release/default/definition.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CREATE_VNET: true
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: false
+          GINKGO_SKIP: ""
+          STABILITY_ITERATIONS: "0"
+          RETAIN_SSH: false
+          CONTAINER_RUNTIME: "containerd"
+          BLOCK_SSH: false
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Add local tag
+        run: git tag ${{ env.RELEASE_VERSION }}
+      - name: print and validate git status before producing binaries
+        run: |
+          git status
+          git status | grep 'working tree clean'
+      - name: clean all unstaged changes
+        run: |
+          git checkout -- .
+      - name: Build Artifacts
+        run: |
+          docker run --rm \
+          -v ${GITHUB_WORKSPACE}:/go/src/github.com/Azure/aks-engine \
+          -w /go/src/github.com/Azure/aks-engine \
+          mcr.microsoft.com/oss/azcu/go-dev:v1.32.3 make dist
+      - name: Remove local tag
+        run: git tag -d ${{ env.RELEASE_VERSION }}
+      - name: Publish Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: _dist/aks-engine*-*-*.*
+          bodyFile: releases/CHANGELOG-${{ env.RELEASE_VERSION }}.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.RELEASE_VERSION }}

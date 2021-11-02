@@ -1,0 +1,164 @@
+name: Create Release Branch
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Which version are we creating a release branch for?'
+        required: true
+      from_branch:
+        description: 'Which branch to source release branch from? (default: master)'
+        required: false
+        default: 'master'
+jobs:
+  create-release-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: validate version
+        run: echo "${{github.event.inputs.release_version}}" | grep -E 'v[0-9]+\.[0-9]+\.[0-9]+$'
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.inputs.from_branch}}
+      - name: Setup SSH Keys and known_hosts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - name: Install helm
+        run: |
+          curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+          sudo apt-get install apt-transport-https --yes
+          echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update
+          sudo apt-get install helm
+      - name: Install k
+        run: |
+          sudo curl -o /usr/local/bin/k https://raw.githubusercontent.com/jakepearson/k/master/k
+          sudo chmod +x /usr/local/bin/k
+      - name: Build aks-engine binary
+        run: make build-binary
+      - name: Validate 1.19 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.19"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.20 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.21 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.21"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.22 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.22"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate gpu + docker scenario
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
+          GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "docker"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate gpu + containerd scenario
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.20"
+          CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
+          GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          CONTAINER_RUNTIME: "containerd"
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: create branch
+        run: |
+          git remote -v
+          git checkout -b release-${{github.event.inputs.release_version}}
+          git push origin release-${{github.event.inputs.release_version}}
+  generate-release-changelog:
+    needs: create-release-branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: release-${{github.event.inputs.release_version}}
+          fetch-depth: 0
+      - name: install go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+      - name: install git-chglog
+        run: go get -u github.com/git-chglog/git-chglog/cmd/git-chglog # TODO don't do this
+      - name: reset go mod
+        run: |
+          git checkout -- go.mod
+          git checkout -- go.sum
+      - name: generate release notes
+        run: |
+          git tag ${{github.event.inputs.release_version}}
+          git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{github.event.inputs.release_version}}.md ${{github.event.inputs.release_version}}
+          git tag -d ${{github.event.inputs.release_version}}
+          git add releases/CHANGELOG-${{github.event.inputs.release_version}}.md
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'release: ${{github.event.inputs.release_version}} CHANGELOG'
+          title: 'release: ${{github.event.inputs.release_version}} CHANGELOG'
+          body: Add CHANGELOG for upcoming ${{github.event.inputs.release_version}} release
+          branch: CHANGELOG-${{github.event.inputs.release_version}}
