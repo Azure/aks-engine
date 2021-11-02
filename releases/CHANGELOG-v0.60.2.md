@@ -11,5 +11,4 @@
 - add examples expected by Create Release Branch
 
 #### Please report any issues here: https://github.com/Azure/aks-engine/issues/new
-[Unreleased]: https://github.com/Azure/aks-engine/compare/v0.60.2...HEAD
 [v0.60.2]: https://github.com/Azure/aks-engine/compare/v0.60.1...v0.60.2
