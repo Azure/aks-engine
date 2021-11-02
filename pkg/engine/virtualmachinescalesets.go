@@ -188,6 +188,13 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		netintconfig.EnableIPForwarding = to.BoolPtr(true)
 	}
 
+	// Enable IPForwarding on NetworkInterface for azurecni dualstack
+	if isAzureCNI {
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			netintconfig.EnableIPForwarding = to.BoolPtr(true)
+		}
+	}
+
 	networkProfile := compute.VirtualMachineScaleSetNetworkProfile{
 		NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
 			netintconfig,
@@ -572,8 +579,16 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	}
 
-	if !orchProfile.IsAzureCNI() && !cs.Properties.IsAzureStackCloud() {
+	isAzureCNI := orchProfile.IsAzureCNI()
+	if !isAzureCNI && !cs.Properties.IsAzureStackCloud() {
 		vmssNICConfig.EnableIPForwarding = to.BoolPtr(true)
+	}
+
+	// Enable IPForwarding on NetworkInterface for azurecni dualstack
+	if isAzureCNI {
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			vmssNICConfig.EnableIPForwarding = to.BoolPtr(true)
+		}
 	}
 
 	vmssNetworkProfile := compute.VirtualMachineScaleSetNetworkProfile{

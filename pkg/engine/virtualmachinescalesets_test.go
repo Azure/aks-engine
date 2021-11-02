@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
-
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -620,6 +618,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 				VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 					Primary:                     to.BoolPtr(true),
 					EnableAcceleratedNetworking: to.BoolPtr(true),
+					EnableIPForwarding:          to.BoolPtr(true),
 					IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false, true),
 				},
 			},
@@ -642,6 +641,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 				VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
 					Primary:                     to.BoolPtr(true),
 					EnableAcceleratedNetworking: to.BoolPtr(true),
+					EnableIPForwarding:          to.BoolPtr(true),
 					IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), true, true),
 				},
 			},

@@ -200,6 +200,13 @@ func createPrivateClusterMasterVMNetworkInterface(cs *api.ContainerService) Netw
 		nicProperties.EnableIPForwarding = to.BoolPtr(true)
 	}
 
+	// Enable IPForwarding on NetworkInterface for azurecni dualstack
+	if isAzureCNI {
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			nicProperties.EnableIPForwarding = to.BoolPtr(true)
+		}
+	}
+
 	linuxProfile := cs.Properties.LinuxProfile
 	if linuxProfile != nil && linuxProfile.HasCustomNodesDNS() {
 		nicProperties.DNSSettings = &network.InterfaceDNSSettings{
@@ -408,6 +415,13 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 
 	if !isAzureCNI && !cs.Properties.IsAzureStackCloud() {
 		networkInterface.EnableIPForwarding = to.BoolPtr(true)
+	}
+
+	// Enable IPForwarding on NetworkInterface for azurecni dualstack
+	if isAzureCNI {
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			networkInterface.EnableIPForwarding = to.BoolPtr(true)
+		}
 	}
 
 	return NetworkInterfaceARM{
