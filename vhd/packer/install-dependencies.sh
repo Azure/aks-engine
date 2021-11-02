@@ -156,7 +156,7 @@ for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.22.0
+1.22.1
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
