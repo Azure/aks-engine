@@ -1,0 +1,45 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "masterProfile": {
+            "count": 1,
+            "dnsPrefix": "",
+            "vmSize": "Standard_D2_v3"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "pool1804vhd",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "availabilityProfile": "VirtualMachineScaleSets",
+                "distro": "aks-ubuntu-18.04"
+            },
+            {
+                "name": "poolwinvhd",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "availabilityProfile": "VirtualMachineScaleSets",
+                "osType": "Windows"
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        },
+        "windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "replacepassword1234$",
+            "enableAutomaticUpdates": false,
+            "sshEnabled": true
+        },
+        "featureFlags": {
+            "BlockOutboundInternet": true
+        }
+    }
+}
