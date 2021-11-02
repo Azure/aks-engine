@@ -1848,7 +1848,7 @@ func (p *Pod) ValidateLogsRotate(sleep, timeout time.Duration) (bool, error) {
 				return
 			default:
 				// extract the date
-				output, err := p.checkTailOfLogFor("40", "-oP '(?<=DATE=)[^.-]*'")
+				output, err := p.checkTailOfLogFor("100", "-oP '(?<=DATE=)[^.-]*'")
 				if err != nil {
 					log.Printf("Unable to tail the log:\n %s \n", output)
 					time.Sleep(sleep)
