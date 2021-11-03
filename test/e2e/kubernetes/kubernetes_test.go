@@ -916,7 +916,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 
 			By("Ensuring that we have stable and responsive DNS resolution")
-			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, cfg.Timeout)
+			p, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -980,7 +980,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
-			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
+			p, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -988,7 +988,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to restart a pod due to an exec livenessProbe failure", func() {
-			_, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness.yaml"), "exec-liveness", "default", 1*time.Second, 2*time.Minute)
+			_, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness.yaml"), "exec-liveness", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err := pod.Get("exec-liveness", "default", podLookupRetries)
@@ -998,7 +998,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
 			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
-			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-assume-1-second-default-timeout.yaml"), "exec-liveness-assume-1-second-default-timeout", "default", 1*time.Second, 2*time.Minute)
+			_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-assume-1-second-default-timeout.yaml"), "exec-liveness-assume-1-second-default-timeout", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-assume-1-second-default-timeout", "default", podLookupRetries)
@@ -1014,7 +1014,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(restarts > 0).To(BeTrue())
 			}
 			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
-			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 2*time.Minute)
+			_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-always-fail", "default", podLookupRetries)
@@ -1027,7 +1027,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// exec probe timeout is broken entirely for containerd prior to 1.20, and/or if ExecProbeTimeout=false, so we can't test it
 			if !(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() &&
 				(!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") || strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false"))) {
-				_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
+				_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 1*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(30 * time.Second) // Wait for probe to take effect
 				p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
