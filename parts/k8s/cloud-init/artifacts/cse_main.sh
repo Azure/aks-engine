@@ -81,9 +81,6 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
   if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
     overrideNetworkConfig
   fi
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "InstallBcc" installBcc
-  fi
   {{- if not IsDockerContainerRuntime}}
   time_metric "InstallImg" installImg
   {{end}}
