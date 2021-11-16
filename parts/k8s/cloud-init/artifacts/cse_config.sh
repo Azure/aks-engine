@@ -431,8 +431,11 @@ ensureAddons() {
   rm -Rf ${ADDONS_DIR}/init
   replaceAddonsInit
   {{/* Force re-load all addons because we have changed the source location for addon specs */}}
-  retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
-  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
+  while [ ! $(${KUBECTL} get pods -l app=kube-addon-manager -n kube-system --template={{.status.phase}}) == "Running"]; do
+    sleep 3
+  done
+    retrycmd 3 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
+    retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
   exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
