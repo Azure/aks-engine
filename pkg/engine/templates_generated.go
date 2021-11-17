@@ -3489,18 +3489,14 @@ spec:
             - "--v=2"
             - "--csi-address=$(CSI_ENDPOINT)"
             - "--kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)"
-          lifecycle:
-            preStop:
-              exec:
-                command: ["cmd", "/c", "del /f C:\\registration\\disk.csi.azure.com-reg.sock C:\\csi\\disk.csi.azure.com\\csi.sock"]
           livenessProbe:
             exec:
               command:
                 - /csi-node-driver-registrar.exe
                 - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
                 - --mode=kubelet-registration-probe
-            initialDelaySeconds: 30
-            timeoutSeconds: 15
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
           env:
             - name: CSI_ENDPOINT
               value: unix://C:\\csi\\csi.sock
@@ -3675,10 +3671,6 @@ spec:
             - --csi-address=$(ADDRESS)
             - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
             - --v=2
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/disk.csi.azure.com-reg.sock /csi/csi.sock"]
           livenessProbe:
             exec:
               command:
@@ -3893,7 +3885,8 @@ spec:
             - "-csi-address=$(ADDRESS)"
             - "-v=2"
             - "-leader-election"
-            - '-handle-volume-inuse-error=true'
+            - '-handle-volume-inuse-error=false'
+            - '-timeout=60s'
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -5115,8 +5108,8 @@ spec:
                 - /csi-node-driver-registrar.exe
                 - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
                 - --mode=kubelet-registration-probe
-            initialDelaySeconds: 30
-            timeoutSeconds: 15
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
           env:
             - name: CSI_ENDPOINT
               value: unix://C:\\csi\\csi.sock
@@ -5283,10 +5276,6 @@ spec:
             - --csi-address=$(ADDRESS)
             - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
             - --v=2
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/file.csi.azure.com-reg.sock /csi/csi.sock"]
           livenessProbe:
             exec:
               command:
