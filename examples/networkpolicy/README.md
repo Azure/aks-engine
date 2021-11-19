@@ -83,7 +83,7 @@ The kubernetes-antrea deployment template enables Antrea networking and policies
       }
 ```
 
-Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antrea will enforce Network Policies using OVS and Azure CNI will take care of Networking. The kubernetes-antrea deployment template enables Azure Networking and Antrea Network Policies for the AKS Engine via `"networkPolicy": "antrea"` and optional `"networkPlugin": "azure"` being present inside the `kubernetesConfig`. For more details regarding Antrea NetworkPolicyOnly mode, please refer to [this](https://github.com/vmware-tanzu/antrea/blob/master/docs/policy-only.md).
+Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antrea will enforce Network Policies using OVS and Azure CNI will take care of Networking. The kubernetes-antrea deployment template enables Azure Networking and Antrea Network Policies for the AKS Engine via `"networkPolicy": "antrea"` and optional `"networkPlugin": "azure"` being present inside the `kubernetesConfig`. For more details regarding Antrea NetworkPolicyOnly mode, please refer to [this](https://antrea.io/docs/v1.3.0/docs/design/policy-only/).
 
 
 ```json
@@ -97,4 +97,4 @@ Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antr
 
 ### Post installation
 
-For the latest documentation on Antrea, please refer to [this](https://github.com/vmware-tanzu/antrea).
+For the latest documentation on Antrea, please refer to [this](https://antrea.io/docs/main/).
