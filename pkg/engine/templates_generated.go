@@ -13417,15 +13417,6 @@ installMoby() {
     apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
 }
-installBcc() {
-  local key=/tmp/iovisor-release.key url=https://repo.iovisor.org/GPG-KEY
-  retrycmd_no_stats 120 5 25 curl -fsSL $url >$key || exit 166
-  wait_for_apt_locks
-  retrycmd 30 5 30 apt-key add $key || exit 167
-  echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" >/etc/apt/sources.list.d/iovisor.list
-  apt_get_update || exit 99
-  apt_get_install 120 5 25 bcc-tools libbcc-examples linux-headers-$(uname -r) || exit 168
-}
 downloadCNI() {
   mkdir -p $CNI_DOWNLOADS_DIR
   CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
@@ -13642,9 +13633,6 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
   time_metric "InstallDeps" installDeps
   if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
     overrideNetworkConfig
-  fi
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "InstallBcc" installBcc
   fi
   {{- if not IsDockerContainerRuntime}}
   time_metric "InstallImg" installImg

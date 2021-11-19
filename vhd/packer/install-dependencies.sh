@@ -45,7 +45,6 @@ apt packages:
   - jq
   - libpam-pwquality
   - libpwquality-tools
-  - linux-headers-$(uname -r)
   - make
   - mount
   - nfs-common
@@ -95,12 +94,6 @@ ETCD_VERSION="3.3.25"
 ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
-
-installBcc
-cat << EOF >> ${VHD_LOGS_FILEPATH}
-  - bcc-tools
-  - libbcc-examples
-EOF
 
 VNET_CNI_VERSIONS="
 1.4.12
