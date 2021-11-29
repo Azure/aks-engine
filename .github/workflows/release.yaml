@@ -152,6 +152,8 @@ jobs:
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
+      - name: Remove untracked files created during workflow steps
+        run: git ls-files --others --exclude-standard -z | xargs -0 rm
       - name: Add local tag
         run: git tag ${{ env.RELEASE_VERSION }}
       - name: print and validate git status before producing binaries
