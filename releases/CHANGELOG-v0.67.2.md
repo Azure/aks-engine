@@ -13,4 +13,4 @@
 
 #### Please report any issues here: https://github.com/Azure/aks-engine/issues/new
 [Unreleased]: https://github.com/Azure/aks-engine/compare/v0.67.2...HEAD
-[v0.67.2]: https://github.com/Azure/aks-engine/compare/v0.60.2...v0.67.2
+[v0.67.2]: https://github.com/Azure/aks-engine/compare/v0.67.1...v0.67.2
