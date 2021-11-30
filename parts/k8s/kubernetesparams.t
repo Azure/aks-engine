@@ -238,7 +238,7 @@
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.4.6",
+      "defaultValue": "1.4.11",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -252,7 +252,11 @@
          "1.3.8",
          "1.3.9",
          "1.4.4",
-         "1.4.6"
+         "1.4.6",
+         "1.4.7",
+         "1.4.8",
+         "1.4.9",
+         "1.4.11"
        ],
       "type": "string"
     },
