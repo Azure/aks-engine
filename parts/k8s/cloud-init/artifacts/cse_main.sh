@@ -1,6 +1,9 @@
 #!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
+{{/* delete non-working iovisor definition to ensure apt operations work */}}
+rm -Rf /etc/apt/sources.list.d/iovisor.list
+
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
   exit 0
