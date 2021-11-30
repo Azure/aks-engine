@@ -81,7 +81,7 @@ echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="20.10.7"
+MOBY_VERSION="20.10.11"
 CONTAINERD_VERSION="1.4.6"
 installMoby
 installRunc

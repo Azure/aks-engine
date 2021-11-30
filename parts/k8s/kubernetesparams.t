@@ -207,7 +207,7 @@
       }
     },
     "mobyVersion": {
-      "defaultValue": "20.10.7",
+      "defaultValue": "20.10.11",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -229,7 +229,11 @@
          "19.03.13",
          "19.03.14",
          "20.10.5",
-         "20.10.7"
+         "20.10.7",
+         "20.10.8",
+         "20.10.9",
+         "20.10.10",
+         "20.10.11"
        ],
       "type": "string"
     },
