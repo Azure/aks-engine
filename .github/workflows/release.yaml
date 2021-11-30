@@ -17,6 +17,11 @@ jobs:
         run: |
           export CURRENT_BRANCH=$(git branch --show-current)
           echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
+      - name: Validate tag does not already exist
+        run: |
+          if [[ $(git tag -l ${{ env.RELEASE_VERSION }}) ]]; then
+            exit 1
+          fi
       - name: Setup SSH Keys and known_hosts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
