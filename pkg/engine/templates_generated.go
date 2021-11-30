@@ -35,6 +35,7 @@
 // ../../parts/k8s/addons/smb-flexvolume.yaml
 // ../../parts/k8s/addons/tiller.yaml
 // ../../parts/k8s/armparameters.t
+// ../../parts/k8s/cloud-init/artifacts/apiserver-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/apt-preferences
 // ../../parts/k8s/cloud-init/artifacts/auditd-rules
 // ../../parts/k8s/cloud-init/artifacts/cis.sh
@@ -15966,6 +15967,34 @@ func k8sArmparametersT() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsApiserverMonitorService = []byte(`[Unit]
+Description=a script that checks apiserver health and restarts if needed
+After=kubelet.service
+[Service]
+Restart=always
+RestartSec=10
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/health-monitor.sh apiserver
+[Install]
+WantedBy=multi-user.target
+#EOF
+`)
+
+func k8sCloudInitArtifactsApiserverMonitorServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsApiserverMonitorService, nil
+}
+
+func k8sCloudInitArtifactsApiserverMonitorService() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsApiserverMonitorServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/apiserver-monitor.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsAptPreferences = []byte(``)
 
 func k8sCloudInitArtifactsAptPreferencesBytes() ([]byte, error) {
@@ -16621,6 +16650,20 @@ ensureKubelet() {
   {{- end}}
   fi
 {{- end}}
+if [[ -n ${MASTER_NODE} ]]; then
+  wait_for_file 1200 1 /etc/systemd/system/apiserver-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart apiserver-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+fi
+}
+
+ensureKubeAddonManager() {
+  {{/* Wait 5 mins for kube-addon-manager to become Ready */}}
+  if ! retrycmd 60 5 30 ${KUBECTL} wait --for=condition=Ready --timeout=5s -l app=kube-addon-manager po -n kube-system; then
+    {{/* Restart kubelet if kube-addon-manager is not Ready after 5 mins */}}
+    systemctl_restart 3 5 30 kubelet
+    {{/* Wait 5 more mins for kube-addon-manager to become Ready, and then return failure if not */}}
+    retrycmd 60 5 30 ${KUBECTL} wait --for=condition=Ready --timeout=5s -l app=kube-addon-manager po -n kube-system || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  fi
 }
 
 ensureAddons() {
@@ -16633,12 +16676,13 @@ ensureAddons() {
 {{- if not HasCustomPodSecurityPolicy}}
   retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
 {{- end}}
-  rm -Rf ${ADDONS_DIR}/init
   replaceAddonsInit
-  {{/* Force re-load all addons because we have changed the source location for addon specs */}}
-  retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
-  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
-  exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  rm -Rf ${ADDONS_DIR}/init
+  ensureKubeAddonManager
+  {{/* Manually delete any kube-addon-manager pods that point to the init directory */}}
+  for initPod in $(${KUBECTL} get pod -l app=kube-addon-manager -n kube-system -o json | jq -r '.items[] | select(.spec.containers[0].env[] | select(.value=="/etc/kubernetes/addons/init")) | select(.status.phase=="Running") .metadata.name'); do
+    retrycmd 120 5 30 ${KUBECTL} delete pod $initPod -n kube-system --force --grace-period 0 || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  done
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -16663,7 +16707,9 @@ ensureAddons() {
 }
 replaceAddonsInit() {
   wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  cp $ADDON_MANAGER_SPEC /tmp/kube-addon-manager.yaml || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" /tmp/kube-addon-manager.yaml || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  mv /tmp/kube-addon-manager.yaml $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
 }
 ensureLabelNodes() {
   wait_for_file 1200 1 /opt/azure/containers/label-nodes.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
@@ -18459,6 +18505,29 @@ kubelet_monitoring() {
   done
 }
 
+apiserver_monitoring() {
+  sleep 300 {{/* Wait for 5 minutes for apiserver to be functional/stable */}}
+  local private_ip=$( (ip -br -4 addr show eth0 || ip -br -4 addr show azure0) | grep -Po '\d+\.\d+\.\d+\.\d+')
+  local max_seconds=10 output=""
+  local monitor_cmd="curl -m ${max_seconds} --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/client.crt --key /etc/kubernetes/certs/client.key https://${private_ip}:443/readyz?verbose"
+  while true; do
+    if ! output=$(${monitor_cmd} 2>&1); then
+      echo $output
+      echo "apiserver is unhealthy!"
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! output=$(${monitor_cmd} 2>&1); then
+        systemctl kill kubelet
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active kubelet; then
+          systemctl start kubelet
+        fi
+      fi
+    else
+      sleep "${SLEEP_TIME}"
+    fi
+  done
+}
+
 etcd_monitoring() {
   sleep 300 {{/* Wait for 5 minutes for etcd to be functional/stable */}}
   local max_seconds=10 output=""
@@ -18495,6 +18564,8 @@ if [[ ${component} == "container-runtime" ]]; then
   container_runtime_monitoring
 elif [[ ${component} == "kubelet" ]]; then
   kubelet_monitoring
+elif [[ ${component} == "apiserver" ]]; then
+  apiserver_monitoring
 elif [[ ${component} == "etcd" ]]; then
   etcd_monitoring
 else
@@ -19652,6 +19723,13 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
 {{- end}}
+
+- path: /etc/systemd/system/apiserver-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "apiserverMonitorSystemdService"}}
 
 - path: /etc/systemd/system/etcd-monitor.service
   permissions: "0644"
@@ -24672,6 +24750,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/smb-flexvolume.yaml":                                     k8sAddonsSmbFlexvolumeYaml,
 	"k8s/addons/tiller.yaml":                                             k8sAddonsTillerYaml,
 	"k8s/armparameters.t":                                                k8sArmparametersT,
+	"k8s/cloud-init/artifacts/apiserver-monitor.service":                 k8sCloudInitArtifactsApiserverMonitorService,
 	"k8s/cloud-init/artifacts/apt-preferences":                           k8sCloudInitArtifactsAptPreferences,
 	"k8s/cloud-init/artifacts/auditd-rules":                              k8sCloudInitArtifactsAuditdRules,
 	"k8s/cloud-init/artifacts/cis.sh":                                    k8sCloudInitArtifactsCisSh,
@@ -24823,17 +24902,18 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{
 			"artifacts": {nil, map[string]*bintree{
-				"apt-preferences":        {k8sCloudInitArtifactsAptPreferences, map[string]*bintree{}},
-				"auditd-rules":           {k8sCloudInitArtifactsAuditdRules, map[string]*bintree{}},
-				"cis.sh":                 {k8sCloudInitArtifactsCisSh, map[string]*bintree{}},
-				"cse_config.sh":          {k8sCloudInitArtifactsCse_configSh, map[string]*bintree{}},
-				"cse_customcloud.sh":     {k8sCloudInitArtifactsCse_customcloudSh, map[string]*bintree{}},
-				"cse_helpers.sh":         {k8sCloudInitArtifactsCse_helpersSh, map[string]*bintree{}},
-				"cse_install.sh":         {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
-				"cse_main.sh":            {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
-				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
-				"dhcpv6.service":         {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
-				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
+				"apiserver-monitor.service": {k8sCloudInitArtifactsApiserverMonitorService, map[string]*bintree{}},
+				"apt-preferences":           {k8sCloudInitArtifactsAptPreferences, map[string]*bintree{}},
+				"auditd-rules":              {k8sCloudInitArtifactsAuditdRules, map[string]*bintree{}},
+				"cis.sh":                    {k8sCloudInitArtifactsCisSh, map[string]*bintree{}},
+				"cse_config.sh":             {k8sCloudInitArtifactsCse_configSh, map[string]*bintree{}},
+				"cse_customcloud.sh":        {k8sCloudInitArtifactsCse_customcloudSh, map[string]*bintree{}},
+				"cse_helpers.sh":            {k8sCloudInitArtifactsCse_helpersSh, map[string]*bintree{}},
+				"cse_install.sh":            {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
+				"cse_main.sh":               {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
+				"default-grub":              {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
+				"dhcpv6.service":            {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
+				"docker-monitor.service":    {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
 				"enable-dhcpv6.sh":                          {k8sCloudInitArtifactsEnableDhcpv6Sh, map[string]*bintree{}},
 				"etc-issue":                                 {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},

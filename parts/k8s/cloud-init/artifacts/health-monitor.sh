@@ -59,6 +59,29 @@ kubelet_monitoring() {
   done
 }
 
+apiserver_monitoring() {
+  sleep 300 {{/* Wait for 5 minutes for apiserver to be functional/stable */}}
+  local private_ip=$( (ip -br -4 addr show eth0 || ip -br -4 addr show azure0) | grep -Po '\d+\.\d+\.\d+\.\d+')
+  local max_seconds=10 output=""
+  local monitor_cmd="curl -m ${max_seconds} --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/client.crt --key /etc/kubernetes/certs/client.key https://${private_ip}:443/readyz?verbose"
+  while true; do
+    if ! output=$(${monitor_cmd} 2>&1); then
+      echo $output
+      echo "apiserver is unhealthy!"
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! output=$(${monitor_cmd} 2>&1); then
+        systemctl kill kubelet
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active kubelet; then
+          systemctl start kubelet
+        fi
+      fi
+    else
+      sleep "${SLEEP_TIME}"
+    fi
+  done
+}
+
 etcd_monitoring() {
   sleep 300 {{/* Wait for 5 minutes for etcd to be functional/stable */}}
   local max_seconds=10 output=""
@@ -95,6 +118,8 @@ if [[ ${component} == "container-runtime" ]]; then
   container_runtime_monitoring
 elif [[ ${component} == "kubelet" ]]; then
   kubelet_monitoring
+elif [[ ${component} == "apiserver" ]]; then
+  apiserver_monitoring
 elif [[ ${component} == "etcd" ]]; then
   etcd_monitoring
 else

@@ -416,6 +416,20 @@ ensureKubelet() {
   {{- end}}
   fi
 {{- end}}
+if [[ -n ${MASTER_NODE} ]]; then
+  wait_for_file 1200 1 /etc/systemd/system/apiserver-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart apiserver-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+fi
+}
+
+ensureKubeAddonManager() {
+  {{/* Wait 5 mins for kube-addon-manager to become Ready */}}
+  if ! retrycmd 60 5 30 ${KUBECTL} wait --for=condition=Ready --timeout=5s -l app=kube-addon-manager po -n kube-system; then
+    {{/* Restart kubelet if kube-addon-manager is not Ready after 5 mins */}}
+    systemctl_restart 3 5 30 kubelet
+    {{/* Wait 5 more mins for kube-addon-manager to become Ready, and then return failure if not */}}
+    retrycmd 60 5 30 ${KUBECTL} wait --for=condition=Ready --timeout=5s -l app=kube-addon-manager po -n kube-system || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  fi
 }
 
 ensureAddons() {
@@ -428,12 +442,13 @@ ensureAddons() {
 {{- if not HasCustomPodSecurityPolicy}}
   retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
 {{- end}}
-  rm -Rf ${ADDONS_DIR}/init
   replaceAddonsInit
-  {{/* Force re-load all addons because we have changed the source location for addon specs */}}
-  retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
-  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
-  exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  rm -Rf ${ADDONS_DIR}/init
+  ensureKubeAddonManager
+  {{/* Manually delete any kube-addon-manager pods that point to the init directory */}}
+  for initPod in $(${KUBECTL} get pod -l app=kube-addon-manager -n kube-system -o json | jq -r '.items[] | select(.spec.containers[0].env[] | select(.value=="/etc/kubernetes/addons/init")) | select(.status.phase=="Running") .metadata.name'); do
+    retrycmd 120 5 30 ${KUBECTL} delete pod $initPod -n kube-system --force --grace-period 0 || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  done
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -458,7 +473,9 @@ ensureAddons() {
 }
 replaceAddonsInit() {
   wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  cp $ADDON_MANAGER_SPEC /tmp/kube-addon-manager.yaml || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" /tmp/kube-addon-manager.yaml || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  mv /tmp/kube-addon-manager.yaml $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
 }
 ensureLabelNodes() {
   wait_for_file 1200 1 /opt/azure/containers/label-nodes.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
