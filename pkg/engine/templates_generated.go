@@ -16650,8 +16650,8 @@ ensureKubelet() {
   {{- end}}
   fi
 {{- end}}
-wait_for_file 1200 1 /etc/systemd/system/apiserver-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 if [[ -n ${MASTER_NODE} ]]; then
+  wait_for_file 1200 1 /etc/systemd/system/apiserver-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart apiserver-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 fi
 }
