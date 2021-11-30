@@ -1,6 +1,7 @@
 
 <a name="v0.67.3"></a>
 # [v0.67.3] - 2021-11-18
+
 ### Bug Fixes 🐞
 - update windows binary URL for Azure Stack ([#4742](https://github.com/Azure/aks-engine/issues/4742))
 - bypass systemd-resolved but use the resolv.conf it generates ([#4726](https://github.com/Azure/aks-engine/issues/4726))
