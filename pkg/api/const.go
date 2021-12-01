@@ -448,7 +448,7 @@ const (
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
 	DefaultMobyVersion = "20.10.11"
 	// DefaultContainerdVersion specifies the default containerd version to install.
-	DefaultContainerdVersion = "1.4.11"
+	DefaultContainerdVersion = "1.5.8"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.
@@ -470,7 +470,7 @@ const (
 	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
 	DefaultWindowsSSHEnabled = true
 	// DefaultWindowsContainerdURL is the URL for the default containerd package on Windows
-	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.11+azure/windows/windows_amd64/moby-containerd-1.4.11+azure-1.amd64.zip"
+	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.5.8+azure/windows/windows_amd64/moby-containerd-1.5.8+azure-1.amd64.zip"
 )
 
 // WindowsProfile defaults
