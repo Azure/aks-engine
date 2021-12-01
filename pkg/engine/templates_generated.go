@@ -23417,8 +23417,12 @@ function Adjust-DynamicPortRange()
     # to ~225 services if default port reservations are used.
     # https://docs.microsoft.com/en-us/virtualization/windowscontainers/kubernetes/common-problems#load-balancers-are-plumbed-inconsistently-across-the-cluster-nodes
     # Kube-proxy load balancing should be set to DSR mode when it releases with future versions of the OS
+    #
+    # The fix which reduces dynamic port usage for non-DSR load balancers is shiped with KB4550969 in April 2020
+    # Update the range to [33000, 65535] to avoid that it conflicts with NodePort range (30000 - 32767)
+    # Will remove this after WinDSR is enabled by default
 
-    Invoke-Executable -Executable "netsh.exe" -ArgList @("int", "ipv4", "set", "dynamicportrange", "tcp", "16385", "49151")
+    Invoke-Executable -Executable "netsh.exe" -ArgList @("int", "ipv4", "set", "dynamicportrange", "tcp", "33000", "32536")
 }
 
 # TODO: should this be in this PR?
