@@ -96,6 +96,7 @@ installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.4.16
 1.4.14
 1.4.13
 1.4.12
