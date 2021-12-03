@@ -58,7 +58,7 @@ const (
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
 	csiSecretsStoreProviderAzureImageReference        string = "oss/azure/secrets-store/provider-azure:0.0.12"
 	csiSecretsStoreDriverImageReference               string = "oss/kubernetes-csi/secrets-store/driver:v0.0.19"
-	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
+	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.8.5"
 	azureArcOnboardingImageReference                  string = "arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0"
 	azureKMSProviderImageReference                    string = "k8s/kms/keyvault:v0.0.10"
 )
@@ -84,7 +84,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DashboardAddonName:                   "oss/kubernetes/dashboard:v2.0.4", // deprecated
 		common.DashboardMetricsScraperContainerName: "oss/kubernetes/metrics-scraper:v1.0.4",
 		common.ExecHealthZComponentName:             "oss/kubernetes/exechealthz:1.2",
-		common.CoreDNSAddonName:                     "oss/kubernetes/coredns:1.7.0",
+		common.CoreDNSAddonName:                     "oss/kubernetes/coredns:1.8.6",
 		common.KubeDNSAddonName:                     "oss/kubernetes/k8s-dns-kube-dns:1.15.4",
 		common.DNSMasqComponentName:                 "oss/kubernetes/k8s-dns-dnsmasq-nanny:1.15.4",
 		common.DNSSidecarComponentName:              "oss/kubernetes/k8s-dns-sidecar:1.14.10",
