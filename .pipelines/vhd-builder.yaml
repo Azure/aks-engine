@@ -1,11 +1,3 @@
-trigger: none
-
-# steps:
-# - create an VHD in Packer to normal storage account
-# - copy from Packer storage account to classic storage account using AzCopy
-# - generate SAS link from azure CLI
-# - POST a new SKU to azure marketplace
-
 variables:
   CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.32.3'
 
