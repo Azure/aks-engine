@@ -162,7 +162,7 @@ As a [replacement of the current in-tree volume provisioner](https://kubernetes.
 | Considerations        | [Azure Disk CSI Driver Limitations](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/limitations.md) | [Azure Blob CSI Driver Limitations](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/docs/limitations.md) | Users will be responsible for setting up and maintaining the NFS server. |
 | Slack Support Channel | [#provider-azure](https://kubernetes.slack.com/archives/C5HJXTT9Q)                                                           | [#provider-azure](https://kubernetes.slack.com/archives/C5HJXTT9Q)                                                      | [#sig-storage](https://kubernetes.slack.com/archives/C09QZFCE5)          |
 
-> Currently, disconnected environments do not support CSI Drivers.
+> To deploy a CSI driver to an air-gapped cluster, make sure that your `helm` chart is referencing container images that are reachable from the cluster nodes.
 
 ### Requirements
 
