@@ -34,33 +34,32 @@ jobs:
     ${CONTAINER_IMAGE} make all
   displayName: build aks-engine-test - make all
   condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
- 
+
 - script: |
     OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
     IMAGE_NAME="$(echo $OS_DISK_URI | cut -d "/" -f 3 | cut -d "." -f 1)" && \
     docker run --rm \
     -v ${PWD}:/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
-    -e CLEANUP_ON_EXIT="true" \    
+    -e CLEANUP_ON_EXIT="true" \
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET="$(CLIENT_SECRET)" \
     -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
     -e LOCATION=${AZURE_LOCATION} \
     -e ORCHESTRATOR_RELEASE="1.20" \
-    -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \ 
+    -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \  
     -e TENANT_ID=${TENANT_ID} \
     -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
     -e USE_MANAGED_IDENTITY="false" \
     -e CONTAINER_RUNTIME=docker \
     ${CONTAINER_IMAGE} make test-kubernetes
-    displayName: run e2e tests
-    condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
-
+  displayName: run e2e tests
+  condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
+    
 - task: PublishPipelineArtifact@1
-    inputs:
-      artifact: '2004-docker-vhd-release-notes'
-      path: 'release-notes.txt'
-
+  inputs:
+    artifact: '2004-docker-vhd-release-notes'
+    path: 'release-notes.txt'
 
 - script: |
     OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
