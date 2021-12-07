@@ -1,11 +1,14 @@
 #!/bin/bash
 
+set -o pipefail
 source /opt/azure/containers/provision_source.sh
 
 clusterInfo() {
-    FIRST_MASTER_READY=$(kubectl get nodes | grep k8s-master | grep Ready | sort | head -n 1 | cut -d ' ' -f 1)
-    if [[ "${FIRST_MASTER_READY}" == "${HOSTNAME}" ]]; then
-        retrycmd_no_stats 3 5 120 kubectl cluster-info dump --namespace=kube-system --output-directory=${OUTDIR}/cluster-info
+    if [ -f .kube/config ]; then
+        FIRST_MASTER_READY=$(retrycmd_no_stats 3 3 10 kubectl get nodes -l node-role.kubernetes.io/master | grep Ready | sort | head -n 1 | cut -d ' ' -f 1)
+        if [[ "${FIRST_MASTER_READY}" == "${HOSTNAME}" ]]; then
+            retrycmd_no_stats 3 5 300 kubectl cluster-info dump --namespace=kube-system --output-directory=${OUTDIR}/cluster-info
+        fi
     fi
 }
 
@@ -185,6 +188,16 @@ stackfyNetwork() {
     mkdir -p ${DIR}
     # basic name resolution test
     ping ${HOSTNAME} -c 3 &> ${DIR}/k8s-ping.txt
+
+    if [ -f /etc/kubernetes/azurestackcloud.json ]; then
+        LOGIN_ENDPOINT=$(jq -r .activeDirectoryEndpoint /etc/kubernetes/azurestackcloud.json)
+        LOGIN_ENDPOINT=${LOGIN_ENDPOINT#'https://'}
+        LOGIN_ENDPOINT=${LOGIN_ENDPOINT%'/'}
+        LOGIN_ENDPOINT_LOG=${DIR}/k8s-loginEndpoint.txt
+        timeout 10 nc -vz ${LOGIN_ENDPOINT} 443 \
+        && echo "login endpoint reachable: ${LOGIN_ENDPOINT}" &> ${LOGIN_ENDPOINT_LOG} \
+        || echo "error: login endpoint not reachable: ${LOGIN_ENDPOINT}" &> ${LOGIN_ENDPOINT_LOG}
+    fi
 }
 
 stackfyFileNames() {
