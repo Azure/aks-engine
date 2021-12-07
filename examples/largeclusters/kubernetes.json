@@ -7,7 +7,7 @@
         "loadBalancerOutboundIPs": 5,
         "useCloudControllerManager": true,
         "kubeletConfig": {
-          "--max-pods": "12"
+          "--max-pods": "16"
         },
         "schedulerConfig": {
           "--kube-api-burst": "800",
@@ -35,27 +35,27 @@
     "agentPoolProfiles": [
       {
         "name": "agentpool1",
-        "count": 1,
+        "count": 2,
         "vmSize": "Standard_D2s_v3"
       },
       {
         "name": "agentpool2",
-        "count": 1,
+        "count": 2,
         "vmSize": "Standard_D2s_v3"
       },
       {
         "name": "agentpool3",
-        "count": 1,
+        "count": 2,
         "vmSize": "Standard_D2s_v3"
       },
       {
         "name": "agentpool4",
-        "count": 1,
+        "count": 2,
         "vmSize": "Standard_D2s_v3"
       },
       {
         "name": "agentpool5",
-        "count": 1,
+        "count": 2,
         "vmSize": "Standard_D2s_v3"
       }
     ],

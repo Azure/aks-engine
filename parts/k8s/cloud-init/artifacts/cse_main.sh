@@ -1,6 +1,9 @@
 #!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
+{{/* delete non-working iovisor definition to ensure apt operations work */}}
+rm -Rf /etc/apt/sources.list.d/iovisor.list
+
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
   exit 0
@@ -40,6 +43,10 @@ wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEE
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  disable1804SystemdResolved
+fi
+
 set +x
 ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
@@ -76,9 +83,6 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
   time_metric "InstallDeps" installDeps
   if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
     overrideNetworkConfig
-  fi
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "InstallBcc" installBcc
   fi
   {{- if not IsDockerContainerRuntime}}
   time_metric "InstallImg" installImg
@@ -271,7 +275,9 @@ fi
 {{end}}
 
 {{- /* re-enable unattended upgrades */}}
+{{- if EnableUnattendedUpgrades}}
 rm -f /etc/apt/apt.conf.d/99periodic
+{{- end}}
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
@@ -280,7 +286,7 @@ fi
 {{end}}
 
 {{- if not HasBlockOutboundInternet}}
-    {{- if RunUnattendedUpgrades}}
+    {{- if RunUnattendedUpgradesOnBootstrap}}
 apt_get_update && unattended_upgrade
     {{- end}}
 {{- end}}
@@ -292,7 +298,7 @@ if [ -f /var/run/reboot-required ]; then
     aptmarkWALinuxAgent unhold &
   fi
 else
-{{- if RunUnattendedUpgrades}}
+{{- if RunUnattendedUpgradesOnBootstrap}}
   if [[ -z ${MASTER_NODE} ]]; then
     systemctl_restart 100 5 30 kubelet
     systemctl_restart 100 5 30 kubelet-monitor

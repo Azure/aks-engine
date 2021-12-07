@@ -113,6 +113,13 @@ write_files:
     {{CloudInitData "kubeletMonitorSystemdService"}}
 {{- end}}
 
+- path: /etc/systemd/system/apiserver-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "apiserverMonitorSystemdService"}}
+
 - path: /etc/systemd/system/etcd-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -464,6 +471,27 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
     iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
+    {{- /* Ensure that we have access to the upstream DNS via TCP */}}
+    {{- /* There is a long-standing bug where TCP is blocked for all ports */}}
+    {{- /* thus impacting DNS via TCP - https://github.com/Azure/WALinuxAgent/issues/1673 */}}
+    {{- /* This works around that bug and will not have negative impacts if it gets fixed */}}
+    iptables -t security -D OUTPUT -d 168.63.129.16/32 -p tcp -m tcp --dport 53 -j ACCEPT || true
+    iptables -t security -I OUTPUT 1 -d 168.63.129.16/32 -p tcp -m tcp --dport 53 -j ACCEPT
+    {{- /* The two lines are (1) to delete the rule if it is there already and     */}}
+    {{- /* then (2) to add the rule at the top (first entry) which specifically    */}}
+    {{- /* allows TCP to the magic VM host controlled IP address for DNS (which is */}}
+    {{- /* the upstream DNS provider)                                              */}}
+    {{- /* Why the delete? Well, if the kubelet gets restarted, we don't want to   */}}
+    {{- /* add the rule again. The -I will add the rule again, even if it is there */}}
+    {{- /* already. So, we delete the rule first. It also makes sure that the      */}}
+    {{- /* rule is added at the top of the chain such that this will also          */}}
+    {{- /* effectively move it to the top if it was already there. In other words, */}}
+    {{- /* it just makes sure that the rule exists and is at the right spot. If it */}}
+    {{- /* does not exist, the delete (-D) will "fail" to delete the non-existing  */}}
+    {{- /* rule, which is the end state we want so we don't care if the delete     */}}
+    {{- /* failed and thus the "|| true". Then the second step is to insert the    */}}
+    {{- /* rule at the top of the chain, thus making sure that no other rule       */}}
+    {{- /* blocks access before it can do the ACCEPT                               */}}
     #EOF
 
 {{- if not HasCosmosEtcd  }}

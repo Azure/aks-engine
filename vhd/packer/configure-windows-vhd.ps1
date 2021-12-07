@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
-$global:containerdPackageUrl = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.6+azure/windows/windows_amd64/moby-containerd-1.4.6+azure-1.amd64.zip"
+$global:containerdPackageUrl = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.5.8+azure/windows/windows_amd64/moby-containerd-1.5.8+azure-1.amd64.zip"
 
 function Write-Log($Message) {
     $msg = $message | Timestamp
@@ -117,20 +117,18 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.2.2/binaries/csi-proxy-v0.2.2.tar.gz"
         );
         "c:\akse-cache\win-k8s\"      = @(
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.18-azs/windowszip/v1.18.18-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.10-azs/windowszip/v1.19.10-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.6-azs/windowszip/v1.20.6-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.20/windowszip/v1.18.20-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.14/windowszip/v1.19.14-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.10/windowszip/v1.20.10-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.4/windowszip/v1.21.4-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.1/windowszip/v1.22.1-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.0-alpha.1/windowszip/v1.23.0-alpha.1-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.15-azs/windowszip/v1.19.15-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.11-azs/windowszip/v1.20.11-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.16/windowszip/v1.19.16-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.13/windowszip/v1.20.13-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.7/windowszip/v1.21.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.4/windowszip/v1.22.4-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.0-rc.0/windowszip/v1.23.0-rc.0-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.7/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.7.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.0/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.0.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.9/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.9.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.13/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.13.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.14/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.14.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.16/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.16.zip"
         )
     }
 
@@ -200,9 +198,7 @@ function Install-WindowsPatches {
             # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-            # Find a specific patch at https://www.catalog.update.microsoft.com/Search.aspx?q=<KB-number>
-            # Cumulative updates for WS 2019 from Setp 14, 2021
-            # https://www.catalog.update.microsoft.com/Search.aspx?q=KB5005568
+            # Find a specific patch at https://www.catalog.update.microsoft.com/Search.aspx?q=kb5005625
             $patchUrls = @()
         }
         '2004' {

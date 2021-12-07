@@ -45,7 +45,6 @@ apt packages:
   - jq
   - libpam-pwquality
   - libpwquality-tools
-  - linux-headers-$(uname -r)
   - make
   - mount
   - nfs-common
@@ -82,8 +81,8 @@ echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="20.10.7"
-CONTAINERD_VERSION="1.4.6"
+MOBY_VERSION="20.10.11"
+CONTAINERD_VERSION="1.4.11"
 installMoby
 installRunc
 systemctl_restart 100 5 30 docker || exit 1
@@ -96,16 +95,10 @@ ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
-installBcc
-cat << EOF >> ${VHD_LOGS_FILEPATH}
-  - bcc-tools
-  - libbcc-examples
-EOF
-
 VNET_CNI_VERSIONS="
-1.4.9
-1.4.0
-1.2.7
+1.4.16
+1.4.14
+1.4.13
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -129,7 +122,7 @@ systemctl status docker --no-pager || exit 1
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
 METRICS_SERVER_VERSIONS="
-0.5.0
+0.5.2
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-server:v${METRICS_SERVER_VERSION}"
@@ -156,7 +149,7 @@ for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.22.0
+1.22.1
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -165,7 +158,7 @@ for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
 done
 
 CORE_DNS_VERSIONS="
-1.7.0
+1.8.6
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/coredns:${CORE_DNS_VERSION}"
@@ -226,15 +219,13 @@ loadContainerImage "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.23.0-alpha.1
-1.22.1
-1.21.4
-1.20.10
-1.20.6-azs
-1.19.14
-1.19.10-azs
-1.18.20
-1.18.18-azs
+1.23.0-rc.0
+1.22.4
+1.21.7
+1.20.13
+1.20.11-azs
+1.19.16
+1.19.15-azs
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
@@ -259,19 +250,19 @@ for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
 done
 
 AZUREDISK_CSI_VERSIONS="
-1.7.0
+1.8.0
 "
 for AZUREDISK_CSI_VERSION in ${AZUREDISK_CSI_VERSIONS}; do
-  CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/azuredisk-csi:v${AZUREDISK_CSI_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi:v${AZUREDISK_CSI_VERSION}"
   loadContainerImage ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
 AZUREFILE_CSI_VERSIONS="
-1.6.0
+1.7.0
 "
 for AZUREFILE_CSI_VERSION in ${AZUREFILE_CSI_VERSIONS}; do
-  CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/azurefile-csi:v${AZUREFILE_CSI_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/azurefile-csi:v${AZUREFILE_CSI_VERSION}"
   loadContainerImage ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -376,7 +367,7 @@ for AAD_POD_IDENTITY_NMI_VERSION in ${AAD_POD_IDENTITY_NMI_VERSIONS}; do
 done
 
 CLUSTER_PROPORTIONAL_AUTOSCALER_VERSIONS="
-1.7.1
+1.8.5
 "
 for CLUSTER_PROPORTIONAL_AUTOSCALER_VERSION in ${CLUSTER_PROPORTIONAL_AUTOSCALER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:${CLUSTER_PROPORTIONAL_AUTOSCALER_VERSION}"

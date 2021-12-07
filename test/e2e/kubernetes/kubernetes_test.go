@@ -191,20 +191,24 @@ var _ = BeforeSuite(func() {
 		}
 	}
 
-	vmssHealthCommand, err = RunVMSSHealthCheck(cfg)
-	Expect(err).NotTo(HaveOccurred())
-	vmssHealthCommandStdOut = fmt.Sprintf("./vmss-health-check-%s.out", cfg.ResourceGroup)
+	if cfg.RunVMSSHygiene {
+		vmssHealthCommand, err = RunVMSSHealthCheck(cfg)
+		Expect(err).NotTo(HaveOccurred())
+		vmssHealthCommandStdOut = fmt.Sprintf("./vmss-health-check-%s.out", cfg.ResourceGroup)
+	}
 })
 
 var _ = AfterSuite(func() {
-	if err := vmssHealthCommand.Process.Kill(); err != nil {
-		log.Fatal(fmt.Sprintf("failed to kill process ID %d: ", vmssHealthCommand.Process.Pid), err)
+	if cfg.RunVMSSHygiene {
+		if err := vmssHealthCommand.Process.Kill(); err != nil {
+			log.Fatal(fmt.Sprintf("failed to kill process ID %d: ", vmssHealthCommand.Process.Pid), err)
+		}
+		stdout, err := ioutil.ReadFile(vmssHealthCommandStdOut)
+		if err != nil {
+			fmt.Printf("Unable to read file %s", vmssHealthCommandStdOut)
+		}
+		fmt.Println(string(stdout))
 	}
-	stdout, err := ioutil.ReadFile(vmssHealthCommandStdOut)
-	if err != nil {
-		fmt.Printf("Unable to read file %s", vmssHealthCommandStdOut)
-	}
-	fmt.Println(string(stdout))
 	if cfg.DebugAfterSuite {
 		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses,podsecuritypolicy", "--all-namespaces", "-o", "wide")
 		out, err := cmd.CombinedOutput()
@@ -912,7 +916,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 
 			By("Ensuring that we have stable and responsive DNS resolution")
-			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, cfg.Timeout)
+			p, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -976,7 +980,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
-			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
+			p, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -984,7 +988,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to restart a pod due to an exec livenessProbe failure", func() {
-			_, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness.yaml"), "exec-liveness", "default", 1*time.Second, 2*time.Minute)
+			_, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness.yaml"), "exec-liveness", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err := pod.Get("exec-liveness", "default", podLookupRetries)
@@ -994,7 +998,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
 			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
-			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-assume-1-second-default-timeout.yaml"), "exec-liveness-assume-1-second-default-timeout", "default", 1*time.Second, 2*time.Minute)
+			_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-assume-1-second-default-timeout.yaml"), "exec-liveness-assume-1-second-default-timeout", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-assume-1-second-default-timeout", "default", podLookupRetries)
@@ -1010,7 +1014,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(restarts > 0).To(BeTrue())
 			}
 			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
-			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 2*time.Minute)
+			_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-always-fail", "default", podLookupRetries)
@@ -1023,7 +1027,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// exec probe timeout is broken entirely for containerd prior to 1.20, and/or if ExecProbeTimeout=false, so we can't test it
 			if !(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() &&
 				(!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") || strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false"))) {
-				_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
+				_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 1*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(30 * time.Second) // Wait for probe to take effect
 				p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
@@ -2912,10 +2916,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if eng.ExpandedDefinition.Properties.HasVMSSAgentPool() {
 					newKaminoNodes, err := strconv.Atoi(cfg.KaminoVMSSNewNodes)
 					Expect(err).NotTo(HaveOccurred())
-					By("Installing kured 1.7.0 with node annotations configuration")
-					cmd := exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--version", "2.6.0", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
-					util.PrintCommand(cmd)
-					out, err := cmd.CombinedOutput()
+					By("Installing kured with node annotations configuration")
+					var kuredCommand *exec.Cmd
+					if cfg.KuredLocalChartPath == "" {
+						kuredCommand = exec.Command("helm", "install", "--wait", "--generate-name", "--repo", "https://weaveworks.github.io/kured", "kured", "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
+					} else {
+						kuredCommand = exec.Command("helm", "install", "--wait", "kured", cfg.KuredLocalChartPath, "--set", "configuration.annotateNodes=true", "--set", "configuration.period=1m")
+					}
+					util.PrintCommand(kuredCommand)
+					out, err := kuredCommand.CombinedOutput()
 					log.Printf("%s\n", out)
 					Expect(err).NotTo(HaveOccurred())
 					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
@@ -2961,7 +2970,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Waiting for nodes to be be rebooted and annotated correctly")
 					_, err = node.WaitForNodesWithAnnotation(numAgentNodes, "weave.works/kured-most-recent-reboot-needed", "", 5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					_, err = node.WaitForNodesWithAnnotation(0, "weave.works/kured-reboot-in-progress", "", 1*time.Minute, cfg.Timeout)
+					_, err = node.WaitForNodesWithAnnotation(0, "weave.works/kured-reboot-in-progress", "", 1*time.Minute, time.Duration(5*numAgentNodes)*time.Minute)
 					Expect(err).NotTo(HaveOccurred())
 					By("Waiting for all nodes to be Ready again")
 					ready = node.WaitOnReady(len(nodes), 30*time.Second, cfg.Timeout)
@@ -3013,8 +3022,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							timeToLargeContainerDaemonsetRunningBaseline = time.Since(start)
 							log.Printf("Took %s for large-container-daemonset pod to reach Running state on new node\n", timeToLargeContainerDaemonsetRunningBaseline)
 						}
+						vmssNodes, err := node.GetByRegexWithRetry(fmt.Sprintf("^%s", vmssName), 1*time.Minute, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(len(vmssNodes)).To(BeNumerically(">", 0))
 						helmName := fmt.Sprintf("vmss-prototype-%s", vmssName)
-						cmd = exec.Command("helm", "status", helmName)
+						cmd := exec.Command("helm", "status", helmName)
 						out, err = cmd.CombinedOutput()
 						if err == nil {
 							By(fmt.Sprintf("Found pre-existing '%s' helm release, deleting it...", helmName))
@@ -3082,8 +3094,19 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						numNodesExpected := numAgentNodes + newKaminoNodes + numControlPlaneNodes
 						numLargeContainerPodsExpected := numAgentNodes + newKaminoNodes
 						By(fmt.Sprintf("Waiting for the %d new nodes created from prototype(s) to become Ready; waiting for %d total nodes", newKaminoNodes, numNodesExpected))
+						timeToWaitForLargeCluster := time.Duration(newKaminoNodes/1000) * time.Hour
+						timeToWaitForNewNodes := timeToWaitForLargeCluster
+						if cfg.Timeout > timeToWaitForLargeCluster {
+							timeToWaitForNewNodes = cfg.Timeout
+						}
 						start := time.Now()
-						ready := node.WaitOnReadyMin(numNodesExpected, 30*time.Second, false, 2*time.Hour)
+						ready := node.WaitOnReadyMin(numNodesExpected, 1*time.Minute, false, timeToWaitForNewNodes)
+						if !ready {
+							nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+							if err != nil {
+								log.Printf("Not enough Ready nodes! Expected %d, but only %d nodes are Ready", numNodesExpected, len(nodes))
+							}
+						}
 						Expect(ready).To(BeTrue())
 						elapsed = time.Since(start)
 						log.Printf("Took %s to add %d nodes derived from peer node prototype(s)\n", elapsed, newKaminoNodes)

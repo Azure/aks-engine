@@ -52,7 +52,8 @@ jobs:
           ORCHESTRATOR_RELEASE: "1.22"
           CLUSTER_DEFINITION: "examples/largeclusters/kubernetes.json"
           RUN_VMSS_NODE_PROTOTYPE: true
-          KAMINO_VMSS_PROTOTYPE_NEW_NODES: 999
+          RUN_VMSS_HYGIENE: true
+          KAMINO_VMSS_PROTOTYPE_NEW_NODES: 998
           GINKGO_FOCUS: "should be able to install vmss node prototype"
           GINKGO_SKIP: "should create a pv by deploying a pod that consumes a pvc|should have the expected k8s version|should report all nodes in a Ready state|should have node labels specific to masters or agents|should have functional container networking DNS"
           SUBSCRIPTION_ID: ${{ secrets.LARGE_AZURE_SUB_ID }}
@@ -97,6 +98,24 @@ jobs:
         run: |
           sonobuoy run --plugin e2e --wait --e2e-skip "\[Serial\]" --e2e-focus "\[Conformance\]" --timeout=86400
           k get pod sonobuoy -n sonobuoy -o json | jq -r '.metadata.annotations."sonobuoy.hept.io/status"'
+      - name: checkout knarly
+        uses: actions/checkout@v2
+        with:
+          repository: Azure/knarly
+          path: knarly
+          ref: main
+      - name: checkout perf-tests
+        uses: actions/checkout@v2
+        with:
+          repository: kubernetes/perf-tests
+          path: perf-tests
+          ref: release-1.20
+      - name: Run pod churn tests
+        working-directory: perf-tests
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+        run: |
+          CL2_NS_COUNT=15 CL2_CLEANUP=0 CL2_REPEATS=4 CL2_POD_START_TIMEOUT_MINS=20 CL2_PODS_PER_NODE=10 CL2_TARGET_POD_CHURN=75 CL2_PODS_PER_DEPLOYMENT=32 go run clusterloader2/cmd/clusterloader.go --testconfig=../knarly/test/workloads/deployment-churn/config.yaml --provider=aks --kubeconfig=$KUBECONFIG --v=2 --enable-exec-service=false
       - name: Validate ELB again after conformance
         env:
           NAME: ${{ env.RESOURCE_GROUP }}

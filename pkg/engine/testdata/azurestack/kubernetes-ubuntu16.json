@@ -35,7 +35,7 @@
         },
         "masterProfile": {
             "dnsPrefix": "k111007",
-            "distro": "aks-ubuntu-16.04",
+            "distro": "aks-ubuntu-18.04",
             "osDiskSizeGB": 200,
             "count": 3,
             "vmSize": "Standard_D2_v2"
@@ -46,7 +46,7 @@
                 "osDiskSizeGB": 200,
                 "count": 3,
                 "vmSize": "Standard_D2_v2",
-                "distro": "aks-ubuntu-16.04",
+                "distro": "aks-ubuntu-18.04",
                 "availabilityProfile": "AvailabilitySet",
                 "AcceleratedNetworkingEnabled": false
             },

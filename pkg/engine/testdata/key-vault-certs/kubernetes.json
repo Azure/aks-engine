@@ -147,7 +147,7 @@
               }
             ],
             "config": {
-              "dockerProviderVersion": "14.0.0-0",
+              "dockerProviderVersion": "16.0.0-0",
               "omsAgentVersion": "1.10.0.1"
             }
           },
@@ -326,7 +326,7 @@
       "oauthEnabled": false,
       "preProvisionExtension": null,
       "extensions": [],
-      "distro": "aks-ubuntu-16.04",
+      "distro": "aks-ubuntu-18.04",
       "kubernetesConfig": {
         "kubeletConfig": {
           "--address": "0.0.0.0",
@@ -370,7 +370,7 @@
         "osType": "Linux",
         "availabilityProfile": "VirtualMachineScaleSets",
         "storageProfile": "ManagedDisks",
-        "distro": "aks-ubuntu-16.04",
+        "distro": "aks-ubuntu-18.04",
         "kubernetesConfig": {
           "kubeletConfig": {
             "--address": "0.0.0.0",

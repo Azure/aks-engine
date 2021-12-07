@@ -53,6 +53,7 @@ type Config struct {
 	GinkgoFailFast                     bool   `envconfig:"GINKGO_FAIL_FAST" default:"false"`
 	GinkgoParallel                     bool   `envconfig:"GINKGO_PARALLEL" default:"false"`
 	DebugAfterSuite                    bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
+	RunVMSSHygiene                     bool   `envconfig:"RUN_VMSS_HYGIENE" default:"false"`
 	BlockSSHPort                       bool   `envconfig:"BLOCK_SSH" default:"false"`
 	RebootControlPlaneNodes            bool   `envconfig:"REBOOT_CONTROL_PLANE_NODES" default:"false"`
 	RunVMSSNodePrototype               bool   `envconfig:"RUN_VMSS_NODE_PROTOTYPE" default:"false"`
@@ -67,6 +68,7 @@ type Config struct {
 	ArcSubscriptionID                  string `envconfig:"ARC_SUBSCRIPTION_ID" default:""`
 	ArcLocation                        string `envconfig:"ARC_LOCATION" default:""`
 	ArcTenantID                        string `envconfig:"ARC_TENANT_ID" default:""`
+	KuredLocalChartPath                string `envconfig:"KURED_LOCAL_CHART_PATH" default:""`
 	KaminoVMSSPrototypeLocalChartPath  string `envconfig:"KAMINO_VMSS_PROTOTYPE_LOCAL_CHART_PATH" default:""`
 	KaminoVMSSPrototypeImageRegistry   string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_REGISTRY" default:""`
 	KaminoVMSSPrototypeImageRepository string `envconfig:"KAMINO_VMSS_PROTOTYPE_IMAGE_REPOSITORY" default:""`

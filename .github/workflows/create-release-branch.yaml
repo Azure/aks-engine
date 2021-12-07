@@ -40,19 +40,6 @@ jobs:
           sudo chmod +x /usr/local/bin/k
       - name: Build aks-engine binary
         run: make build-binary
-      - name: Validate 1.18 no-egress scenario
-        env:
-          ORCHESTRATOR_RELEASE: "1.18"
-          CLUSTER_DEFINITION: "examples/no_outbound.json"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-        run: make test-kubernetes
       - name: Validate 1.19 no-egress scenario
         env:
           ORCHESTRATOR_RELEASE: "1.19"
@@ -82,6 +69,19 @@ jobs:
       - name: Validate 1.21 no-egress scenario
         env:
           ORCHESTRATOR_RELEASE: "1.21"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.22 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.22"
           CLUSTER_DEFINITION: "examples/no_outbound.json"
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}

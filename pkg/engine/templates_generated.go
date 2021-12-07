@@ -35,6 +35,7 @@
 // ../../parts/k8s/addons/smb-flexvolume.yaml
 // ../../parts/k8s/addons/tiller.yaml
 // ../../parts/k8s/armparameters.t
+// ../../parts/k8s/cloud-init/artifacts/apiserver-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/apt-preferences
 // ../../parts/k8s/cloud-init/artifacts/auditd-rules
 // ../../parts/k8s/cloud-init/artifacts/cis.sh
@@ -779,7 +780,7 @@ func k8sAddonsAadPodIdentityYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsAntreaYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
+var _k8sAddonsAntreaYaml = []byte(`apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -792,15 +793,73 @@ spec:
     kind: AntreaAgentInfo
     plural: antreaagentinfos
     shortNames:
-    - aai
+    - laai
     singular: antreaagentinfo
   scope: Cluster
   versions:
   - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     served: true
     storage: true
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antreaagentinfos.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: AntreaAgentInfo
+    plural: antreaagentinfos
+    shortNames:
+    - aai
+    singular: antreaagentinfo
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: Health status of this Agent
+      jsonPath: .agentConditions[?(@.type=='AgentHealthy')].status
+      name: Healthy
+      type: string
+    - description: Last time the Healthy Condition was updated
+      jsonPath: .agentConditions[?(@.type=='AgentHealthy')].lastHeartbeatTime
+      name: Last Heartbeat
+      type: date
+    - description: Version of this Agent
+      jsonPath: .version
+      name: Version
+      priority: 1
+      type: string
+    - description: Node on which this Agent is running
+      jsonPath: .nodeRef.name
+      name: Node
+      priority: 1
+      type: string
+    - description: Number of local Pods managed by this Agent
+      jsonPath: .localPodNum
+      name: Num Pods
+      priority: 2
+      type: integer
+    - description: Subnets used by this Agent for Pod IPAM
+      jsonPath: .nodeSubnets
+      name: Subnets
+      priority: 2
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
@@ -813,13 +872,2904 @@ spec:
     kind: AntreaControllerInfo
     plural: antreacontrollerinfos
     shortNames:
-    - aci
+    - laci
     singular: antreacontrollerinfo
   scope: Cluster
   versions:
   - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
     served: true
     storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antreacontrollerinfos.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: AntreaControllerInfo
+    plural: antreacontrollerinfos
+    shortNames:
+    - aci
+    singular: antreacontrollerinfo
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: Health status of the Controller
+      jsonPath: .controllerConditions[?(@.type=='ControllerHealthy')].status
+      name: Healthy
+      type: string
+    - description: Last time the Healthy Condition was updated
+      jsonPath: .controllerConditions[?(@.type=='ControllerHealthy')].lastHeartbeatTime
+      name: Last Heartbeat
+      type: date
+    - description: Version of the Controller
+      jsonPath: .version
+      name: Version
+      priority: 1
+      type: string
+    - description: Number of Agents connected to the Controller
+      jsonPath: .connectedAgentNum
+      name: Connected Agents
+      priority: 1
+      type: integer
+    - description: Node on which the Controller is running
+      jsonPath: .nodeRef.name
+      name: Node
+      priority: 1
+      type: string
+    - description: Number of Network Policies computed by Controller
+      jsonPath: .networkPolicyControllerInfo.networkPolicyNum
+      name: Num Network Policies
+      priority: 2
+      type: integer
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: clustergroups.core.antrea.tanzu.vmware.com
+spec:
+  group: core.antrea.tanzu.vmware.com
+  names:
+    kind: ClusterGroup
+    plural: clustergroups
+    shortNames:
+    - lcg
+    singular: group
+  scope: Cluster
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              childGroups:
+                items:
+                  type: string
+                type: array
+              externalEntitySelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              ipBlock:
+                properties:
+                  cidr:
+                    format: cidr
+                    type: string
+                type: object
+              ipBlocks:
+                items:
+                  properties:
+                    cidr:
+                      format: cidr
+                      type: string
+                  type: object
+                type: array
+              namespaceSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              podSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              serviceReference:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: clustergroups.crd.antrea.io
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: antrea
+          namespace: kube-system
+          path: /convert/clustergroup
+      conversionReviewVersions:
+      - v1
+      - v1beta1
+  group: crd.antrea.io
+  names:
+    kind: ClusterGroup
+    plural: clustergroups
+    shortNames:
+    - cg
+    singular: clustergroup
+  scope: Cluster
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              childGroups:
+                items:
+                  type: string
+                type: array
+              externalEntitySelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              ipBlock:
+                properties:
+                  cidr:
+                    format: cidr
+                    type: string
+                type: object
+              ipBlocks:
+                items:
+                  properties:
+                    cidr:
+                      format: cidr
+                      type: string
+                  type: object
+                type: array
+              namespaceSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              podSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              serviceReference:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: false
+  - name: v1alpha3
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              childGroups:
+                items:
+                  type: string
+                type: array
+              externalEntitySelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              ipBlocks:
+                items:
+                  properties:
+                    cidr:
+                      format: cidr
+                      type: string
+                  type: object
+                type: array
+              namespaceSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              podSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+              serviceReference:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: clusternetworkpolicies.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: ClusterNetworkPolicy
+    plural: clusternetworkpolicies
+    shortNames:
+    - acnp
+    singular: clusternetworkpolicy
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: The Tier to which this ClusterNetworkPolicy belongs to.
+      jsonPath: .spec.tier
+      name: Tier
+      type: string
+    - description: The Priority of this ClusterNetworkPolicy relative to other policies.
+      format: float
+      jsonPath: .spec.priority
+      name: Priority
+      type: number
+    - description: The total number of Nodes that should realize the NetworkPolicy.
+      format: int32
+      jsonPath: .status.desiredNodesRealized
+      name: Desired Nodes
+      type: number
+    - description: The number of Nodes that have realized the NetworkPolicy.
+      format: int32
+      jsonPath: .status.currentNodesRealized
+      name: Current Nodes
+      type: number
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              appliedTo:
+                items:
+                  properties:
+                    group:
+                      type: string
+                    namespaceSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                enum:
+                                - In
+                                - NotIn
+                                - Exists
+                                - DoesNotExist
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          type: array
+                        matchLabels:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                    podSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                enum:
+                                - In
+                                - NotIn
+                                - Exists
+                                - DoesNotExist
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          type: array
+                        matchLabels:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                  type: object
+                type: array
+              egress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          group:
+                            type: string
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                    to:
+                      items:
+                        properties:
+                          fqdn:
+                            type: string
+                          group:
+                            type: string
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          namespaces:
+                            properties:
+                              match:
+                                type: string
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              ingress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          group:
+                            type: string
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    from:
+                      items:
+                        properties:
+                          group:
+                            type: string
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          namespaces:
+                            properties:
+                              match:
+                                type: string
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              priority:
+                format: float
+                maximum: 10000
+                minimum: 1
+                type: number
+              tier:
+                type: string
+            required:
+            - priority
+            type: object
+          status:
+            properties:
+              currentNodesRealized:
+                type: integer
+              desiredNodesRealized:
+                type: integer
+              observedGeneration:
+                type: integer
+              phase:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: clusternetworkpolicies.security.antrea.tanzu.vmware.com
+spec:
+  group: security.antrea.tanzu.vmware.com
+  names:
+    kind: ClusterNetworkPolicy
+    plural: clusternetworkpolicies
+    shortNames:
+    - lacnp
+    singular: clusternetworkpolicy
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: The Tier to which this ClusterNetworkPolicy belongs to.
+      jsonPath: .spec.tier
+      name: Tier
+      type: string
+    - description: The Priority of this ClusterNetworkPolicy relative to other policies.
+      format: float
+      jsonPath: .spec.priority
+      name: Priority
+      type: number
+    - description: The total number of Nodes that should realize the NetworkPolicy.
+      format: int32
+      jsonPath: .status.desiredNodesRealized
+      name: Desired Nodes
+      type: number
+    - description: The number of Nodes that have realized the NetworkPolicy.
+      format: int32
+      jsonPath: .status.currentNodesRealized
+      name: Current Nodes
+      type: number
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              appliedTo:
+                items:
+                  properties:
+                    group:
+                      type: string
+                    namespaceSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                enum:
+                                - In
+                                - NotIn
+                                - Exists
+                                - DoesNotExist
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          type: array
+                        matchLabels:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                    podSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                enum:
+                                - In
+                                - NotIn
+                                - Exists
+                                - DoesNotExist
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          type: array
+                        matchLabels:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                  type: object
+                type: array
+              egress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          group:
+                            type: string
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                    to:
+                      items:
+                        properties:
+                          group:
+                            type: string
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          namespaces:
+                            properties:
+                              match:
+                                type: string
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              ingress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          group:
+                            type: string
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    from:
+                      items:
+                        properties:
+                          group:
+                            type: string
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          namespaces:
+                            properties:
+                              match:
+                                type: string
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              priority:
+                format: float
+                maximum: 10000
+                minimum: 1
+                type: number
+              tier:
+                type: string
+            required:
+            - priority
+            type: object
+          status:
+            properties:
+              currentNodesRealized:
+                type: integer
+              desiredNodesRealized:
+                type: integer
+              observedGeneration:
+                type: integer
+              phase:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: egresses.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: Egress
+    plural: egresses
+    shortNames:
+    - eg
+    singular: egress
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: Specifies the SNAT IP address for the selected workloads.
+      jsonPath: .spec.egressIP
+      name: EgressIP
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    - description: The Owner Node of egress IP
+      jsonPath: .status.egressNode
+      name: Node
+      type: string
+    name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            anyOf:
+            - required:
+              - egressIP
+            - required:
+              - externalIPPool
+            properties:
+              appliedTo:
+                properties:
+                  namespaceSelector:
+                    properties:
+                      matchExpressions:
+                        items:
+                          properties:
+                            key:
+                              type: string
+                            operator:
+                              enum:
+                              - In
+                              - NotIn
+                              - Exists
+                              - DoesNotExist
+                              type: string
+                            values:
+                              items:
+                                type: string
+                              type: array
+                          type: object
+                        type: array
+                      matchLabels:
+                        x-kubernetes-preserve-unknown-fields: true
+                    type: object
+                  podSelector:
+                    properties:
+                      matchExpressions:
+                        items:
+                          properties:
+                            key:
+                              type: string
+                            operator:
+                              enum:
+                              - In
+                              - NotIn
+                              - Exists
+                              - DoesNotExist
+                              type: string
+                            values:
+                              items:
+                                type: string
+                              type: array
+                          type: object
+                        type: array
+                      matchLabels:
+                        x-kubernetes-preserve-unknown-fields: true
+                    type: object
+                type: object
+              egressIP:
+                oneOf:
+                - format: ipv4
+                - format: ipv6
+                type: string
+              externalIPPool:
+                type: string
+            required:
+            - appliedTo
+            type: object
+          status:
+            properties:
+              egressNode:
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: externalentities.core.antrea.tanzu.vmware.com
+spec:
+  group: core.antrea.tanzu.vmware.com
+  names:
+    kind: ExternalEntity
+    plural: externalentities
+    shortNames:
+    - lee
+    singular: externalentity
+  scope: Namespaced
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              endpoints:
+                items:
+                  properties:
+                    ip:
+                      oneOf:
+                      - format: ipv4
+                      - format: ipv6
+                      type: string
+                    name:
+                      type: string
+                  type: object
+                type: array
+              externalNode:
+                type: string
+              ports:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    port:
+                      x-kubernetes-int-or-string: true
+                    protocol:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        type: object
+    served: false
+    storage: false
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: externalentities.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: ExternalEntity
+    plural: externalentities
+    shortNames:
+    - ee
+    singular: externalentity
+  scope: Namespaced
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              endpoints:
+                items:
+                  properties:
+                    ip:
+                      oneOf:
+                      - format: ipv4
+                      - format: ipv6
+                      type: string
+                    name:
+                      type: string
+                  type: object
+                type: array
+              externalNode:
+                type: string
+              ports:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    port:
+                      x-kubernetes-int-or-string: true
+                    protocol:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        type: object
+    served: false
+    storage: false
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: externalippools.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: ExternalIPPool
+    plural: externalippools
+    shortNames:
+    - eip
+    singular: externalippool
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: The number of total IPs
+      jsonPath: .status.usage.total
+      name: Total
+      type: integer
+    - description: The number of allocated IPs
+      jsonPath: .status.usage.used
+      name: Used
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              ipRanges:
+                items:
+                  oneOf:
+                  - required:
+                    - cidr
+                  - required:
+                    - start
+                    - end
+                  properties:
+                    cidr:
+                      format: cidr
+                      type: string
+                    end:
+                      oneOf:
+                      - format: ipv4
+                      - format: ipv6
+                      type: string
+                    start:
+                      oneOf:
+                      - format: ipv4
+                      - format: ipv6
+                      type: string
+                  type: object
+                type: array
+              nodeSelector:
+                properties:
+                  matchExpressions:
+                    items:
+                      properties:
+                        key:
+                          type: string
+                        operator:
+                          enum:
+                          - In
+                          - NotIn
+                          - Exists
+                          - DoesNotExist
+                          type: string
+                        values:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    type: array
+                  matchLabels:
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+            required:
+            - ipRanges
+            - nodeSelector
+            type: object
+          status:
+            properties:
+              usage:
+                properties:
+                  total:
+                    type: integer
+                  used:
+                    type: integer
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: networkpolicies.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: NetworkPolicy
+    plural: networkpolicies
+    shortNames:
+    - anp
+    singular: networkpolicy
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The Tier to which this Antrea NetworkPolicy belongs to.
+      jsonPath: .spec.tier
+      name: Tier
+      type: string
+    - description: The Priority of this Antrea NetworkPolicy relative to other policies.
+      format: float
+      jsonPath: .spec.priority
+      name: Priority
+      type: number
+    - description: The total number of Nodes that should realize the NetworkPolicy.
+      format: int32
+      jsonPath: .status.desiredNodesRealized
+      name: Desired Nodes
+      type: number
+    - description: The number of Nodes that have realized the NetworkPolicy.
+      format: int32
+      jsonPath: .status.currentNodesRealized
+      name: Current Nodes
+      type: number
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              appliedTo:
+                items:
+                  properties:
+                    podSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                enum:
+                                - In
+                                - NotIn
+                                - Exists
+                                - DoesNotExist
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          type: array
+                        matchLabels:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                  type: object
+                type: array
+              egress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                    to:
+                      items:
+                        properties:
+                          externalEntitySelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          fqdn:
+                            type: string
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              ingress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    from:
+                      items:
+                        properties:
+                          externalEntitySelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              priority:
+                format: float
+                maximum: 10000
+                minimum: 1
+                type: number
+              tier:
+                type: string
+            required:
+            - priority
+            type: object
+          status:
+            properties:
+              currentNodesRealized:
+                type: integer
+              desiredNodesRealized:
+                type: integer
+              observedGeneration:
+                type: integer
+              phase:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: networkpolicies.security.antrea.tanzu.vmware.com
+spec:
+  group: security.antrea.tanzu.vmware.com
+  names:
+    kind: NetworkPolicy
+    plural: networkpolicies
+    shortNames:
+    - lanp
+    singular: networkpolicy
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The Tier to which this Antrea NetworkPolicy belongs to.
+      jsonPath: .spec.tier
+      name: Tier
+      type: string
+    - description: The Priority of this Antrea NetworkPolicy relative to other policies.
+      format: float
+      jsonPath: .spec.priority
+      name: Priority
+      type: number
+    - description: The total number of Nodes that should realize the NetworkPolicy.
+      format: int32
+      jsonPath: .status.desiredNodesRealized
+      name: Desired Nodes
+      type: number
+    - description: The number of Nodes that have realized the NetworkPolicy.
+      format: int32
+      jsonPath: .status.currentNodesRealized
+      name: Current Nodes
+      type: number
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              appliedTo:
+                items:
+                  properties:
+                    podSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                enum:
+                                - In
+                                - NotIn
+                                - Exists
+                                - DoesNotExist
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          type: array
+                        matchLabels:
+                          x-kubernetes-preserve-unknown-fields: true
+                      type: object
+                  type: object
+                type: array
+              egress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                    to:
+                      items:
+                        properties:
+                          externalEntitySelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              ingress:
+                items:
+                  properties:
+                    action:
+                      enum:
+                      - Allow
+                      - Drop
+                      - Reject
+                      type: string
+                    appliedTo:
+                      items:
+                        properties:
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    enableLogging:
+                      type: boolean
+                    from:
+                      items:
+                        properties:
+                          externalEntitySelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          ipBlock:
+                            properties:
+                              cidr:
+                                format: cidr
+                                type: string
+                            type: object
+                          namespaceSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                          podSelector:
+                            properties:
+                              matchExpressions:
+                                items:
+                                  properties:
+                                    key:
+                                      type: string
+                                    operator:
+                                      enum:
+                                      - In
+                                      - NotIn
+                                      - Exists
+                                      - DoesNotExist
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                type: array
+                              matchLabels:
+                                x-kubernetes-preserve-unknown-fields: true
+                            type: object
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    ports:
+                      items:
+                        properties:
+                          endPort:
+                            type: integer
+                          port:
+                            x-kubernetes-int-or-string: true
+                          protocol:
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - action
+                  type: object
+                type: array
+              priority:
+                format: float
+                maximum: 10000
+                minimum: 1
+                type: number
+              tier:
+                type: string
+            required:
+            - priority
+            type: object
+          status:
+            properties:
+              currentNodesRealized:
+                type: integer
+              desiredNodesRealized:
+                type: integer
+              observedGeneration:
+                type: integer
+              phase:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: tiers.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: Tier
+    plural: tiers
+    shortNames:
+    - tr
+    singular: tier
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: The Priority of this Tier relative to other Tiers.
+      jsonPath: .spec.priority
+      name: Priority
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              description:
+                type: string
+              priority:
+                maximum: 255
+                minimum: 0
+                type: integer
+            required:
+            - priority
+            type: object
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: tiers.security.antrea.tanzu.vmware.com
+spec:
+  group: security.antrea.tanzu.vmware.com
+  names:
+    kind: Tier
+    plural: tiers
+    shortNames:
+    - ltr
+    singular: tier
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: The Priority of this Tier relative to other Tiers.
+      jsonPath: .spec.priority
+      name: Priority
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              description:
+                type: string
+              priority:
+                maximum: 255
+                minimum: 0
+                type: integer
+            required:
+            - priority
+            type: object
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: traceflows.crd.antrea.io
+spec:
+  group: crd.antrea.io
+  names:
+    kind: Traceflow
+    plural: traceflows
+    shortNames:
+    - tf
+    singular: traceflow
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: The phase of the Traceflow.
+      jsonPath: .status.phase
+      name: Phase
+      type: string
+    - description: The name of the source Pod.
+      jsonPath: .spec.source.pod
+      name: Source-Pod
+      priority: 10
+      type: string
+    - description: The name of the destination Pod.
+      jsonPath: .spec.destination.pod
+      name: Destination-Pod
+      priority: 10
+      type: string
+    - description: The IP address of the destination.
+      jsonPath: .spec.destination.ip
+      name: Destination-IP
+      priority: 10
+      type: string
+    - description: Trace live traffic.
+      jsonPath: .spec.liveTraffic
+      name: Live-Traffic
+      priority: 10
+      type: boolean
+    - description: Capture only the dropped packet.
+      jsonPath: .spec.droppedOnly
+      name: Dropped-Only
+      priority: 10
+      type: boolean
+    - description: Timeout in seconds.
+      jsonPath: .spec.timeout
+      name: Timeout
+      priority: 10
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              destination:
+                properties:
+                  ip:
+                    oneOf:
+                    - format: ipv4
+                    - format: ipv6
+                    type: string
+                  namespace:
+                    type: string
+                  pod:
+                    type: string
+                  service:
+                    type: string
+                type: object
+              droppedOnly:
+                type: boolean
+              liveTraffic:
+                type: boolean
+              packet:
+                properties:
+                  ipHeader:
+                    properties:
+                      flags:
+                        type: integer
+                      protocol:
+                        type: integer
+                      srcIP:
+                        oneOf:
+                        - format: ipv4
+                        - format: ipv6
+                        type: string
+                      ttl:
+                        type: integer
+                    type: object
+                  ipv6Header:
+                    properties:
+                      hopLimit:
+                        type: integer
+                      nextHeader:
+                        type: integer
+                      srcIP:
+                        format: ipv6
+                        type: string
+                    type: object
+                  transportHeader:
+                    properties:
+                      icmp:
+                        properties:
+                          id:
+                            type: integer
+                          sequence:
+                            type: integer
+                        type: object
+                      tcp:
+                        properties:
+                          dstPort:
+                            type: integer
+                          flags:
+                            type: integer
+                          srcPort:
+                            type: integer
+                        type: object
+                      udp:
+                        properties:
+                          dstPort:
+                            type: integer
+                          srcPort:
+                            type: integer
+                        type: object
+                    type: object
+                type: object
+              source:
+                properties:
+                  ip:
+                    oneOf:
+                    - format: ipv4
+                    - format: ipv6
+                    type: string
+                  namespace:
+                    type: string
+                  pod:
+                    type: string
+                type: object
+              timeout:
+                type: integer
+            type: object
+          status:
+            properties:
+              capturedPacket:
+                properties:
+                  dstIP:
+                    type: string
+                  ipHeader:
+                    properties:
+                      flags:
+                        type: integer
+                      protocol:
+                        type: integer
+                      ttl:
+                        type: integer
+                    type: object
+                  ipv6Header:
+                    properties:
+                      hopLimit:
+                        type: integer
+                      nextHeader:
+                        type: integer
+                    type: object
+                  length:
+                    type: integer
+                  srcIP:
+                    type: string
+                  transportHeader:
+                    properties:
+                      icmp:
+                        properties:
+                          id:
+                            type: integer
+                          sequence:
+                            type: integer
+                        type: object
+                      tcp:
+                        properties:
+                          dstPort:
+                            type: integer
+                          flags:
+                            type: integer
+                          srcPort:
+                            type: integer
+                        type: object
+                      udp:
+                        properties:
+                          dstPort:
+                            type: integer
+                          srcPort:
+                            type: integer
+                        type: object
+                    type: object
+                type: object
+              dataplaneTag:
+                type: integer
+              phase:
+                type: string
+              reason:
+                type: string
+              results:
+                items:
+                  properties:
+                    node:
+                      type: string
+                    observations:
+                      items:
+                        properties:
+                          action:
+                            type: string
+                          component:
+                            type: string
+                          componentInfo:
+                            type: string
+                          dstMAC:
+                            type: string
+                          networkPolicy:
+                            type: string
+                          pod:
+                            type: string
+                          translatedDstIP:
+                            type: string
+                          translatedSrcIP:
+                            type: string
+                          ttl:
+                            type: integer
+                          tunnelDstIP:
+                            type: string
+                        type: object
+                      type: array
+                    role:
+                      type: string
+                    timestamp:
+                      type: integer
+                  type: object
+                type: array
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: traceflows.ops.antrea.tanzu.vmware.com
+spec:
+  group: ops.antrea.tanzu.vmware.com
+  names:
+    kind: Traceflow
+    plural: traceflows
+    shortNames:
+    - ltf
+    singular: traceflow
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: The phase of the Traceflow.
+      jsonPath: .status.phase
+      name: Phase
+      type: string
+    - description: The name of the source Pod.
+      jsonPath: .spec.source.pod
+      name: Source-Pod
+      priority: 10
+      type: string
+    - description: The name of the destination Pod.
+      jsonPath: .spec.destination.pod
+      name: Destination-Pod
+      priority: 10
+      type: string
+    - description: The IP address of the destination.
+      jsonPath: .spec.destination.ip
+      name: Destination-IP
+      priority: 10
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              destination:
+                properties:
+                  ip:
+                    oneOf:
+                    - format: ipv4
+                    - format: ipv6
+                    type: string
+                  namespace:
+                    type: string
+                  pod:
+                    type: string
+                  service:
+                    type: string
+                type: object
+              packet:
+                properties:
+                  ipHeader:
+                    properties:
+                      flags:
+                        type: integer
+                      protocol:
+                        type: integer
+                      srcIP:
+                        oneOf:
+                        - format: ipv4
+                        - format: ipv6
+                        type: string
+                      ttl:
+                        type: integer
+                    type: object
+                  ipv6Header:
+                    properties:
+                      hopLimit:
+                        type: integer
+                      nextHeader:
+                        type: integer
+                      srcIP:
+                        format: ipv6
+                        type: string
+                    type: object
+                  transportHeader:
+                    properties:
+                      icmp:
+                        properties:
+                          id:
+                            type: integer
+                          sequence:
+                            type: integer
+                        type: object
+                      tcp:
+                        properties:
+                          dstPort:
+                            type: integer
+                          flags:
+                            type: integer
+                          srcPort:
+                            type: integer
+                        type: object
+                      udp:
+                        properties:
+                          dstPort:
+                            type: integer
+                          srcPort:
+                            type: integer
+                        type: object
+                    type: object
+                type: object
+              source:
+                properties:
+                  namespace:
+                    type: string
+                  pod:
+                    type: string
+                required:
+                - pod
+                - namespace
+                type: object
+            required:
+            - source
+            type: object
+          status:
+            properties:
+              dataplaneTag:
+                type: integer
+              phase:
+                type: string
+              reason:
+                type: string
+              results:
+                items:
+                  properties:
+                    node:
+                      type: string
+                    observations:
+                      items:
+                        properties:
+                          action:
+                            type: string
+                          component:
+                            type: string
+                          componentInfo:
+                            type: string
+                          dstMAC:
+                            type: string
+                          networkPolicy:
+                            type: string
+                          pod:
+                            type: string
+                          translatedDstIP:
+                            type: string
+                          translatedSrcIP:
+                            type: string
+                          ttl:
+                            type: integer
+                          tunnelDstIP:
+                            type: string
+                        type: object
+                      type: array
+                    role:
+                      type: string
+                    timestamp:
+                      type: integer
+                  type: object
+                type: array
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -853,11 +3803,199 @@ kind: ClusterRole
 metadata:
   labels:
     app: antrea
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: aggregate-antrea-clustergroups-edit
+rules:
+- apiGroups:
+  - core.antrea.tanzu.vmware.com
+  resources:
+  - clustergroups
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - clustergroups
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: aggregate-antrea-clustergroups-view
+rules:
+- apiGroups:
+  - core.antrea.tanzu.vmware.com
+  resources:
+  - clustergroups
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - clustergroups
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: aggregate-antrea-policies-edit
+rules:
+- apiGroups:
+  - security.antrea.tanzu.vmware.com
+  resources:
+  - clusternetworkpolicies
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - clusternetworkpolicies
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: aggregate-antrea-policies-view
+rules:
+- apiGroups:
+  - security.antrea.tanzu.vmware.com
+  resources:
+  - clusternetworkpolicies
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - clusternetworkpolicies
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: aggregate-traceflows-edit
+rules:
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  resources:
+  - traceflows
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - traceflows
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: aggregate-traceflows-view
+rules:
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  resources:
+  - traceflows
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - traceflows
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
     addonmanager.kubernetes.io/mode: "Reconcile"
   name: antctl
 rules:
 - apiGroups:
-  - networking.antrea.tanzu.vmware.com
+  - controlplane.antrea.tanzu.vmware.com
+  - controlplane.antrea.io
   resources:
   - networkpolicies
   - appliedtogroups
@@ -866,19 +4004,48 @@ rules:
   - get
   - list
 - apiGroups:
+  - stats.antrea.tanzu.vmware.com
+  - stats.antrea.io
+  resources:
+  - networkpolicystats
+  - antreaclusternetworkpolicystats
+  - antreanetworkpolicystats
+  verbs:
+  - get
+  - list
+- apiGroups:
   - system.antrea.tanzu.vmware.com
+  - system.antrea.io
   resources:
   - controllerinfos
   - agentinfos
+  verbs:
+  - get
+- apiGroups:
+  - system.antrea.tanzu.vmware.com
+  - system.antrea.io
+  resources:
+  - supportbundles
+  verbs:
+  - get
+  - post
+- apiGroups:
+  - system.antrea.tanzu.vmware.com
+  - system.antrea.io
+  resources:
+  - supportbundles/download
   verbs:
   - get
 - nonResourceURLs:
   - /agentinfo
   - /addressgroups
   - /appliedtogroups
+  - /loglevel
   - /networkpolicies
   - /ovsflows
+  - /ovstracing
   - /podinterfaces
+  - /featuregates
   verbs:
   - get
 ---
@@ -894,13 +4061,40 @@ rules:
   - ""
   resources:
   - nodes
+  verbs:
+  - get
+  - watch
+  - list
+  - patch
+- apiGroups:
+  - ""
+  resources:
   - pods
+  verbs:
+  - get
+  - watch
+  - list
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  - services
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
   verbs:
   - get
   - watch
   - list
 - apiGroups:
   - clusterinformation.antrea.tanzu.vmware.com
+  - crd.antrea.io
   resources:
   - antreaagentinfos
   verbs:
@@ -909,11 +4103,149 @@ rules:
   - update
   - delete
 - apiGroups:
-  - networking.antrea.tanzu.vmware.com
+  - controlplane.antrea.tanzu.vmware.com
+  - controlplane.antrea.io
   resources:
   - networkpolicies
   - appliedtogroups
   - addressgroups
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - controlplane.antrea.io
+  resources:
+  - egressgroups
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - controlplane.antrea.tanzu.vmware.com
+  - controlplane.antrea.io
+  resources:
+  - nodestatssummaries
+  verbs:
+  - create
+- apiGroups:
+  - controlplane.antrea.tanzu.vmware.com
+  - controlplane.antrea.io
+  resources:
+  - networkpolicies/status
+  verbs:
+  - create
+  - get
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resourceNames:
+  - extension-apiserver-authentication
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resourceNames:
+  - antrea-ca
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  - crd.antrea.io
+  resources:
+  - traceflows
+  - traceflows/status
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - egresses
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - egresses/status
+  verbs:
+  - update
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - externalippools
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-cluster-identity-reader
+rules:
+- apiGroups:
+  - ""
+  resourceNames:
+  - antrea-cluster-identity
+  resources:
+  - configmaps
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-controller
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - pods
+  - namespaces
+  - services
+  - configmaps
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
   verbs:
   - get
   - watch
@@ -930,33 +4262,180 @@ rules:
   - subjectaccessreviews
   verbs:
   - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller
-rules:
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ""
+  resourceNames:
+  - extension-apiserver-authentication
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resourceNames:
+  - antrea-ca
+  - antrea-cluster-identity
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - update
 - apiGroups:
   - ""
   resources:
-  - nodes
-  - pods
-  - namespaces
+  - configmaps
+  verbs:
+  - create
+- apiGroups:
+  - apiregistration.k8s.io
+  resourceNames:
+  - v1alpha1.stats.antrea.tanzu.vmware.com
+  - v1beta1.system.antrea.tanzu.vmware.com
+  - v1beta2.controlplane.antrea.tanzu.vmware.com
+  - v1alpha1.stats.antrea.io
+  - v1beta1.system.antrea.io
+  - v1beta2.controlplane.antrea.io
+  resources:
+  - apiservices
   verbs:
   - get
-  - watch
-  - list
+  - update
 - apiGroups:
-  - networking.k8s.io
+  - apiregistration.k8s.io
+  resourceNames:
+  - v1beta1.networking.antrea.tanzu.vmware.com
+  - v1beta1.controlplane.antrea.tanzu.vmware.com
   resources:
+  - apiservices
+  verbs:
+  - delete
+- apiGroups:
+  - admissionregistration.k8s.io
+  resourceNames:
+  - crdmutator.antrea.tanzu.vmware.com
+  - crdvalidator.antrea.tanzu.vmware.com
+  - labelsmutator.antrea.io
+  - crdmutator.antrea.io
+  - crdvalidator.antrea.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - antreacontrollerinfos
+  verbs:
+  - get
+  - create
+  - update
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - antreaagentinfos
+  verbs:
+  - list
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - clusternetworkpolicies
   - networkpolicies
   verbs:
   - get
   - watch
   - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - clusternetworkpolicies/status
+  - networkpolicies/status
+  verbs:
+  - update
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - tiers
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - traceflows
+  - traceflows/status
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - externalentities
+  - clustergroups
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - clustergroups/status
+  verbs:
+  - update
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - egresses
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - externalippools
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - crd.antrea.io
+  resources:
+  - externalippools/status
+  verbs:
+  - update
 - apiGroups:
   - clusterinformation.antrea.tanzu.vmware.com
   resources:
@@ -974,51 +4453,69 @@ rules:
   - list
   - delete
 - apiGroups:
-  - authentication.k8s.io
+  - security.antrea.tanzu.vmware.com
   resources:
-  - tokenreviews
+  - clusternetworkpolicies
+  - networkpolicies
   verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
   - create
+  - delete
 - apiGroups:
-  - authorization.k8s.io
+  - security.antrea.tanzu.vmware.com
   resources:
-  - subjectaccessreviews
+  - clusternetworkpolicies/status
+  - networkpolicies/status
   verbs:
+  - update
+- apiGroups:
+  - security.antrea.tanzu.vmware.com
+  resources:
+  - tiers
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
   - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-agent-authentication-reader
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: extension-apiserver-authentication-reader
-subjects:
-- kind: ServiceAccount
-  name: antrea-agent
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller-authentication-reader
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: extension-apiserver-authentication-reader
-subjects:
-- kind: ServiceAccount
-  name: antrea-controller
-  namespace: kube-system
+  - delete
+- apiGroups:
+  - ops.antrea.tanzu.vmware.com
+  resources:
+  - traceflows
+  - traceflows/status
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - core.antrea.tanzu.vmware.com
+  resources:
+  - externalentities
+  - clustergroups
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+  - patch
+  - create
+  - delete
+- apiGroups:
+  - core.antrea.tanzu.vmware.com
+  resources:
+  - clustergroups/status
+  verbs:
+  - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1037,7 +4534,7 @@ subjects:
   name: antctl
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -1053,7 +4550,7 @@ subjects:
   name: antrea-agent
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -1072,6 +4569,39 @@ subjects:
 apiVersion: v1
 data:
   antrea-agent.conf: |
+    # FeatureGates is a map of feature names to bools that enable or disable experimental features.
+    featureGates:
+    # Enable AntreaProxy which provides ServiceLB for in-cluster Services in antrea-agent.
+    # It should be enabled on Windows, otherwise NetworkPolicy will not take effect on
+    # Service traffic.
+      AntreaProxy: true
+
+    # Enable EndpointSlice support in AntreaProxy. Don't enable this feature unless that EndpointSlice
+    # API version v1beta1 is supported and set as enabled in Kubernetes. If AntreaProxy is not enabled,
+    # this flag will not take effect.
+    #  EndpointSlice: false
+
+    # Enable traceflow which provides packet tracing feature to diagnose network issue.
+    #  Traceflow: true
+
+    # Enable NodePortLocal feature to make the pods reachable externally through NodePort
+    #  NodePortLocal: false
+
+    # Enable Antrea ClusterNetworkPolicy feature to complement K8s NetworkPolicy for cluster admins
+    # to define security policies which apply to the entire cluster, and Antrea NetworkPolicy
+    # feature that supports priorities, rule actions and externalEntities in the future.
+    #  AntreaPolicy: true
+
+    # Enable flowexporter which exports polled conntrack connections as IPFIX flow records from each
+    # agent to a configured collector.
+    #  FlowExporter: false
+
+    # Enable collecting and exposing NetworkPolicy statistics.
+    #  NetworkPolicyStats: true
+
+    # Enable controlling SNAT IPs of Pod egress traffic.
+    #  Egress: false
+
     # Name of the OpenVSwitch bridge antrea-agent will create and use.
     # Make sure it doesn't conflict with your existing OpenVSwitch bridges.
     #ovsBridge: br-int
@@ -1085,35 +4615,65 @@ data:
 
     # Name of the interface antrea-agent will create and use for host <--> pod communication.
     # Make sure it doesn't conflict with your existing interfaces.
-    #hostGateway: gw0
+    #hostGateway: antrea-gw0
 
-    # Encapsulation mode for communication between Pods across Nodes, supported values:
-    # - vxlan (default)
-    # - geneve
-    # - gre
-    # - stt
-    #tunnelType: vxlan
-
-    # Default MTU to use for the host gateway interface and the network interface of each Pod. If
-    # omitted, antrea-agent will default this value to 1450 to accommodate for tunnel encapsulate
-    # overhead.
-    #defaultMTU: 1450
-
-    # Whether or not to enable IPsec encryption of tunnel traffic. IPsec encryption is only supported
-    # for the GRE tunnel type.
-    #enableIPSecTunnel: false
-    # CIDR Range for services in cluster. It's required to support egress network policy, should
-    # be set to the same value as the one specified by --service-cluster-ip-range for kube-apiserver.
-    serviceCIDR: {{ContainerConfig "serviceCidr"}}
-
-    # Determines how traffic is encapsulated. It has the following options
-    # encap(default): Inter-node Pod traffic is always encapsulated and Pod to outbound traffic is masqueraded.
-    # noEncap: Inter-node Pod traffic is not encapsulated, but Pod to outbound traffic is masqueraded.
-    #          Underlying network must be capable of supporting Pod traffic across IP subnet.
-    # hybrid: noEncap if worker Nodes on same subnet, otherwise encap.
-    # networkPolicyOnly: Antrea enforces NetworkPolicy only, and utilizes CNI chaining and delegates Pod IPAM and connectivity to primary CNI.
+    # Determines how traffic is encapsulated. It has the following options:
+    # encap(default):    Inter-node Pod traffic is always encapsulated and Pod to external network
+    #                    traffic is SNAT'd.
+    # noEncap:           Inter-node Pod traffic is not encapsulated; Pod to external network traffic is
+    #                    SNAT'd if noSNAT is not set to true. Underlying network must be capable of
+    #                    supporting Pod traffic across IP subnets.
+    # hybrid:            noEncap if source and destination Nodes are on the same subnet, otherwise encap.
+    # networkPolicyOnly: Antrea enforces NetworkPolicy only, and utilizes CNI chaining and delegates Pod
+    #                    IPAM and connectivity to the primary CNI.
     #
     trafficEncapMode: {{ContainerConfig "trafficEncapMode"}}
+
+    # Whether or not to SNAT (using the Node IP) the egress traffic from a Pod to the external network.
+    # This option is for the noEncap traffic mode only, and the default value is false. In the noEncap
+    # mode, if the cluster's Pod CIDR is reachable from the external network, then the Pod traffic to
+    # the external network needs not be SNAT'd. In the networkPolicyOnly mode, antrea-agent never
+    # performs SNAT and this option will be ignored; for other modes it must be set to false.
+    #noSNAT: false
+
+    # Tunnel protocols used for encapsulating traffic across Nodes. If WireGuard is enabled in trafficEncryptionMode,
+    # this option will not take effect. Supported values:
+    # - geneve (default)
+    # - vxlan
+    # - gre
+    # - stt
+    #tunnelType: geneve
+
+    # Determines how tunnel traffic is encrypted. Currently encryption only works with encap mode.
+    # It has the following options:
+    # - none (default):  Inter-node Pod traffic will not be encrypted.
+    # - ipsec:           Enable IPSec (ESP) encryption for Pod traffic across Nodes. Antrea uses
+    #                    Preshared Key (PSK) for IKE authentication. When IPSec tunnel is enabled,
+    #                    the PSK value must be passed to Antrea Agent through an environment
+    #                    variable: ANTREA_IPSEC_PSK.
+    # - wireGuard:       Enable WireGuard for tunnel traffic encryption.
+    #trafficEncryptionMode: none
+
+    # Default MTU to use for the host gateway interface and the network interface of each Pod.
+    # If omitted, antrea-agent will discover the MTU of the Node's primary interface and
+    # also adjust MTU to accommodate for tunnel encapsulation overhead (if applicable).
+    #defaultMTU: 0
+
+    # wireGuard specifies WireGuard related configurations.
+    wireGuard:
+    #  The port for WireGuard to receive traffic.
+    #  port: 51820
+
+    # ClusterIP CIDR range for Services. It's required when AntreaProxy is not enabled, and should be
+    # set to the same value as the one specified by --service-cluster-ip-range for kube-apiserver. When
+    # AntreaProxy is enabled, this parameter is not needed and will be ignored if provided.
+    serviceCIDR: {{ContainerConfig "serviceCidr"}}
+
+    # ClusterIP CIDR range for IPv6 Services. It's required when using kube-proxy to provide IPv6 Service in a Dual-Stack
+    # cluster or an IPv6 only cluster. The value should be the same as the configuration for kube-apiserver specified by
+    # --service-cluster-ip-range. When AntreaProxy is enabled, this parameter is not needed.
+    # No default value for this field.
+    #serviceCIDRv6:
 
     # The port for the antrea-agent APIServer to serve on.
     # Note that if it's set to another value, the ` + "`" + `containerPort` + "`" + ` of the ` + "`" + `api` + "`" + ` port of the
@@ -1121,7 +4681,60 @@ data:
     #apiPort: 10350
 
     # Enable metrics exposure via Prometheus. Initializes Prometheus metrics listener.
-    #enablePrometheusMetrics: false
+    #enablePrometheusMetrics: true
+
+    # Provide the IPFIX collector address as a string with format <HOST>:[<PORT>][:<PROTO>].
+    # HOST can either be the DNS name or the IP of the Flow Collector. For example,
+    # "flow-aggregator.flow-aggregator.svc" can be provided as DNS name to connect
+    # to the Antrea Flow Aggregator service. If IP, it can be either IPv4 or IPv6.
+    # However, IPv6 address should be wrapped with [].
+    # If PORT is empty, we default to 4739, the standard IPFIX port.
+    # If no PROTO is given, we consider "tls" as default. We support "tls", "tcp" and
+    # "udp" protocols. "tls" is used for securing communication between flow exporter and
+    # flow aggregator.
+    #flowCollectorAddr: "flow-aggregator.flow-aggregator.svc:4739:tls"
+
+    # Provide flow poll interval as a duration string. This determines how often the
+    # flow exporter dumps connections from the conntrack module. Flow poll interval
+    # should be greater than or equal to 1s (one second).
+    # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+    #flowPollInterval: "5s"
+
+    # Provide the active flow export timeout, which is the timeout after which a flow
+    # record is sent to the collector for active flows. Thus, for flows with a continuous
+    # stream of packets, a flow record will be exported to the collector once the elapsed
+    # time since the last export event is equal to the value of this timeout.
+    # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+    #activeFlowExportTimeout: "30s"
+
+    # Provide the idle flow export timeout, which is the timeout after which a flow
+    # record is sent to the collector for idle flows. A flow is considered idle if no
+    # packet matching this flow has been observed since the last export event.
+    # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+    #idleFlowExportTimeout: "15s"
+
+    # Provide the port range used by NodePortLocal. When the NodePortLocal feature is enabled, a port from that range will be assigned
+    # whenever a Pod's container defines a specific port to be exposed (each container can define a list of ports as pod.spec.containers[].ports),
+    # and all Node traffic directed to that port will be forwarded to the Pod.
+    #nplPortRange: 61000-62000
+
+    # Provide the address of Kubernetes apiserver, to override any value provided in kubeconfig or InClusterConfig.
+    # Defaults to "". It must be a host string, a host:port pair, or a URL to the base of the apiserver.
+    #kubeAPIServerOverride: ""
+
+    # Comma-separated list of Cipher Suites. If omitted, the default Go Cipher Suites will be used.
+    # https://golang.org/pkg/crypto/tls/#pkg-constants
+    # Note that TLS1.3 Cipher Suites cannot be added to the list. But the apiserver will always
+    # prefer TLS1.3 Cipher Suites whenever possible.
+    #tlsCipherSuites:
+
+    # TLS min version from: VersionTLS10, VersionTLS11, VersionTLS12, VersionTLS13.
+    #tlsMinVersion:
+
+    # The name of the interface on Node which is used for tunneling or routing the traffic across Nodes.
+    # If there are multiple IP addresses configured on the interface, the first one is used.
+    # The interface configured with Node IP is used if this parameter is not set.
+    #transportInterface:
   antrea-cni.conflist: |
     {
         "cniVersion":"0.3.0",
@@ -1136,24 +4749,76 @@ data:
             {
                 "type": "portmap",
                 "capabilities": {"portMappings": true}
+            },
+            {
+                "type": "bandwidth",
+                "capabilities": {"bandwidth": true}
             }
         ]
     }
   antrea-controller.conf: |
+    # FeatureGates is a map of feature names to bools that enable or disable experimental features.
+    featureGates:
+    # Enable traceflow which provides packet tracing feature to diagnose network issue.
+    #  Traceflow: true
+
+    # Enable Antrea ClusterNetworkPolicy feature to complement K8s NetworkPolicy for cluster admins
+    # to define security policies which apply to the entire cluster, and Antrea NetworkPolicy
+    # feature that supports priorities, rule actions and externalEntities in the future.
+    #  AntreaPolicy: true
+
+    # Enable collecting and exposing NetworkPolicy statistics.
+    #  NetworkPolicyStats: true
+
+    # Enable controlling SNAT IPs of Pod egress traffic.
+    #  Egress: false
+
     # The port for the antrea-controller APIServer to serve on.
     # Note that if it's set to another value, the ` + "`" + `containerPort` + "`" + ` of the ` + "`" + `api` + "`" + ` port of the
     # ` + "`" + `antrea-controller` + "`" + ` container must be set to the same value.
     #apiPort: 10349
 
     # Enable metrics exposure via Prometheus. Initializes Prometheus metrics listener.
-    #enablePrometheusMetrics: false
+    #enablePrometheusMetrics: true
+
+    # Indicates whether to use auto-generated self-signed TLS certificate.
+    # If false, A Secret named "antrea-controller-tls" must be provided with the following keys:
+    #   ca.crt: <CA certificate>
+    #   tls.crt: <TLS certificate>
+    #   tls.key: <TLS private key>
+    # And the Secret must be mounted to directory "/var/run/antrea/antrea-controller-tls" of the
+    # antrea-controller container.
+    #selfSignedCert: true
+
+    # Comma-separated list of Cipher Suites. If omitted, the default Go Cipher Suites will be used.
+    # https://golang.org/pkg/crypto/tls/#pkg-constants
+    # Note that TLS1.3 Cipher Suites cannot be added to the list. But the apiserver will always
+    # prefer TLS1.3 Cipher Suites whenever possible.
+    #tlsCipherSuites:
+
+    # TLS min version from: VersionTLS10, VersionTLS11, VersionTLS12, VersionTLS13.
+    #tlsMinVersion:
+
+    # If Antrea is upgraded from version <= v0.13 and legacy CRDs are used, this option should be
+    # enabled, otherwise the CRDs created with the legacy API groups will not take any effect and
+    # work as expected. When the mirroring is enabled, if a legacy CRD is created with legacy API
+    # groups, mirroring-controller will create a new CRD with the Spec and Labels from the legacy
+    # CRD. Afterwards, the modification of Spec and Label in legacy CRD will be synchronized to new
+    # CRD automatically. In addition, the modification of Status in new CRD will also be synchronized
+    # to legacy CRD automatically. If a legacy CRD is deleted, the corresponding new CRD will be deleted.
+    # Note that: to decouple a new CRD from the corresponding legacy CRD, the legacy CRD should be
+    # annotated with "crd.antrea.io/stop-mirror". Afterwards, updates to the legacy CRDs will no
+    # longer be reflected in the new CRD, and all CRUD operations should be done through the new
+    # API groups. After adding the annotation, legacy CRDs can be deleted safely without impacting
+    # new CRDs.
+    #legacyCRDMirroring: true
 kind: ConfigMap
 metadata:
   annotations: {}
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "EnsureExists"
-  name: antrea-config-m8cb9g82tf
+  name: antrea-config-mc8h75hbgg
   namespace: kube-system
 ---
 apiVersion: v1
@@ -1201,9 +4866,11 @@ spec:
         - --config
         - /etc/antrea/antrea-controller.conf
         - --logtostderr=false
-        - --log_dir
-        - /var/log/antrea
+        - --log_dir=/var/log/antrea
         - --alsologtostderr
+        - --log_file_max_size=100
+        - --log_file_max_num=4
+        - --v=0
         command:
         - antrea-controller
         env:
@@ -1219,7 +4886,22 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: SERVICEACCOUNT_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.serviceAccountName
+        - name: ANTREA_CONFIG_MAP_NAME
+          value: antrea-config-mc8h75hbgg
         image: {{ContainerImage "antrea-controller"}}
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            host: localhost
+            path: /livez
+            port: api
+            scheme: HTTPS
+          periodSeconds: 10
+          timeoutSeconds: 5
         name: antrea-controller
         ports:
         - containerPort: 10349
@@ -1228,8 +4910,8 @@ spec:
         readinessProbe:
           failureThreshold: 5
           httpGet:
-            host: 127.0.0.1
-            path: /healthz
+            host: localhost
+            path: /readyz
             port: api
             scheme: HTTPS
           initialDelaySeconds: 5
@@ -1243,6 +4925,8 @@ spec:
           name: antrea-config
           readOnly: true
           subPath: antrea-controller.conf
+        - mountPath: /var/run/antrea/antrea-controller-tls
+          name: antrea-controller-tls
         - mountPath: /var/log/antrea
           name: host-var-log-antrea
       hostNetwork: true
@@ -1257,8 +4941,13 @@ spec:
         key: node-role.kubernetes.io/master
       volumes:
       - configMap:
-          name: antrea-config-m8cb9g82tf
+          name: antrea-config-mc8h75hbgg
         name: antrea-config
+      - name: antrea-controller-tls
+        secret:
+          defaultMode: 256
+          optional: true
+          secretName: antrea-controller-tls
       - hostPath:
           path: /var/log/antrea
           type: DirectoryOrCreate
@@ -1270,11 +4959,42 @@ metadata:
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "Reconcile"
-  name: v1beta1.networking.antrea.tanzu.vmware.com
+  name: v1alpha1.stats.antrea.io
 spec:
-  group: networking.antrea.tanzu.vmware.com
+  group: stats.antrea.io
   groupPriorityMinimum: 100
-  insecureSkipTLSVerify: true
+  service:
+    name: antrea
+    namespace: kube-system
+  version: v1alpha1
+  versionPriority: 100
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: v1alpha1.stats.antrea.tanzu.vmware.com
+spec:
+  group: stats.antrea.tanzu.vmware.com
+  groupPriorityMinimum: 100
+  service:
+    name: antrea
+    namespace: kube-system
+  version: v1alpha1
+  versionPriority: 100
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: v1beta1.system.antrea.io
+spec:
+  group: system.antrea.io
+  groupPriorityMinimum: 100
   service:
     name: antrea
     namespace: kube-system
@@ -1291,11 +5011,42 @@ metadata:
 spec:
   group: system.antrea.tanzu.vmware.com
   groupPriorityMinimum: 100
-  insecureSkipTLSVerify: true
   service:
     name: antrea
     namespace: kube-system
   version: v1beta1
+  versionPriority: 100
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: v1beta2.controlplane.antrea.io
+spec:
+  group: controlplane.antrea.io
+  groupPriorityMinimum: 100
+  service:
+    name: antrea
+    namespace: kube-system
+  version: v1beta2
+  versionPriority: 100
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: v1beta2.controlplane.antrea.tanzu.vmware.com
+spec:
+  group: controlplane.antrea.tanzu.vmware.com
+  groupPriorityMinimum: 100
+  service:
+    name: antrea
+    namespace: kube-system
+  version: v1beta2
   versionPriority: 100
 ---
 apiVersion: apps/v1
@@ -1314,6 +5065,8 @@ spec:
       component: antrea-agent
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: antrea-agent
       labels:
         app: antrea
         component: antrea-agent
@@ -1323,9 +5076,11 @@ spec:
         - --config
         - /etc/antrea/antrea-agent.conf
         - --logtostderr=false
-        - --log_dir
-        - /var/log/antrea
+        - --log_dir=/var/log/antrea
         - --alsologtostderr
+        - --log_file_max_size=100
+        - --log_file_max_num=4
+        - --v=0
         command:
         - antrea-agent
         env:
@@ -1358,10 +5113,10 @@ spec:
           name: api
           protocol: TCP
         readinessProbe:
-          failureThreshold: 5
+          failureThreshold: 8
           httpGet:
-            host: 127.0.0.1
-            path: /healthz
+            host: localhost
+            path: /readyz
             port: api
             scheme: HTTPS
           initialDelaySeconds: 5
@@ -1396,7 +5151,10 @@ spec:
           readOnly: true
         - mountPath: /run/xtables.lock
           name: xtables-lock
-      - command:
+      - args:
+        - --log_file_max_size=100
+        - --log_file_max_num=4
+        command:
         - start_ovs
         image: {{ContainerImage "antrea-ovs"}}
         livenessProbe:
@@ -1404,9 +5162,11 @@ spec:
             command:
             - /bin/sh
             - -c
-            - timeout 5 container_liveness_probe ovs
+            - timeout 10 container_liveness_probe ovs
+          failureThreshold: 5
           initialDelaySeconds: 5
-          periodSeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 10
         name: antrea-ovs
         resources:
           requests:
@@ -1425,6 +5185,7 @@ spec:
         - mountPath: /var/log/openvswitch
           name: host-var-log-antrea
           subPath: openvswitch
+      dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       initContainers:
       - command:
@@ -1451,9 +5212,8 @@ spec:
         - mountPath: /lib/modules
           name: host-lib-modules
           readOnly: true
-        - mountPath: /sbin/depmod
-          name: host-depmod
-          readOnly: true
+        - mountPath: /var/run/antrea
+          name: host-var-run-antrea
       nodeSelector:
         kubernetes.io/os: linux
       priorityClassName: system-node-critical
@@ -1463,9 +5223,11 @@ spec:
         operator: Exists
       - effect: NoSchedule
         operator: Exists
+      - effect: NoExecute
+        operator: Exists
       volumes:
       - configMap:
-          name: antrea-config-m8cb9g82tf
+          name: antrea-config-mc8h75hbgg
         name: antrea-config
       - hostPath:
           path: /etc/cni/net.d
@@ -1491,16 +5253,358 @@ spec:
           path: /lib/modules
         name: host-lib-modules
       - hostPath:
-          path: /sbin/depmod
-        name: host-depmod
-      - hostPath:
           path: /run/xtables.lock
           type: FileOrCreate
         name: xtables-lock
   updateStrategy:
     type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: crdmutator.antrea.io
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /mutate/acnp
+  name: acnpmutator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusternetworkpolicies
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /mutate/anp
+  name: anpmutator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - networkpolicies
+    scope: Namespaced
+  sideEffects: None
+  timeoutSeconds: 5
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: crdmutator.antrea.tanzu.vmware.com
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /mutate/acnp
+  name: acnpmutator.antrea.tanzu.vmware.com
+  rules:
+  - apiGroups:
+    - security.antrea.tanzu.vmware.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusternetworkpolicies
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /mutate/anp
+  name: anpmutator.antrea.tanzu.vmware.com
+  rules:
+  - apiGroups:
+    - security.antrea.tanzu.vmware.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - networkpolicies
+    scope: Namespaced
+  sideEffects: None
+  timeoutSeconds: 5
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: crdvalidator.antrea.io
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/tier
+  name: tiervalidator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - tiers
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/acnp
+  name: acnpvalidator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusternetworkpolicies
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/anp
+  name: anpvalidator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - networkpolicies
+    scope: Namespaced
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/clustergroup
+  name: clustergroupvalidator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha3
+    - v1alpha2
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clustergroups
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/externalippool
+  name: externalippoolvalidator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha2
+    operations:
+    - UPDATE
+    resources:
+    - externalippools
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/egress
+  name: egressvalidator.antrea.io
+  rules:
+  - apiGroups:
+    - crd.antrea.io
+    apiVersions:
+    - v1alpha2
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - egresses
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: crdvalidator.antrea.tanzu.vmware.com
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/tier
+  name: tiervalidator.antrea.tanzu.vmware.com
+  rules:
+  - apiGroups:
+    - security.antrea.tanzu.vmware.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - tiers
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/acnp
+  name: acnpvalidator.antrea.tanzu.vmware.com
+  rules:
+  - apiGroups:
+    - security.antrea.tanzu.vmware.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusternetworkpolicies
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/anp
+  name: anpvalidator.antrea.tanzu.vmware.com
+  rules:
+  - apiGroups:
+    - security.antrea.tanzu.vmware.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - networkpolicies
+    scope: Namespaced
+  sideEffects: None
+  timeoutSeconds: 5
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: antrea
+      namespace: kube-system
+      path: /validate/clustergroup
+  name: clustergroupvalidator.antrea.tanzu.vmware.com
+  rules:
+  - apiGroups:
+    - core.antrea.tanzu.vmware.com
+    apiVersions:
+    - v1alpha2
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - clustergroups
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 5
 `)
 
 func k8sAddonsAntreaYamlBytes() ([]byte, error) {
@@ -3489,17 +7593,14 @@ spec:
             - "--v=2"
             - "--csi-address=$(CSI_ENDPOINT)"
             - "--kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)"
-          lifecycle:
-            preStop:
-              exec:
-                command: ["cmd", "/c", "del /f C:\\registration\\disk.csi.azure.com-reg.sock C:\\csi\\disk.csi.azure.com\\csi.sock"]
           livenessProbe:
             exec:
               command:
                 - /csi-node-driver-registrar.exe
                 - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
                 - --mode=kubelet-registration-probe
-            initialDelaySeconds: 3
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
           env:
             - name: CSI_ENDPOINT
               value: unix://C:\\csi\\csi.sock
@@ -3585,29 +7686,23 @@ spec:
         - name: csi-proxy-fs-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1
-            type: ""
         - name: csi-proxy-disk-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-disk-v1
-            type: ""
         - name: csi-proxy-volume-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-volume-v1
-            type: ""
         # these paths are still included for compatibility, they're used
         # only if the node has still the beta version of the CSI proxy
         - name: csi-proxy-fs-pipe-v1beta1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1beta1
-            type: ""
         - name: csi-proxy-disk-pipe-v1beta2
           hostPath:
             path: \\.\pipe\csi-proxy-disk-v1beta2
-            type: ""
         - name: csi-proxy-volume-pipe-v1beta2
           hostPath:
             path: \\.\pipe\csi-proxy-volume-v1beta2
-            type: ""
         - name: registration-dir
           hostPath:
             path: C:\var\lib\kubelet\plugins_registry\
@@ -3623,7 +7718,7 @@ spec:
         - name: azure-config
           hostPath:
             path: C:\k
-            type: Directory
+            type: DirectoryOrCreate
 {{end}}
 {{if HasLinux}}
 ---
@@ -3680,10 +7775,14 @@ spec:
             - --csi-address=$(ADDRESS)
             - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
             - --v=2
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/disk.csi.azure.com-reg.sock /csi/csi.sock"]
+          livenessProbe:
+            exec:
+              command:
+                - /csi-node-driver-registrar
+                - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+                - --mode=kubelet-registration-probe
+            initialDelaySeconds: 30
+            timeoutSeconds: 15
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -3742,9 +7841,6 @@ spec:
               name: mountpoint-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
             - mountPath: /dev
               name: device-dir
             - mountPath: /sys/bus/scsi/devices
@@ -3773,11 +7869,8 @@ spec:
           name: registration-dir
         - hostPath:
             path: /etc/kubernetes/
-            type: Directory
+            type: DirectoryOrCreate
           name: azure-cred
-        - hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
-          name: msi
         - hostPath:
             path: /dev
             type: Directory
@@ -3896,7 +7989,8 @@ spec:
             - "-csi-address=$(ADDRESS)"
             - "-v=2"
             - "-leader-election"
-            - '-handle-volume-inuse-error=true'
+            - '-handle-volume-inuse-error=false'
+            - '-timeout=60s'
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -3959,9 +8053,6 @@ spec:
               name: socket-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
           resources:
             limits:
               cpu: {{ContainerCPULimits "azuredisk-csi"}}
@@ -3975,10 +8066,7 @@ spec:
         - name: azure-cred
           hostPath:
             path: /etc/kubernetes/
-            type: Directory
-        - name: msi
-          hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
+            type: DirectoryOrCreate
 {{if ShouldEnableCSISnapshotFeature "azuredisk-csi-driver"}}
 ---
 # Source: azuredisk-csi-driver/templates/csi-snapshot-controller.yaml
@@ -4225,7 +8313,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: false
+    storage: true
     subresources:
       status: {}
   - additionalPrinterColumns:
@@ -4261,6 +8349,11 @@ spec:
       name: Age
       type: date
     name: v1beta1
+    # This indicates the v1beta1 version of the custom resource is deprecated.
+    # API requests to this version receive a warning in the server response.
+    deprecated: true
+    # This overrides the default warning returned to clients making v1beta1 API requests.
+    deprecationWarning: "snapshot.storage.k8s.io/v1beta1 VolumeSnapshot is deprecated; use snapshot.storage.k8s.io/v1 VolumeSnapshot"
     schema:
       openAPIV3Schema:
         description: VolumeSnapshot is a user's request for either creating a point-in-time snapshot of a persistent volume, or binding to a pre-existing snapshot.
@@ -4324,7 +8417,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: true
+    storage: false
     subresources:
       status: {}
 status:
@@ -4395,7 +8488,7 @@ spec:
         - driver
         type: object
     served: true
-    storage: false
+    storage: true
     subresources: {}
   - additionalPrinterColumns:
     - jsonPath: .driver
@@ -4409,6 +8502,11 @@ spec:
       name: Age
       type: date
     name: v1beta1
+    # This indicates the v1beta1 version of the custom resource is deprecated.
+    # API requests to this version receive a warning in the server response.
+    deprecated: true
+    # This overrides the default warning returned to clients making v1beta1 API requests.
+    deprecationWarning: "snapshot.storage.k8s.io/v1beta1 VolumeSnapshotClass is deprecated; use snapshot.storage.k8s.io/v1 VolumeSnapshotClass"
     schema:
       openAPIV3Schema:
         description: VolumeSnapshotClass specifies parameters that a underlying storage system uses when creating a volume snapshot. A specific VolumeSnapshotClass is used by specifying its name in a VolumeSnapshot object. VolumeSnapshotClasses are non-namespaced
@@ -4438,7 +8536,7 @@ spec:
         - driver
         type: object
     served: true
-    storage: true
+    storage: false
     subresources: {}
 status:
   acceptedNames:
@@ -4491,6 +8589,10 @@ spec:
     - description: Name of the VolumeSnapshot object to which this VolumeSnapshotContent object is bound.
       jsonPath: .spec.volumeSnapshotRef.name
       name: VolumeSnapshot
+      type: string
+    - description: Namespace of the VolumeSnapshot object to which this VolumeSnapshotContent object is bound.
+      jsonPath: .spec.volumeSnapshotRef.namespace
+      name: VolumeSnapshotNamespace
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -4599,7 +8701,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: false
+    storage: true
     subresources:
       status: {}
   - additionalPrinterColumns:
@@ -4627,10 +8729,19 @@ spec:
       jsonPath: .spec.volumeSnapshotRef.name
       name: VolumeSnapshot
       type: string
+    - description: Namespace of the VolumeSnapshot object to which this VolumeSnapshotContent object is bound.
+      jsonPath: .spec.volumeSnapshotRef.namespace
+      name: VolumeSnapshotNamespace
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
     name: v1beta1
+    # This indicates the v1beta1 version of the custom resource is deprecated.
+    # API requests to this version receive a warning in the server response.
+    deprecated: true
+    # This overrides the default warning returned to clients making v1beta1 API requests.
+    deprecationWarning: "snapshot.storage.k8s.io/v1beta1 VolumeSnapshotContent is deprecated; use snapshot.storage.k8s.io/v1 VolumeSnapshotContent"
     schema:
       openAPIV3Schema:
         description: VolumeSnapshotContent represents the actual "on-disk" snapshot object in the underlying storage system
@@ -4731,7 +8842,7 @@ spec:
         - spec
         type: object
     served: true
-    storage: true
+    storage: false
     subresources:
       status: {}
 status:
@@ -5101,7 +9212,8 @@ spec:
                 - /csi-node-driver-registrar.exe
                 - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
                 - --mode=kubelet-registration-probe
-            initialDelaySeconds: 3
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
           env:
             - name: CSI_ENDPOINT
               value: unix://C:\\csi\\csi.sock
@@ -5185,21 +9297,17 @@ spec:
         - name: csi-proxy-fs-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1
-            type: ""
         - name: csi-proxy-smb-pipe-v1
           hostPath:
             path: \\.\pipe\csi-proxy-smb-v1
-            type: ""
         # these paths are still included for compatibility, they're used
         # only if the node has still the beta version of the CSI proxy
         - name: csi-proxy-fs-pipe-v1beta1
           hostPath:
             path: \\.\pipe\csi-proxy-filesystem-v1beta1
-            type: ""
         - name: csi-proxy-smb-pipe-v1beta1
           hostPath:
             path: \\.\pipe\csi-proxy-smb-v1beta1
-            type: ""
         - name: registration-dir
           hostPath:
             path: C:\var\lib\kubelet\plugins_registry\
@@ -5215,7 +9323,7 @@ spec:
         - name: azure-config
           hostPath:
             path: C:\k
-            type: Directory
+            type: DirectoryOrCreate
 {{end}}
 {{if HasLinux}}
 ---
@@ -5272,10 +9380,14 @@ spec:
             - --csi-address=$(ADDRESS)
             - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
             - --v=2
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/file.csi.azure.com-reg.sock /csi/csi.sock"]
+          livenessProbe:
+            exec:
+              command:
+                - /csi-node-driver-registrar
+                - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+                - --mode=kubelet-registration-probe
+            initialDelaySeconds: 30
+            timeoutSeconds: 15
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -5333,9 +9445,6 @@ spec:
               name: mountpoint-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
             - mountPath: /dev
               name: device-dir
           resources:
@@ -5360,11 +9469,8 @@ spec:
           name: registration-dir
         - hostPath:
             path: /etc/kubernetes/
-            type: Directory
+            type: DirectoryOrCreate
           name: azure-cred
-        - hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
-          name: msi
         - hostPath:
             path: /dev
             type: Directory
@@ -5534,9 +9640,6 @@ spec:
               name: socket-dir
             - mountPath: /etc/kubernetes/
               name: azure-cred
-            - mountPath: /var/lib/waagent/ManagedIdentity-Settings
-              readOnly: true
-              name: msi
           resources:
             limits:
               cpu: {{ContainerCPULimits "azurefile-csi"}}
@@ -5550,10 +9653,7 @@ spec:
         - name: azure-cred
           hostPath:
             path: /etc/kubernetes/
-            type: Directory
-        - name: msi
-          hostPath:
-            path: /var/lib/waagent/ManagedIdentity-Settings
+            type: DirectoryOrCreate
 ---
 # Source: azurefile-csi-driver/templates/csi-azurefile-driver.yaml
 apiVersion: storage.k8s.io/v1
@@ -7924,7 +12024,7 @@ data:
       type kubepodinventory
       tag oms.containerinsights.KubePodInventory
       run_interval 60
-      log_level debug     
+      log_level debug
      </source>
 
      #Kubernetes Persistent Volume inventory
@@ -7984,7 +12084,7 @@ data:
      </source>
 
      <filter mdm.kubenodeinventory**>
-      type filter_inventory2mdm     
+      type filter_inventory2mdm
       log_level info
      </filter>
 
@@ -8214,10 +12314,10 @@ spec:
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: omsagent
-      dnsConfig:    
+      dnsConfig:
         options:
           - name: ndots
-            value: "3"  
+            value: "3"
       containers:
         - name: omsagent
           image: {{ContainerImage "omsagent"}}
@@ -8287,6 +12387,59 @@ spec:
             - mountPath: /etc/config/settings/adx
               name: omsagent-adx-secret
               readOnly: true
+        - name: omsagent-prometheus
+          image: {{ContainerImage "omsagent"}}
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "omsagent-prometheus"}}
+              memory: {{ContainerMemLimits "omsagent-prometheus"}}
+            requests:
+              cpu: {{ContainerCPUReqs "omsagent-prometheus"}}
+              memory: {{ContainerMemReqs "omsagent-prometheus"}}
+          env:
+            # azure devops pipeline uses AKS_RESOURCE_ID and AKS_REGION hence ensure to uncomment these
+            - name: ACS_RESOURCE_NAME
+              value: {{ContainerConfig "clusterName"}}
+            - name: CONTROLLER_TYPE
+              value: "DaemonSet"
+            - name: ISTEST
+              value: "true"
+            - name: CONTAINER_TYPE
+              value: "PrometheusSidecar"
+            - name: CONTROLLER_TYPE
+              value: "DaemonSet"
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
+            - name: USING_AAD_MSI_AUTH
+              value: "false"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /etc/kubernetes/host
+              name: azure-json-path
+            - mountPath: /etc/omsagent-secret
+              name: omsagent-secret
+              readOnly: true
+            - mountPath: /etc/config/settings
+              name: settings-vol-config
+              readOnly: true
+            - mountPath: /etc/config/osm-settings
+              name: osm-settings-vol-config
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /opt/livenessprobe.sh
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 15
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -8406,7 +12559,7 @@ spec:
             - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
               value: ""
             - name: SIDECAR_SCRAPING_ENABLED
-              value: "false"
+              value: "true"
           securityContext:
             privileged: true
           ports:
@@ -8539,10 +12692,10 @@ spec:
         schema-versions:  {{ContainerConfig "schema-versions"}}
     spec:
       serviceAccountName: omsagent
-      dnsConfig:    
+      dnsConfig:
         options:
           - name: ndots
-            value: "3"  
+            value: "3"
       containers:
         - name: omsagent-win
           image: {{ContainerImage "omsagent-win"}}
@@ -8569,7 +12722,7 @@ spec:
                  fieldRef:
                    fieldPath: status.hostIP
             - name: SIDECAR_SCRAPING_ENABLED
-              value: "false"
+              value: "true"
           volumeMounts:
             - mountPath: C:\ProgramData\docker\containers
               name: docker-windows-containers
@@ -8590,7 +12743,11 @@ spec:
               command:
                 - cmd
                 - /c
-                - C:\opt\omsagentwindows\scripts\cmd\livenessProbe.cmd
+                - C:\opt\omsagentwindows\scripts\cmd\livenessprobe.exe
+                - fluent-bit.exe
+                - fluentdwinaks
+                - "C:\\etc\\omsagentwindows\\filesystemwatcher.txt"
+                - "C:\\etc\\omsagentwindows\\renewcertificate.txt"
             periodSeconds: 60
             initialDelaySeconds: 180
       affinity:
@@ -8734,6 +12891,13 @@ rules:
   - nodes
   verbs:
   - get
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - list
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -11810,6 +15974,34 @@ func k8sArmparametersT() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsApiserverMonitorService = []byte(`[Unit]
+Description=a script that checks apiserver health and restarts if needed
+After=kubelet.service
+[Service]
+Restart=always
+RestartSec=10
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/health-monitor.sh apiserver
+[Install]
+WantedBy=multi-user.target
+#EOF
+`)
+
+func k8sCloudInitArtifactsApiserverMonitorServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsApiserverMonitorService, nil
+}
+
+func k8sCloudInitArtifactsApiserverMonitorService() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsApiserverMonitorServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/apiserver-monitor.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsAptPreferences = []byte(``)
 
 func k8sCloudInitArtifactsAptPreferencesBytes() ([]byte, error) {
@@ -12163,7 +16355,11 @@ configureChrony() {
 ensureChrony() {
   systemctlEnableAndStart chrony || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
-
+disable1804SystemdResolved() {
+  {{/* Ignoring systemd-resolved query service but using its resolv.conf file */}}
+  {{/* This is the simplest approach to workaround resolved issues without completely uninstall it */}}
+  [ -f /run/systemd/resolve/resolv.conf ] && sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+}
 ensureRPC() {
   systemctlEnableAndStart rpcbind || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
   systemctlEnableAndStart rpc-statd || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
@@ -12443,7 +16639,7 @@ ensureKubelet() {
   if [[ -n ${MASTER_NODE} ]]; then
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   else
-{{- if not RunUnattendedUpgrades}}
+{{- if not RunUnattendedUpgradesOnBootstrap}}
     systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
 {{else}}
     systemctl_enable 100 5 30 kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
@@ -12454,13 +16650,27 @@ ensureKubelet() {
   if [[ -n ${MASTER_NODE} ]]; then
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   else
-  {{- if not RunUnattendedUpgrades}}
+  {{- if not RunUnattendedUpgradesOnBootstrap}}
     systemctlEnableAndStart kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{else}}
     systemctl_enable 100 5 30 kubelet-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
   {{- end}}
   fi
 {{- end}}
+if [[ -n ${MASTER_NODE} ]]; then
+  wait_for_file 1200 1 /etc/systemd/system/apiserver-monitor.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart apiserver-monitor || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+fi
+}
+
+ensureKubeAddonManager() {
+  {{/* Wait 5 mins for kube-addon-manager to become Ready */}}
+  if ! retrycmd 60 5 30 ${KUBECTL} wait --for=condition=Ready --timeout=5s -l app=kube-addon-manager po -n kube-system; then
+    {{/* Restart kubelet if kube-addon-manager is not Ready after 5 mins */}}
+    systemctl_restart 3 5 30 kubelet
+    {{/* Wait 5 more mins for kube-addon-manager to become Ready, and then return failure if not */}}
+    retrycmd 60 5 30 ${KUBECTL} wait --for=condition=Ready --timeout=5s -l app=kube-addon-manager po -n kube-system || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  fi
 }
 
 ensureAddons() {
@@ -12473,12 +16683,13 @@ ensureAddons() {
 {{- if not HasCustomPodSecurityPolicy}}
   retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
 {{- end}}
-  rm -Rf ${ADDONS_DIR}/init
   replaceAddonsInit
-  {{/* Force re-load all addons because we have changed the source location for addon specs */}}
-  retrycmd 10 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || \
-  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system --force --grace-period 0 || \
-  exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  rm -Rf ${ADDONS_DIR}/init
+  ensureKubeAddonManager
+  {{/* Manually delete any kube-addon-manager pods that point to the init directory */}}
+  for initPod in $(${KUBECTL} get pod -l app=kube-addon-manager -n kube-system -o json | jq -r '.items[] | select(.spec.containers[0].env[] | select(.value=="/etc/kubernetes/addons/init")) | select(.status.phase=="Running") .metadata.name'); do
+    retrycmd 120 5 30 ${KUBECTL} delete pod $initPod -n kube-system --force --grace-period 0 || exit_cse {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}} $GET_KUBELET_LOGS
+  done
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -12503,7 +16714,9 @@ ensureAddons() {
 }
 replaceAddonsInit() {
   wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  cp $ADDON_MANAGER_SPEC /tmp/kube-addon-manager.yaml || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" /tmp/kube-addon-manager.yaml || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  mv /tmp/kube-addon-manager.yaml $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
 }
 ensureLabelNodes() {
   wait_for_file 1200 1 /opt/azure/containers/label-nodes.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
@@ -13417,15 +17630,6 @@ installMoby() {
     apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
 }
-installBcc() {
-  local key=/tmp/iovisor-release.key url=https://repo.iovisor.org/GPG-KEY
-  retrycmd_no_stats 120 5 25 curl -fsSL $url >$key || exit 166
-  wait_for_apt_locks
-  retrycmd 30 5 30 apt-key add $key || exit 167
-  echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" >/etc/apt/sources.list.d/iovisor.list
-  apt_get_update || exit 99
-  apt_get_install 120 5 25 bcc-tools libbcc-examples linux-headers-$(uname -r) || exit 168
-}
 downloadCNI() {
   mkdir -p $CNI_DOWNLOADS_DIR
   CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
@@ -13567,6 +17771,9 @@ func k8sCloudInitArtifactsCse_installSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_mainSh = []byte(`#!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
+{{/* delete non-working iovisor definition to ensure apt operations work */}}
+rm -Rf /etc/apt/sources.list.d/iovisor.list
+
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
   exit 0
@@ -13606,6 +17813,10 @@ wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEE
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  disable1804SystemdResolved
+fi
+
 set +x
 ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
@@ -13642,9 +17853,6 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
   time_metric "InstallDeps" installDeps
   if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
     overrideNetworkConfig
-  fi
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "InstallBcc" installBcc
   fi
   {{- if not IsDockerContainerRuntime}}
   time_metric "InstallImg" installImg
@@ -13837,7 +18045,9 @@ fi
 {{end}}
 
 {{- /* re-enable unattended upgrades */}}
+{{- if EnableUnattendedUpgrades}}
 rm -f /etc/apt/apt.conf.d/99periodic
+{{- end}}
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
@@ -13846,7 +18056,7 @@ fi
 {{end}}
 
 {{- if not HasBlockOutboundInternet}}
-    {{- if RunUnattendedUpgrades}}
+    {{- if RunUnattendedUpgradesOnBootstrap}}
 apt_get_update && unattended_upgrade
     {{- end}}
 {{- end}}
@@ -13858,7 +18068,7 @@ if [ -f /var/run/reboot-required ]; then
     aptmarkWALinuxAgent unhold &
   fi
 else
-{{- if RunUnattendedUpgrades}}
+{{- if RunUnattendedUpgradesOnBootstrap}}
   if [[ -z ${MASTER_NODE} ]]; then
     systemctl_restart 100 5 30 kubelet
     systemctl_restart 100 5 30 kubelet-monitor
@@ -14302,6 +18512,29 @@ kubelet_monitoring() {
   done
 }
 
+apiserver_monitoring() {
+  sleep 300 {{/* Wait for 5 minutes for apiserver to be functional/stable */}}
+  local private_ip=$( (ip -br -4 addr show eth0 || ip -br -4 addr show azure0) | grep -Po '\d+\.\d+\.\d+\.\d+')
+  local max_seconds=10 output=""
+  local monitor_cmd="curl -m ${max_seconds} --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/client.crt --key /etc/kubernetes/certs/client.key https://${private_ip}:443/readyz?verbose"
+  while true; do
+    if ! output=$(${monitor_cmd} 2>&1); then
+      echo $output
+      echo "apiserver is unhealthy!"
+      sleep 10 {{/* Wait 10 more seconds, check again, because the systemd job itself may have already restarted things */}}
+      if ! output=$(${monitor_cmd} 2>&1); then
+        systemctl kill kubelet
+        sleep 60 {{/* Wait a minute to validate that the systemd job restarted itself after we manually killed the process */}}
+        if ! systemctl is-active kubelet; then
+          systemctl start kubelet
+        fi
+      fi
+    else
+      sleep "${SLEEP_TIME}"
+    fi
+  done
+}
+
 etcd_monitoring() {
   sleep 300 {{/* Wait for 5 minutes for etcd to be functional/stable */}}
   local max_seconds=10 output=""
@@ -14338,6 +18571,8 @@ if [[ ${component} == "container-runtime" ]]; then
   container_runtime_monitoring
 elif [[ ${component} == "kubelet" ]]; then
   kubelet_monitoring
+elif [[ ${component} == "apiserver" ]]; then
+  apiserver_monitoring
 elif [[ ${component} == "etcd" ]]; then
   etcd_monitoring
 else
@@ -15496,6 +19731,13 @@ write_files:
     {{CloudInitData "kubeletMonitorSystemdService"}}
 {{- end}}
 
+- path: /etc/systemd/system/apiserver-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "apiserverMonitorSystemdService"}}
+
 - path: /etc/systemd/system/etcd-monitor.service
   permissions: "0644"
   encoding: gzip
@@ -15847,6 +20089,27 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     {{- /* Ensure that container traffic can't connect to internal Azure IP endpoint */}}
     iptables -I FORWARD -d 168.63.129.16 -p tcp --dport 80 -j DROP
+    {{- /* Ensure that we have access to the upstream DNS via TCP */}}
+    {{- /* There is a long-standing bug where TCP is blocked for all ports */}}
+    {{- /* thus impacting DNS via TCP - https://github.com/Azure/WALinuxAgent/issues/1673 */}}
+    {{- /* This works around that bug and will not have negative impacts if it gets fixed */}}
+    iptables -t security -D OUTPUT -d 168.63.129.16/32 -p tcp -m tcp --dport 53 -j ACCEPT || true
+    iptables -t security -I OUTPUT 1 -d 168.63.129.16/32 -p tcp -m tcp --dport 53 -j ACCEPT
+    {{- /* The two lines are (1) to delete the rule if it is there already and     */}}
+    {{- /* then (2) to add the rule at the top (first entry) which specifically    */}}
+    {{- /* allows TCP to the magic VM host controlled IP address for DNS (which is */}}
+    {{- /* the upstream DNS provider)                                              */}}
+    {{- /* Why the delete? Well, if the kubelet gets restarted, we don't want to   */}}
+    {{- /* add the rule again. The -I will add the rule again, even if it is there */}}
+    {{- /* already. So, we delete the rule first. It also makes sure that the      */}}
+    {{- /* rule is added at the top of the chain such that this will also          */}}
+    {{- /* effectively move it to the top if it was already there. In other words, */}}
+    {{- /* it just makes sure that the rule exists and is at the right spot. If it */}}
+    {{- /* does not exist, the delete (-D) will "fail" to delete the non-existing  */}}
+    {{- /* rule, which is the end state we want so we don't care if the delete     */}}
+    {{- /* failed and thus the "|| true". Then the second step is to insert the    */}}
+    {{- /* rule at the top of the chain, thus making sure that no other rule       */}}
+    {{- /* blocks access before it can do the ACCEPT                               */}}
     #EOF
 
 {{- if not HasCosmosEtcd  }}
@@ -16761,7 +21024,7 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
       }
     },
     "mobyVersion": {
-      "defaultValue": "20.10.7",
+      "defaultValue": "20.10.11",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -16783,14 +21046,18 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "19.03.13",
          "19.03.14",
          "20.10.5",
-         "20.10.7"
+         "20.10.7",
+         "20.10.8",
+         "20.10.9",
+         "20.10.10",
+         "20.10.11"
        ],
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.4.6",
+      "defaultValue": "1.4.11",
       "metadata": {
-        "description": "The Azure Moby build version"
+        "description": "The Azure containerd build version"
       },
       "allowedValues": [
          "1.3.2",
@@ -16802,7 +21069,11 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "1.3.8",
          "1.3.9",
          "1.4.4",
-         "1.4.6"
+         "1.4.6",
+         "1.4.7",
+         "1.4.8",
+         "1.4.9",
+         "1.4.11"
        ],
       "type": "string"
     },
@@ -18850,15 +23121,36 @@ function New-ExternalHnsNetwork
 
     Write-Log "Creating new HNS network ` + "`" + `"ext` + "`" + `""
     $externalNetwork = "ext"
-    $na = @(Get-NetAdapter -Physical)
+    $nas = @(Get-NetAdapter -Physical)
 
-    if ($na.Count -eq 0) {
+    if ($nas.Count -eq 0) {
         throw "Failed to find any physical network adapters"
     }
 
-    # If there is more than one adapter, use the first adapter.
-    $managementIP = (Get-NetIPAddress -ifIndex $na[0].ifIndex -AddressFamily IPv4).IPAddress
-    $adapterName = $na[0].Name
+    # If there is more than one adapter, use the first adapter that is assigned an ipaddress.
+    foreach($na in $nas)
+    {
+        $netIP = Get-NetIPAddress -ifIndex $na.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue -ErrorVariable netIPErr
+        if ($netIP)
+        {
+            $managementIP = $netIP.IPAddress
+            $adapterName = $na.Name
+            break
+        }
+        else {
+            Write-Log "No IPv4 found on the network adapter $($na.Name); trying the next adapter ..."
+            if ($netIPErr) {
+                Write-Log "error when retrieving IPAddress: $netIPErr"
+                $netIPErr.Clear()
+            }
+        }
+    }
+
+    if(-Not $managementIP)
+    {
+        throw "None of the physical network adapters has an IP address"
+    }
+
     Write-Log "Using adapter $adapterName with IP address $managementIP"
     $mgmtIPAfterNetworkCreate
 
@@ -19136,8 +23428,12 @@ function Adjust-DynamicPortRange()
     # to ~225 services if default port reservations are used.
     # https://docs.microsoft.com/en-us/virtualization/windowscontainers/kubernetes/common-problems#load-balancers-are-plumbed-inconsistently-across-the-cluster-nodes
     # Kube-proxy load balancing should be set to DSR mode when it releases with future versions of the OS
+    #
+    # The fix which reduces dynamic port usage for non-DSR load balancers is shiped with KB4550969 in April 2020
+    # Update the range to [33000, 65535] to avoid that it conflicts with NodePort range (30000 - 32767)
+    # Will remove this after WinDSR is enabled by default
 
-    Invoke-Executable -Executable "netsh.exe" -ArgList @("int", "ipv4", "set", "dynamicportrange", "tcp", "16385", "49151")
+    Invoke-Executable -Executable "netsh.exe" -ArgList @("int", "ipv4", "set", "dynamicportrange", "tcp", "33000", "32536")
 }
 
 # TODO: should this be in this PR?
@@ -20476,6 +24772,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/smb-flexvolume.yaml":                                     k8sAddonsSmbFlexvolumeYaml,
 	"k8s/addons/tiller.yaml":                                             k8sAddonsTillerYaml,
 	"k8s/armparameters.t":                                                k8sArmparametersT,
+	"k8s/cloud-init/artifacts/apiserver-monitor.service":                 k8sCloudInitArtifactsApiserverMonitorService,
 	"k8s/cloud-init/artifacts/apt-preferences":                           k8sCloudInitArtifactsAptPreferences,
 	"k8s/cloud-init/artifacts/auditd-rules":                              k8sCloudInitArtifactsAuditdRules,
 	"k8s/cloud-init/artifacts/cis.sh":                                    k8sCloudInitArtifactsCisSh,
@@ -20627,17 +24924,18 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{
 			"artifacts": {nil, map[string]*bintree{
-				"apt-preferences":        {k8sCloudInitArtifactsAptPreferences, map[string]*bintree{}},
-				"auditd-rules":           {k8sCloudInitArtifactsAuditdRules, map[string]*bintree{}},
-				"cis.sh":                 {k8sCloudInitArtifactsCisSh, map[string]*bintree{}},
-				"cse_config.sh":          {k8sCloudInitArtifactsCse_configSh, map[string]*bintree{}},
-				"cse_customcloud.sh":     {k8sCloudInitArtifactsCse_customcloudSh, map[string]*bintree{}},
-				"cse_helpers.sh":         {k8sCloudInitArtifactsCse_helpersSh, map[string]*bintree{}},
-				"cse_install.sh":         {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
-				"cse_main.sh":            {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
-				"default-grub":           {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
-				"dhcpv6.service":         {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
-				"docker-monitor.service": {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
+				"apiserver-monitor.service": {k8sCloudInitArtifactsApiserverMonitorService, map[string]*bintree{}},
+				"apt-preferences":           {k8sCloudInitArtifactsAptPreferences, map[string]*bintree{}},
+				"auditd-rules":              {k8sCloudInitArtifactsAuditdRules, map[string]*bintree{}},
+				"cis.sh":                    {k8sCloudInitArtifactsCisSh, map[string]*bintree{}},
+				"cse_config.sh":             {k8sCloudInitArtifactsCse_configSh, map[string]*bintree{}},
+				"cse_customcloud.sh":        {k8sCloudInitArtifactsCse_customcloudSh, map[string]*bintree{}},
+				"cse_helpers.sh":            {k8sCloudInitArtifactsCse_helpersSh, map[string]*bintree{}},
+				"cse_install.sh":            {k8sCloudInitArtifactsCse_installSh, map[string]*bintree{}},
+				"cse_main.sh":               {k8sCloudInitArtifactsCse_mainSh, map[string]*bintree{}},
+				"default-grub":              {k8sCloudInitArtifactsDefaultGrub, map[string]*bintree{}},
+				"dhcpv6.service":            {k8sCloudInitArtifactsDhcpv6Service, map[string]*bintree{}},
+				"docker-monitor.service":    {k8sCloudInitArtifactsDockerMonitorService, map[string]*bintree{}},
 				"docker_clear_mount_propagation_flags.conf": {k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf, map[string]*bintree{}},
 				"enable-dhcpv6.sh":                          {k8sCloudInitArtifactsEnableDhcpv6Sh, map[string]*bintree{}},
 				"etc-issue":                                 {k8sCloudInitArtifactsEtcIssue, map[string]*bintree{}},

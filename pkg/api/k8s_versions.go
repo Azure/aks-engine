@@ -24,7 +24,7 @@ const (
 	ciliumCleanStateImageReference                    string = "docker.io/cilium/cilium-init:2018-10-16"
 	ciliumOperatorImageReference                      string = "docker.io/cilium/operator:v1.4"
 	ciliumEtcdOperatorImageReference                  string = "docker.io/cilium/cilium-etcd-operator:v2.0.5"
-	antreaControllerImageReference                    string = "antrea/antrea-ubuntu:v0.6.0"
+	antreaControllerImageReference                    string = "projects.registry.vmware.com/antrea/antrea-ubuntu:v1.3.0"
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
@@ -36,15 +36,15 @@ const (
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector/node-problem-detector:v0.8.4"
 	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v3.0.0"
 	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v3.3.0"
-	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.4.0"
-	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.4.0"
-	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.3.0"
-	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.3.0"
+	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v2.5.0"
+	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.5.0"
+	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.4.0"
+	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v2.4.0"
 	csiResizerImageReference                          string = "oss/kubernetes-csi/csi-resizer:v1.3.0"
 	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v4.2.1"
 	csiSnapshotControllerImageReference               string = "oss/kubernetes-csi/snapshot-controller:v4.2.1"
-	csiAzureDiskImageReference                        string = "oss/kubernetes-csi/azuredisk-csi:v1.7.0"
-	csiAzureFileImageReference                        string = "oss/kubernetes-csi/azurefile-csi:v1.6.0"
+	csiAzureDiskImageReference                        string = "oss/kubernetes-csi/azuredisk-csi:v1.8.0"
+	csiAzureFileImageReference                        string = "oss/kubernetes-csi/azurefile-csi:v1.7.0"
 	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v1.1.1"
 	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v1.1.1"
 	dashboardImageReference                           string = "mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.4" // deprecated
@@ -58,7 +58,7 @@ const (
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
 	csiSecretsStoreProviderAzureImageReference        string = "oss/azure/secrets-store/provider-azure:0.0.12"
 	csiSecretsStoreDriverImageReference               string = "oss/kubernetes-csi/secrets-store/driver:v0.0.19"
-	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
+	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.8.5"
 	azureArcOnboardingImageReference                  string = "arck8sonboarding.azurecr.io/arck8sonboarding:v0.1.0"
 	azureKMSProviderImageReference                    string = "k8s/kms/keyvault:v0.0.10"
 )
@@ -84,7 +84,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DashboardAddonName:                   "oss/kubernetes/dashboard:v2.0.4", // deprecated
 		common.DashboardMetricsScraperContainerName: "oss/kubernetes/metrics-scraper:v1.0.4",
 		common.ExecHealthZComponentName:             "oss/kubernetes/exechealthz:1.2",
-		common.CoreDNSAddonName:                     "oss/kubernetes/coredns:1.7.0",
+		common.CoreDNSAddonName:                     "oss/kubernetes/coredns:1.8.6",
 		common.KubeDNSAddonName:                     "oss/kubernetes/k8s-dns-kube-dns:1.15.4",
 		common.DNSMasqComponentName:                 "oss/kubernetes/k8s-dns-dnsmasq-nanny:1.15.4",
 		common.DNSSidecarComponentName:              "oss/kubernetes/k8s-dns-sidecar:1.14.10",
@@ -246,33 +246,33 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 	common.KubernetesImageBaseTypeMCR: {
 		"1.23": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.0",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.2",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.5",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.0",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.1",
 		},
 		"1.22": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.0",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.2",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.5",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.0",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.1",
 		},
 		"1.21": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.0",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.2",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.0",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.1",
 		},
 		"1.20": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.0",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.2",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.0",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.1",
 		},
 		"1.19": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.0",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.5.2",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.3",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.0",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.22.1",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
@@ -499,7 +499,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
-			common.WindowsArtifactAzureStackComponentName:     "v" + version + common.AzureStackSuffix + "/windowszip/v" + version + common.AzureStackSuffix + "-1int.zip",
+			common.WindowsArtifactAzureStackComponentName:     "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			common.DashboardMetricsScraperContainerName:       dashboardMetricsScraperImageReference,
 			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
@@ -583,7 +583,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
-			common.WindowsArtifactAzureStackComponentName:     "v" + version + common.AzureStackSuffix + "/windowszip/v" + version + common.AzureStackSuffix + "-1int.zip",
+			common.WindowsArtifactAzureStackComponentName:     "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			common.DashboardMetricsScraperContainerName:       dashboardMetricsScraperImageReference,
 			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
@@ -751,7 +751,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
-			common.WindowsArtifactAzureStackComponentName:     "v" + version + "/windowszip/v" + version + "-1int.zip",
+			common.WindowsArtifactAzureStackComponentName:     "v" + version + common.AzureStackSuffix + "/windowszip/v" + version + common.AzureStackSuffix + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			common.DashboardMetricsScraperContainerName:       dashboardMetricsScraperImageReference,
 			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
