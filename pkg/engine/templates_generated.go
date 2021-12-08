@@ -17054,6 +17054,15 @@ configureK8sCustomCloud() {
   fi
   set -x
 
+  {{/* Log whether the custom login endpoint is reachable to simplify troubleshooting. */}}
+  {{/* CSE will finish successfully but kubelet will error out if not reachable. */}}
+  LOGIN_ENDPOINT=$(jq -r .activeDirectoryEndpoint /etc/kubernetes/azurestackcloud.json)
+  LOGIN_ENDPOINT=${LOGIN_ENDPOINT#'https://'}
+  LOGIN_ENDPOINT=${LOGIN_ENDPOINT%'/'}
+  timeout 10 nc -vz ${LOGIN_ENDPOINT} 443 \
+  && echo "login endpoint reachable: ${LOGIN_ENDPOINT}" \
+  || echo "error: login endpoint not reachable: ${LOGIN_ENDPOINT}"
+
   {{- if not IsAzureCNI}}
   # Decrease eth0 MTU to mitigate Azure Stack's NRP issue
   echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces
@@ -17102,33 +17111,19 @@ ensureAzureStackCertificates() {
 }
 
 configureAzureStackInterfaces() {
-  set +x
-
   NETWORK_INTERFACES_FILE="/etc/kubernetes/network_interfaces.json"
   AZURE_CNI_CONFIG_FILE="/etc/kubernetes/interfaces.json"
   AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
   SERVICE_MANAGEMENT_ENDPOINT=$(jq -r '.serviceManagementEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
   ACTIVE_DIRECTORY_ENDPOINT=$(jq -r '.activeDirectoryEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
   RESOURCE_MANAGER_ENDPOINT=$(jq -r '.resourceManagerEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
+  TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
 
   if [[ ${IDENTITY_SYSTEM,,} == "adfs" ]]; then
     TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}adfs/oauth2/token"
-  else
-    TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
   fi
 
-  echo "Generating token for Azure Resource Manager"
-  echo "------------------------------------------------------------------------"
-  echo "Parameters"
-  echo "------------------------------------------------------------------------"
-  echo "SERVICE_PRINCIPAL_CLIENT_ID:     ..."
-  echo "SERVICE_PRINCIPAL_CLIENT_SECRET: ..."
-  echo "SERVICE_MANAGEMENT_ENDPOINT:     $SERVICE_MANAGEMENT_ENDPOINT"
-  echo "ACTIVE_DIRECTORY_ENDPOINT:       $ACTIVE_DIRECTORY_ENDPOINT"
-  echo "TENANT_ID:                       $TENANT_ID"
-  echo "IDENTITY_SYSTEM:                 $IDENTITY_SYSTEM"
-  echo "TOKEN_URL:                       $TOKEN_URL"
-  echo "------------------------------------------------------------------------"
+  set +x
 
   TOKEN=$(curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X POST \
     -H "Content-Type: application/x-www-form-urlencoded" \
@@ -17142,16 +17137,6 @@ configureAzureStackInterfaces() {
     echo "Error generating token for Azure Resource Manager"
     exit 120
   fi
-
-  echo "Fetching network interface configuration for node"
-  echo "------------------------------------------------------------------------"
-  echo "Parameters"
-  echo "------------------------------------------------------------------------"
-  echo "RESOURCE_MANAGER_ENDPOINT: $RESOURCE_MANAGER_ENDPOINT"
-  echo "SUBSCRIPTION_ID:           $SUBSCRIPTION_ID"
-  echo "RESOURCE_GROUP:            $RESOURCE_GROUP"
-  echo "NETWORK_API_VERSION:       $NETWORK_API_VERSION"
-  echo "------------------------------------------------------------------------"
 
   curl -s --retry 5 --retry-delay 10 --max-time 60 -f -X GET \
     -H "Authorization: Bearer $TOKEN" \
