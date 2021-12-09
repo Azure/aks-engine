@@ -168,7 +168,7 @@ done
 
 AZURE_CNIIMAGEBASE="mcr.microsoft.com/containernetworking"
 AZURE_NPM_VERSIONS="
-1.2.2_hotfix
+1.4.9
 "
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-npm:v${AZURE_NPM_VERSION}"
