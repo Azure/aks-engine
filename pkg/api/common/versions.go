@@ -296,12 +296,14 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.22.2":         false,
 	"1.22.3":         false,
 	"1.22.4":         true,
-	"1.23.0-alpha.1": true,
-	"1.23.0-alpha.2": true,
-	"1.23.0-alpha.3": true,
-	"1.23.0-alpha.4": true,
-	"1.23.0-beta.0":  true,
-	"1.23.0-rc.0":    true,
+	"1.23.0-alpha.1": false,
+	"1.23.0-alpha.2": false,
+	"1.23.0-alpha.3": false,
+	"1.23.0-alpha.4": false,
+	"1.23.0-beta.0":  false,
+	"1.23.0-rc.0":    false,
+	"1.23.0-rc.1":    false,
+	"1.23.0":         true,
 }
 
 // AllKubernetesSupportedVersionsAzureStack is a hash table of all supported Kubernetes version strings on Azure Stack

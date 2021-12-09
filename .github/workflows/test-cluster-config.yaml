@@ -14,9 +14,9 @@ on:
         required: false
         default: ''
       kubernetes_release:
-        description: 'Which Kubernetes release to test (major.minor only, e.g., "1.22")'
+        description: 'Which Kubernetes release to test (major.minor only, e.g., "1.23")'
         required: false
-        default: '1.22'
+        default: '1.23'
       container_runtime:
         description: 'Which CRI to use (e.g., "containerd" or "docker")'
         required: false
