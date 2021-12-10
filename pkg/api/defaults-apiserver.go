@@ -20,7 +20,6 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--advertise-address":           "<advertiseAddr>",
 		"--allow-privileged":            "true",
 		"--audit-log-path":              "/var/log/kubeaudit/audit.log",
-		"--insecure-port":               "0",
 		"--secure-port":                 "443",
 		"--service-account-lookup":      "true",
 		"--etcd-certfile":               "/etc/kubernetes/certs/etcdclient.crt",
@@ -103,6 +102,10 @@ func (cs *ContainerService) setAPIServerConfig() {
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.1") {
 		defaultAPIServerConfig["--service-account-issuer"] = "https://kubernetes.default.svc.cluster.local"
 		defaultAPIServerConfig["--service-account-signing-key-file"] = "/etc/kubernetes/certs/apiserver.key"
+	}
+
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.20.0-alpha.0") {
+		defaultAPIServerConfig["--insecure-port"] = "0"
 	}
 
 	// Set default admission controllers
