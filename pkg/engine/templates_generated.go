@@ -5902,7 +5902,7 @@ volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
   - key: topology.disk.csi.azure.com/zone
-    values: {{GetZones}}
+    values: {{GetAgentPoolZones}}
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
@@ -5925,7 +5925,7 @@ volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
   - key: topology.disk.csi.azure.com/zone
-    values: {{GetZones}}
+    values: {{GetAgentPoolZones}}
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
@@ -5948,7 +5948,7 @@ volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
   - key: topology.disk.csi.azure.com/zone
-    values: {{GetZones}}
+    values: {{GetAgentPoolZones}}
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
