@@ -3,6 +3,7 @@
   "properties": {
     "orchestratorProfile": {
       "kubernetesConfig": {
+        "useCloudControllerManager": true,
         "useManagedIdentity": true,
         "clusterSubnet": "10.239.0.0/16",
         "addons": [
