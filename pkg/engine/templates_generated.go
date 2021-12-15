@@ -5897,7 +5897,7 @@ parameters:
   cachingMode: ReadOnly
 reclaimPolicy: Delete
 allowVolumeExpansion: true
-  {{- if HasAvailabilityZones}}
+  {{- if HasAgentPoolAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
@@ -5920,7 +5920,7 @@ parameters:
   cachingMode: ReadOnly
 reclaimPolicy: Delete
 allowVolumeExpansion: true
-  {{- if HasAvailabilityZones}}
+  {{- if HasAgentPoolAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
@@ -5943,7 +5943,7 @@ parameters:
   cachingMode: ReadOnly
 reclaimPolicy: Delete
 allowVolumeExpansion: true
-  {{- if HasAvailabilityZones}}
+  {{- if HasAgentPoolAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:

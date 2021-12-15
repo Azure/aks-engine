@@ -596,12 +596,7 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 			return cs.Properties.HasAvailabilityZones()
 		},
 		"HasAgentPoolAvailabilityZones": func() bool {
-			for _, pool := range cs.Properties.AgentPoolProfiles {
-				if pool.AvailabilityZones != nil {
-					return true
-				}
-			}
-			return false
+			return cs.Properties.HasAgentPoolAvailabilityZones()
 		},
 		"GetAgentPoolZones": func() string {
 			if len(cs.Properties.AgentPoolProfiles) == 0 {
@@ -611,7 +606,7 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 			var zones string
 			for _, pool := range cs.Properties.AgentPoolProfiles {
 				if pool.AvailabilityZones != nil {
-					for _, zone := range cs.Properties.AgentPoolProfiles[0].AvailabilityZones {
+					for _, zone := range pool.AvailabilityZones {
 						zones += fmt.Sprintf("\n    - %s-%s", cs.Location, zone)
 					}
 				}

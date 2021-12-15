@@ -90,9 +90,9 @@ func IsUsingEphemeralDisks(agentPools []*api.AgentPoolProfile) bool {
 	return false
 }
 
-func GetAgentVMSize(agentPools []*api.AgentPoolProfile, osType api.OSType) string {
+func GetAgentVMSize(agentPools []*api.AgentPoolProfile, nodeName string) string {
 	for _, a := range agentPools {
-		if a.OSType == osType {
+		if strings.HasPrefix(nodeName, fmt.Sprintf("k8s-%s", a.Name)) {
 			return a.VMSize
 		}
 	}

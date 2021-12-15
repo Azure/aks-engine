@@ -2288,7 +2288,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 		expectedUsesCloudControllerManager                bool
 		expectedHasAvailabilityZones                      bool
 		expectedHasAgentPoolAvailabilityZones             bool
-		expectedGetZones                                  string
+		expectedGetAgentPoolZones                         string
 		expectedHasWindows                                bool
 		expectedHasLinux                                  bool
 		expectedCSIControllerReplicas                     string
@@ -2371,7 +2371,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedUsesCloudControllerManager:                false,
 			expectedHasAvailabilityZones:                      false,
 			expectedHasAgentPoolAvailabilityZones:             false,
-			expectedGetZones:                                  "",
+			expectedGetAgentPoolZones:                         "",
 			expectedHasWindows:                                false,
 			expectedHasLinux:                                  true,
 			expectedCSIControllerReplicas:                     "2",
@@ -2458,7 +2458,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedUsesCloudControllerManager:                false,
 			expectedHasAvailabilityZones:                      false,
 			expectedHasAgentPoolAvailabilityZones:             false,
-			expectedGetZones:                                  "",
+			expectedGetAgentPoolZones:                         "",
 			expectedHasWindows:                                false,
 			expectedHasLinux:                                  true,
 			expectedCSIControllerReplicas:                     "2",
@@ -2541,7 +2541,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedUsesCloudControllerManager:                false,
 			expectedHasAvailabilityZones:                      false,
 			expectedHasAgentPoolAvailabilityZones:             false,
-			expectedGetZones:                                  "",
+			expectedGetAgentPoolZones:                         "",
 			expectedHasWindows:                                false,
 			expectedHasLinux:                                  true,
 			expectedCSIControllerReplicas:                     "2",
@@ -2625,7 +2625,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedUsesCloudControllerManager:                true,
 			expectedHasAvailabilityZones:                      false,
 			expectedHasAgentPoolAvailabilityZones:             false,
-			expectedGetZones:                                  "",
+			expectedGetAgentPoolZones:                         "",
 			expectedHasWindows:                                false,
 			expectedHasLinux:                                  true,
 			expectedCSIControllerReplicas:                     "2",
@@ -2699,6 +2699,16 @@ func TestGetAddonFuncMap(t *testing.T) {
 							},
 							OSType: api.Linux,
 						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							AvailabilityZones: []string{
+								"1",
+							},
+							OSType: api.Linux,
+						},
 					},
 				},
 			},
@@ -2714,7 +2724,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedUsesCloudControllerManager:                true,
 			expectedHasAvailabilityZones:                      true,
 			expectedHasAgentPoolAvailabilityZones:             true,
-			expectedGetZones:                                  "\n    - eastus2-1\n    - eastus2-2",
+			expectedGetAgentPoolZones:                         "\n    - eastus2-1\n    - eastus2-2",
 			expectedHasWindows:                                false,
 			expectedHasLinux:                                  true,
 			expectedCSIControllerReplicas:                     "2",
@@ -2805,7 +2815,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedUsesCloudControllerManager:                true,
 			expectedHasAvailabilityZones:                      true,
 			expectedHasAgentPoolAvailabilityZones:             false,
-			expectedGetZones:                                  "",
+			expectedGetAgentPoolZones:                         "",
 			expectedHasWindows:                                false,
 			expectedHasLinux:                                  true,
 			expectedCSIControllerReplicas:                     "2",
@@ -3063,8 +3073,8 @@ func TestGetAddonFuncMap(t *testing.T) {
 			}
 			v = reflect.ValueOf(funcMap["GetAgentPoolZones"])
 			ret = v.Call(make([]reflect.Value, 0))
-			if ret[0].Interface() != c.expectedGetZones {
-				t.Errorf("expected funcMap invocation of GetAgentPoolZones to return %s, instead got %s", c.expectedGetZones, ret[0].Interface())
+			if ret[0].Interface() != c.expectedGetAgentPoolZones {
+				t.Errorf("expected funcMap invocation of GetAgentPoolZones to return %s, instead got %s", c.expectedGetAgentPoolZones, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["HasWindows"])
 			ret = v.Call(make([]reflect.Value, 0))
