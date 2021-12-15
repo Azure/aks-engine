@@ -5897,12 +5897,12 @@ parameters:
   cachingMode: ReadOnly
 reclaimPolicy: Delete
 allowVolumeExpansion: true
-  {{- if HasAvailabilityZones}}
+  {{- if HasAgentPoolAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
   - key: topology.disk.csi.azure.com/zone
-    values: {{GetZones}}
+    values: {{GetAgentPoolZones}}
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
@@ -5920,12 +5920,12 @@ parameters:
   cachingMode: ReadOnly
 reclaimPolicy: Delete
 allowVolumeExpansion: true
-  {{- if HasAvailabilityZones}}
+  {{- if HasAgentPoolAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
   - key: topology.disk.csi.azure.com/zone
-    values: {{GetZones}}
+    values: {{GetAgentPoolZones}}
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}
@@ -5943,12 +5943,12 @@ parameters:
   cachingMode: ReadOnly
 reclaimPolicy: Delete
 allowVolumeExpansion: true
-  {{- if HasAvailabilityZones}}
+  {{- if HasAgentPoolAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
 - matchLabelExpressions:
   - key: topology.disk.csi.azure.com/zone
-    values: {{GetZones}}
+    values: {{GetAgentPoolZones}}
   {{else}}
 volumeBindingMode: Immediate
   {{- end}}

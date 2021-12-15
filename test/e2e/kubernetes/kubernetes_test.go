@@ -1382,7 +1382,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				sc, err := storageclass.Get(azureDiskStorageClass)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(sc.Provisioner).To(Equal(azureDiskProvisioner))
-				if isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasAvailabilityZones() {
+				if isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasAgentPoolAvailabilityZones() {
 					Expect(sc.VolumeBindingMode).To(Equal("WaitForFirstConsumer"))
 					Expect(len(sc.AllowedTopologies)).To(Equal(1))
 					Expect(len(sc.AllowedTopologies[0].MatchLabelExpressions)).To(Equal(1))
@@ -2851,11 +2851,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					case "master":
 						instanceType = eng.ExpandedDefinition.Properties.MasterProfile.VMSize
 					case "agent":
-						osType := api.Linux
-						if n.IsWindows() {
-							osType = api.Windows
-						}
-						instanceType = util.GetAgentVMSize(eng.ExpandedDefinition.Properties.AgentPoolProfiles, osType)
+						instanceType = util.GetAgentVMSize(eng.ExpandedDefinition.Properties.AgentPoolProfiles, n.Metadata.Name, n.Status.NodeInfo.OperatingSystem)
 					}
 					Expect(labels).To(HaveKeyWithValue("beta.kubernetes.io/instance-type", instanceType))
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/instance-type", instanceType))

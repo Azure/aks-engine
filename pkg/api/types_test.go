@@ -1711,10 +1711,11 @@ func TestIsCustomVNET(t *testing.T) {
 
 func TestHasAvailabilityZones(t *testing.T) {
 	cases := []struct {
-		p                Properties
-		expectedMaster   bool
-		expectedAgent    bool
-		expectedAllZones bool
+		p                                     Properties
+		expectedMaster                        bool
+		expectedAgent                         bool
+		expectedAllZones                      bool
+		expectedHasAgentPoolAvailabilityZones bool
 	}{
 		{
 			p: Properties{
@@ -1733,9 +1734,30 @@ func TestHasAvailabilityZones(t *testing.T) {
 					},
 				},
 			},
-			expectedMaster:   true,
-			expectedAgent:    true,
-			expectedAllZones: true,
+			expectedMaster:                        true,
+			expectedAgent:                         true,
+			expectedAllZones:                      true,
+			expectedHasAgentPoolAvailabilityZones: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:             1,
+					AvailabilityZones: []string{"1", "2"},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count: 1,
+					},
+					{
+						Count: 1,
+					},
+				},
+			},
+			expectedMaster:                        true,
+			expectedAgent:                         false,
+			expectedAllZones:                      false,
+			expectedHasAgentPoolAvailabilityZones: false,
 		},
 		{
 			p: Properties{
@@ -1752,9 +1774,10 @@ func TestHasAvailabilityZones(t *testing.T) {
 					},
 				},
 			},
-			expectedMaster:   false,
-			expectedAgent:    false,
-			expectedAllZones: false,
+			expectedMaster:                        false,
+			expectedAgent:                         false,
+			expectedAllZones:                      false,
+			expectedHasAgentPoolAvailabilityZones: true,
 		},
 		{
 			p: Properties{
@@ -1772,9 +1795,10 @@ func TestHasAvailabilityZones(t *testing.T) {
 					},
 				},
 			},
-			expectedMaster:   false,
-			expectedAgent:    false,
-			expectedAllZones: false,
+			expectedMaster:                        false,
+			expectedAgent:                         false,
+			expectedAllZones:                      false,
+			expectedHasAgentPoolAvailabilityZones: true,
 		},
 	}
 
@@ -1787,6 +1811,9 @@ func TestHasAvailabilityZones(t *testing.T) {
 		}
 		if c.p.HasZonesForAllAgentPools() != c.expectedAllZones {
 			t.Fatalf("expected HasZonesForAllAgentPools() to return %t but instead returned %t", c.expectedAllZones, c.p.HasZonesForAllAgentPools())
+		}
+		if c.p.HasAgentPoolAvailabilityZones() != c.expectedHasAgentPoolAvailabilityZones {
+			t.Fatalf("expected HasAgentPoolAvailabilityZones() to return %t but instead returned %t", c.expectedHasAgentPoolAvailabilityZones, c.p.HasAgentPoolAvailabilityZones())
 		}
 	}
 }

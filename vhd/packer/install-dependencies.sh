@@ -239,7 +239,10 @@ done
 
 # Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
 CLOUD_MANAGER_VERSIONS="
-1.1.1
+1.1.3
+1.0.7
+0.7.10
+0.6.0
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do
@@ -250,7 +253,7 @@ for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
 done
 
 AZUREDISK_CSI_VERSIONS="
-1.8.0
+1.9.0
 "
 for AZUREDISK_CSI_VERSION in ${AZUREDISK_CSI_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi:v${AZUREDISK_CSI_VERSION}"
@@ -259,7 +262,7 @@ for AZUREDISK_CSI_VERSION in ${AZUREDISK_CSI_VERSIONS}; do
 done
 
 AZUREFILE_CSI_VERSIONS="
-1.7.0
+1.8.0
 "
 for AZUREFILE_CSI_VERSION in ${AZUREFILE_CSI_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/azurefile-csi:v${AZUREFILE_CSI_VERSION}"

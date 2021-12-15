@@ -3,27 +3,10 @@
   "properties": {
     "orchestratorProfile": {
       "kubernetesConfig": {
+        "useCloudControllerManager": true,
         "useManagedIdentity": true,
         "clusterSubnet": "10.239.0.0/16",
         "addons": [
-          {
-            "name": "cluster-autoscaler",
-            "enabled": true,
-            "pools": [
-              {
-                "name": "poollinux",
-                "config": {
-                  "min-nodes": "1",
-                  "max-nodes": "3"
-                }
-              }
-            ],
-            "config": {
-              "scan-interval": "1m",
-              "scale-down-delay-after-add": "1m0s",
-              "scale-down-unneeded-time": "2m0s"
-            }
-          },
           {
             "name": "coredns",
             "enabled": true,
@@ -61,7 +44,11 @@
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "osDiskCachingType": "ReadOnly",
-        "dataDiskCachingType": "ReadWrite"
+        "dataDiskCachingType": "ReadWrite",
+        "availabilityZones": [
+          "1",
+          "2"
+        ]
       },
       {
         "name": "poolwin",
@@ -70,7 +57,11 @@
         "OSDiskSizeGB": 256,
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-        "osType": "Windows"
+        "osType": "Windows",
+        "availabilityZones": [
+          "1",
+          "2"
+        ]
       },
       {
         "name": "pool1804",
@@ -78,7 +69,11 @@
         "vmSize": "Standard_D2_v3",
         "distro": "ubuntu-18.04",
         "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+        "availabilityZones": [
+          "1",
+          "2"
+        ]
       },
       {
         "name": "pool1804gen2",
@@ -86,7 +81,11 @@
         "vmSize": "Standard_D2s_v3",
         "distro": "ubuntu-18.04-gen2",
         "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+        "availabilityZones": [
+          "1",
+          "2"
+        ]
       }
     ],
     "linuxProfile": {
