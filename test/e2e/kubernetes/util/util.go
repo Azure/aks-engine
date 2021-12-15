@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -90,10 +91,18 @@ func IsUsingEphemeralDisks(agentPools []*api.AgentPoolProfile) bool {
 	return false
 }
 
-func GetAgentVMSize(agentPools []*api.AgentPoolProfile, nodeName string) string {
-	for _, a := range agentPools {
-		if strings.HasPrefix(nodeName, fmt.Sprintf("k8s-%s", a.Name)) {
-			return a.VMSize
+func GetAgentVMSize(agentPools []*api.AgentPoolProfile, nodeName, os string) string {
+	for i, a := range agentPools {
+		if os == "linux" {
+			if strings.Split(nodeName, "-")[1] == a.Name {
+				return a.VMSize
+			}
+		} else if os == "windows" {
+			if poolIndex, err := strconv.Atoi(nodeName[8:9]); err == nil {
+				if poolIndex == i {
+					return a.VMSize
+				}
+			}
 		}
 	}
 	return ""

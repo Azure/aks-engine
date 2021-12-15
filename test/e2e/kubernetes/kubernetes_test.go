@@ -2851,7 +2851,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					case "master":
 						instanceType = eng.ExpandedDefinition.Properties.MasterProfile.VMSize
 					case "agent":
-						instanceType = util.GetAgentVMSize(eng.ExpandedDefinition.Properties.AgentPoolProfiles, n.Metadata.Name)
+						instanceType = util.GetAgentVMSize(eng.ExpandedDefinition.Properties.AgentPoolProfiles, n.Metadata.Name, n.Status.NodeInfo.OperatingSystem)
 					}
 					Expect(labels).To(HaveKeyWithValue("beta.kubernetes.io/instance-type", instanceType))
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/instance-type", instanceType))
