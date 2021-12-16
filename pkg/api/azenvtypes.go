@@ -140,7 +140,7 @@ var (
 		ImageOffer:     "aks-windows",
 		ImageSku:       "2019-datacenter-core-smalldisk-2112",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.2300.211204",
+		ImageVersion:   "17763.2300.211214",
 	}
 
 	// AKSWindowsServer2019ContainerDOSImageConfig is the aks-engine image based on Windows Server 2019
@@ -149,7 +149,7 @@ var (
 		ImageOffer:     "aks-windows",
 		ImageSku:       "2019-datacenter-core-ctrd-2112",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.2300.211203",
+		ImageVersion:   "17763.2300.211214",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
