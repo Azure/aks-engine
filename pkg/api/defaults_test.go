@@ -5762,14 +5762,15 @@ func TestDefaultIPAddressCount(t *testing.T) {
 							Name: "pool1",
 						},
 						{
-							Name: "pool2",
+							Name:   "pool2",
+							OSType: Windows,
 						},
 					},
 				},
 			},
 			expectedMaster: DefaultKubernetesMaxPodsVNETIntegrated + 1,
 			expectedPool0:  DefaultKubernetesMaxPodsVNETIntegrated + 1 - numHostNetworkAddonsEnabledByDefault,
-			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1 - numHostNetworkAddonsEnabledByDefault,
+			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1,
 		},
 		{
 			name: "Azure CNI + custom IPAddressCount",
