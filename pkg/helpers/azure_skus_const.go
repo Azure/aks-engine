@@ -1033,6 +1033,14 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E112iads_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E112ias_v5",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_E16-4ads_v5",
 		AcceleratedNetworking: true,
 	},
@@ -1906,6 +1914,10 @@ var VMSkus = []VMSku{
 	},
 	{
 		Name:                  "Standard_E96ds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E96ias_v4",
 		AcceleratedNetworking: true,
 	},
 	{
