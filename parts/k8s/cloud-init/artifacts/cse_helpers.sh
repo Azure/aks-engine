@@ -23,6 +23,7 @@ if ! [[ $(echo -n "$PRIVATE_IP" | grep -c '^') == 1 ]]; then
 fi
 export PRIVATE_IP
 APT_CACHE_DIR=/var/cache/apt/archives/
+PERMANENT_CACHE_DIR=/root/
 
 configure_prerequisites() {
   ip_forward_path=/proc/sys/net/ipv4/ip_forward
