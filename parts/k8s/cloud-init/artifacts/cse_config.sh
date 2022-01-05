@@ -637,6 +637,7 @@ configGPUDrivers() {
   retrycmd 120 5 25 nvidia-modprobe -u -c0 || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
   retrycmd 120 5 25 nvidia-smi || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
   retrycmd 120 5 25 ldconfig || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  rm -Rf ${PERMANENT_CACHE_DIR}
 }
 ensureGPUDrivers() {
   configGPUDrivers
