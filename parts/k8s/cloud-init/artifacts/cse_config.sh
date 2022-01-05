@@ -624,8 +624,6 @@ configGPUDrivers() {
   wait_for_apt_locks
   for apt_package in $NVIDIA_PACKAGES; do
     dpkg -i $(ls ${PERMANENT_CACHE_DIR}${apt_package}*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
-    dpkg -i $(ls ${PERMANENT_CACHE_DIR}${apt_package}*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
-    dpkg -i $(ls ${PERMANENT_CACHE_DIR}${apt_package}*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   done
   dpkg -i $(ls ${PERMANENT_CACHE_DIR}nvidia-container-runtime*) || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
