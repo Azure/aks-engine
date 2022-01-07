@@ -7,6 +7,9 @@ CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
 APMZ_DOWNLOADS_DIR="/opt/apmz/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
+NVIDIA_PACKAGES="libnvidia-container1 libnvidia-container-tools nvidia-container-toolkit"
+NVIDIA_CONTAINER_TOOLKIT_VER=1.6.0
+NVIDIA_RUNTIME_VER=3.6.0
 
 disableTimeSyncd() {
   systemctl_stop 20 5 10 systemd-timesyncd || exit 3
@@ -67,6 +70,12 @@ installDeps() {
     fi
   fi
 }
+gpuDriversDownloaded() {
+  for apt_package in $NVIDIA_PACKAGES; do
+    ls ${PERMANENT_CACHE_DIR}${apt_package}* || return 1
+  done
+  ls ${PERMANENT_CACHE_DIR}nvidia-container-runtime* || return 1
+}
 downloadGPUDrivers() {
   mkdir -p $GPU_DEST/tmp
   retrycmd_no_stats 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey >$GPU_DEST/tmp/aptnvidia.gpg || exit 85
@@ -78,8 +87,13 @@ downloadGPUDrivers() {
   retrycmd_no_stats 120 5 25 cat $GPU_DEST/tmp/nvidia-docker.list >/etc/apt/sources.list.d/nvidia-docker.list || exit 85
   apt_get_update
   retrycmd 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit 85
-  tmpDir=$GPU_DEST/tmp
-  apt_get_download 20 30 libnvidia-container1=1.6.0* libnvidia-container-tools=1.6.0* nvidia-container-toolkit=1.6.0* nvidia-container-runtime=3.6.0* || exit 85
+  mkdir -p $PERMANENT_CACHE_DIR
+  for apt_package in $NVIDIA_PACKAGES; do
+    apt_get_download 20 30 "${apt_package}=${NVIDIA_CONTAINER_TOOLKIT_VER}*" || exit 85
+    cp -al ${APT_CACHE_DIR}${apt_package}_${NVIDIA_CONTAINER_TOOLKIT_VER}* $PERMANENT_CACHE_DIR || exit 85
+  done
+  apt_get_download 20 30 nvidia-container-runtime=${NVIDIA_RUNTIME_VER}* || exit 85
+  cp -al ${APT_CACHE_DIR}nvidia-container-runtime_${NVIDIA_RUNTIME_VER}* $PERMANENT_CACHE_DIR || exit 85
 }
 removeMoby() {
   apt_get_purge moby-engine moby-cli || exit 27
