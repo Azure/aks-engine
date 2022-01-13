@@ -59,6 +59,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -72,6 +74,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -85,6 +89,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -98,6 +104,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -111,6 +119,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -161,7 +171,7 @@ jobs:
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CREATE_VNET: true
           CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: false
+          CLEANUP_IF_FAIL: true
           GINKGO_SKIP: ""
           STABILITY_ITERATIONS: "0"
           RETAIN_SSH: false
