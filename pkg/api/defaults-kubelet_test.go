@@ -2420,6 +2420,18 @@ func TestRemoveKubeletFlags(t *testing.T) {
 			},
 			version: "1.9.0",
 		},
+		{
+			name: "v1.24.0",
+			kubeletConfig: map[string]string{
+				"--image-pull-progress-deadline": "30m",
+				"--network-plugin":               "cni",
+				"--pod-max-pids":                 "100",
+			},
+			expected: map[string]string{
+				"--pod-max-pids": "100",
+			},
+			version: "1.24.0-alpha",
+		},
 	}
 
 	for _, c := range cases {
