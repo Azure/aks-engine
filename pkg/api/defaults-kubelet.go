@@ -318,7 +318,16 @@ func removeKubeletFlags(k map[string]string, v string) {
 
 	// Remove dockershim related flags in v1.24 and up
 	if common.IsKubernetesVersionGe(v, "1.24.0-alpha") {
-		for _, key := range []string{"--image-pull-progress-deadline", "--network-plugin"} {
+		for _, key := range []string{
+			"--cni-conf-dir",
+			"--cni-bin-dir",
+			"--cni-cache-dir",
+			"--docker-endpoint",
+			"--experimental-dockershim-root-directory",
+			"--image-pull-progress-deadline",
+			"--network-plugin",
+			"--network-plugin-mtu",
+		} {
 			delete(k, key)
 		}
 	}

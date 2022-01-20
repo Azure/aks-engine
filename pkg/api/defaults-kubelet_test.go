@@ -2423,9 +2423,15 @@ func TestRemoveKubeletFlags(t *testing.T) {
 		{
 			name: "v1.24.0",
 			kubeletConfig: map[string]string{
-				"--image-pull-progress-deadline": "30m",
-				"--network-plugin":               "cni",
-				"--pod-max-pids":                 "100",
+				"--cni-conf-dir":    "/opt/cni/conf",
+				"--cni-bin-dir":     "/opt/cni/bin",
+				"--cni-cache-dir":   "/opt/cni/cache",
+				"--docker-endpoint": "/docker.sock",
+				"--experimental-dockershim-root-directory": "/some/dir",
+				"--image-pull-progress-deadline":           "30m",
+				"--network-plugin":                         "cni",
+				"--network-plugin-mtu":                     "2000",
+				"--pod-max-pids":                           "100",
 			},
 			expected: map[string]string{
 				"--pod-max-pids": "100",
