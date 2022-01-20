@@ -26,12 +26,15 @@ func PauseClusterAutoscaler(client internal.KubeClient) (func() error, error) {
 
 	deploy, err := client.GetDeployment(metav1.NamespaceSystem, name)
 	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, errors.Wrapf(err, "getting %s deployment", name)
+		e := errors.Wrapf(err, "getting %s deployment", name)
+		return func() error { return e }, e
 	}
 	if apierrors.IsNotFound(err) || *deploy.Spec.Replicas == 0 {
+		// autoscaler not present or no replicas, NOP
 		return func() error { return nil }, nil
 	}
 
+	// autoscaler present
 	patch := func(msg string, count int32) error {
 		log.Infof(msg)
 		json := fmt.Sprintf(`{"spec":{"replicas": %d}}`, count)
@@ -41,10 +44,12 @@ func PauseClusterAutoscaler(client internal.KubeClient) (func() error, error) {
 		return nil
 	}
 
+	// pause autoscaler
 	if err := patch(fmt.Sprintf("Pausing %s, setting replica count to 0", name), 0); err != nil {
-		return nil, err
+		return func() error { return err }, err
 	}
 
+	// resume autoscaler func
 	return func() error {
 		c := *deploy.Spec.Replicas
 		err := patch(fmt.Sprintf("Resuming %s, setting replica count to %d", name, c), c)
