@@ -220,7 +220,7 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.23.2
-1.22.5
+1.22.6
 1.21.9
 1.20.14
 1.20.11-azs
