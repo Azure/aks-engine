@@ -487,6 +487,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.VnetCidr = api.VnetCidr
 	vlabsProfile.SetSubnet(api.Subnet)
 	vlabsProfile.SetSubnetIPv6(api.SubnetIPv6)
+	vlabsProfile.IPAddressCount = api.IPAddressCount
 	vlabsProfile.FQDN = api.FQDN
 	vlabsProfile.StorageProfile = api.StorageProfile
 	if api.PreprovisionExtension != nil {
@@ -562,6 +563,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.DiskSizesGB = append(p.DiskSizesGB, api.DiskSizesGB...)
 	p.VnetSubnetID = api.VnetSubnetID
 	p.SetSubnet(api.Subnet)
+	p.IPAddressCount = api.IPAddressCount
 	p.FQDN = api.FQDN
 	p.CustomNodeLabels = map[string]string{}
 	p.AcceleratedNetworkingEnabled = api.AcceleratedNetworkingEnabled

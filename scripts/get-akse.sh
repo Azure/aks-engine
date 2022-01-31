@@ -67,19 +67,47 @@ verifySupported() {
     echo "Either curl or wget is required"
     exit 1
   fi
+
+  if ! type "jq" > /dev/null; then
+    echo "jq is required"
+    exit 1
+  fi
 }
 
 # checkDesiredVersion checks if the desired version is available.
 checkDesiredVersion() {
-  # Use the GitHub releases webpage for the project to find the desired version for this project.
-  local release_url="https://github.com/Azure/aks-engine/releases/${DESIRED_VERSION:-latest}"
-  # shellcheck disable=SC2086
-  if type "curl" > /dev/null; then
-    TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
-  elif type "wget" > /dev/null; then
-    TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
+  # Use the GitHub releases API for the project to find the desired version for this project.
+  local release_url
+  if [[ -z "${DESIRED_VERSION}" ]]; then
+    release_url="https://api.github.com/repos/Azure/aks-engine/releases/latest"
+  else
+    release_url="https://api.github.com/repos/Azure/aks-engine/releases/tags/${DESIRED_VERSION}"
   fi
-  if [ "$TAG" == "" ]; then
+
+  # shellcheck disable=SC2086
+  local requestCmd
+  if type "curl" > /dev/null; then
+    requestCmd="curl -Ssl "
+    if [[ -n "${GITHUB_TOKEN}" ]]; then
+      requestCmd+="-H 'Authorization: token ${GITHUB_TOKEN}'"
+    fi
+    requestCmd+=" --fail ${release_url}"
+  elif type "wget" > /dev/null; then
+    requestCmd="wget -nv "
+    if [[ -n "${GITHUB_TOKEN}" ]]; then
+      requestCmd+="--header='Authorization: token ${GITHUB_TOKEN}'"
+    fi
+    requestCmd+=" -O - ${release_url}"
+  fi
+
+  local response
+  if ! response=$(eval "${requestCmd}") ; then
+    echo "Failed requesting release for ${DESIRED_VERSION} tag from GitHub API."
+    exit 1
+  fi
+
+  TAG=$(jq -r '.name | values' <<< "${response}")
+  if [[ -z "${TAG}" ]]; then
     echo "Cannot determine ${DESIRED_VERSION} tag."
     exit 1
   fi
@@ -164,7 +192,8 @@ help () {
   echo -e "\t[--help|-h ] ->> prints this help"
   echo -e "\t[--version|-v <desired_version>] . When not defined it defaults to latest"
   echo -e "\te.g. --version v0.32.3  or -v latest"
-  echo -e "\t[--no-sudo]  ->> install without sudo"
+  echo -e "\t[--no-sudo]  ->> install without sudo\n"
+  echo -e "\tIf GITHUB_TOKEN env var is set, it will be used to fetch releases via the GitHub API.\n"
 }
 
 # cleanup temporary files

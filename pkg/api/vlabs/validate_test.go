@@ -64,7 +64,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.8 1.3.9 1.4.4 1.4.6]",
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2 1.3.3 1.3.4 1.3.5 1.3.6 1.3.7 1.3.8 1.3.9 1.4.4 1.4.6 1.4.7 1.4.8 1.4.9 1.4.11]",
 		},
 		"should error when KubernetesConfig has containerdVersion value for docker container runtime": {
 			properties: &Properties{
@@ -665,8 +665,8 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
-			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
+		if err := c.Validate(k8sVersion, false, true, false, false); err != nil {
+			t.Errorf("should not error when Azure CNI + dual stack with transparent mode: %v", err)
 		}
 
 		// Azure CNI + dualstack doesn't work with transparent NetworkMode
@@ -679,8 +679,8 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false, false); err == nil {
-			t.Errorf("should error when Azure CNI + dual stack without bridge network mode")
+		if err := c.Validate(k8sVersion, false, true, false, false); err != nil {
+			t.Errorf("should not error when Azure CNI + dual stack with transparent mode: %v", err)
 		}
 	}
 
@@ -4908,7 +4908,7 @@ func TestValidateAcceleratedNetworkingEnabledWindows(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("Accelerated Networking is currently unstable for Windows + Kubernetes, please set acceleratedNetworkingEnabledWindows to false"),
+			expectedErr: nil,
 		},
 	}
 

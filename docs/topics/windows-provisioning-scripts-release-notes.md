@@ -1,3 +1,7 @@
+## v0.0.16
+
+- [feat: Updating script used to run kubelet to not set docker-specific kubelet args when using containerd #4817](https://github.com/Azure/aks-engine/pull/4817)
+
 ## v0.0.15
 
 - [feat: Allow setting Kubeproxy parameters by :ClusterConfiguration.Kubernetes.Kubeproxy.ConfigArgs](https://github.com/Azure/aks-engine/pull/4640)

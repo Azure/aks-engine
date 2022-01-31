@@ -4,9 +4,11 @@
 package rotatecerts
 
 import (
+	"fmt"
 	"testing"
 
 	mock "github.com/Azure/aks-engine/cmd/rotatecerts/internal/mock_internal"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	gomock "github.com/golang/mock/gomock"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -37,9 +39,11 @@ func TestPauseClusterAutoscaler(t *testing.T) {
 		mock.EXPECT().GetDeployment(gomock.Any(), gomock.Any()).Return(nil, errAPIGeneric).Times(1)
 
 		resume, err := PauseClusterAutoscaler(mock)
-		g.Expect(resume).To(BeNil())
+		g.Expect(resume).NotTo(BeNil())
 		g.Expect(err).To(HaveOccurred())
 		g.Expect(errors.Cause(err)).To(Equal(errAPIGeneric))
+		msg := fmt.Sprintf("getting %s deployment: %s", common.ClusterAutoscalerAddonName, errAPIGeneric)
+		g.Expect(errors.Unwrap(resume()).Error()).To(Equal(msg))
 	})
 
 	t.Run("Deployment does not exist", func(t *testing.T) {
@@ -85,9 +89,11 @@ func TestPauseClusterAutoscaler(t *testing.T) {
 		mock.EXPECT().PatchDeployment(gomock.Any(), gomock.Any(), gomock.Any()).Return(&deploy, errAPIGeneric).Times(1)
 
 		resume, err := PauseClusterAutoscaler(mock)
-		g.Expect(resume).To(BeNil())
+		g.Expect(resume).NotTo(BeNil())
 		g.Expect(err).To(HaveOccurred())
 		g.Expect(errors.Cause(err)).To(Equal(errAPIGeneric))
+		msg := fmt.Sprintf("applying patch to %s deployment: %s", common.ClusterAutoscalerAddonName, errAPIGeneric)
+		g.Expect(errors.Unwrap(resume()).Error()).To(Equal(msg))
 	})
 
 	t.Run("Deployment scale ok", func(t *testing.T) {

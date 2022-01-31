@@ -1088,6 +1088,15 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
+func (p *Properties) HasAgentPoolAvailabilityZones() bool {
+	for _, pool := range p.AgentPoolProfiles {
+		if pool.AvailabilityZones != nil {
+			return true
+		}
+	}
+	return false
+}
+
 // HasNonRegularPriorityScaleset returns true if any one node pool has a low or spot priority scaleset configuration
 func (p *Properties) HasNonRegularPriorityScaleset() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {

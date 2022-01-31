@@ -17,6 +17,11 @@ jobs:
         run: |
           export CURRENT_BRANCH=$(git branch --show-current)
           echo "RELEASE_VERSION=${CURRENT_BRANCH:8}" >> $GITHUB_ENV # release-v1.0.0 substring starting at v1.0.0
+      - name: Validate tag does not already exist
+        run: |
+          if [[ $(git tag -l ${{ env.RELEASE_VERSION }}) ]]; then
+            exit 1
+          fi
       - name: Setup SSH Keys and known_hosts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -45,19 +50,6 @@ jobs:
       - name: print git status after build
         run: |
           git status
-      - name: Validate 1.18 no-egress scenario
-        env:
-          ORCHESTRATOR_RELEASE: "1.18"
-          CLUSTER_DEFINITION: "examples/no_outbound.json"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-        run: make test-kubernetes
       - name: Validate 1.19 no-egress scenario
         env:
           ORCHESTRATOR_RELEASE: "1.19"
@@ -67,6 +59,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -80,6 +74,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -93,6 +89,38 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.22 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.22"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          SKIP_LOGS_COLLECTION: true
+          SKIP_TEST: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.23 no-egress scenario
+        env:
+          ORCHESTRATOR_RELEASE: "1.23"
+          CLUSTER_DEFINITION: "examples/no_outbound.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "westus2"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
           SKIP_LOGS_COLLECTION: true
           SKIP_TEST: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
@@ -143,7 +171,7 @@ jobs:
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CREATE_VNET: true
           CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: false
+          CLEANUP_IF_FAIL: true
           GINKGO_SKIP: ""
           STABILITY_ITERATIONS: "0"
           RETAIN_SSH: false
@@ -152,11 +180,14 @@ jobs:
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
+      - name: Remove untracked files created during workflow steps
+        run: git ls-files --others --exclude-standard -z | xargs -0 -r rm
       - name: Add local tag
         run: git tag ${{ env.RELEASE_VERSION }}
-      - name: print git status before producing binaries
+      - name: print and validate git status before producing binaries
         run: |
           git status
+          git status | grep 'working tree clean'
       - name: clean all unstaged changes
         run: |
           git checkout -- .

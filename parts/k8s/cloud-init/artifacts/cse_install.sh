@@ -7,6 +7,9 @@ CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
 APMZ_DOWNLOADS_DIR="/opt/apmz/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
+NVIDIA_PACKAGES="libnvidia-container1 libnvidia-container-tools nvidia-container-toolkit"
+NVIDIA_CONTAINER_TOOLKIT_VER=1.6.0
+NVIDIA_RUNTIME_VER=3.6.0
 
 disableTimeSyncd() {
   systemctl_stop 20 5 10 systemd-timesyncd || exit 3
@@ -67,6 +70,12 @@ installDeps() {
     fi
   fi
 }
+gpuDriversDownloaded() {
+  for apt_package in $NVIDIA_PACKAGES; do
+    ls ${PERMANENT_CACHE_DIR}${apt_package}* || return 1
+  done
+  ls ${PERMANENT_CACHE_DIR}nvidia-container-runtime* || return 1
+}
 downloadGPUDrivers() {
   mkdir -p $GPU_DEST/tmp
   retrycmd_no_stats 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey >$GPU_DEST/tmp/aptnvidia.gpg || exit 85
@@ -78,8 +87,13 @@ downloadGPUDrivers() {
   retrycmd_no_stats 120 5 25 cat $GPU_DEST/tmp/nvidia-docker.list >/etc/apt/sources.list.d/nvidia-docker.list || exit 85
   apt_get_update
   retrycmd 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit 85
-  tmpDir=$GPU_DEST/tmp
-  apt_get_download 20 30 libnvidia-container1=1.4.0* libnvidia-container-tools=1.4.0* nvidia-container-toolkit=1.5.0* nvidia-container-runtime=3.5.0* || exit 85
+  mkdir -p $PERMANENT_CACHE_DIR
+  for apt_package in $NVIDIA_PACKAGES; do
+    apt_get_download 20 30 "${apt_package}=${NVIDIA_CONTAINER_TOOLKIT_VER}*" || exit 85
+    cp -al ${APT_CACHE_DIR}${apt_package}_${NVIDIA_CONTAINER_TOOLKIT_VER}* $PERMANENT_CACHE_DIR || exit 85
+  done
+  apt_get_download 20 30 nvidia-container-runtime=${NVIDIA_RUNTIME_VER}* || exit 85
+  cp -al ${APT_CACHE_DIR}nvidia-container-runtime_${NVIDIA_RUNTIME_VER}* $PERMANENT_CACHE_DIR || exit 85
 }
 removeMoby() {
   apt_get_purge moby-engine moby-cli || exit 27
@@ -93,8 +107,8 @@ mobyPkgVersion() {
 installRunc() {
   local v
   v=$(runc --version | head -n 1 | cut -d" " -f3)
-  if [[ $v != "1.0.0" ]]; then
-    apt_get_install 20 30 120 moby-runc=1.0.0* --allow-downgrades || exit 27
+  if [[ $v != "1.0.2" ]]; then
+    apt_get_install 20 30 120 moby-runc=1.0.2* --allow-downgrades || exit 27
   fi
 }
 installMoby() {
@@ -117,15 +131,6 @@ installMoby() {
   if [ -n "${install_pkgs}" ]; then
     apt_get_install 20 30 120 ${install_pkgs} --allow-downgrades || exit 27
   fi
-}
-installBcc() {
-  local key=/tmp/iovisor-release.key url=https://repo.iovisor.org/GPG-KEY
-  retrycmd_no_stats 120 5 25 curl -fsSL $url >$key || exit 166
-  wait_for_apt_locks
-  retrycmd 30 5 30 apt-key add $key || exit 167
-  echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" >/etc/apt/sources.list.d/iovisor.list
-  apt_get_update || exit 99
-  apt_get_install 120 5 25 bcc-tools libbcc-examples linux-headers-$(uname -r) || exit 168
 }
 downloadCNI() {
   mkdir -p $CNI_DOWNLOADS_DIR

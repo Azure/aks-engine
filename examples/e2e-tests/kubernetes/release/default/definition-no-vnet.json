@@ -3,26 +3,9 @@
     "properties": {
         "orchestratorProfile": {
             "kubernetesConfig": {
+                "useCloudControllerManager": true,
                 "useManagedIdentity": true,
                 "addons": [
-                    {
-                        "name": "cluster-autoscaler",
-                        "enabled": true,
-                        "pools": [
-                            {
-                                "name": "poollinux",
-                                "config": {
-                                    "min-nodes": "1",
-                                    "max-nodes": "3"
-                                }
-                            }
-                        ],
-                        "config": {
-                            "scan-interval": "1m",
-                            "scale-down-delay-after-add": "1m0s",
-                            "scale-down-unneeded-time": "2m0s"
-                        }
-                    },
                     {
                         "name": "coredns",
                         "enabled": true,
@@ -56,7 +39,11 @@
                 ],
                 "availabilityProfile": "VirtualMachineScaleSets",
                 "osDiskCachingType": "ReadOnly",
-                "dataDiskCachingType": "ReadWrite"
+                "dataDiskCachingType": "ReadWrite",
+                "availabilityZones": [
+                    "1",
+                    "2"
+                ]
             },
             {
                 "name": "poolwin",
@@ -64,28 +51,33 @@
                 "vmSize": "Standard_D2s_v3",
                 "OSDiskSizeGB": 256,
                 "availabilityProfile": "VirtualMachineScaleSets",
-                "osType": "Windows"
-            },
-            {
-                "name": "pool1604vhd",
-                "count": 1,
-                "vmSize": "Standard_D2_v3",
-                "distro": "aks-ubuntu-16.04",
-                "availabilityProfile": "VirtualMachineScaleSets"
+                "osType": "Windows",
+                "availabilityZones": [
+                    "1",
+                    "2"
+                ]
             },
             {
                 "name": "pool1804",
                 "count": 1,
                 "vmSize": "Standard_D2_v3",
                 "distro": "ubuntu-18.04",
-                "availabilityProfile": "VirtualMachineScaleSets"
+                "availabilityProfile": "VirtualMachineScaleSets",
+                "availabilityZones": [
+                    "1",
+                    "2"
+                ]
             },
             {
                 "name": "pool1804gen2",
                 "count": 1,
                 "vmSize": "Standard_D2s_v3",
                 "distro": "ubuntu-18.04-gen2",
-                "availabilityProfile": "VirtualMachineScaleSets"
+                "availabilityProfile": "VirtualMachineScaleSets",
+                "availabilityZones": [
+                    "1",
+                    "2"
+                ]
             }
         ],
         "linuxProfile": {

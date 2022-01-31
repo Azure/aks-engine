@@ -39,17 +39,21 @@ $KubeletArgList += "--volume-plugin-dir=$global:VolumePluginDir"
 # If you are thinking about adding another arg here, you should be considering pkg/engine/defaults-kubelet.go first
 # Only args that need to be calculated or combined with other ones on the Windows agent should be added here.
 
-# Configure kubelet to use CNI plugins if enabled.
-if ($NetworkPlugin -eq "azure") {
-    $KubeletArgList += @("--cni-bin-dir=$AzureCNIBinDir", "--cni-conf-dir=$AzureCNIConfDir")
-}
-elseif ($NetworkPlugin -eq "kubenet") {
-    $KubeletArgList += @("--cni-bin-dir=$CNIPath", "--cni-conf-dir=$CNIConfigPath")
-    # handle difference in naming between Linux & Windows reference plugin
-    $KubeletArgList = $KubeletArgList -replace "kubenet", "cni"
-}
-else {
-    throw "Unknown network type $NetworkPlugin, can't configure kubelet"
+
+if ($global:ContainerRuntime -eq "docker") {
+    # Configure kubelet to use CNI plugins if enabled.
+    # Note: --cni-bin-dir and --cni-conf-dir kubelet args are only used with dockershim and have been removed in v1.24
+    if ($NetworkPlugin -eq "azure") {
+        $KubeletArgList += @("--cni-bin-dir=$AzureCNIBinDir", "--cni-conf-dir=$AzureCNIConfDir")
+    }
+    elseif ($NetworkPlugin -eq "kubenet") {
+        $KubeletArgList += @("--cni-bin-dir=$CNIPath", "--cni-conf-dir=$CNIConfigPath")
+        # handle difference in naming between Linux & Windows reference plugin
+        $KubeletArgList = $KubeletArgList -replace "kubenet", "cni"
+    }
+    else {
+        throw "Unknown network type $NetworkPlugin, can't configure kubelet"
+    }
 }
 
 # Update args to use ContainerD if needed

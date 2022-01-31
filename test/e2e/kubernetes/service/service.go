@@ -362,10 +362,53 @@ func CreateServiceFromFileDeleteIfExist(filename, name, namespace string) (*Serv
 		if err != nil {
 			return nil, err
 		}
-		_, err = WaitOnDeleted(name, namespace, 10*time.Second, 1*time.Minute)
+		_, err = WaitOnDeleted(name, namespace, 10*time.Second, 2*time.Minute)
 		if err != nil {
 			return nil, err
 		}
 	}
 	return CreateServiceFromFile(filename, name, namespace)
+}
+
+// CreateServiceFromFileDeleteIfExistAsync wraps CreateServiceFromFileDeleteIfExist with a struct response for goroutine + channel usage
+func CreateServiceFromFileDeleteIfExistAsync(filename, name, namespace string) GetResult {
+	s, err := CreateServiceFromFileDeleteIfExist(filename, name, namespace)
+	return GetResult{
+		svc: s,
+		err: err,
+	}
+}
+
+// CreateServiceFromFileDeleteIfExistWithRetry will kubectl apply a Service from file (if it exists already it will be deleted) with a name with retry toleration
+func CreateServiceFromFileDeleteIfExistWithRetry(filename, name, namespace string, sleep, timeout time.Duration) (*Service, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateServiceFromFileDeleteIfExistWithRetryWithRetryError error
+	var s *Service
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- CreateServiceFromFileDeleteIfExistAsync(filename, name, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateServiceFromFileDeleteIfExistWithRetryWithRetryError = result.err
+			s = result.svc
+			if mostRecentCreateServiceFromFileDeleteIfExistWithRetryWithRetryError == nil {
+				if s != nil {
+					return s, nil
+				}
+			}
+		case <-ctx.Done():
+			return s, errors.Errorf("CreateServiceFromFileDeleteIfExistWithRetry timed out: %s\n", mostRecentCreateServiceFromFileDeleteIfExistWithRetryWithRetryError)
+		}
+	}
 }

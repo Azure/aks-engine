@@ -112,7 +112,7 @@ nginx-ipv6    LoadBalancer   fd00::6283       2603:1030:805:3::3   80:31140/TCP 
 ## Limitations
 
 - Dual-stack clusters are supported only with kubenet and azurecni.
-  - Dual-stack cluster with azurecni are only supported with `bridge` network mode.
+  - Dual-stack cluster with azurecni are supported with transparent mode and bridge mode. Bridge mode will be deprecated in future. The recommendation is to use transparent mode.
 - Dual-stack clusters are supported on Windows from version 2004 (kernel version 10.0.19041.610) and Kubernetes version 1.19
   - https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#ipv4-ipv6-dual-stack
 - Dual-stack clusters are supported with

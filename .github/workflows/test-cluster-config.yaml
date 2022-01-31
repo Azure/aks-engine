@@ -3,21 +3,41 @@ on:
   workflow_dispatch:
     inputs:
       cluster_config:
-        description: 'Which cluster config type? (options are: "gpu")'
+        description: 'Path to example api model? (e.g., examples/kubernetes-gpu/kubernetes.json)'
         required: true
+      ginkgo_focus:
+        description: 'E2E tests to run (e.g., "should be able to run a nvidia-gpu job")'
+        required: false
+        default: ''
+      ginkgo_skip:
+        description: 'E2E tests to skip (e.g., "should have the expected k8s version")'
+        required: false
+        default: ''
+      kubernetes_release:
+        description: 'Which Kubernetes release to test (major.minor only, e.g., "1.23")'
+        required: false
+        default: '1.23'
+      container_runtime:
+        description: 'Which CRI to use (e.g., "containerd" or "docker")'
+        required: false
+        default: 'containerd'
+      azure_region:
+        description: 'Which Azure region to create cluster in (e.g., "westus2")'
+        required: false
+        default: 'westus2'
       from_branch:
-        description: 'Which branch to source release branch from? (default: master)'
+        description: 'Which branch to run tests from? (default: master)'
         required: false
         default: 'master'
 jobs:
-  create-release-branch:
+  run-e2e:
     runs-on: ubuntu-latest
     steps:
-      - name: validate version
-        run: echo "${{github.event.inputs.cluster_config}}" | grep -E '^gpu$'
       - uses: actions/checkout@v2
         with:
           ref: ${{github.event.inputs.from_branch}}
+      - name: validate cluster config
+        run: ls -la ${{github.event.inputs.cluster_config}}
       - name: Setup SSH Keys and known_hosts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -40,39 +60,21 @@ jobs:
           sudo chmod +x /usr/local/bin/k
       - name: Build aks-engine binary
         run: make build-binary
-      - name: Validate gpu + docker scenario
-        if: ${{ github.event.inputs.cluster_config == 'gpu' }}
+      - name: Run E2E
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          ORCHESTRATOR_RELEASE: "1.22"
-          CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
-          GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
+          ORCHESTRATOR_RELEASE: ${{ github.event.inputs.kubernetes_release }}
+          CLUSTER_DEFINITION: ${{ github.event.inputs.cluster_config }}
+          GINKGO_FOCUS: ${{ github.event.inputs.ginkgo_focus }}
+          GINKGO_SKIP: ${{ github.event.inputs.ginkgo_skip }}
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
+          LOCATION: ${{ github.event.inputs.azure_region }}
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
-          CONTAINER_RUNTIME: "docker"
-          SKIP_LOGS_COLLECTION: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-        run: make test-kubernetes
-      - name: Validate gpu + containerd scenario
-        if: ${{ github.event.inputs.cluster_config == 'gpu' }}
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          ORCHESTRATOR_RELEASE: "1.22"
-          CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
-          GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: true
-          CONTAINER_RUNTIME: "containerd"
+          CONTAINER_RUNTIME: ${{ github.event.inputs.container_runtime }}
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes

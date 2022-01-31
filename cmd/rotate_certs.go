@@ -255,11 +255,13 @@ func (rcc *rotateCertsCmd) run() (err error) {
 	if !rcc.force {
 		var resumeClusterAutoscaler func() error
 		resumeClusterAutoscaler, err = ops.PauseClusterAutoscaler(rcc.kubeClient)
-		defer func() {
-			if e := resumeClusterAutoscaler(); e != nil {
-				log.Warn(e)
-			}
-		}()
+		if resumeClusterAutoscaler != nil {
+			defer func() {
+				if e := resumeClusterAutoscaler(); e != nil {
+					log.Warn(e)
+				}
+			}()
+		}
 		if err != nil {
 			return err
 		}
