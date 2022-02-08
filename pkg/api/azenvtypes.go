@@ -135,6 +135,13 @@ var (
 		ImageVersion:   "2021.09.27",
 	}
 
+	AzureStackAKSUbuntu1804OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "aks",
+		ImageSku:       "aks-engine-ubuntu-1804-202202",
+		ImagePublisher: "microsoft-aks",
+		ImageVersion:   "2022.02.07",
+	}
+
 	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",

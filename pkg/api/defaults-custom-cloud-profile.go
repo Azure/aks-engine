@@ -213,6 +213,10 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureCustomCloudSpec
 		}
 
+		if p.IsAzureStackCloud() {
+			azureCustomCloudSpec.OSImageConfig[AKSUbuntu1804] = AzureStackAKSUbuntu1804OSImageConfig
+		}
+
 		// Kubernetes only understand AzureStackCloud environment (AzureCloudSpecEnvMap is only accessed using AzureStackCloud for custom clouds)
 		AzureCloudSpecEnvMap[AzureStackCloud] = azureCustomCloudSpec
 	}
