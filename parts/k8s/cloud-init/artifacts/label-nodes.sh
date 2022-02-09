@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-# Applies missing master and agent labels to Kubernetes nodes.
+# This script looks for nodes that don't have the required kubernetes.io/role label,
+# and then labels them appropriately
 #
-# Kubelet 1.16+ rejects the `kubernetes.io/role` and `node-role.kubernetes.io`
-# labels in its `--node-labels` argument, but they need to be present for
-# backward compatibility.
+# Because nodes can't self-label their role in this way,
+# we need control plane nodes to do this continually
+# to ensure that new nodes get the role labels quickly
 
 set -euo pipefail
 
