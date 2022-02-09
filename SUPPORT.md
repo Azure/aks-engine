@@ -7,6 +7,10 @@ The AKS Engine project maintainers will respond to the best of their abilities.
 
 ## Support FAQ
 
+### Is AKS Engine currently maintained?
+
+See the [AKS Engine project status][project-status] for updates on the maintenance of AKS Engine.
+
 ### How often are new AKS Engine releases published?
 
 There is no definite release cadence. Project maintainers use the following as guidance to prioritize testing, validating, and publishing a new release:
@@ -40,3 +44,4 @@ Support for this project is limited to the resources listed above.
 [docs]: https://github.com/Azure/aks-engine/tree/master/docs
 [faq]: https://github.com/Azure/aks-engine/blob/master/docs/faq.md
 [github-issues]: https://github.com/Azure/aks-engine/issues
+[project-status]: https://github.com/Azure/aks-engine/#project-status
