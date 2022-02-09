@@ -2432,6 +2432,7 @@ func TestRemoveKubeletFlags(t *testing.T) {
 				"--network-plugin":                         "cni",
 				"--network-plugin-mtu":                     "2000",
 				"--pod-max-pids":                           "100",
+				"--non-masquerade-cidr":                    "0.0.0.0/0",
 			},
 			expected: map[string]string{
 				"--pod-max-pids": "100",
