@@ -327,6 +327,7 @@ func removeKubeletFlags(k map[string]string, v string) {
 			"--image-pull-progress-deadline",
 			"--network-plugin",
 			"--network-plugin-mtu",
+			"--non-masquerade-cidr",
 		} {
 			delete(k, key)
 		}
