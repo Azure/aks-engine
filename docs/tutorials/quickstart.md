@@ -215,6 +215,7 @@ export KUBECONFIG=_output/contoso-apple-5eac6ed8/kubeconfig/kubeconfig.westus2.j
 
 Now you're ready to start using your Kubernetes cluster with `kubectl`!
 
+[addpool]: ../topics/addpool.md
 [azure]: https://azure.microsoft.com/
 [choco]: https://chocolatey.org/
 [choco-install]: https://chocolatey.org/install
@@ -228,4 +229,5 @@ Now you're ready to start using your Kubernetes cluster with `kubectl`!
 [scoop]: https://scoop.sh/
 [scoop-install]: https://github.com/lukesampson/scoop#installation
 [sp]: ../topics/service-principals.md
+[update]: ../topics/update.md
 [upgrade]: ../topics/upgrade.md
