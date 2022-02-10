@@ -26,7 +26,9 @@ Please see the [FAQ][] for answers about AKS Engine and its progenitor ACS-Engin
 
 ## Join the community
 
-If you are committed to using AKS Engine longer term and would like to become a project maintainer, please reach out to us via the [#aks-engine-dev Slack channel](https://kubernetes.slack.com/archives/CU1CXUHN0)! The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute. The [developer guide][developer-guide] will help you onboard as a developer. The AKS Engine community is committed to integrating and validating new versions of Kubernetes into AKS Engine. We encourage AKS Engine users to evaluate moving to CAPZ as it provides stronger support for managing the cluster lifecycle compared to AKS Engine.
+We encourage AKS Engine users to evaluate moving to AKS or to CAPZ, per the [project status](#project-status).
+
+For existing users of AKS Engine, the [community guide][community] and [developer guide][developer-guide] are available, as is the [#aks-engine-dev Slack channel](https://kubernetes.slack.com/archives/CU1CXUHN0).
 
 ## Support
 
