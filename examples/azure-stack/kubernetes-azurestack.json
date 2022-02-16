@@ -57,7 +57,8 @@
                         "keyData": ""
                     }
                 ]
-            }
+            },
+            "runUnattendedUpgradesOnBootstrap": false
         },
         "servicePrincipalProfile": {
             "clientId": "",

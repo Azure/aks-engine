@@ -137,6 +137,8 @@ The `AKS Base Image` marketplace item has to be available in your Azure Stack Hu
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
+Make sure `runUnattendedUpgradesOnBootstrap` in the `linuxProfile` of your `apimodel.json` file is set to `"false"` when you create or upgrade cluster on disconnected Azure Stack Hub instances, otherwise the operation will fail.
+
 ## AKS Engine Versions
 
 | AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |
@@ -333,6 +335,12 @@ Because Azure and Azure Stack Hub currently rely on a different version of the C
 This can be resolved by making a small modification to the extension `template.json` file. Replacing all usages of template parameter `apiVersionDeployments` by the hard-code value `2017-12-01` (or whatever API version Azure Stack Hub runs at the time you try to deploy) should be all you need.
 
 Once you are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
+
+### Ubuntu VMs does not contains latest OS security fixes
+
+The `aks-ubuntu-16.04` and `aks-ubuntu-18.04` base images provided in Azure Stack Hub's Marketplace are created and published prior to the release date of corresponding AKS-Engine versions that consumes it, and are not actively updated after published to Azure Stack Hub's Marketplace. Kubernetes clusters created with these images will not contain OS security fixes released after the AKS Base Images are published.
+
+To obtain all latest OS security fixes for Ubunutu VMs in your cluster, you can set `runUnattendedUpgradesOnBootstrap` to `"true"` in the `linuxProfile` of your generated `apimodel.json` file, and run `aks-engine upgrade` command for the same Kubernetes version. Alternatively, you can manually run `apt-get update`, followed by a manual invocation of `/usr/bin/unattended-upgrade`, and then restart the VMs after these commands.
 
 ### Troubleshoting
 
