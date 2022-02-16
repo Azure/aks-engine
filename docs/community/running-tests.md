@@ -47,6 +47,7 @@ The E2E test runner is designed to be flexible across a wide range of cluster co
 | `CLEANUP_ON_EXIT` | no      | Delete cluster after running E2E. E.g., `CLEANUP_ON_EXIT=true`. Default is false. |
 | `CLEANUP_IF_FAIL` | no      | Delete cluster only if E2E failed. E.g., `CLEANUP_IF_FAIL=false`. Default is false. |
 | `STABILITY_ITERATIONS` | no      | How many basic functional cluster tests to run in rapid succession as a part of E2E validation. This is useful for simulation continual usage of basic cluster reconciliation functionality (schedule/delete a pod, resolve a DNS lookup, etc). E.g., `STABILITY_ITERATIONS=100`. Default is 3. |
+| `STABILITY_PASS_RATE` | no      | How much pass rate is acceptable for the number of basic functional cluster tests to run in rapid succession as a part of E2E validation. E.g., `STABILITY_PASS_RATE=0.75`. Default is 1.0, meaning 100% pass rate. |
 | `TIMEOUT` | no      | How much timeout tolerance for tests? Decrease timeout tolerance to do performance-type tests, increase to allow for more operational variability and possibly reduce flakes. E.g., `TIMEOUT=10m`. Default is 20m. |
 | `LB_TIMEOUT` | no      | How much timeout tolerance for Load Balancer tests? Decrease timeout tolerance to do performance-type tests, increase to allow for more operational variability and possibly reduce flakes. E.g., `LB_TIMEOUT=5m`. Default is 20m. |
 | `GINKGO_FAIL_FAST` | no      | Stop the suite right after the first failure? E.g., `GINKGO_FAIL_FAST=false`. Default is true. |
