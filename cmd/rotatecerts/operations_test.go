@@ -134,109 +134,73 @@ func TestPauseClusterAutoscaler(t *testing.T) {
 	})
 }
 
-func TestDeleteDeploymentSATokensAndForceRollout(t *testing.T) {
+func TestRolloutDeployments(t *testing.T) {
 	t.Parallel()
 	g := NewGomegaWithT(t)
-
-	deleteSATokens := func(saMap map[string]bool) func(name string) error {
-		return func(name string) error {
-			saMap[name] = false
-			return nil
-		}
-	}
 
 	t.Run("ListDeployment fails", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDeployments(gomock.Any(), gomock.Any()).Return(nil, errAPIGeneric).Times(1)
+		mock.EXPECT().ListDeployments(metav1.NamespaceAll, metav1.ListOptions{}).Return(nil, errAPIGeneric).Times(1)
 
-		err := deleteDeploymentSATokensAndForceRollout(mock, "ns", deleteSATokens(nil))
+		err := rolloutDeployments(mock)
 		g.Expect(err).To(HaveOccurred())
 	})
 
-	t.Run("All deployments are patched, SA deleted", func(t *testing.T) {
+	t.Run("All deployments are patched", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		noSA := appsv1.Deployment{}
-		noSA.Name = "noSA"
-		noSA.Spec.Template.Spec.ServiceAccountName = "noSA"
-		hasSA := appsv1.Deployment{}
-		hasSA.Name = "hasSA"
-		hasSA.Spec.Template.Spec.ServiceAccountName = "hasSA"
-		list := &appsv1.DeploymentList{Items: []appsv1.Deployment{hasSA, noSA}}
-
-		saMap := make(map[string]bool)
-		saMap[hasSA.Spec.Template.Spec.ServiceAccountName] = true
-		saMap["random"] = true
+		d1 := appsv1.Deployment{}
+		d1.Namespace = "ns1"
+		d1.Name = "d1"
+		d2 := appsv1.Deployment{}
+		d2.Namespace = "ns2"
+		d2.Name = "d2"
+		list := &appsv1.DeploymentList{Items: []appsv1.Deployment{d1, d2}}
 
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDeployments(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-		mock.EXPECT().PatchDeployment(gomock.Any(), "noSA", gomock.Any()).Return(nil, nil).Times(1)
-		mock.EXPECT().PatchDeployment(gomock.Any(), "hasSA", gomock.Any()).Return(nil, nil).Times(1)
+		mock.EXPECT().ListDeployments(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
+		mock.EXPECT().PatchDeployment("ns1", "d1", gomock.Any()).Return(nil, nil).Times(1)
+		mock.EXPECT().PatchDeployment("ns2", "d2", gomock.Any()).Return(nil, nil).Times(1)
 
-		err := deleteDeploymentSATokensAndForceRollout(mock, "ns", deleteSATokens(saMap))
+		err := rolloutDeployments(mock)
 		g.Expect(err).ToNot(HaveOccurred())
-		g.Expect(saMap["random"]).To(BeTrue())
-		g.Expect(saMap["hasSA"]).To(BeFalse())
-	})
-
-	t.Run("Return error if delete SA fails", func(t *testing.T) {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-
-		hasSA := appsv1.Deployment{}
-		hasSA.Spec.Template.Spec.ServiceAccountName = "hasSA"
-		list := &appsv1.DeploymentList{Items: []appsv1.Deployment{hasSA}}
-
-		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDeployments(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-
-		err := deleteDeploymentSATokensAndForceRollout(mock, "ns", func(name string) error {
-			return errors.New("Delete SA failed")
-		})
-		g.Expect(err).To(HaveOccurred())
 	})
 
 	t.Run("Return error if patch deployment fails", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hasSA := appsv1.Deployment{}
-		hasSA.Spec.Template.Spec.ServiceAccountName = "hasSA"
-		list := &appsv1.DeploymentList{Items: []appsv1.Deployment{hasSA}}
+		d1 := appsv1.Deployment{}
+		d1.Namespace = "ns1"
+		d1.Name = "d1"
+		list := &appsv1.DeploymentList{Items: []appsv1.Deployment{d1}}
 
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDeployments(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-		mock.EXPECT().PatchDeployment(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errAPIGeneric).Times(1)
+		mock.EXPECT().ListDeployments(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
+		mock.EXPECT().PatchDeployment("ns1", "d1", gomock.Any()).Return(nil, errAPIGeneric).Times(1)
 
-		err := deleteDeploymentSATokensAndForceRollout(mock, "ns", func(_ string) error { return nil })
+		err := rolloutDeployments(mock)
 		g.Expect(err).To(HaveOccurred())
 		g.Expect(errors.Cause(err)).To(Equal(errAPIGeneric))
 	})
 }
 
-func TestDeleteDaemonSetSATokensAndForceRollout(t *testing.T) {
+func TestRolloutDaemonSets(t *testing.T) {
 	t.Parallel()
 	g := NewGomegaWithT(t)
-
-	deleteSATokens := func(saMap map[string]bool) func(name string) error {
-		return func(name string) error {
-			saMap[name] = false
-			return nil
-		}
-	}
 
 	t.Run("ListDaemonSets fails", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDaemonSets(gomock.Any(), gomock.Any()).Return(nil, errAPIGeneric).Times(1)
+		mock.EXPECT().ListDaemonSets(metav1.NamespaceAll, metav1.ListOptions{}).Return(nil, errAPIGeneric).Times(1)
 
-		err := deleteDaemonSetSATokensAndForceRollout(mock, "ns", deleteSATokens(nil))
+		err := rolloutDaemonSets(mock)
 		g.Expect(err).To(HaveOccurred())
 	})
 
@@ -244,65 +208,43 @@ func TestDeleteDaemonSetSATokensAndForceRollout(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		noSA := appsv1.DaemonSet{}
-		noSA.Name = "noSA"
-		noSA.Spec.Template.Spec.ServiceAccountName = "noSA"
-		hasSA := appsv1.DaemonSet{}
-		hasSA.Name = "hasSA"
-		hasSA.Spec.Template.Spec.ServiceAccountName = "hasSA"
-		list := &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{hasSA, noSA}}
-
-		saMap := make(map[string]bool)
-		saMap[hasSA.Spec.Template.Spec.ServiceAccountName] = true
-		saMap["random"] = true
+		ds1 := appsv1.DaemonSet{}
+		ds1.Namespace = "ns1"
+		ds1.Name = "ds1"
+		ds2 := appsv1.DaemonSet{}
+		ds2.Namespace = "ns2"
+		ds2.Name = "ds2"
+		list := &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{ds1, ds2}}
 
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDaemonSets(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-		mock.EXPECT().PatchDaemonSet(gomock.Any(), "noSA", gomock.Any()).Return(nil, nil).Times(1)
-		mock.EXPECT().PatchDaemonSet(gomock.Any(), "hasSA", gomock.Any()).Return(nil, nil).Times(1)
+		mock.EXPECT().ListDaemonSets(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
+		mock.EXPECT().PatchDaemonSet("ns1", "ds1", gomock.Any()).Return(nil, nil).Times(1)
+		mock.EXPECT().PatchDaemonSet("ns2", "ds2", gomock.Any()).Return(nil, nil).Times(1)
 
-		err := deleteDaemonSetSATokensAndForceRollout(mock, "ns", deleteSATokens(saMap))
+		err := rolloutDaemonSets(mock)
 		g.Expect(err).ToNot(HaveOccurred())
-		g.Expect(saMap["random"]).To(BeTrue())
-		g.Expect(saMap["hasSA"]).To(BeFalse())
-	})
-
-	t.Run("Return error if delete SA fails", func(t *testing.T) {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-
-		hasSA := appsv1.DaemonSet{}
-		hasSA.Spec.Template.Spec.ServiceAccountName = "hasSA"
-		list := &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{hasSA}}
-
-		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDaemonSets(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-
-		err := deleteDaemonSetSATokensAndForceRollout(mock, "ns", func(name string) error {
-			return errors.New("Delete SA failed")
-		})
-		g.Expect(err).To(HaveOccurred())
 	})
 
 	t.Run("Return error if patch daemonset fails", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hasSA := appsv1.DaemonSet{}
-		hasSA.Spec.Template.Spec.ServiceAccountName = "hasSA"
-		list := &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{hasSA}}
+		ds1 := appsv1.DaemonSet{}
+		ds1.Namespace = "ns1"
+		ds1.Name = "ds1"
+		list := &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{ds1}}
 
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListDaemonSets(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-		mock.EXPECT().PatchDaemonSet(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errAPIGeneric).Times(1)
+		mock.EXPECT().ListDaemonSets(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
+		mock.EXPECT().PatchDaemonSet("ns1", "ds1", gomock.Any()).Return(nil, errAPIGeneric).Times(1)
 
-		err := deleteDaemonSetSATokensAndForceRollout(mock, "ns", func(_ string) error { return nil })
+		err := rolloutDaemonSets(mock)
 		g.Expect(err).To(HaveOccurred())
 		g.Expect(errors.Cause(err)).To(Equal(errAPIGeneric))
 	})
 }
 
-func TestDeleteSATokensFunc(t *testing.T) {
+func TestDeleteSATokens(t *testing.T) {
 	t.Parallel()
 	g := NewGomegaWithT(t)
 
@@ -312,10 +254,9 @@ func TestDeleteSATokensFunc(t *testing.T) {
 
 		list := &v1.ServiceAccountList{}
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListServiceAccounts(gomock.Any(), gomock.Any()).Return(list, errAPIGeneric).Times(1)
+		mock.EXPECT().ListServiceAccounts(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, errAPIGeneric).Times(1)
 
-		deleteSATokens, err := deleteSATokensFunc(mock, "ns")
-		g.Expect(deleteSATokens).To(BeNil())
+		err := deleteSATokens(mock)
 		g.Expect(errors.Cause(err)).To(Equal(errAPIGeneric))
 	})
 
@@ -325,66 +266,34 @@ func TestDeleteSATokensFunc(t *testing.T) {
 
 		list := &v1.ServiceAccountList{}
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListServiceAccounts(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
+		mock.EXPECT().ListServiceAccounts(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
 
-		deleteSATokens, err := deleteSATokensFunc(mock, "ns")
-		g.Expect(deleteSATokens).To(BeNil())
+		err := deleteSATokens(mock)
 		g.Expect(err).To(BeNil())
 	})
 
-	t.Run("Expected ServiceAccount not found", func(t *testing.T) {
+	t.Run("Secret to delete not found", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
 		sa := v1.ServiceAccount{}
 		sa.Name = "sa"
 		sa.Secrets = []v1.ObjectReference{
-			v1.ObjectReference{
+			{
 				Name:      "sasecret1",
 				Namespace: "ns",
 			},
-			v1.ObjectReference{
+			{
 				Name:      "sasecret2",
 				Namespace: "ns",
 			},
 		}
 		list := &v1.ServiceAccountList{Items: []v1.ServiceAccount{sa}}
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListServiceAccounts(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-
-		deleteSATokens, err := deleteSATokensFunc(mock, "ns")
-		g.Expect(deleteSATokens).ToNot(BeNil())
-		g.Expect(err).To(BeNil())
-		err = deleteSATokens("404")
-		g.Expect(err).To(BeNil())
-	})
-
-	t.Run("Secret to delete not found, service account deleted", func(t *testing.T) {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-
-		sa := v1.ServiceAccount{}
-		sa.Name = "sa"
-		sa.Secrets = []v1.ObjectReference{
-			v1.ObjectReference{
-				Name:      "sasecret1",
-				Namespace: "ns",
-			},
-			v1.ObjectReference{
-				Name:      "sasecret2",
-				Namespace: "ns",
-			},
-		}
-		list := &v1.ServiceAccountList{Items: []v1.ServiceAccount{sa}}
-		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListServiceAccounts(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
+		mock.EXPECT().ListServiceAccounts(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
 		mock.EXPECT().DeleteSecret(gomock.Any()).Return(errAPINotFound).Times(2)
-		mock.EXPECT().DeleteServiceAccount(&sa).Return(nil).Times(1)
 
-		deleteSATokens, err := deleteSATokensFunc(mock, "ns")
-		g.Expect(deleteSATokens).ToNot(BeNil())
-		g.Expect(err).To(BeNil())
-		err = deleteSATokens(sa.Name)
+		err := deleteSATokens(mock)
 		g.Expect(err).To(BeNil())
 	})
 
@@ -395,40 +304,36 @@ func TestDeleteSATokensFunc(t *testing.T) {
 		sa := v1.ServiceAccount{}
 		sa.Name = "sa"
 		sa.Secrets = []v1.ObjectReference{
-			v1.ObjectReference{
+			{
 				Name:      "sasecret1",
 				Namespace: "ns",
 			},
-			v1.ObjectReference{
+			{
 				Name:      "sasecret2",
 				Namespace: "ns",
 			},
 		}
 		list := &v1.ServiceAccountList{Items: []v1.ServiceAccount{sa}}
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListServiceAccounts(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
+		mock.EXPECT().ListServiceAccounts(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
 		mock.EXPECT().DeleteSecret(gomock.Any()).Return(errAPIGeneric).Times(1)
 
-		deleteSATokens, err := deleteSATokensFunc(mock, "ns")
-		g.Expect(deleteSATokens).ToNot(BeNil())
-		g.Expect(err).To(BeNil())
-		err = deleteSATokens(sa.Name)
+		err := deleteSATokens(mock)
 		g.Expect(err).ToNot(BeNil())
-		g.Expect(errors.Cause(err)).To(Equal(errAPIGeneric))
 	})
 
-	t.Run("Secrets deleted, service account deleted", func(t *testing.T) {
+	t.Run("Secrets deleted", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
 		sa := v1.ServiceAccount{}
 		sa.Name = "sa"
 		sa.Secrets = []v1.ObjectReference{
-			v1.ObjectReference{
+			{
 				Name:      "sasecret1",
 				Namespace: "ns",
 			},
-			v1.ObjectReference{
+			{
 				Name:      "sasecret2",
 				Namespace: "ns",
 			},
@@ -436,48 +341,10 @@ func TestDeleteSATokensFunc(t *testing.T) {
 
 		list := &v1.ServiceAccountList{Items: []v1.ServiceAccount{sa}}
 		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListServiceAccounts(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
+		mock.EXPECT().ListServiceAccounts(metav1.NamespaceAll, metav1.ListOptions{}).Return(list, nil).Times(1)
 		mock.EXPECT().DeleteSecret(gomock.Any()).Return(nil).Times(2)
-		mock.EXPECT().DeleteServiceAccount(&sa).Return(nil).Times(1)
 
-		deleteSATokens, err := deleteSATokensFunc(mock, "ns")
-		g.Expect(deleteSATokens).ToNot(BeNil())
+		err := deleteSATokens(mock)
 		g.Expect(err).To(BeNil())
-		err = deleteSATokens(sa.Name)
-		g.Expect(err).To(BeNil())
-		// check is only deleted once
-		err = deleteSATokens(sa.Name)
-		g.Expect(err).To(BeNil())
-	})
-
-	t.Run("Secrets deleted, delete service account fails", func(t *testing.T) {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-
-		sa := v1.ServiceAccount{}
-		sa.Name = "sa"
-		sa.Secrets = []v1.ObjectReference{
-			v1.ObjectReference{
-				Name:      "sasecret1",
-				Namespace: "ns",
-			},
-			v1.ObjectReference{
-				Name:      "sasecret2",
-				Namespace: "ns",
-			},
-		}
-
-		list := &v1.ServiceAccountList{Items: []v1.ServiceAccount{sa}}
-		mock := mock.NewMockKubeClient(mockCtrl)
-		mock.EXPECT().ListServiceAccounts(gomock.Any(), gomock.Any()).Return(list, nil).Times(1)
-		mock.EXPECT().DeleteSecret(gomock.Any()).Return(nil).Times(2)
-		mock.EXPECT().DeleteServiceAccount(&sa).Return(errAPIGeneric).Times(1)
-
-		deleteSATokens, err := deleteSATokensFunc(mock, "ns")
-		g.Expect(deleteSATokens).ToNot(BeNil())
-		g.Expect(err).To(BeNil())
-		err = deleteSATokens(sa.Name)
-		g.Expect(err).ToNot(BeNil())
-		g.Expect(errors.Cause(err)).To(Equal(errAPIGeneric))
 	})
 }
