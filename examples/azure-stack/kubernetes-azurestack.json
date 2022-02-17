@@ -58,7 +58,7 @@
                     }
                 ]
             },
-            "runUnattendedUpgradesOnBootstrap": false
+            "runUnattendedUpgradesOnBootstrap": true
         },
         "servicePrincipalProfile": {
             "clientId": "",

@@ -138,7 +138,7 @@ The `AKS Base Image` marketplace item has to be available in your Azure Stack Hu
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
-Make sure `runUnattendedUpgradesOnBootstrap` in the `linuxProfile` of your `apimodel.json` file is set to `"false"` when you create or upgrade cluster on disconnected Azure Stack Hub instances, otherwise the operation will fail.
+Make sure `linuxProfile.runUnattendedUpgradesOnBootstrap` in the `apimodel.json` file is set to `"false"` when you create or upgrade cluster on disconnected Azure Stack Hub instances, otherwise the operation will fail.
 
 ## AKS Engine Versions
 
@@ -345,9 +345,9 @@ By default, `enableUnattendedUpgrades` is set to `true` and runs in the backend 
 
 If you want to immediate get latest security patches in your cluster, you can choose to deploy a new cluster that includes the latest security patches, or you can upgrade an existing cluster to get the latest security patches.
 
-To deploy a cluster that includes the latests security patches, you can set `runUnattendedUpgradesOnBootstrap` to `"true"` in the api model template provided for [Linux](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json) or [Windows](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-windows.json) before running the `aks-engine deploy` command.
+To deploy a cluster that includes the latests security patches, you can set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the api model (see [example](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json)) before executing the `aks-engine deploy` command.
 
-To upgrade an existing cluster and get the latest security patches, you can either do it manually or use `aks-engine upgrade` command. If you do it manually, run `apt-get update && apt-get upgrade` command, and reboot the node after command execution. If you use `aks-engine upgrade` command, make sure to update the generated `apimodel.json` file and set `runUnattendedUpgradesOnBootstrap` to `"true"` in the `linuxProfile`, and run the `aks-engine upgrade` command to upgrade the cluster to the same Kubernetes version.
+To upgrade an existing cluster and get the latest security patches, you can either do it manually or use the `aks-engine` command. If you do it manually, execute `apt-get update && apt-get upgrade` command, and reboot the node after command execution. If you use the `aks-engine` command, make sure to set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the generated `apimodel.json` file and execute the `aks-engine upgrade` command to upgrade the cluster to the same Kubernetes version.
 
 ### Troubleshoting
 
