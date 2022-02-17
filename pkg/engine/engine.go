@@ -655,6 +655,12 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
+		"GetAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "v1"
+			}
+			return "v1beta1"
+		},
 	}
 }
 

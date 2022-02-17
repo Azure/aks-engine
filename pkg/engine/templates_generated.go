@@ -460,7 +460,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: azureassignedidentities.aadpodidentity.k8s.io
@@ -475,7 +475,7 @@ spec:
     plural: azureassignedidentities
   scope: Namespaced
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: azureidentitybindings.aadpodidentity.k8s.io
@@ -490,7 +490,7 @@ spec:
     plural: azureidentitybindings
   scope: Namespaced
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: azureidentities.aadpodidentity.k8s.io
@@ -506,7 +506,7 @@ spec:
     plural: azureidentities
   scope: Namespaced
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: azurepodidentityexceptions.aadpodidentity.k8s.io
@@ -546,7 +546,7 @@ rules:
   resources: ["azureassignedidentities"]
   verbs: ["get", "list", "watch"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-nmi-binding
@@ -689,7 +689,7 @@ rules:
   resources: ["azureassignedidentities"]
   verbs: ["*"]
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-mic-binding
@@ -6102,7 +6102,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 kind: ClusterRole
 metadata:
   name: azure-npm
@@ -6129,7 +6129,7 @@ rules:
       - list
       - watch
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 kind: ClusterRoleBinding
 metadata:
   name: azure-npm-binding
@@ -6245,7 +6245,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-system
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -6358,7 +6358,7 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -6435,7 +6435,7 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -6511,7 +6511,7 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
@@ -7072,7 +7072,7 @@ spec:
           defaultMode: 420
           secretName: gatekeeper-webhook-server-cert
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/{{GetAPIVersion}}
 kind: ValidatingWebhookConfiguration
 metadata:
   creationTimestamp: null
@@ -9811,7 +9811,7 @@ data:
 
 ---
 {{- /* Source: calico/templates/kdd-crds.yaml */}}
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: felixconfigurations.crd.projectcalico.org
@@ -9827,7 +9827,7 @@ spec:
     singular: felixconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: bgpconfigurations.crd.projectcalico.org
@@ -9843,7 +9843,7 @@ spec:
     singular: bgpconfiguration
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: ippools.crd.projectcalico.org
@@ -9859,7 +9859,7 @@ spec:
     singular: ippool
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: hostendpoints.crd.projectcalico.org
@@ -9875,7 +9875,7 @@ spec:
     singular: hostendpoint
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: clusterinformations.crd.projectcalico.org
@@ -9891,7 +9891,7 @@ spec:
     singular: clusterinformation
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworkpolicies.crd.projectcalico.org
@@ -9907,7 +9907,7 @@ spec:
     singular: globalnetworkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: globalnetworksets.crd.projectcalico.org
@@ -9923,7 +9923,7 @@ spec:
     singular: globalnetworkset
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: networkpolicies.crd.projectcalico.org
@@ -9939,7 +9939,7 @@ spec:
     singular: networkpolicy
 ---
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: networksets.crd.projectcalico.org
@@ -9958,7 +9958,7 @@ spec:
 Include a clusterrole for the calico-node DaemonSet,
 and bind it to the calico-node serviceaccount. */}}
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 metadata:
   name: calico-node
   labels:
@@ -10059,7 +10059,7 @@ be removed after upgrade or on fresh installations. */}}
   - create
   - update
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 kind: ClusterRoleBinding
 metadata:
   name: calico-node
@@ -12825,7 +12825,7 @@ spec:
     plural: healthstates
     kind: HealthState
 {{- else }}
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   name: healthstates.azmon.container.insights
@@ -13361,7 +13361,7 @@ spec:
 {{- /* This file was pulled from:
 https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 metadata:
   name: flannel
   labels:
@@ -13388,7 +13388,7 @@ rules:
       - patch
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 metadata:
   name: flannel
   labels:
@@ -15229,7 +15229,7 @@ func k8sAddonsScheduledMaintenanceDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsSecretsStoreCsiDriverYaml = []byte(`apiVersion: storage.k8s.io/v1beta1
+var _k8sAddonsSecretsStoreCsiDriverYaml = []byte(`apiVersion: storage.k8s.io/{{GetAPIVersion}}
 kind: CSIDriver
 metadata:
   name: secrets-store.csi.k8s.io
@@ -15840,7 +15840,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 kind: ClusterRoleBinding
 metadata:
   name: tiller

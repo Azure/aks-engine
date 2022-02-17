@@ -120,7 +120,7 @@ spec:
 {{- /* This file was pulled from:
 https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 metadata:
   name: flannel
   labels:
@@ -147,7 +147,7 @@ rules:
       - patch
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
 metadata:
   name: flannel
   labels:
