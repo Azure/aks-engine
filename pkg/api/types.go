@@ -1232,6 +1232,9 @@ func (p *Properties) ShouldEnableAzureCloudAddon(addonName string) bool {
 	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
 		return false
 	}
+	if addonName == common.AzureDiskCSIDriverAddonName && p.IsAzureStackCloud() {
+		return false
+	}
 	if !p.HasWindows() {
 		switch addonName {
 		case common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName:
