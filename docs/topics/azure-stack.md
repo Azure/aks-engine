@@ -138,7 +138,7 @@ The `AKS Base Image` marketplace item has to be available in your Azure Stack Hu
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
-Make sure `linuxProfile.runUnattendedUpgradesOnBootstrap` in the `apimodel.json` file is set to `"false"` when you create or upgrade cluster on disconnected Azure Stack Hub instances, otherwise the operation will fail.
+Make sure `linuxProfile.runUnattendedUpgradesOnBootstrap` is set to `"false"` when you deploy, or upgrade, a cluster to air-gapped Azure Stack Hub clouds.
 
 ## AKS Engine Versions
 
