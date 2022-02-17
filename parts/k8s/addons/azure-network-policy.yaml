@@ -6,7 +6,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
-apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
+apiVersion: {{GetRBACAPIVersion}}
 kind: ClusterRole
 metadata:
   name: azure-npm
@@ -33,7 +33,7 @@ rules:
       - list
       - watch
 ---
-apiVersion: rbac.authorization.k8s.io/{{GetAPIVersion}}
+apiVersion: {{GetRBACAPIVersion}}
 kind: ClusterRoleBinding
 metadata:
   name: azure-npm-binding

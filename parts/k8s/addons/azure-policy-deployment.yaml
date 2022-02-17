@@ -9,7 +9,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-system
 ---
-apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
+apiVersion: {{GetCRDAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -122,7 +122,7 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
+apiVersion: {{GetCRDAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -199,7 +199,7 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
+apiVersion: {{GetCRDAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -275,7 +275,7 @@ status:
   conditions: []
   storedVersions: []
 ---
-apiVersion: apiextensions.k8s.io/{{GetAPIVersion}}
+apiVersion: {{GetCRDAPIVersion}}
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
@@ -836,7 +836,7 @@ spec:
           defaultMode: 420
           secretName: gatekeeper-webhook-server-cert
 ---
-apiVersion: admissionregistration.k8s.io/{{GetAPIVersion}}
+apiVersion: {{GetWebhookAPIVersion}}
 kind: ValidatingWebhookConfiguration
 metadata:
   creationTimestamp: null
