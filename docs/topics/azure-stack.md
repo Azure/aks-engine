@@ -119,6 +119,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 `linuxProfile` provides the linux configuration for each linux node in the cluster
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
+| enableUnattendedUpgrades | no    | Configure each Linux node VM (including control plane node VMs) to run `/usr/bin/unattended-upgrade` in the background according to a daily schedule. If enabled, the default `unattended-upgrades` package configuration will be used as provided by the Ubuntu distro version running on the VM. More information [here](https://help.ubuntu.com/community/AutomaticSecurityUpdates). By default, `enableUnattendedUpgrades` is set to `true`.|
 | runUnattendedUpgradesOnBootstrap| no       | Invoke an unattended-upgrade when each Linux node VM comes online for the first time. In practice this is accomplished by performing an `apt-get update`, followed by a manual invocation of `/usr/bin/unattended-upgrade`, to fetch updated apt configuration, and install all package updates provided by the unattended-upgrade facility, respectively. Defaults to `"false"`. |
 
 ## Azure Stack Hub Instances Registered with Azure's China cloud
@@ -336,11 +337,17 @@ This can be resolved by making a small modification to the extension `template.j
 
 Once you are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
 
-### Ubuntu VMs does not contains latest OS security fixes
+### The cluster nodes do not contain the latest Ubuntu OS security patches
 
-The `aks-ubuntu-16.04` and `aks-ubuntu-18.04` base images provided in Azure Stack Hub's Marketplace are created and published prior to the release date of corresponding AKS-Engine versions that consumes it, and are not actively updated after published to Azure Stack Hub's Marketplace. Kubernetes clusters created with these images will not contain OS security fixes released after the AKS Base Images are published.
+If an `aks-ubuntu-18.04` image is created by the AKS Engine team prior to the release of an OS security patch, then the cluster nodes won't include those security patches until an unattended upgrade is triggered.
 
-To obtain all latest OS security fixes for Ubunutu VMs in your cluster, you can set `runUnattendedUpgradesOnBootstrap` to `"true"` in the `linuxProfile` of your generated `apimodel.json` file, and run `aks-engine upgrade` command for the same Kubernetes version. Alternatively, you can manually run `apt-get update`, followed by a manual invocation of `/usr/bin/unattended-upgrade`, and then restart the VMs after these commands.
+By default, `enableUnattendedUpgrades` is set to `true` and runs in the backend on a daily schedule. Latest Ubuntu OS security patches should be applied when rebooting the cluster nodes that has been deployed for more than a day.
+
+If you want to immediate get latest security patches in your cluster, you can choose to deploy a new cluster that includes the latest security patches, or you can upgrade an existing cluster to get the latest security patches.
+
+To deploy a cluster that includes the latests security patches, you can set `runUnattendedUpgradesOnBootstrap` to `"true"` in the api model template provided for [Linux](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json) or [Windows](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-windows.json) before running the `aks-engine deploy` command.
+
+To upgrade an existing cluster and get the latest security patches, you can either do it manually or use `aks-engine upgrade` command. If you do it manually, run `apt-get update && apt-get upgrade` command, and reboot the node after command execution. If you use `aks-engine upgrade` command, make sure to update the generated `apimodel.json` file and set `runUnattendedUpgradesOnBootstrap` to `"true"` in the `linuxProfile`, and run the `aks-engine upgrade` command to upgrade the cluster to the same Kubernetes version.
 
 ### Troubleshoting
 
