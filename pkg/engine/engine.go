@@ -655,6 +655,30 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
+		"GetCRDAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "apiextensions.k8s.io/v1"
+			}
+			return "apiextensions.k8s.io/v1beta1"
+		},
+		"GetRBACAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "rbac.authorization.k8s.io/v1"
+			}
+			return "rbac.authorization.k8s.io/v1beta1"
+		},
+		"GetStorageAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "storage.k8s.io/v1"
+			}
+			return "storage.k8s.io/v1beta1"
+		},
+		"GetWebhookAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "admissionregistration.k8s.io/v1"
+			}
+			return "admissionregistration.k8s.io/v1beta1"
+		},
 	}
 }
 
