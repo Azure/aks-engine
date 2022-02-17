@@ -345,7 +345,7 @@ By default, `enableUnattendedUpgrades` is set to `true` and runs in the backend 
 
 If you want to immediate get latest security patches in your cluster, you can choose to deploy a new cluster that includes the latest security patches, or you can upgrade an existing cluster to get the latest security patches.
 
-To deploy a cluster that includes the latests security patches, you can set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the api model (see [example](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json)) before executing the `aks-engine deploy` command.
+To deploy a cluster that includes the latests security patches, you can set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the api model before executing the `aks-engine deploy` command.
 
 To upgrade an existing cluster and get the latest security patches, you can either do it manually or use the `aks-engine` command. If you do it manually, execute `apt-get update && apt-get upgrade` command, and reboot the node after command execution. If you use the `aks-engine` command, make sure to set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the generated `apimodel.json` file and execute the `aks-engine upgrade` command to upgrade the cluster to the same Kubernetes version.
 
