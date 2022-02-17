@@ -339,15 +339,13 @@ Once you are done updating the extension template, host the extension directory 
 
 ### The cluster nodes do not contain the latest Ubuntu OS security patches
 
-If an `aks-ubuntu-18.04` image is created by the AKS Engine team prior to the release of an OS security patch, then the cluster nodes won't include those security patches until an unattended upgrade is triggered.
+If an `aks-ubuntu-18.04` image is created by the AKS Engine team prior to the release of an OS security patch, then the image won't include those security patches until an unattended upgrade is triggered.
 
-By default, `enableUnattendedUpgrades` is set to `true` and runs in the backend on a daily schedule. Latest Ubuntu OS security patches should be applied when rebooting the cluster nodes that has been deployed for more than a day.
+When `linuxProfile.enableUnattendedUpgrades` is set to `true`, unattended upgrades will be checked and/or installed once a day. To ensure that the nodes are rebooted in a non-disruptive way, you can deploy [kured](https://github.com/weaveworks/kured) or similar solutions.
 
-If you want to immediate get latest security patches in your cluster, you can choose to deploy a new cluster that includes the latest security patches, or you can upgrade an existing cluster to get the latest security patches.
+To deploy a cluster that includes the latests OS security patches right from the beginning, set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` (see [example](../../examples/azure-stack/kubernetes-azurestack.json)).
 
-To deploy a cluster that includes the latests security patches, you can set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the api model before executing the `aks-engine deploy` command.
-
-To upgrade an existing cluster and get the latest security patches, you can either do it manually or use the `aks-engine` command. If you do it manually, execute `apt-get update && apt-get upgrade` command, and reboot the node after command execution. If you use the `aks-engine` command, make sure to set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the generated `apimodel.json` file and execute the `aks-engine upgrade` command to upgrade the cluster to the same Kubernetes version.
+To apply the latest OS security patches to an existing cluster, you can either do it manually or use the `aks-engine upgrade` command. A manual upgrade can be done by executing `apt-get update && apt-get upgrade` and rebooting the node if necessary. If you use the `aks-engine upgrade` command, set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the generated `apimodel.json` and execute `aks-engine upgrade` (a forced upgrade to the current Kubernetes version also works).
 
 ### Troubleshoting
 
