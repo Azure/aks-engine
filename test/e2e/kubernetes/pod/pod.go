@@ -279,7 +279,7 @@ func RunWindowsPod(image, name, namespace, command string, printOutput bool, sle
 type podRunnerCmd func(string, string, string, string, bool, time.Duration, time.Duration, time.Duration) (*Pod, error)
 
 // RunCommandMultipleTimes runs the same command 'desiredAttempts' times
-func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, commandTimeout, timeout time.Duration, StabilityPassRate float32) (int, error) {
+func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command string, desiredAttempts int, sleep, commandTimeout, timeout time.Duration, StabilityIterationsSuccessRate float32) (int, error) {
 	var successfulAttempts int
 	var actualAttempts int
 	logResults := func() {
@@ -293,25 +293,25 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		var p *Pod
 		var err error
 		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, timeout, timeout)
-		if err != nil && StabilityPassRate == 1.0 {
+		if err != nil && StabilityIterationsSuccessRate == 1.0 {
 			return successfulAttempts, err
 		}
 		succeeded, err := p.WaitOnSucceeded(sleep, timeout)
 		if err != nil {
 			log.Printf("pod %s did not succeed in time\n", podName)
-			if StabilityPassRate == 1.0 {
+			if StabilityIterationsSuccessRate == 1.0 {
 				return successfulAttempts, err
 			}
 		}
 		terminated, err := p.WaitOnTerminated(podName, sleep, commandTimeout, timeout)
 		if err != nil {
 			log.Printf("pod %s container %s did not reach a terminal exit 0 state in time\n", podName, podName)
-			if StabilityPassRate == 1.0 {
+			if StabilityIterationsSuccessRate == 1.0 {
 				return successfulAttempts, err
 			}
 		}
 		err = p.Delete(util.DefaultDeleteRetries)
-		if err != nil && StabilityPassRate == 1.0 {
+		if err != nil && StabilityIterationsSuccessRate == 1.0 {
 			return successfulAttempts, err
 		}
 		if succeeded && terminated {
