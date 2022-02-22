@@ -61,109 +61,79 @@ func PauseClusterAutoscaler(client internal.KubeClient) (func() error, error) {
 	}, nil
 }
 
-// RotateServiceAccountTokens deletes service account tokens referenced by daemonsets and deployments
-// from the namespaces of interest and triggers a rollout once the tokens are deleted.
+// RotateServiceAccountTokens deletes all service account tokens and
+// triggers a forced rollout of all daemonsets and deployments.
 //
 // Service account tokens are signed by the cluster CA,
 // deleting them after the CA is rotated ensures that KCM will regenerate tokens signed by the new CA.
-func RotateServiceAccountTokens(client internal.KubeClient, namespaces []string) error {
-	for _, ns := range namespaces {
-		deleteSATokens, err := deleteSATokensFunc(client, ns)
-		if err != nil {
-			return err
-		}
-		if deleteSATokens == nil {
-			// no tokens to rotate in this namespace
-			continue
-		}
-		if err = deleteDeploymentSATokensAndForceRollout(client, ns, deleteSATokens); err != nil {
-			return err
-		}
-		if err = deleteDaemonSetSATokensAndForceRollout(client, ns, deleteSATokens); err != nil {
-			return err
-		}
+func RotateServiceAccountTokens(client internal.KubeClient) error {
+	if err := deleteSATokens(client); err != nil {
+		return err
 	}
+	if err := rolloutDeployments(client); err != nil {
+		return err
+	}
+	if err := rolloutDaemonSets(client); err != nil {
+		return err
+	}
+	// TODO rolloutStatefulSets
 	return nil
 }
 
-func deleteDeploymentSATokensAndForceRollout(client internal.KubeClient, ns string, deleteSATokens func(string) error) error {
+func rolloutDeployments(client internal.KubeClient) error {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	patch := fmt.Sprintf(`{"spec":{"template":{"metadata":{"annotations":{"ca-rotation":"%d"}}}}}`, random.Int31())
 
-	deployList, err := client.ListDeployments(ns, metav1.ListOptions{})
+	deployList, err := client.ListDeployments(metav1.NamespaceAll, metav1.ListOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "listing %s deployments", ns)
+		return errors.Wrapf(err, "listing cluster deployments")
 	}
 	for _, deploy := range deployList.Items {
-		if deploy.Spec.Template.Spec.ServiceAccountName != "" {
-			// delete SA tokens
-			if err = deleteSATokens(deploy.Spec.Template.Spec.ServiceAccountName); err != nil {
-				return err
-			}
-		}
 		// trigger rollout so the deploy replicas mount the newly generated sa token
-		if _, err := client.PatchDeployment(ns, deploy.Name, patch); err != nil {
-			return errors.Wrapf(err, "patching %s deployment %s", ns, deploy.Name)
+		if _, err := client.PatchDeployment(deploy.Namespace, deploy.Name, patch); err != nil {
+			return errors.Wrapf(err, "patching %s deployment %s", deploy.Namespace, deploy.Name)
 		}
 	}
 	return nil
 }
 
-func deleteDaemonSetSATokensAndForceRollout(client internal.KubeClient, ns string, deleteSATokens func(string) error) error {
+func rolloutDaemonSets(client internal.KubeClient) error {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	patch := fmt.Sprintf(`{"spec":{"template":{"metadata":{"annotations":{"ca-rotation":"%d"}}}}}`, random.Int31())
 
-	dsList, err := client.ListDaemonSets(ns, metav1.ListOptions{})
+	dsList, err := client.ListDaemonSets(metav1.NamespaceAll, metav1.ListOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "listing %s daemonsets", ns)
+		return errors.Wrapf(err, "listing cluster daemonsets")
 	}
 	for _, ds := range dsList.Items {
-		if ds.Spec.Template.Spec.ServiceAccountName != "" {
-			// delete SA tokens
-			if err = deleteSATokens(ds.Spec.Template.Spec.ServiceAccountName); err != nil {
-				return err
-			}
-		}
 		// trigger rollout so the ds replicas mount the newly generated sa token
-		if _, err = client.PatchDaemonSet(ns, ds.Name, patch); err != nil {
-			return errors.Wrapf(err, "patching %s daemonset %s", ns, ds.Name)
+		if _, err = client.PatchDaemonSet(ds.Namespace, ds.Name, patch); err != nil {
+			return errors.Wrapf(err, "patching %s daemonset %s", ds.Namespace, ds.Name)
 		}
 	}
 	return nil
 }
 
-func deleteSATokensFunc(client internal.KubeClient, ns string) (func(string) error, error) {
-	saList, err := client.ListServiceAccounts(ns, metav1.ListOptions{})
+func deleteSATokens(client internal.KubeClient) error {
+	saList, err := client.ListServiceAccounts(metav1.NamespaceAll, metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "listing %s service accounts", ns)
+		return errors.Wrapf(err, "listing cluster service accounts")
 	}
 	if len(saList.Items) == 0 {
-		return nil, nil
+		return nil
 	}
-	saMap := make(map[string]v1.ServiceAccount)
 	for _, sa := range saList.Items {
-		saMap[sa.Name] = sa
-	}
-	return func(name string) error {
-		sa, ok := saMap[name]
-		if !ok {
-			return nil
-		}
 		for _, s := range sa.Secrets {
 			err := client.DeleteSecret(&v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Namespace: ns,
+					Namespace: sa.Namespace,
 					Name:      s.Name,
 				},
 			})
 			if err != nil && !apierrors.IsNotFound(err) {
-				return errors.Wrapf(err, "deleting %s secret %s", ns, s.Name)
+				return errors.Wrapf(err, "deleting %s secret %s", s.Namespace, s.Name)
 			}
 		}
-		if err := client.DeleteServiceAccount(&sa); err != nil && !apierrors.IsNotFound(err) {
-			return errors.Wrapf(err, "deleting %s service account %s", ns, sa.Name)
-		}
-		delete(saMap, name)
-		return nil
-	}, nil
+	}
+	return nil
 }
