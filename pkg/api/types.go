@@ -1232,6 +1232,10 @@ func (p *Properties) ShouldEnableAzureCloudAddon(addonName string) bool {
 	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
 		return false
 	}
+	// For Azure Stack Hub clusters, azuredisk-csi driver will not be enabled by default when cloud-controller-manager is enabled due to custom data oversize
+	if addonName == common.AzureDiskCSIDriverAddonName && p.IsAzureStackCloud() {
+		return false
+	}
 	if !p.HasWindows() {
 		switch addonName {
 		case common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName:
