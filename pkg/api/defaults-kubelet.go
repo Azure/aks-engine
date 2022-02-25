@@ -77,6 +77,9 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	staticWindowsKubeletConfig["--image-pull-progress-deadline"] = "20m"
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
 	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
+	if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
+		staticWindowsKubeletConfig["--cloud-provider"] = "external"
+	}
 
 	nodeStatusUpdateFrequency := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["nodestatusfreq"]
 	if cs.Properties.IsAzureStackCloud() {
@@ -190,6 +193,10 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		if isUpgrade {
 			// if upgrade, force default "--pod-infra-container-image" value
 			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
+		}
+		//Ensure cloud-provider setting
+		if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--cloud-provider"] = "external"
 		}
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")

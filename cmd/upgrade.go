@@ -222,6 +222,12 @@ func (uc *upgradeCmd) loadCluster() error {
 		}
 	}
 
+	// Enforce UseCloudControllerManager for Kubernetes 1.21+ on Azure Stack cloud
+	if uc.containerService.Properties.IsAzureStackCloud() && common.IsKubernetesVersionGe(uc.upgradeVersion, "1.21.0") {
+		log.Infoln("Updating UseCloudControllerManager to 'true' on Azure Stack cloud...\n")
+		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
+	}
+
 	// The cluster-init component is a cluster create-only feature, temporarily disable if enabled
 	if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
 		if uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].IsEnabled() {
