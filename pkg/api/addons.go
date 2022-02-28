@@ -932,7 +932,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
 		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.21.0") {
 		// Force enabling cloud-node-manager addon
-		log.Infoln("Updating cloud-node-manager addon to 'true' on Azure Stack cloud...\n")
+		log.Infoln("Updating cloud-node-manager addon to 'true' on Azure Stack cloud...")
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.CloudNodeManagerAddonName); i > -1 {
 			o.KubernetesConfig.Addons[i] = defaultCloudNodeManagerAddonsConfig
 		}
