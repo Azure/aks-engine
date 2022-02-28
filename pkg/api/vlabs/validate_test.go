@@ -4738,7 +4738,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("useCloudControllerManager should be set to true for Kubernetes v1.21+ cluster on Azure Stack Hub"),
+			expectedErr: errors.New("useCloudControllerManager should be set to true for Kubernetes v1.21+ clusters on Azure Stack Hub"),
 		},
 		{
 			name:          "AzureStack UseInstanceMetadata is true",
