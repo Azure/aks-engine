@@ -6,8 +6,6 @@ package api
 import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
@@ -152,10 +150,8 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 	// Ensure cloud-controller-manager is enabled on appropriate upgrades for Azure Stack cloud
 	if isUpgrade &&
 		cs.Properties.IsAzureStackCloud() &&
-		to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
-		common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
+		to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 		// Force enabling cloud-controller-manager
-		log.Infoln("Updating cloud-controller-manager component to 'true' on Azure Stack cloud...")
 		if i := GetComponentsIndexByName(kubernetesConfig.Components, common.CloudControllerManagerComponentName); i > -1 {
 			kubernetesConfig.Components[i] = defaultCloudControllerManagerComponentConfig
 		}

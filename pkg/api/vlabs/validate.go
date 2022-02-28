@@ -301,7 +301,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 
 			if a.IsAzureStackCloud() {
 				if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.21.0") && !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
-					return errors.New("useCloudControllerManager should be set to true for Kubernetes 1.21+ cluster on Azure Stack")
+					return errors.New("useCloudControllerManager should be set to true for Kubernetes v1.21+ cluster on Azure Stack Hub")
 				}
 
 				if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {

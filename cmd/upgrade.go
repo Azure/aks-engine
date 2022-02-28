@@ -224,7 +224,7 @@ func (uc *upgradeCmd) loadCluster() error {
 
 	// Enforce UseCloudControllerManager for Kubernetes 1.21+ on Azure Stack cloud
 	if uc.containerService.Properties.IsAzureStackCloud() && common.IsKubernetesVersionGe(uc.upgradeVersion, "1.21.0") {
-		log.Infoln("Updating UseCloudControllerManager to 'true' on Azure Stack cloud...")
+		log.Infoln("The in-tree cloud provider is not longer supported on Azure Stack Hub for v1.21+ clusters, overwriting UseCloudControllerManager to 'true'...")
 		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
 	}
 
