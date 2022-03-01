@@ -105,8 +105,8 @@ azuredeploy.json		ca.key				etcdclient.key			etcdserver.key
 Access the new cluster by using the kubeconfig generated for the cluster's location. This example used `westus2`, so the kubeconfig is located at `_output/contoso-apple-5f776b0d/kubeconfig/kubeconfig.westus2.json`:
 
 ```sh
-$export KUBECONFIG=_output/contoso-apple-5f776b0d/kubeconfig/kubeconfig.westus2.json 
-kubectl cluster-info
+$ export KUBECONFIG=_output/contoso-apple-5f776b0d/kubeconfig/kubeconfig.westus2.json 
+$ kubectl cluster-info
 Kubernetes master is running at https://contoso-apple-5f776b0d.westus2.cloudapp.azure.com
 CoreDNS is running at https://contoso-apple-5f776b0d.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 Metrics-server is running at https://contoso-apple-5f776b0d.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
