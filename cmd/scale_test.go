@@ -163,7 +163,7 @@ func TestVmInVMASAgentPool(t *testing.T) {
 				},
 			},
 			expected: false,
-			name:     "linux agentpool mismatch scale pool",
+			name:     "linux VM is not in linux pool to scale",
 			vmName:   "k8s-linuxpool2-39573225-0",
 		},
 		{
@@ -183,7 +183,7 @@ func TestVmInVMASAgentPool(t *testing.T) {
 				},
 			},
 			expected: true,
-			name:     "linux agentpool matches scale pool",
+			name:     "linux VM is in linux pool to scale",
 			vmName:   "k8s-linuxpool2-39573225-1",
 		},
 		{
@@ -203,7 +203,7 @@ func TestVmInVMASAgentPool(t *testing.T) {
 				},
 			},
 			expected: false,
-			name:     "windows agentpool mismatch scale pool",
+			name:     "windows VM is not in windows pool to scale",
 			vmName:   "3957k8s030",
 		},
 		{
@@ -223,7 +223,7 @@ func TestVmInVMASAgentPool(t *testing.T) {
 				},
 			},
 			expected: true,
-			name:     "windows agentpool matches scale pool",
+			name:     "windows VM is in windows pool to scale",
 			vmName:   "3957k8s031",
 		},
 	}
