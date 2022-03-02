@@ -296,7 +296,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 				for _, vm := range vmsListPage.Values() {
 					vmName := *vm.Name
-					if !sc.vmInAgentPool(vmName, vm.Tags) {
+					if !sc.vmInVMASAgentPool(vmName, vm.Tags) {
 						continue
 					}
 
@@ -584,7 +584,7 @@ func (sc *scaleCmd) saveAPIModel() error {
 	return f.SaveFile(dir, file, b)
 }
 
-func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
+func (sc *scaleCmd) vmInVMASAgentPool(vmName string, tags map[string]*string) bool {
 	// Try to locate the VM's agent pool by expected tags.
 	if tags != nil {
 		if poolName, ok := tags["poolName"]; ok {
@@ -599,14 +599,12 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 	}
 
 	// Fall back to checking the VM name to see if it fits the naming pattern
-	if sc.agentPool.OSType == api.Windows && sc.agentPool.AvailabilityProfile == api.AvailabilitySet && strings.HasPrefix(vmName, sc.containerService.Properties.GetClusterID()[:4]) {
-		_, _, winPoolIndex, _, err := utils.WindowsVMNameParts(vmName)
-		if err == nil {
-			return vmName[:9] == sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)[:9]
-		}
-		return false
+	if sc.agentPool.OSType == api.Windows {
+		return strings.HasPrefix(vmName, sc.containerService.Properties.GetClusterID()[:4]) &&
+			vmName[:9] == sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, sc.agentPoolIndex)[:9]
 	}
-	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.Contains(vmName, sc.agentPoolToScale)
+	poolIdentifier, _, _, _ := utils.K8sLinuxVMNameParts(vmName)
+	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.EqualFold(poolIdentifier, sc.agentPoolToScale)
 }
 
 type paramsMap map[string]interface{}

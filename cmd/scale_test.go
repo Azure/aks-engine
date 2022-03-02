@@ -6,6 +6,7 @@ package cmd
 import (
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -131,6 +132,109 @@ func TestScaleCmdValidate(t *testing.T) {
 				} else if err != nil {
 					t.Fatalf("expected validate scale command to return no error, but instead got %s", err.Error())
 				}
+			}
+		})
+	}
+}
+
+func TestVmInVMASAgentPool(t *testing.T) {
+	tags := map[string]*string{}
+
+	cases := []struct {
+		sc       *scaleCmd
+		expected bool
+		name     string
+		vmName   string
+	}{
+		{
+			sc: &scaleCmd{
+				nameSuffix:       "39573225",
+				agentPoolIndex:   0,
+				agentPoolToScale: "linuxpool",
+				agentPool: &api.AgentPoolProfile{
+					Name:                "linuxpool2",
+					OSType:              "Linux",
+					AvailabilityProfile: "AvailabilitySet",
+				},
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						ClusterID: "39573225",
+					},
+				},
+			},
+			expected: false,
+			name:     "linux agentpool mismatch scale pool",
+			vmName:   "k8s-linuxpool2-39573225-0",
+		},
+		{
+			sc: &scaleCmd{
+				nameSuffix:       "39573225",
+				agentPoolIndex:   1,
+				agentPoolToScale: "linuxpool2",
+				agentPool: &api.AgentPoolProfile{
+					Name:                "linuxpool2",
+					OSType:              "Linux",
+					AvailabilityProfile: "AvailabilitySet",
+				},
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						ClusterID: "39573225",
+					},
+				},
+			},
+			expected: true,
+			name:     "linux agentpool matches scale pool",
+			vmName:   "k8s-linuxpool2-39573225-1",
+		},
+		{
+			sc: &scaleCmd{
+				nameSuffix:       "39573225",
+				agentPoolIndex:   2,
+				agentPoolToScale: "windowspool",
+				agentPool: &api.AgentPoolProfile{
+					Name:                "windowspool2",
+					OSType:              "Windows",
+					AvailabilityProfile: "AvailabilitySet",
+				},
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						ClusterID: "39573225",
+					},
+				},
+			},
+			expected: false,
+			name:     "windows agentpool mismatch scale pool",
+			vmName:   "3957k8s030",
+		},
+		{
+			sc: &scaleCmd{
+				nameSuffix:       "39573225",
+				agentPoolIndex:   3,
+				agentPoolToScale: "windowspool2",
+				agentPool: &api.AgentPoolProfile{
+					Name:                "windowspool2",
+					OSType:              "Windows",
+					AvailabilityProfile: "AvailabilitySet",
+				},
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						ClusterID: "39573225",
+					},
+				},
+			},
+			expected: true,
+			name:     "windows agentpool matches scale pool",
+			vmName:   "3957k8s031",
+		},
+	}
+
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			ret := c.sc.vmInVMASAgentPool(c.vmName, tags)
+			if ret != c.expected {
+				t.Errorf("expected %t to be %t", ret, c.expected)
 			}
 		})
 	}
