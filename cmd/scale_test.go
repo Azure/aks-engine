@@ -152,7 +152,7 @@ func TestVmInVMASAgentPool(t *testing.T) {
 				agentPoolIndex:   0,
 				agentPoolToScale: "linuxpool",
 				agentPool: &api.AgentPoolProfile{
-					Name:                "linuxpool2",
+					Name:                "linuxpool",
 					OSType:              "Linux",
 					AvailabilityProfile: "AvailabilitySet",
 				},
@@ -192,7 +192,7 @@ func TestVmInVMASAgentPool(t *testing.T) {
 				agentPoolIndex:   2,
 				agentPoolToScale: "windowspool",
 				agentPool: &api.AgentPoolProfile{
-					Name:                "windowspool2",
+					Name:                "windowspool",
 					OSType:              "Windows",
 					AvailabilityProfile: "AvailabilitySet",
 				},
