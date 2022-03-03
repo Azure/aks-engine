@@ -4720,6 +4720,27 @@ func TestValidateLocation(t *testing.T) {
 			expectedErr: errors.New("missing ContainerService Location"),
 		},
 		{
+			name:          "AzureStack UseCloudControllerManager is false",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, true),
+						KubernetesConfig: &KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(falseVal),
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("useCloudControllerManager should be set to true for Kubernetes v1.21+ clusters on Azure Stack Hub"),
+		},
+		{
 			name:          "AzureStack UseInstanceMetadata is true",
 			location:      "local",
 			propertiesnil: false,
@@ -4733,7 +4754,8 @@ func TestValidateLocation(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, true),
 						KubernetesConfig: &KubernetesConfig{
-							UseInstanceMetadata: to.BoolPtr(trueVal),
+							UseCloudControllerManager: to.BoolPtr(trueVal),
+							UseInstanceMetadata:       to.BoolPtr(trueVal),
 						},
 					},
 				},
@@ -4754,7 +4776,8 @@ func TestValidateLocation(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, true),
 						KubernetesConfig: &KubernetesConfig{
-							EtcdDiskSizeGB: "1024",
+							UseCloudControllerManager: to.BoolPtr(trueVal),
+							EtcdDiskSizeGB:            "1024",
 						},
 					},
 				},
@@ -4775,7 +4798,8 @@ func TestValidateLocation(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, true),
 						KubernetesConfig: &KubernetesConfig{
-							EtcdDiskSizeGB: "1024GB",
+							UseCloudControllerManager: to.BoolPtr(trueVal),
+							EtcdDiskSizeGB:            "1024GB",
 						},
 					},
 				},

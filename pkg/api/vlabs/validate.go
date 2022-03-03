@@ -300,6 +300,10 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 			}
 
 			if a.IsAzureStackCloud() {
+				if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.21.0") && !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
+					return errors.New("useCloudControllerManager should be set to true for Kubernetes v1.21+ clusters on Azure Stack Hub")
+				}
+
 				if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {
 					return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
 				}
@@ -809,7 +813,7 @@ func (a *Properties) validateAddons(isUpdate bool) error {
 				// Validation for addons if they are disabled
 				switch addon.Name {
 				case "cloud-node-manager":
-					if a.ShouldEnableAzureCloudAddon(addon.Name) {
+					if a.ShouldEnableAzureCloudAddon(addon.Name) && !a.IsAzureStackCloud() {
 						minVersion := "1.16.0"
 						if a.HasWindows() {
 							minVersion = "1.18.0"

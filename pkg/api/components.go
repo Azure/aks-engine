@@ -147,6 +147,16 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Ensure cloud-controller-manager is enabled on appropriate upgrades for Azure Stack cloud
+	if isUpgrade &&
+		cs.Properties.IsAzureStackCloud() &&
+		to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+		// Force enabling cloud-controller-manager
+		if i := GetComponentsIndexByName(kubernetesConfig.Components, common.CloudControllerManagerComponentName); i > -1 {
+			kubernetesConfig.Components[i] = defaultCloudControllerManagerComponentConfig
+		}
+	}
+
 	for _, component := range defaultComponents {
 		synthesizeComponentsConfig(kubernetesConfig.Components, component, isUpgrade)
 	}
