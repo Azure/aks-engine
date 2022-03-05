@@ -10,12 +10,11 @@
 - resumeClusterAutoscaler nil dereference in rotate-certs ([#4812](https://github.com/Azure/aks-engine/issues/4812))
 
 ### Documentation 📘
+- Update AKS-Engine project status to deprecated ([#4821](https://github.com/Azure/aks-engine/issues/4821))
 - Update quickstart.md ([#4531](https://github.com/Azure/aks-engine/issues/4531))
 - add linuxProfile section to Azure Stack Hub doc page ([#4833](https://github.com/Azure/aks-engine/issues/4833))
 - add missing links ([#4832](https://github.com/Azure/aks-engine/issues/4832))
 - Adding current status updates ([#4828](https://github.com/Azure/aks-engine/issues/4828))
-- Update AKS-Engine project status to deprecated ([#4821](https://github.com/Azure/aks-engine/issues/4821))
-- Azure Stack doc update for v0.67.3 ([#4803](https://github.com/Azure/aks-engine/issues/4803))
 
 ### Features 🌈
 - Adding Windows VHDs with Feb 2022 security updates ([#4852](https://github.com/Azure/aks-engine/issues/4852))
@@ -24,11 +23,6 @@
 - add support for Kubernetes v1.22.7 ([#4838](https://github.com/Azure/aks-engine/issues/4838))
 - add support for Kubernetes v1.20.15 ([#4837](https://github.com/Azure/aks-engine/issues/4837))
 - add support for Kubernetes v1.24.0-alpha.3 ([#4834](https://github.com/Azure/aks-engine/issues/4834))
-- add support for Kubernetes v1.24.0-alpha.2 ([#4825](https://github.com/Azure/aks-engine/issues/4825))
-- add support for Kubernetes v1.23.3 ([#4820](https://github.com/Azure/aks-engine/issues/4820))
-- add support for Kubernetes v1.22.6 ([#4816](https://github.com/Azure/aks-engine/issues/4816))
-- add support for Kubernetes v1.23.2 ([#4815](https://github.com/Azure/aks-engine/issues/4815))
-- add support for Kubernetes v1.21.9 ([#4814](https://github.com/Azure/aks-engine/issues/4814))
 - Add 1.24 support ([#4813](https://github.com/Azure/aks-engine/issues/4813))
 
 ### Maintenance 🔧
