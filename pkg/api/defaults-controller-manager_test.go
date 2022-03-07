@@ -99,6 +99,17 @@ func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
 			cm["--feature-gates"])
 	}
 
+	// test 1.24.0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.24.0"
+	cs.setControllerManagerConfig()
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	expected := "LegacyServiceAccountTokenNoAutoGeneration=false,LocalStorageCapacityIsolation=true"
+	if cm["--feature-gates"] != expected {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value, expected %s, got %s",
+			expected, cm["--feature-gates"])
+	}
+
 	// test user-overrides
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig

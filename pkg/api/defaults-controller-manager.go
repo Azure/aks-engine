@@ -87,6 +87,10 @@ func (cs *ContainerService) setControllerManagerConfig() {
 		addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.9.0", "ServiceNodeExclusion=true")
 	}
 
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.24.0-alpha.4") {
+		addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.9.0", "LegacyServiceAccountTokenNoAutoGeneration=false")
+	}
+
 	// Enable the consumption of local ephemeral storage and also the sizeLimit property of an emptyDir volume.
 	addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.10.0", "LocalStorageCapacityIsolation=true")
 
