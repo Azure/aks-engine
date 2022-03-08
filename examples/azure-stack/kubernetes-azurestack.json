@@ -3,8 +3,8 @@
     "location": "",
     "properties": {
         "orchestratorProfile": {
-            "orchestratorRelease": "1.19",
-            "orchestratorVersion": "1.19.15",
+            "orchestratorRelease": "1.21",
+            "orchestratorVersion": "1.21.10",
             "kubernetesConfig": {
                 "cloudProviderBackoff": true,
                 "cloudProviderBackoffRetries": 1,
@@ -14,6 +14,7 @@
                 "cloudProviderRateLimitBucket": 150,
                 "cloudProviderRateLimitQPSWrite": 25,
                 "cloudProviderRateLimitBucketWrite": 30,
+                "useCloudControllerManager": true,
                 "useInstanceMetadata": false,
                 "networkPlugin": "kubenet",
                 "kubeletConfig": {
