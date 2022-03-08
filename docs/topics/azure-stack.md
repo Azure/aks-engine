@@ -340,9 +340,9 @@ The list below includes the addons currently unsupported on Azure Stack Hub:
 * KeyVault Flex Volume
 * SMB Flex Volume
 
-### Unable to enable addons in the API Model
+### OSProfile exceeds maximum characters length error
 
-Addons enabled in the API Model are encoded in Base64 and included in the custom data sent to VMs. There is a length limit of 87380 characters for the custom data, thus if too many addons are enabled in the API Model, the `aks-engine` operations could fail with the below error:
+Addons enabled in the API Model are Base64 encoded and included in the VMs ARM template. There is a length limit of 87380 characters for the custom data, thus if too many addons are enabled in the API Model, the `aks-engine` operations could fail with the below error:
 ```
 Custom data in OSProfile must be in Base64 encoding and with a maximum length of 87380 characters
 ```
