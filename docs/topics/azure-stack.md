@@ -156,7 +156,7 @@ Make sure `linuxProfile.runUnattendedUpgradesOnBootstrap` is set to `"false"` wh
 | [v0.67.3](https://github.com/Azure/aks-engine/releases/tag/v0.67.3)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q3 (2021.09.27)](https://github.com/Azure/aks-engine/blob/v0.67.3/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.09.27.txt), [AKS Base Windows Image (17763.2213.210927)](https://github.com/Azure/aks-engine/blob/v0.67.3/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2213.210927.txt)  | 1.19.15, 1.20.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.69.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.69.0/examples/azure-stack/kubernetes-windows.json)) |
 | [v0.69.0](https://github.com/Azure/aks-engine/releases/tag/v0.69.0)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2022 Q1 (2022.02.24)](https://github.com/Azure/aks-engine/blob/v0.69.0/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202112_2022.02.24.txt), [AKS Base Windows Image (17763.2565.220301)](https://github.com/Azure/aks-engine/blob/v0.69.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2565.220301.txt)  | 1.21.10*, 1.22.7* | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-windows.json)) |
 
-** Starting from Kubernetes v1.21, **ONLY** the "out-of-tree" cloud provider for Azure is supported on Azure Stack Hub. Please refer to the section [*Cloud Provider for Azure*](#cloud-provider-for-azure) for more details.
+>\* Starting from Kubernetes v1.21, **ONLY** the `out-of-tree` cloud provider for Azure is supported on Azure Stack Hub. Please refer to the section [*Cloud Provider for Azure*](#cloud-provider-for-azure) for more details.
 
 ## Azure Monitor for containers
 
@@ -167,12 +167,14 @@ Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Az
 Cloud Provider for Azure is the Azure implementation of Kubernetes cloud provider [interface](https://github.com/kubernetes/cloud-provider). Since the in-tree cloud provider has been deprecated in Kubernetes and only the bug fixes were allowed in the [Kubernetes repository directory](https://github.com/kubernetes/kubernetes/tree/master/staging/src/k8s.io/legacy-cloud-providers/azure). 
 
 On Azure Stack Hub, in-tree cloud provider for Azure is **no longer** supported for Kubernetes v1.21+, and users should **always** use the cloud-controller-manager implementation of the Azure cloud provider.
+
 ### Use the cloud-controller-manager implementation of the Azure cloud provider
 
-Also referred to as "out-of-tree", cloud-provider-azure code development is carried out in its own [code repository](https://github.com/kubernetes-sigs/cloud-provider-azure/releases), according to a separate release velocity than upstream Kubernetes. The cloud-controller-manager implementation of cloud-provider-azure produces many runtime optimizations that optimize cluster behavior for running at scale.
+Also referred to as `out-of-tree`, cloud-provider-azure code development is carried out in its own [code repository](https://github.com/kubernetes-sigs/cloud-provider-azure/releases), according to a separate release velocity than upstream Kubernetes. The cloud-controller-manager implementation of cloud-provider-azure produces many runtime optimizations that optimize cluster behavior for running at scale.
 
-To use cloud-controller-manager, set `orchestratorProfile.kubernetesConfig.useCloudControllerManager` to `true` in the api model:
-```
+To use cloud-controller-manager, set `orchestratorProfile.kubernetesConfig.useCloudControllerManager` to `true` in the API Model:
+
+```json
 {
   "apiVersion": "vlabs",
   "properties": {
@@ -195,7 +197,7 @@ The AzureDisk volume plugin that works with in-tree cloud provider are not suppo
 
 ### Upgrade from Kubernetes v1.20 to v1.21 on Azure Stack Hub
 
-On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by default, and cluster with v1.21 only support out-of-tree cloud provider. Follow the steps below as a guidance of upgrade:
+On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by default, and cluster with v1.21 only support `out-of-tree` cloud provider. Follow the steps below as a guidance of upgrade:
 
 * Uninstall AzureDisk CSI driver on the cluster if previously installed (optional)
 * Delete all existing storage class resources from provisioner "kubernetes.io/azure-disk"
@@ -337,6 +339,14 @@ The list below includes the addons currently unsupported on Azure Stack Hub:
 * Cluster Autoscaler
 * KeyVault Flex Volume
 * SMB Flex Volume
+
+### Unable to enable addons in the API Model
+
+Addons enabled in the API Model are encoded in Base64 and included in the custom data sent to VMs. There is a length limit of 87380 characters for the custom data, thus if too many addons are enabled in the API Model, the `aks-engine` operations could fail with the below error:
+```
+Custom data in OSProfile must be in Base64 encoding and with a maximum length of 87380 characters
+```
+In such cases, try reduce the number of enabled addons or remove all of them in the API Model.
 
 ### Limited Number of Frontend Public IPs
 
