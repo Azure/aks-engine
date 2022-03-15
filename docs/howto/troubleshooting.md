@@ -170,7 +170,8 @@ See this [document](../topics/azure-api-throttling.md) for help with troubleshoo
 
 ## Avoid bridge mode problems by using transparent networking
 
-AKS Engine clusters before v0.58.0 or any version with an API model not using "transparent" Kubernetes networking mode may become unavailable if a control plan node becomes `NotReady`. Rebooting the node should recreate a working network configuration, but the problem can be prevented by re-launching clusters using transparent networking instead of bridge mode.
+AKS Engine clusters before v0.58.0 or any version with an API model not using "transparent" Kubernetes networking mode may become unavailable if a control plane node becomes `NotReady`. Rebooting the node should recreate a working network configuration, but the problem can be avoided by provisioning clusters using transparent networking instead of bridge mode.
+
 
 If your API model does not say "networkMode": "transparent", redeploy the cluster with a current version of AKS Engine using a new cluster template. See [#4595](https://github.com/Azure/aks-engine/issues/4595#issuecomment-885082542) for details.
 
