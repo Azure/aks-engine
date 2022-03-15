@@ -926,6 +926,16 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Ensure cloud-node-manager is enabled on appropriate upgrades for Azure Stack cloud
+	if isUpgrade &&
+		cs.Properties.IsAzureStackCloud() &&
+		to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+		// Force enabling cloud-node-manager addon
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.CloudNodeManagerAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i] = defaultCloudNodeManagerAddonsConfig
+		}
+	}
+
 	// Back-compat for older addon specs of cluster-autoscaler
 	if isUpgrade {
 		i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.ClusterAutoscalerAddonName)

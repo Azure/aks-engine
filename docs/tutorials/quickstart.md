@@ -105,7 +105,8 @@ azuredeploy.json		ca.key				etcdclient.key			etcdserver.key
 Access the new cluster by using the kubeconfig generated for the cluster's location. This example used `westus2`, so the kubeconfig is located at `_output/contoso-apple-5f776b0d/kubeconfig/kubeconfig.westus2.json`:
 
 ```sh
-$ KUBECONFIG=_output/contoso-apple-5f776b0d/kubeconfig/kubeconfig.westus2.json kubectl cluster-info
+$ export KUBECONFIG=_output/contoso-apple-5f776b0d/kubeconfig/kubeconfig.westus2.json 
+$ kubectl cluster-info
 Kubernetes master is running at https://contoso-apple-5f776b0d.westus2.cloudapp.azure.com
 CoreDNS is running at https://contoso-apple-5f776b0d.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 Metrics-server is running at https://contoso-apple-5f776b0d.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
@@ -215,6 +216,7 @@ export KUBECONFIG=_output/contoso-apple-5eac6ed8/kubeconfig/kubeconfig.westus2.j
 
 Now you're ready to start using your Kubernetes cluster with `kubectl`!
 
+[addpool]: ../topics/addpool.md
 [azure]: https://azure.microsoft.com/
 [choco]: https://chocolatey.org/
 [choco-install]: https://chocolatey.org/install
@@ -228,4 +230,5 @@ Now you're ready to start using your Kubernetes cluster with `kubectl`!
 [scoop]: https://scoop.sh/
 [scoop-install]: https://github.com/lukesampson/scoop#installation
 [sp]: ../topics/service-principals.md
+[update]: ../topics/update.md
 [upgrade]: ../topics/upgrade.md

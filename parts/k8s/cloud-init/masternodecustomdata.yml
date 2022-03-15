@@ -113,6 +113,13 @@ write_files:
     {{CloudInitData "kubeletMonitorSystemdService"}}
 {{- end}}
 
+- path: /etc/systemd/system/apiserver-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "apiserverMonitorSystemdService"}}
+
 - path: /etc/systemd/system/etcd-monitor.service
   permissions: "0644"
   encoding: gzip

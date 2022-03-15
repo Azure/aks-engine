@@ -6,7 +6,9 @@
 
 ## Project status
 
-This project is stable, meaning the pace of new features is intentionally low. AKS Engine is maintained by teams who depend on it including [AKS Engine on Azure Stack Hub](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-kubernetes-aks-engine-overview).
+This project is deprecated for Azure public cloud customers. Please consider using [Azure Kubernetes Service (AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/#overview) for managed Kubernetes or [Cluster API Provider Azure](https://github.com/kubernetes-sigs/cluster-api-provider-azure) for self-managed Kubernetes. There are no new features planned; this project will only be updated for CVEs & similar, with Kubernetes 1.24 as the final version to receive updates.
+
+For use on [Azure Stack Hub product](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-kubernetes-aks-engine-overview) this project is fully supported until [AKS on Azure Stack Hub](https://docs.microsoft.com/en-us/azure-stack/user/aks-overview) reaches General Availability at which time it will be deprecated. AKS on Azure Stack Hub is in Public Preview as of December 2021; we encourage customers to test it.
 
 ## Overview
 
@@ -24,7 +26,9 @@ Please see the [FAQ][] for answers about AKS Engine and its progenitor ACS-Engin
 
 ## Join the community
 
-If you are committed to using AKS Engine longer term and would like to become a project maintainer, please reach out to us via the [#aks-engine-dev Slack channel](https://kubernetes.slack.com/archives/CU1CXUHN0)! The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute. The [developer guide][developer-guide] will help you onboard as a developer. The AKS Engine community is committed to integrating and validating new versions of Kubernetes into AKS Engine. We encourage AKS Engine users to evaluate moving to CAPZ as it provides stronger support for managing the cluster lifecycle compared to AKS Engine.
+We encourage AKS Engine users to evaluate moving to AKS or to CAPZ, per the [project status](#project-status).
+
+For existing users of AKS Engine, the [community guide][community] and [developer guide][developer-guide] are available, as is the [#aks-engine-dev Slack channel](https://kubernetes.slack.com/archives/CU1CXUHN0).
 
 ## Support
 

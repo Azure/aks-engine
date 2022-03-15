@@ -6,6 +6,7 @@
             "kubernetesConfig": {
                 "kubernetesImageBase": "k8s.gcr.io/",
                 "useInstanceMetadata": false,
+                "useCloudControllerManager":  true,
                 "networkPolicy": "none"
             }
         },

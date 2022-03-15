@@ -191,6 +191,10 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 			// if upgrade, force default "--pod-infra-container-image" value
 			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--pod-infra-container-image"] = o.KubernetesConfig.KubeletConfig["--pod-infra-container-image"]
 		}
+		//Ensure cloud-provider setting
+		if to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--cloud-provider"] = "external"
+		}
 		setMissingKubeletValues(cs.Properties.MasterProfile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
 		addDefaultFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "", "")
 
@@ -312,6 +316,23 @@ func removeKubeletFlags(k map[string]string, v string) {
 	// Get rid of values not supported in v1.15 and up
 	if common.IsKubernetesVersionGe(v, "1.15.0-beta.1") {
 		for _, key := range []string{"--allow-privileged"} {
+			delete(k, key)
+		}
+	}
+
+	// Remove dockershim related flags in v1.24 and up
+	if common.IsKubernetesVersionGe(v, "1.24.0-alpha") {
+		for _, key := range []string{
+			"--cni-conf-dir",
+			"--cni-bin-dir",
+			"--cni-cache-dir",
+			"--docker-endpoint",
+			"--experimental-dockershim-root-directory",
+			"--image-pull-progress-deadline",
+			"--network-plugin",
+			"--network-plugin-mtu",
+			"--non-masquerade-cidr",
+		} {
 			delete(k, key)
 		}
 	}

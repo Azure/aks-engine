@@ -79,7 +79,6 @@ type rotateCertsCmd struct {
 	newCertsProfile   *api.CertificateProfile
 	kubeClient        *kubernetes.CompositeClientSet
 	armClient         *ops.ARMClientWrapper
-	saTokenNamespaces []string
 	nodes             nodeMap
 	generateCerts     bool
 	linuxAuthConfig   *ssh.AuthConfig
@@ -216,7 +215,6 @@ func (rcc *rotateCertsCmd) loadAPIModel() (err error) {
 }
 
 func (rcc *rotateCertsCmd) init() (err error) {
-	rcc.saTokenNamespaces = rcc.getNamespacesWithSATokensToRotate()
 	rcc.backupDirectory = path.Join(filepath.Dir(rcc.apiModelPath), "_rotate_certs_backup")
 
 	rcc.linuxAuthConfig = &ssh.AuthConfig{
@@ -255,11 +253,13 @@ func (rcc *rotateCertsCmd) run() (err error) {
 	if !rcc.force {
 		var resumeClusterAutoscaler func() error
 		resumeClusterAutoscaler, err = ops.PauseClusterAutoscaler(rcc.kubeClient)
-		defer func() {
-			if e := resumeClusterAutoscaler(); e != nil {
-				log.Warn(e)
-			}
-		}()
+		if resumeClusterAutoscaler != nil {
+			defer func() {
+				if e := resumeClusterAutoscaler(); e != nil {
+					log.Warn(e)
+				}
+			}()
+		}
 		if err != nil {
 			return err
 		}
@@ -449,7 +449,7 @@ func (rcc *rotateCertsCmd) rotateAgentCerts() (err error) {
 		return err
 	}
 	log.Info("Recreating service account tokens")
-	if err = ops.RotateServiceAccountTokens(rcc.kubeClient, rcc.saTokenNamespaces); err != nil {
+	if err = ops.RotateServiceAccountTokens(rcc.kubeClient); err != nil {
 		return err
 	}
 	if err = rcc.waitForKubeSystemReadiness(); err != nil {
@@ -767,25 +767,6 @@ func isMaster(node *ssh.RemoteHost) bool {
 func isLinux(node *ssh.RemoteHost) bool        { return node.OperatingSystem == api.Linux }
 func isWindowsAgent(node *ssh.RemoteHost) bool { return node.OperatingSystem == api.Windows }
 func isLinuxAgent(node *ssh.RemoteHost) bool   { return isLinux(node) && !isMaster(node) }
-
-func (rcc *rotateCertsCmd) getNamespacesWithSATokensToRotate() []string {
-	// TODO parametize addons namespace so hard-coding their names is not required.
-	// TODO maybe add an extra cli param so user can add extra namespaces
-	namespaces := []string{metav1.NamespaceSystem}
-	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.DashboardAddonName) {
-		namespaces = append(namespaces, "kubernetes-dashboard")
-	}
-	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzureArcOnboardingAddonName) {
-		namespaces = append(namespaces, "azure-arc")
-	}
-	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzurePolicyAddonName) {
-		namespaces = append(namespaces, "gatekeeper-system")
-	}
-	if rcc.cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ScheduledMaintenanceAddonName) {
-		namespaces = append(namespaces, "drainsafe-system")
-	}
-	return namespaces
-}
 
 func keys(nodes nodeMap) []string {
 	n := make([]string, 0)

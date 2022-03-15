@@ -147,6 +147,16 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Ensure cloud-controller-manager is enabled on appropriate upgrades for Azure Stack cloud
+	if isUpgrade &&
+		cs.Properties.IsAzureStackCloud() &&
+		to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+		// Force enabling cloud-controller-manager
+		if i := GetComponentsIndexByName(kubernetesConfig.Components, common.CloudControllerManagerComponentName); i > -1 {
+			kubernetesConfig.Components[i] = defaultCloudControllerManagerComponentConfig
+		}
+	}
+
 	for _, component := range defaultComponents {
 		synthesizeComponentsConfig(kubernetesConfig.Components, component, isUpgrade)
 	}
@@ -270,7 +280,8 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	k8sComponents := GetK8sComponentsByVersionMap(kubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 	hyperkubeImageBase := kubernetesImageBase
 	hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
-	if cs.Properties.IsAzureStackCloud() {
+	// For Azure Stack Hub clusters, no custom hyperkubeImage with "-azs" will be used for Kubernetes 1.21+
+	if cs.Properties.IsAzureStackCloud() && !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
 		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 	}
 	controllerManagerBase := kubernetesImageBase

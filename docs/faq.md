@@ -2,6 +2,10 @@
 
 This page provides help with the most common questions about AKS Engine.
 
+### Is AKS Engine currently maintained?
+
+See the [AKS Engine project status][project-status] for updates on the maintenance of AKS Engine.
+
 ### What's the Difference Between AKS and AKS Engine?
 
 Azure Kubernetes Service ([AKS][]) is a Microsoft Azure service that supports fully managed Kubernetes clusters. [AKS Engine][] is an Azure open source project that allows you to create your own Kubernetes clusters with lots of user-configurable options, but with no official Azure support.
@@ -35,3 +39,4 @@ Yes. `aks-engine` released [v0.27.0][] as a continuation of the ACS-Engine proje
 [Kubernetes]: https://kubernetes.io/
 [v0.27.0]: https://github.com/Azure/aks-engine/releases/tag/v0.27.0
 [v0.26.2]: https://github.com/Azure/acs-engine/releases/tag/v0.26.2
+[project-status]: https://github.com/Azure/aks-engine/#project-status

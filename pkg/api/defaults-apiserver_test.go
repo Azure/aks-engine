@@ -495,6 +495,65 @@ func TestAPIServerFeatureGates(t *testing.T) {
 	}
 }
 
+func TestAPIServerInsecureFlag(t *testing.T) {
+	type apiServerTest struct {
+		version string
+		found   bool
+	}
+
+	apiTests := []apiServerTest{
+		{
+			version: "1.19.16",
+			found:   true,
+		},
+		{
+			version: "1.20.0",
+			found:   false,
+		},
+		{
+			version: "1.21.0",
+			found:   false,
+		},
+		{
+			version: "1.22.0",
+			found:   false,
+		},
+		{
+			version: "1.23.0",
+			found:   false,
+		},
+		{
+			version: "1.24.0",
+			found:   false,
+		},
+		{
+			version: "1.24.0-alpha.0",
+			found:   false,
+		},
+		{
+			version: "1.24.0-alpha.1-24",
+			found:   false,
+		},
+	}
+
+	for _, tt := range apiTests {
+		cs := CreateMockContainerService("testcluster", tt.version, 3, 2, false)
+		cs.setAPIServerConfig()
+		a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+
+		v, found := a["--insecure-port"]
+		if found != tt.found {
+			t.Fatalf("got found %t want %t", found, tt.found)
+		}
+
+		if tt.found && v != "0" {
+			t.Fatalf("got unexpected '--insecure-port' API server config value for k8s v%s: %s",
+				defaultTestClusterVer, a["--insecure-port"])
+		}
+	}
+
+}
+
 func TestAPIServerIPv6Only(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}

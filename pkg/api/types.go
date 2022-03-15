@@ -1088,6 +1088,15 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
+func (p *Properties) HasAgentPoolAvailabilityZones() bool {
+	for _, pool := range p.AgentPoolProfiles {
+		if pool.AvailabilityZones != nil {
+			return true
+		}
+	}
+	return false
+}
+
 // HasNonRegularPriorityScaleset returns true if any one node pool has a low or spot priority scaleset configuration
 func (p *Properties) HasNonRegularPriorityScaleset() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
@@ -1221,6 +1230,10 @@ func (p *Properties) NeedsAuditdRules() bool {
 func (p *Properties) ShouldEnableAzureCloudAddon(addonName string) bool {
 	o := p.OrchestratorProfile
 	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
+		return false
+	}
+	// For Azure Stack Hub clusters, azuredisk-csi driver will not be enabled by default when cloud-controller-manager is enabled due to custom data oversize
+	if addonName == common.AzureDiskCSIDriverAddonName && p.IsAzureStackCloud() {
 		return false
 	}
 	if !p.HasWindows() {

@@ -80,7 +80,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			// will be removed in future release as if gets phased out (https://github.com/Azure/aks-engine/issues/3851)
 			kubeBinariesSASURL := kubernetesConfig.CustomWindowsPackageURL
 			if kubeBinariesSASURL == "" {
-				if properties.IsAzureStackCloud() {
+				if properties.IsAzureStackCloud() && !common.IsKubernetesVersionGe(properties.OrchestratorProfile.OrchestratorVersion, "1.21.0") {
 					kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents[common.WindowsArtifactAzureStackComponentName]
 				} else {
 					kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents[common.WindowsArtifactComponentName]

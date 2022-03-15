@@ -916,7 +916,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 
 			By("Ensuring that we have stable and responsive DNS resolution")
-			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, cfg.Timeout)
+			p, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "dns-loop.yaml"), "dns-loop", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -933,9 +933,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 		})
 
 		It("should be able to create and connect to a hostPort-configured pod", func() {
@@ -980,7 +980,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to launch a long-running container networking DNS liveness pod", func() {
-			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
+			p, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			running, err := p.WaitOnReady(true, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -988,7 +988,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to restart a pod due to an exec livenessProbe failure", func() {
-			_, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness.yaml"), "exec-liveness", "default", 1*time.Second, 2*time.Minute)
+			_, err := pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness.yaml"), "exec-liveness", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err := pod.Get("exec-liveness", "default", podLookupRetries)
@@ -998,7 +998,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			p.Describe()
 			Expect(restarts > 0).To(BeTrue())
 			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
-			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-assume-1-second-default-timeout.yaml"), "exec-liveness-assume-1-second-default-timeout", "default", 1*time.Second, 2*time.Minute)
+			_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-assume-1-second-default-timeout.yaml"), "exec-liveness-assume-1-second-default-timeout", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-assume-1-second-default-timeout", "default", podLookupRetries)
@@ -1014,7 +1014,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(restarts > 0).To(BeTrue())
 			}
 			Expect(p.Delete(util.DefaultDeleteRetries)).To(Succeed())
-			_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 2*time.Minute)
+			_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-always-fail.yaml"), "exec-liveness-always-fail", "default", 1*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
 			time.Sleep(30 * time.Second) // Wait for probe to take effect
 			p, err = pod.Get("exec-liveness-always-fail", "default", podLookupRetries)
@@ -1027,7 +1027,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// exec probe timeout is broken entirely for containerd prior to 1.20, and/or if ExecProbeTimeout=false, so we can't test it
 			if !(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() &&
 				(!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.20.0") || strings.Contains(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--feature-gates"], "ExecProbeTimeout=false"))) {
-				_, err = pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 2*time.Minute)
+				_, err = pod.CreatePodFromFileIfNotExistWithRetry(filepath.Join(WorkloadDir, "exec-liveness-timeout-always-fail.yaml"), "exec-liveness-timeout-always-fail", "default", 1*time.Second, 1*time.Minute)
 				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(30 * time.Second) // Wait for probe to take effect
 				p, err = pod.Get("exec-liveness-timeout-always-fail", "default", podLookupRetries)
@@ -1065,9 +1065,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 
 			// Use curl to test responsive DNS lookup + TCP 443 connectivity
 			name = fmt.Sprintf("alpine-%s", cfg.Name)
@@ -1078,9 +1078,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 		})
 
 		It("should have stable internal container networking as we recycle a bunch of pods", func() {
@@ -1092,9 +1092,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 		})
 
 		It("should have stable pod-to-pod networking", func() {
@@ -1127,9 +1127,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 				// Ensure responsiveness
-				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "busybox", consumerPodName, commandString, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "busybox", consumerPodName, commandString, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).To(Equal(cfg.StabilityIterations))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 			} else {
 				Skip("Pod-to-pod network tests only valid on Linux clusters")
 			}
@@ -1382,7 +1382,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				sc, err := storageclass.Get(azureDiskStorageClass)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(sc.Provisioner).To(Equal(azureDiskProvisioner))
-				if isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasAvailabilityZones() {
+				if isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasAgentPoolAvailabilityZones() {
 					Expect(sc.VolumeBindingMode).To(Equal("WaitForFirstConsumer"))
 					Expect(len(sc.AllowedTopologies)).To(Equal(1))
 					Expect(len(sc.AllowedTopologies[0].MatchLabelExpressions)).To(Equal(1))
@@ -2297,23 +2297,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Connecting to Windows from another Windows deployment")
 				name := fmt.Sprintf("windows-2-windows-%s", cfg.Name)
 				command := fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", windowsService.Metadata.Name)
-				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout)
+				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).To(Equal(cfg.StabilityIterations))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 
 				By("Connecting to Linux from Windows deployment")
 				name = fmt.Sprintf("windows-2-linux-%s", cfg.Name)
 				command = fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", linuxService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).To(Equal(cfg.StabilityIterations))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 
 				By("Connecting to Windows from Linux deployment")
 				name = fmt.Sprintf("linux-2-windows-%s", cfg.Name)
 				command = fmt.Sprintf("wget %s", windowsService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).To(Equal(cfg.StabilityIterations))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
 
 				By("Cleaning up after ourselves")
 				err = windowsIISDeployment.Delete(util.DefaultDeleteRetries)
@@ -2527,36 +2527,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
 			}
-		})
-
-		// verifies that the pod logs continue to flow even during rotation
-		// https://github.com/Azure/aks-engine/issues/3573
-		It("should be able to rotate docker logs", func() {
-			if !eng.HasWindowsAgents() {
-				Skip("No windows agent was provisioned for this Cluster Definition")
-			}
-
-			if !eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
-				Skip("Skip docker validations on non-docker-backed clusters")
-			}
-
-			windowsImages, err := eng.GetWindowsTestImages()
-			loggingPodFile, err := pod.ReplaceContainerImageFromFile(filepath.Join(WorkloadDir, "validate-windows-logging.yaml"), windowsImages.ServerCore)
-			Expect(err).NotTo(HaveOccurred())
-			defer os.Remove(loggingPodFile)
-
-			By("launching a pod that logs too much")
-			podName := "validate-windows-logging" // should be the same as in iis-azurefile.yaml
-			loggingPod, err := pod.CreatePodFromFileWithRetry(loggingPodFile, podName, "default", 1*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			ready, err := loggingPod.WaitOnReady(false, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ready).To(Equal(true))
-
-			By("validating the logs continue to flow")
-			logsRotated, err := loggingPod.ValidateLogsRotate(20*time.Second, 2*time.Minute)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(logsRotated).To(Equal(true))
 		})
 
 		// metrics endpoints failing in 1.18+
@@ -2832,6 +2802,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				labels := n.Metadata.Labels
 				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
+				Expect(labels).To(HaveKeyWithValue(fmt.Sprintf("node-role.kubernetes.io/%s", role), ""))
 				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
 				if role == "master" && common.IsKubernetesVersionGe(
 					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.1") {
@@ -2851,11 +2822,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					case "master":
 						instanceType = eng.ExpandedDefinition.Properties.MasterProfile.VMSize
 					case "agent":
-						osType := api.Linux
-						if n.IsWindows() {
-							osType = api.Windows
-						}
-						instanceType = util.GetAgentVMSize(eng.ExpandedDefinition.Properties.AgentPoolProfiles, osType)
+						instanceType = util.GetAgentVMSize(eng.ExpandedDefinition.Properties.AgentPoolProfiles, n.Metadata.Name, n.Status.NodeInfo.OperatingSystem)
 					}
 					Expect(labels).To(HaveKeyWithValue("beta.kubernetes.io/instance-type", instanceType))
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/instance-type", instanceType))

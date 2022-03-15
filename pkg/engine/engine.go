@@ -595,14 +595,24 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"HasAvailabilityZones": func() bool {
 			return cs.Properties.HasAvailabilityZones()
 		},
-		"GetZones": func() string {
+		"HasAgentPoolAvailabilityZones": func() bool {
+			return cs.Properties.HasAgentPoolAvailabilityZones()
+		},
+		"GetAgentPoolZones": func() string {
 			if len(cs.Properties.AgentPoolProfiles) == 0 {
 				return ""
 			}
 
 			var zones string
-			for _, zone := range cs.Properties.AgentPoolProfiles[0].AvailabilityZones {
-				zones += fmt.Sprintf("\n    - %s-%s", cs.Location, zone)
+			for _, pool := range cs.Properties.AgentPoolProfiles {
+				if pool.AvailabilityZones != nil {
+					for _, zone := range pool.AvailabilityZones {
+						zones += fmt.Sprintf("\n    - %s-%s", cs.Location, zone)
+					}
+				}
+				if zones != "" {
+					return zones
+				}
 			}
 			return zones
 		},
@@ -644,6 +654,30 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		},
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
+		},
+		"GetCRDAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "apiextensions.k8s.io/v1"
+			}
+			return "apiextensions.k8s.io/v1beta1"
+		},
+		"GetRBACAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "rbac.authorization.k8s.io/v1"
+			}
+			return "rbac.authorization.k8s.io/v1beta1"
+		},
+		"GetStorageAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "storage.k8s.io/v1"
+			}
+			return "storage.k8s.io/v1beta1"
+		},
+		"GetWebhookAPIVersion": func() string {
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.22.0") {
+				return "admissionregistration.k8s.io/v1"
+			}
+			return "admissionregistration.k8s.io/v1beta1"
 		},
 	}
 }

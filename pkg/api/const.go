@@ -31,7 +31,7 @@ const (
 
 const (
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "20.10.6"
+	KubernetesWindowsDockerVersion = "20.10.9"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 	// KubernetesDefaultWindowsRuntimeHandler is the default containerd handler for windows pods
@@ -322,11 +322,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.4.14"
+	AzureCniPluginVerLinux = "v1.4.16"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.4.14"
+	AzureCniPluginVerWindows = "v1.4.16"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.9.1"
@@ -446,9 +446,9 @@ const (
 	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "20.10.7"
+	DefaultMobyVersion = "20.10.11"
 	// DefaultContainerdVersion specifies the default containerd version to install.
-	DefaultContainerdVersion = "1.4.6"
+	DefaultContainerdVersion = "1.4.11"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.
@@ -470,14 +470,14 @@ const (
 	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
 	DefaultWindowsSSHEnabled = true
 	// DefaultWindowsContainerdURL is the URL for the default containerd package on Windows
-	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.4.6+azure/windows/windows_amd64/moby-containerd-1.4.6+azure-1.amd64.zip"
+	DefaultWindowsContainerdURL = "https://mobyartifacts.azureedge.net/moby/moby-containerd/1.5.8+azure/windows/windows_amd64/moby-containerd-1.5.8+azure-1.amd64.zip"
 )
 
 // WindowsProfile defaults
 // TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
 const (
 	DefaultWindowsCsiProxyVersion                   = "v0.2.2"
-	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.15"
+	DefaultWindowsProvisioningScriptsPackageVersion = "v0.0.16"
 )
 
 const (
