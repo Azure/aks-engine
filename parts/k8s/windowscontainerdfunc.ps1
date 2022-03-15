@@ -99,8 +99,16 @@ function Select-Windows-Version {
     "18363" { return "1909" }
     "19041" { return "2004" }
     "19042" { return "20H2" }
+    "20348" { return "ltsc2022" }
     Default { return "" } 
   }
+}
+
+function Get-WindowsVersion {
+  $windowsCurrentBuild = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuild
+  $windowsVersion = Select-Windows-Version -buildNumber $windowsCurrentBuild
+
+  return $windowsVersion
 }
 
 function Enable-Logging {
@@ -160,13 +168,8 @@ function Install-Containerd {
   $formatedbin = $(($CNIBinDir).Replace("\", "/"))
   $formatedconf = $(($CNIConfDir).Replace("\", "/"))
   $sandboxIsolation = 0
-  $windowsReleaseId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
-  # Starting with 20H2 tags used to publish contianer images may not match the 'ReleaseId'
-  switch ($windowsReleaseId)
-  {
-    "2009" { $windowsVersion = "20H2"}
-    default  { $windowsVersion = $windowsReleaseId}
-  }
+  $windowsVersion = Get-WindowsVersion
+
   $hypervRuntimes = ""
   $hypervHandlers = $global:HypervRuntimeHandlers.split(",", [System.StringSplitOptions]::RemoveEmptyEntries)
 
