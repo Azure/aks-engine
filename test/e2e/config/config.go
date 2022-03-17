@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -337,7 +339,7 @@ func (c *Config) SetSSHKeyPermissions() error {
 func (c *Config) SetRandomRegion() {
 	var regions []string
 	if c.Regions == nil || len(c.Regions) == 0 {
-		regions = []string{"eastus", "uksouth", "southeastasia", "westus2", "westeurope"}
+		regions = []string{"eastus", "southeastasia", "westus2", "westeurope"}
 	} else {
 		regions = c.Regions
 	}
