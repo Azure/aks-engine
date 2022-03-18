@@ -49,13 +49,11 @@ function Get-ContainerImages {
                 "mcr.microsoft.com/windows/nanoserver:1809",
                 "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
                 "mcr.microsoft.com/oss/kubernetes/pause:3.4.1",
-                "mcr.microsoft.com/oss/kubernetes/azure-cloud-controller-manager:v1.0.8",
-                "mcr.microsoft.com/oss/kubernetes/azure-cloud-controller-manager:v1.1.4",
+                "mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v1.0.8",
+                "mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v1.1.4",
                 "mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi:v1.10.0",
                 "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v2.4.0",
-                "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.5.0",
-                "mcr.microsoft.com/oss/azure/secrets-store/provider-azure:0.0.12",
-                "mcr.microsoft.com/oss/kubernetes-csi/secrets-store/driver:v0.0.19")
+                "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.5.0")
         }
         '2004' {
             $imagesToPull = @(
