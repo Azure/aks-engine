@@ -22146,20 +22146,33 @@ try
 
         {{if IsAzureStackCloud}}
             {{if UseCloudControllerManager}}
-            # Export the Azure Stack root cert for use in cloud node manager container setup.
+            # Retrieve SSL cert of ARM Endpoint and find unique Azure Stack root cert
             $azsConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
             if (-not (Test-Path -Path $azsConfigFile)) {
-                throw "$azsConfigFile does not exist, cannot export Azure Stack root cert"
+                throw "$azsConfigFile does not exist"
             }
             $azsJson = Get-Content -Raw -Path $azsConfigFile | ConvertFrom-Json
-            if ([string]::IsNullOrEmpty($azsJson.managementPortalURL)) {
-                throw "managementPortalURL is empty, cannot get Azure Stack ARM uri"
+            if ([string]::IsNullOrEmpty($azsJson.resourceManagerEndpoint)) {
+                throw "resourceManagerEndpoint is empty, cannot get Azure Stack ARM uri"
             }
-            $azsARMUri = [System.Uri]$azsJson.managementPortalURL
-            $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.DnsNameList.Unicode -contains $azsARMUri.Host.Substring($azsARMUri.Host.IndexOf(".")).TrimStart(".")}
+            $azsARMUri = [System.Uri]$azsJson.resourceManagerEndpoint
+            $webRequest = [Net.WebRequest]::Create($azsARMUri.AbsoluteUri)
+            try { $webRequest.GetResponse() } catch {}
+            if ($null -eq $webRequest.ServicePoint.Certificate) {
+                throw "SSL Certificate of ARM endpoint is null"
+            }
+            $sslCert = $webRequest.ServicePoint.Certificate
+            $sslCertChain = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Chain
+            $sslCertChain.build($sslCert)
+            $sslRootCert = @($sslCertChain.ChainElements.Certificate)[-1]
+            $azsRootCert = Get-ChildItem -Path Cert:\LocalMachine\Root | Where-Object {$_.Thumbprint -eq $sslRootCert.Thumbprint}
             if ($null -eq $azsRootCert) {
-                throw "$azsRootCert is null, cannot export Azure Stack root cert"
+                throw "azsRootCert is null, cannot find Azure Stack root cert"
+            } elseif ($azsRootCert.Count -ne 1) {
+                throw "azsRootCert is not unique, cannot find Azure Stack root cert"
             }
+
+            # Export the Azure Stack root cert for use in cloud node manager container setup.
             $azsRootCertFilePath =  [io.path]::Combine($global:KubeDir, "azsroot.cer")
             Export-Certificate -Cert $azsRootCert -FilePath $azsRootCertFilePath -Type CERT
 
