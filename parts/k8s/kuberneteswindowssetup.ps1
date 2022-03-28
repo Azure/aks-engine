@@ -462,7 +462,7 @@ try
             $azsARMUri = [System.Uri]$azsJson.resourceManagerEndpoint
             $webRequest = [Net.WebRequest]::Create($azsARMUri.AbsoluteUri)
             try { $webRequest.GetResponse() } catch {}
-            if ($null -eq $webRequest.ServicePoint.Certificate) {
+            if (($null -eq $webRequest.ServicePoint) -Or ($null -eq $webRequest.ServicePoint.Certificate)) {
                 throw "SSL Certificate of ARM endpoint is null"
             }
             $sslCert = $webRequest.ServicePoint.Certificate
