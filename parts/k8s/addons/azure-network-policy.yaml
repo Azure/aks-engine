@@ -99,6 +99,8 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
+            - name: NPM_CONFIG
+              value: /etc/azure-npm/azure-npm.json
           volumeMounts:
           - name: xtables-lock
             mountPath: /run/xtables.lock
@@ -106,6 +108,8 @@ spec:
             mountPath: /var/log
           - name: protocols
             mountPath: /etc/protocols
+          - name: azure-npm-config
+            mountPath: /etc/azure-npm
       hostNetwork: true
       volumes:
       - name: log
@@ -120,6 +124,9 @@ spec:
         hostPath:
           path: /etc/protocols
           type: File
+      - name: azure-npm-config
+        configMap:
+          name: azure-npm-config
       serviceAccountName: azure-npm
 ---
 apiVersion: v1
@@ -128,6 +135,7 @@ metadata:
   name: npm-metrics-cluster-service
   namespace: kube-system
   labels:
+    addonmanager.kubernetes.io/mode: {{GetMode}}
     app: npm-metrics
 spec:
   selector:
@@ -141,6 +149,8 @@ kind: ConfigMap
 metadata:
   name: azure-npm-config
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 data:
   azure-npm.json: |
     {
