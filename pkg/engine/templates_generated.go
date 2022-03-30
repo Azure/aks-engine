@@ -6195,6 +6195,8 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
+            - name: NPM_CONFIG
+              value: /etc/azure-npm/azure-npm.json
           volumeMounts:
           - name: xtables-lock
             mountPath: /run/xtables.lock
@@ -6202,6 +6204,8 @@ spec:
             mountPath: /var/log
           - name: protocols
             mountPath: /etc/protocols
+          - name: azure-npm-config
+            mountPath: /etc/azure-npm
       hostNetwork: true
       volumes:
       - name: log
@@ -6216,7 +6220,47 @@ spec:
         hostPath:
           path: /etc/protocols
           type: File
+      - name: azure-npm-config
+        configMap:
+          name: azure-npm-config
       serviceAccountName: azure-npm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: npm-metrics-cluster-service
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+    app: npm-metrics
+spec:
+  selector:
+    k8s-app: azure-npm
+  ports:
+    - port: 9000
+      targetPort: 10091
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-npm-config
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+data:
+  azure-npm.json: |
+    {
+        "ResyncPeriodInMinutes": 15,
+        "ListeningPort":         10091,
+        "ListeningAddress":      "0.0.0.0",
+        "Toggles": {
+            "EnablePrometheusMetrics": true,
+            "EnablePprof":             true,
+            "EnableHTTPDebugAPI":      true,
+            "EnableV2NPM":             false,
+            "PlaceAzureChainFirst":    false
+        }
+    }
 `)
 
 func k8sAddonsAzureNetworkPolicyYamlBytes() ([]byte, error) {
