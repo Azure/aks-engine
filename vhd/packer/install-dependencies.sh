@@ -215,7 +215,7 @@ for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-loadContainerImage "busybox"
+loadContainerImage "mcr.microsoft.com/oss/busybox/busybox:1.33.1"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
