@@ -314,6 +314,7 @@ if (-not ($validWindowsServerContainers -contains $windowsServerVersion)) {
     exit 1
 }
 
+
 switch ($env:ProvisioningPhase) {
     "1" {
         Write-Log "Performing actions for provisioning phase 1"
