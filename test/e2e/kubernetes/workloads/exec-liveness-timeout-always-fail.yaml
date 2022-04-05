@@ -8,7 +8,7 @@ spec:
   terminationGracePeriodSeconds: 0
   containers:
   - name: exec-liveness-timeout-always-fail
-    image: busybox:1.31.1
+    image: mcr.microsoft.com/oss/busybox/busybox:1.33.1
     args:
     - /bin/sh
     - -c

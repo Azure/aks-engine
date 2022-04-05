@@ -7,7 +7,7 @@ metadata:
 spec:
   containers:
   - name: dns-liveness
-    image: busybox:1.31.1
+    image: mcr.microsoft.com/oss/busybox/busybox:1.33.1
     args:
     - /bin/sh
     - -c
