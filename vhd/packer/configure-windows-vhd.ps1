@@ -275,6 +275,8 @@ function Set-WinRmServiceDelayedStart {
 
 function Update-DefenderSignatures {
     Write-Log "Updating windows defender signatures."
+    $service = Get-Service "Windefend"
+    $service.WaitForStatus("Running","00:5:00")
     Update-MpSignature
 }
 
