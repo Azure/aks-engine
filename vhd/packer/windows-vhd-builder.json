@@ -44,9 +44,7 @@
             "azure_tags": {
                 "os": "Windows",
                 "now": "{{user `create_time`}}",
-                "createdBy": "aks-engine-vhd-pipeline",
-                "SkipNRMSNSG": "295551581",
-                "SkipASMAzSecPack": "True"
+                "createdBy": "aks-engine-vhd-pipeline"
             }
         }
     ],
@@ -96,7 +94,7 @@
         {
             "elevated_user": "packer",
             "elevated_password": "{{.WinRMPassword}}",
-            "environment_vars" : [
+            "environment_vars": [
                 "BUILD_BRANCH={{user `build_branch`}}",
                 "BUILD_COMMIT={{user `build_commit`}}",
                 "BUILD_ID={{user `build_id`}}",
