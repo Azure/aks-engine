@@ -1141,6 +1141,14 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E16bds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E16bs_v5",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_E16d_v4",
 		AcceleratedNetworking: true,
 	},
@@ -1258,6 +1266,14 @@ var VMSkus = []VMSku{
 	},
 	{
 		Name:                  "Standard_E2as_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E2bds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E2bs_v5",
 		AcceleratedNetworking: true,
 	},
 	{
@@ -1389,6 +1405,14 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E32bds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E32bs_v5",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_E32d_v4",
 		AcceleratedNetworking: true,
 	},
@@ -1485,6 +1509,14 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E48bds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E48bs_v5",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_E48d_v4",
 		AcceleratedNetworking: true,
 	},
@@ -1546,6 +1578,14 @@ var VMSkus = []VMSku{
 	},
 	{
 		Name:                  "Standard_E4as_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E4bds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E4bs_v5",
 		AcceleratedNetworking: true,
 	},
 	{
@@ -1674,6 +1714,14 @@ var VMSkus = []VMSku{
 	},
 	{
 		Name:                  "Standard_E64as_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E64bds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E64bs_v5",
 		AcceleratedNetworking: true,
 	},
 	{
@@ -1818,6 +1866,14 @@ var VMSkus = []VMSku{
 	},
 	{
 		Name:                  "Standard_E8as_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E8bds_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E8bs_v5",
 		AcceleratedNetworking: true,
 	},
 	{
@@ -2525,6 +2581,10 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_NC16ads_A10_v4",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_NC16as_T4_v3",
 		AcceleratedNetworking: true,
 	},
@@ -2561,6 +2621,10 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_NC32ads_A10_v4",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_NC4as_T4_v3",
 		AcceleratedNetworking: true,
 	},
@@ -2583,6 +2647,10 @@ var VMSkus = []VMSku{
 	{
 		Name:                  "Standard_NC6s_v3",
 		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_NC8ads_A10_v4",
+		AcceleratedNetworking: true,
 	},
 	{
 		Name:                  "Standard_NC8as_T4_v3",
@@ -2641,6 +2709,10 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_NV12ads_A10_v5",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_NV12s_v2",
 		AcceleratedNetworking: false,
 	},
@@ -2651,6 +2723,10 @@ var VMSkus = []VMSku{
 	{
 		Name:                  "Standard_NV16as_v4",
 		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_NV18ads_A10_v5",
+		AcceleratedNetworking: true,
 	},
 	{
 		Name:                  "Standard_NV24",
@@ -2673,6 +2749,14 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_NV36adms_A10_v5",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_NV36ads_A10_v5",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_NV48s_v3",
 		AcceleratedNetworking: false,
 	},
@@ -2689,8 +2773,16 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_NV6ads_A10_v5",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_NV6s_v2",
 		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_NV72ads_A10_v5",
+		AcceleratedNetworking: true,
 	},
 	{
 		Name:                  "Standard_NV8as_v4",
