@@ -173,7 +173,7 @@ jobs:
       - name: generate release notes
         run: |
           git tag ${{github.event.inputs.release_version}}
-          ./git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{github.event.inputs.release_version}}.md ${{github.event.inputs.release_version}}
+          ${GITHUB_WORKSPACE}/git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{github.event.inputs.release_version}}.md ${{github.event.inputs.release_version}}
           git tag -d ${{github.event.inputs.release_version}}
           git add releases/CHANGELOG-${{github.event.inputs.release_version}}.md
       - name: create pull request
