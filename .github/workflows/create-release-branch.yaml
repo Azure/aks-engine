@@ -167,15 +167,13 @@ jobs:
         with:
           go-version: '^1.16'
       - name: install git-chglog
-        run: go get -u github.com/git-chglog/git-chglog/cmd/git-chglog # TODO don't do this
-      - name: reset go mod
-        run: |
-          git checkout -- go.mod
-          git checkout -- go.sum
+        env:
+          GOBIN: ${GITHUB_WORKSPACE}
+        run: go install github.com/git-chglog/git-chglog/cmd/git-chglog@v0.15.1
       - name: generate release notes
         run: |
           git tag ${{github.event.inputs.release_version}}
-          git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{github.event.inputs.release_version}}.md ${{github.event.inputs.release_version}}
+          ./git-chglog --tag-filter-pattern 'v\d+\.\d+\.\d+$' --output releases/CHANGELOG-${{github.event.inputs.release_version}}.md ${{github.event.inputs.release_version}}
           git tag -d ${{github.event.inputs.release_version}}
           git add releases/CHANGELOG-${{github.event.inputs.release_version}}.md
       - name: create pull request
