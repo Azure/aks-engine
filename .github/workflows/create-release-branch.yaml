@@ -168,7 +168,7 @@ jobs:
           go-version: '^1.16'
       - name: install git-chglog
         env:
-          GOBIN: ${GITHUB_WORKSPACE}
+          GOBIN: ${{ env.GITHUB_WORKSPACE }}
         run: go install github.com/git-chglog/git-chglog/cmd/git-chglog@v0.15.1
       - name: generate release notes
         run: |
