@@ -201,9 +201,11 @@ On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by
 
 * Uninstall AzureDisk CSI driver on the cluster if previously installed (optional)
 * Backup all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl get sc -o yaml > storage-classes-backup.yaml` (optional)
-* Delete all existing storage class resources from provisioner "kubernetes.io/azure-disk"
+* Delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc --all`
 * Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21
-* After upgrade, install AzureDisk CSI driver on the cluster. This will also create storage class resources from provisioner "disk.csi.azure.com". The steps to install AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver)
+* After upgrade, install AzureDisk CSI driver on the cluster. This will also create storage class resources from provisioner "disk.csi.azure.com"
+
+> The commands to install and uninstall AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver)
 
 ## Volume Provisioner: Container Storage Interface Drivers (preview)
 As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are avaiable on Azure Stack Hub. Please find details in the following table.
