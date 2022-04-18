@@ -215,14 +215,14 @@ for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-loadContainerImage "busybox"
+loadContainerImage "mcr.microsoft.com/oss/busybox/busybox:1.33.1"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.24.0-alpha.3
 1.23.5
-1.22.7
-1.21.10
+1.22.8
+1.21.11
 1.20.15
 1.19.16
 "
@@ -280,7 +280,7 @@ for CSI_ATTACHER_VERSION in ${CSI_ATTACHER_VERSIONS}; do
 done
 
 CSI_NODE_DRIVER_REGISTRAR_VERSIONS="
-2.3.0
+2.4.0
 "
 for CSI_NODE_DRIVER_REGISTRAR_VERSION in ${CSI_NODE_DRIVER_REGISTRAR_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v${CSI_NODE_DRIVER_REGISTRAR_VERSION}"
@@ -298,7 +298,7 @@ for CSI_PROVISIONER_VERSION in ${CSI_PROVISIONER_VERSIONS}; do
 done
 
 LIVENESSPROBE_VERSIONS="
-2.4.0
+2.5.0
 "
 for LIVENESSPROBE_VERSION in ${LIVENESSPROBE_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v${LIVENESSPROBE_VERSION}"

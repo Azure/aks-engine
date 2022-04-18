@@ -49,8 +49,11 @@ function Get-ContainerImages {
                 "mcr.microsoft.com/windows/nanoserver:1809",
                 "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
                 "mcr.microsoft.com/oss/kubernetes/pause:3.4.1",
-                "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64",
-                "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64")
+                "mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v1.0.8",
+                "mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v1.1.4",
+                "mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi:v1.10.0",
+                "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v2.4.0",
+                "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.5.0")
         }
         '2004' {
             $imagesToPull = @(
@@ -120,8 +123,8 @@ function Get-FilesToCacheOnVHD {
         "c:\akse-cache\win-k8s\"      = @(
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.16/windowszip/v1.19.16-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.15/windowszip/v1.20.15-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.10/windowszip/v1.21.10-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.7/windowszip/v1.22.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.11/windowszip/v1.21.11-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.8/windowszip/v1.22.8-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.5/windowszip/v1.23.5-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.24.0-alpha.3/windowszip/v1.24.0-alpha.3-1int.zip"
         );

@@ -167,3 +167,28 @@ Please review the [upgrade documentation](../topics/upgrade.md) for a guide on u
 ## Azure API Throttling
 
 See this [document](../topics/azure-api-throttling.md) for help with troubleshooting Kubernetes clusters affected by Azure API throttling.
+
+## Avoid bridge mode problems by using transparent networking
+
+AKS Engine clusters before v0.58.0 or any version with an API model not using "transparent" Kubernetes networking mode may become unavailable if a control plane node becomes `NotReady`. Rebooting the node should recreate a working network configuration, but the problem can be avoided by provisioning clusters using transparent networking instead of bridge mode.
+
+
+If your API model does not say "networkMode": "transparent", redeploy the cluster with a current version of AKS Engine using a new cluster template. See [#4595](https://github.com/Azure/aks-engine/issues/4595#issuecomment-885082542) for details.
+
+## Prevent unattended upgrades
+
+AKS Engine offers a boolean "enableUnattendedUpgrades" configuration property in the LinuxProfile api model configuration object. By default, it is set to true, preserving the behavior existing before this option was added.
+
+A warning is logged if users do not explicitly set this configuration, nudging them to do so next time.
+
+If the "enableUnattendedUpgrades" is set to false, then AKS Engine does not enable unattended upgrades to run regularly in the background.
+
+Unattended upgrades can be disabled on running nodes by writing the file `/etc/apt/apt.conf.d/99periodic` with 0644 permissions and these contents to each affected VM. (Note that this is not a durable fix: scaling the cluster will result in new nodes with unattended upgrades enabled.)
+
+```
+    APT::Periodic::Update-Package-Lists "0";
+    APT::Periodic::Download-Upgradeable-Packages "0";
+    APT::Periodic::AutocleanInterval "0";
+    APT::Periodic::Unattended-Upgrade "0";
+```
+
