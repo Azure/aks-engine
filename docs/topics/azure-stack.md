@@ -12,9 +12,10 @@
   * [agentPoolProfiles](#agentPoolProfiles)
 * [Azure Stack Hub Instances Registered with Azure's China cloud](#azure-stack-hub-instances-registered-with-azures-china-cloud)
 * [Disconnected Azure Stack Hub Instances](#disconnected-azure-stack-hub-instances)
-* [Volume Provisioner: Container Storage Interface Drivers (preview)](#volume-provisioner-container-storage-interface-drivers-preview)
 * [AKS Engine Versions](#aks-engine-versions)
+* [Cloud Provider for Azure](#cloud-provider-for-azure)
 * [Azure Monitor for containers](#azure-Monitor-for-containers)
+* [Volume Provisioner: Container Storage Interface Drivers (preview)](#volume-provisioner-container-storage-interface-drivers-preview)
 * [Known Issues and Limitations](#known-issues-and-limitations)
 * [Frequently Asked Questions](#frequently-asked-questions)
 
@@ -151,11 +152,60 @@ Make sure `linuxProfile.runUnattendedUpgradesOnBootstrap` is set to `"false"` wh
 | [v0.55.4](https://github.com/Azure/aks-engine/releases/tag/v0.55.4)   | [AKS Base Ubuntu 16.04-LTS Image Distro, September 2020 (2020.09.14)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202007_2020.08.24.txt), [AKS Base Windows Image (17763.1397.200820)](https://github.com/Azure/aks-engine/blob/v0.55.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1397.200820.txt)  | 1.15.12, 1.16.14, 1.17.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.55.0/examples/azure-stack/kubernetes-windows.json)) |
 | [v0.60.1](https://github.com/Azure/aks-engine/releases/tag/v0.60.1)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q1 (2021.01.28)](https://github.com/Azure/aks-engine/blob/v0.60.1/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.01.28.txt), [AKS Base Ubuntu 16.04-LTS Image Distro, January 2021 (2021.01.28)](https://github.com/Azure/aks-engine/blob/v0.60.1/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202007_2021.01.28.txt), [AKS Base Windows Image (17763.1697.210129)](https://github.com/Azure/aks-engine/blob/v0.60.1/vhd/release-notes/aks-windows/2109-datacenter-core-smalldisk-17763.1697.210129.txt)  | 1.16.14, 1.16.15, 1.17.17, 1.18.15 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.60.1/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.60.1/examples/azure-stack/kubernetes-windows.json)) |
 | [v0.63.0](https://github.com/Azure/aks-engine/releases/tag/v0.63.0)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q2 (2021.05.24)](https://github.com/Azure/aks-engine/blob/v0.63.0/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.05.24.txt), [AKS Base Windows Image (17763.1935.210520)](https://github.com/Azure/aks-engine/blob/v0.63.0/vhd/release-notes/aks-windows/2109-datacenter-core-smalldisk-17763.1935.210520.txt)  | 1.18.18, 1.19.10, 1.20.6 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.65.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.65.0/examples/azure-stack/kubernetes-windows.json)) |
-| [v0.67.0](https://github.com/Azure/aks-engine/releases/tag/v0.67.0) | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q3 (2021.09.27)](https://github.com/Azure/aks-engine/blob/v0.67.0/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.09.27.txt), [AKS Base Windows Image (17763.2213.210927)](https://github.com/Azure/aks-engine/blob/v0.67.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2213.210927.txt) | 1.19.15, 1.20.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-windows.json)) |
-| [v0.67.3](https://github.com/Azure/aks-engine/releases/tag/v0.67.3)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q3 (2021.09.27)](https://github.com/Azure/aks-engine/blob/v0.67.3/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.09.27.txt), [AKS Base Windows Image (17763.2213.210927)](https://github.com/Azure/aks-engine/blob/v0.67.3/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2213.210927.txt)  | 1.19.15, 1.20.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-windows.json)) |
+| [v0.67.0](https://github.com/Azure/aks-engine/releases/tag/v0.67.0) | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q3 (2021.09.27)](https://github.com/Azure/aks-engine/blob/v0.67.0/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.09.27.txt), [AKS Base Windows Image (17763.2213.210927)](https://github.com/Azure/aks-engine/blob/v0.67.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2213.210927.txt) | 1.19.15, 1.20.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.70.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.70.0/examples/azure-stack/kubernetes-windows.json)) |
+| [v0.67.3](https://github.com/Azure/aks-engine/releases/tag/v0.67.3)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2021 Q3 (2021.09.27)](https://github.com/Azure/aks-engine/blob/v0.67.3/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202007_2021.09.27.txt), [AKS Base Windows Image (17763.2213.210927)](https://github.com/Azure/aks-engine/blob/v0.67.3/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2213.210927.txt)  | 1.19.15, 1.20.11 | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.70.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.70.0/examples/azure-stack/kubernetes-windows.json)) |
+| [v0.70.0](https://github.com/Azure/aks-engine/releases/tag/v0.70.0)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2022 Q1 (2022.02.24)](https://github.com/Azure/aks-engine/blob/v0.70.0/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202112_2022.02.24.txt), [AKS Base Windows Image (17763.2565.220301)](https://github.com/Azure/aks-engine/blob/v0.70.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2565.220301.txt)  | 1.21.10*, 1.22.7* | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-windows.json)) |
+
+>\* Starting from Kubernetes v1.21, **ONLY** the `out-of-tree` cloud provider for Azure is supported on Azure Stack Hub. Please refer to the section [*Cloud Provider for Azure*](#cloud-provider-for-azure) for more details.
+
 ## Azure Monitor for containers
 
 Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Azure Stack Hub Cloud Environments. Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details on how to onboard and monitor clusters, nodes, pods, containers inventory, performance metrics and logs.
+
+## Cloud Provider for Azure
+
+Cloud Provider for Azure is the Azure implementation of Kubernetes cloud provider [interface](https://github.com/kubernetes/cloud-provider). Since the in-tree cloud provider has been deprecated in Kubernetes and only the bug fixes were allowed in the [Kubernetes repository directory](https://github.com/kubernetes/kubernetes/tree/master/staging/src/k8s.io/legacy-cloud-providers/azure). 
+
+On Azure Stack Hub, in-tree cloud provider for Azure is **no longer** supported for Kubernetes v1.21+, and users should **always** use the cloud-controller-manager implementation of the Azure cloud provider.
+
+### Use the cloud-controller-manager implementation of the Azure cloud provider
+
+Also referred to as `out-of-tree`, cloud-provider-azure code development is carried out in its own [code repository](https://github.com/kubernetes-sigs/cloud-provider-azure/releases), according to a separate release velocity than upstream Kubernetes. The cloud-controller-manager implementation of cloud-provider-azure produces many runtime optimizations that optimize cluster behavior for running at scale.
+
+To use cloud-controller-manager, set `orchestratorProfile.kubernetesConfig.useCloudControllerManager` to `true` in the API Model:
+
+```json
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "kubernetesConfig": {
+        "useCloudControllerManager": true,
+        ....
+      }
+      ...
+    },
+    ...
+  }
+  ...
+}
+```
+
+### Use the AzureDisk CSI driver with cloud-controller-manager
+
+The AzureDisk volume plugin that works with in-tree cloud provider are not supported with cloud-controller-manager (See [kubernetes/kubernetes#71018](https://github.com/kubernetes/kubernetes/issues/71018) for explanations). Hence to use cloud-controller-manager, AzureDisk CSI driver should **always** be used for persistent volumes. Kubernetes cluster created by AKS Engine will **not** include AzureDisk CSI driver by default, thus users need to manually install AzureDisk CSI driver after cluster creation. The steps to install AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver).
+
+### Upgrade from Kubernetes v1.20 to v1.21 on Azure Stack Hub
+
+On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by default, and cluster with v1.21 only support `out-of-tree` cloud provider. Follow the steps below as a guidance of upgrade:
+
+* Uninstall AzureDisk CSI driver on the cluster if previously installed (optional)
+* Backup all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl get sc -o yaml > storage-classes-backup.yaml` (optional)
+* Delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc --all`
+* Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21
+* After upgrade, install AzureDisk CSI driver on the cluster. This will also create storage class resources from provisioner "disk.csi.azure.com"
+
+> The commands to install and uninstall AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver)
 
 ## Volume Provisioner: Container Storage Interface Drivers (preview)
 As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are avaiable on Azure Stack Hub. Please find details in the following table.
@@ -189,7 +239,7 @@ In this section, please follow the example commands to deploy a StatefulSet appl
 ``` powershell
 # Install CSI Driver
 helm repo add azuredisk-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/charts
-helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.0.0
+helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.10.0
 
 # Deploy Storage Class
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/deploy/example/storageclass-azuredisk-csi-azurestack.yaml
@@ -292,6 +342,14 @@ The list below includes the addons currently unsupported on Azure Stack Hub:
 * Cluster Autoscaler
 * KeyVault Flex Volume
 * SMB Flex Volume
+
+### OSProfile exceeds maximum characters length error
+
+Addons enabled in the API Model are Base64 encoded and included in the VMs ARM template. There is a length limit of 87380 characters for the custom data, thus if too many addons are enabled in the API Model, the `aks-engine` operations could fail with the below error:
+```
+Custom data in OSProfile must be in Base64 encoding and with a maximum length of 87380 characters
+```
+In such cases, try reduce the number of enabled addons or remove all of them in the API Model.
 
 ### Limited Number of Frontend Public IPs
 
