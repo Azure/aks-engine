@@ -5,7 +5,7 @@
             "enableIPv6DualStack": true
         },
         "orchestratorProfile": {
-            "orchestratorRelease": "1.19",
+            "orchestratorRelease": "1.23",
             "kubernetesConfig": {
                 "apiServerConfig": {
                     "--feature-gates": "IPv6DualStack=true"

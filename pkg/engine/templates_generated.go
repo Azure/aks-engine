@@ -12835,8 +12835,6 @@ spec:
       port: 25227
       targetPort: in-rs-tcp
 ---
-# this is for versions >=1.19, for versions <1.19 we continue to use v1beta1
-{{- if IsKubernetesVersionGe "1.19.0"}}
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -12858,23 +12856,6 @@ spec:
   names:
     plural: healthstates
     kind: HealthState
-{{- else }}
-apiVersion: {{GetCRDAPIVersion}}
-kind: CustomResourceDefinition
-metadata:
-  name: healthstates.azmon.container.insights
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: azmon.container.insights
-  version: v1
-  scope: Namespaced
-  names:
-    plural: healthstates
-    kind: HealthState
-{{end}}
 `)
 
 func k8sAddonsContainerMonitoringYamlBytes() ([]byte, error) {
@@ -14508,7 +14489,7 @@ spec:
       - emptyDir: {}
         name: tmp-dir
 ---
-apiVersion: apiregistration.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
+apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
   labels:

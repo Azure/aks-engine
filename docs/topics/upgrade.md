@@ -25,7 +25,7 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
 
 `aks-engine upgrade` relies on some resources (such as VMs) to be named in accordance with the original `aks-engine` deployment. In summary, the set of Azure resources in the resource group are mutually reconcilable by `aks-engine upgrade` only if they have been exclusively created and managed as the result of a series of successive ARM template deployments originating from various AKS Engine commands that have run to completion successfully.
 
-3) `aks-engine upgrade` allows upgrading the Kubernetes version to any AKS Engine-supported patch release in the current minor release channel that is greater than the current version on the cluster (e.g., from `1.21.4` to `1.21.5`), or to the next aks-engine-supported minor version (e.g., from `1.21.5` to `1.22.2`). (Or, see [`aks-engine upgrade --force`](#force-upgrade) if you want to bypass AKS Engine "supported version requirements"). In practice, the next AKS Engine-supported minor version will commonly be a single minor version ahead of the current cluster version. However, if the cluster has not been upgraded in a significant amount of time, the "next" minor version may have no longer be supported by aks-engine. In such a case, your long-lived cluster will be upgradable to the nearest, supported minor version that `aks-engine` supports at the time of upgrade (e.g., from `1.17.18` to `1.19.15`).
+3) `aks-engine upgrade` allows upgrading the Kubernetes version to any AKS Engine-supported patch release in the current minor release channel that is greater than the current version on the cluster (e.g., from `1.21.4` to `1.21.5`), or to the next aks-engine-supported minor version (e.g., from `1.21.5` to `1.22.2`). (Or, see [`aks-engine upgrade --force`](#force-upgrade) if you want to bypass AKS Engine "supported version requirements"). In practice, the next AKS Engine-supported minor version will commonly be a single minor version ahead of the current cluster version. However, if the cluster has not been upgraded in a significant amount of time, the "next" minor version may have no longer be supported by aks-engine. In such a case, your long-lived cluster will be upgradable to the nearest, supported minor version that `aks-engine` supports at the time of upgrade (e.g., from `1.17.18` to `1.20.15`).
 
     To get the list of all available Kubernetes versions and upgrades, run the `get-versions` command:
 
@@ -36,7 +36,7 @@ In order to ensure that your `aks-engine upgrade` operation runs smoothly, there
     To get the versions of Kubernetes that your particular cluster version is upgradable to, provide its current Kubernetes version in the `version` arg:
 
     ```bash
-    aks-engine get-versions --version 1.19.14
+    aks-engine get-versions --version 1.22.9
     ```
 
 4) `aks-engine upgrade` relies upon a working connection to the cluster control plane during upgrade, both (1) to validate successful upgrade progress, and (2) to cordon and drain nodes before upgrading them, in order to minimize operational downtime of any running cluster workloads. If you are upgrading a **private cluster**, you must run `aks-engine upgrade` from a host VM that has network access to the control plane, for example a jumpbox VM that resides in the same VNET as the master VMs. For more information on private clusters [refer to this documentation](features.md#feat-private-cluster).

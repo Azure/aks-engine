@@ -297,15 +297,15 @@ func TestAPIServerServiceAccountFlags(t *testing.T) {
 			a["--service-account-signing-key-file"])
 	}
 
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.19", "", false, false, false), 3, 2, false)
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.24", "", false, false, false), 3, 2, false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--service-account-issuer"] != "" {
-		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.20: %s",
+	if a["--service-account-issuer"] != "https://kubernetes.default.svc.cluster.local" {
+		t.Fatalf("got unexpected '--service-account-issuer' API server config value for Kubernetes v1.24: %s",
 			a["--service-account-issuer"])
 	}
-	if a["--service-account-signing-key-file"] != "" {
-		t.Fatalf("got unexpected '--service-account-signing-key-file' API server config value for Kubernetes v1.20: %s",
+	if a["--service-account-signing-key-file"] != "/etc/kubernetes/certs/apiserver.key" {
+		t.Fatalf("got unexpected '--service-account-signing-key-file' API server config value for Kubernetes v1.24: %s",
 			a["--service-account-signing-key-file"])
 	}
 
