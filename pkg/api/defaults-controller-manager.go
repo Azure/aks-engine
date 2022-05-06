@@ -90,10 +90,8 @@ func (cs *ContainerService) setControllerManagerConfig() {
 	// Enable the consumption of local ephemeral storage and also the sizeLimit property of an emptyDir volume.
 	addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.10.0", "LocalStorageCapacityIsolation=true")
 
-	// Disable something something for v1.24.0
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.24.0") {
-		addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.24.0", "LegacyServiceAccountTokenNoAutoGeneration=false")
-	}
+	// Enable legacy service account token autogeneration for v1.24.0
+	addDefaultFeatureGates(o.KubernetesConfig.ControllerManagerConfig, o.OrchestratorVersion, "1.24.0", "LegacyServiceAccountTokenNoAutoGeneration=false")
 
 	// We don't support user-configurable values for the following,
 	// so any of the value assignments below will override user-provided values
