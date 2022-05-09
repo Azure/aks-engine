@@ -108,6 +108,16 @@ func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
 		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true,TaintBasedEvictions=true\": %s",
 			cm["--feature-gates"])
 	}
+
+	// test 1.24.0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.24.0"
+	cs.setControllerManagerConfig()
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--feature-gates"] != "LegacyServiceAccountTokenNoAutoGeneration=false,LocalStorageCapacityIsolation=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LegacyServiceAccountTokenNoAutoGeneration=false,LocalStorageCapacityIsolation=true\": %s",
+			cm["--feature-gates"])
+	}
 }
 
 func TestControllerManagerDefaultConfig(t *testing.T) {
