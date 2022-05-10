@@ -239,10 +239,10 @@ done
 # Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
 CLOUD_MANAGER_VERSIONS="
 1.24.0
-1.23.1
-1.1.4
-1.0.8
-0.7.11
+1.23.11
+1.1.14
+1.0.18
+0.7.21
 0.6.0
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
