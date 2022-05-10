@@ -220,7 +220,7 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.24.0
-1.23.5
+1.23.6
 1.22.8
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
@@ -236,8 +236,8 @@ done
 # Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
 CLOUD_MANAGER_VERSIONS="
 1.24.0
-1.23.1
-1.1.4
+1.23.11
+1.1.14
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do
