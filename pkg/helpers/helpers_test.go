@@ -446,7 +446,15 @@ func TestGetCloudTargetEnv(t *testing.T) {
 			"AzureChinaCloud",
 		},
 		{
+			"chinaeast3",
+			"AzureChinaCloud",
+		},
+		{
 			"chinanorth2",
+			"AzureChinaCloud",
+		},
+		{
+			"chinanorth3",
 			"AzureChinaCloud",
 		},
 		{
@@ -506,6 +514,11 @@ func TestGetTargetEnv(t *testing.T) {
 		},
 		{
 			"chinanorth2",
+			"",
+			"AzureChinaCloud",
+		},
+		{
+			"chinanorth3",
 			"",
 			"AzureChinaCloud",
 		},
