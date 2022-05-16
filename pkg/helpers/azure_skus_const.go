@@ -2257,7 +2257,15 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_HB120-16rs_v2",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_HB120-16rs_v3",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_HB120-32rs_v2",
 		AcceleratedNetworking: true,
 	},
 	{
@@ -2265,7 +2273,15 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_HB120-64rs_v2",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_HB120-64rs_v3",
+		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_HB120-96rs_v2",
 		AcceleratedNetworking: true,
 	},
 	{
