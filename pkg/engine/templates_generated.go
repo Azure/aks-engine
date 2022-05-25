@@ -22959,7 +22959,15 @@ Set-AzureCNIConfig
     if ($IsAzureStack) {
         Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
     }
-    
+
+    if ($global:KubeproxyFeatureGates.Contains("WinDSR=true")) {
+        Write-Log "Setting enableLoopbackDSR in Azure CNI conflist for WinDSR"
+        $jsonContent = [PSCustomObject]@{
+            'enableLoopbackDSR' = $True
+        }
+        $configJson.plugins[0]|Add-Member -Name "windowsSettings" -Value $jsonContent -MemberType NoteProperty
+    }
+
     $aclRule1 = [PSCustomObject]@{
         Type = 'ACL'
         Protocols = '6'
