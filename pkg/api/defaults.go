@@ -1129,6 +1129,23 @@ func combineValues(inputs ...string) string {
 	return mapToString(valueMap)
 }
 
+// remove specified outdated --feature-gates
+func removeOutdatedFeatureGates(m map[string]string, outdatedFeatureGates []string) {
+	m["--feature-gates"] = removeKeys(m["--feature-gates"], outdatedFeatureGates)
+}
+
+// removeKeys takes a input of strings matching a pattern []string{"foo=bar","key=val"}
+// removes from this input the given input keys e.g.: "foo"
+// and returns a single, comma-delimited, concatenated string of all remaining key/val string values, e.g.: "key=val"
+func removeKeys(input string, keysToRemove []string) string {
+	valueMap := make(map[string]string)
+	applyValueStringToMap(valueMap, input)
+	for _, key := range keysToRemove {
+		delete(valueMap, key)
+	}
+	return mapToString(valueMap)
+}
+
 func applyValueStringToMap(valueMap map[string]string, input string) {
 	values := strings.Split(input, ",")
 	for index := 0; index < len(values); index++ {
