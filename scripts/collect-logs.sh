@@ -213,6 +213,7 @@ OUTDIR="$(mktemp -d)/${HOSTNAME}"
 collectCloudProviderJson
 collectDirLogs /var/log
 collectDirLogs /var/log/azure
+collectDirLogs /var/log/containers
 collectDirLogs /var/log/kubeaudit
 collectDir /etc/kubernetes/manifests
 collectDir /etc/kubernetes/addons
