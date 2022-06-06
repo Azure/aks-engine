@@ -223,8 +223,6 @@ K8S_VERSIONS="
 1.23.6
 1.22.9
 1.21.12
-1.20.15
-1.19.16
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
@@ -242,8 +240,6 @@ CLOUD_MANAGER_VERSIONS="
 1.23.11
 1.1.14
 1.0.18
-0.7.21
-0.6.0
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do

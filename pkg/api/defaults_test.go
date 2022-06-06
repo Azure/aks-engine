@@ -3661,12 +3661,12 @@ func TestCloudProviderBackoff(t *testing.T) {
 			},
 		},
 		{
-			name: "Kubernetes 1.19.15",
+			name: "Kubernetes 1.23.5",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.19.15",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					},
 					MasterProfile: &MasterProfile{},
 				},

@@ -184,7 +184,7 @@ spec:
       - emptyDir: {}
         name: tmp-dir
 ---
-apiVersion: apiregistration.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
+apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
   labels:
