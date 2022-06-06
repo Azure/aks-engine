@@ -26,10 +26,14 @@ const (
 )
 
 var (
+	chinaEast3DisplayName       = "China East 3"
+	chinaEast3Name              = "chinaeast3"
 	chinaEast2DisplayName       = "China East 2"
 	chinaEast2Name              = "chinaeast2"
 	chinaEastDisplayName        = "China East"
 	chinaEastName               = "chinaeast"
+	chinaNorth3DisplayName      = "China North 3"
+	chinaNorth3Name             = "chinanorth3"
 	chinaNorth2DisplayName      = "China North 2"
 	chinaNorth2Name             = "chinanorth2"
 	chinaNorthDisplayName       = "China North"
@@ -143,6 +147,13 @@ func (glc *LocationsCmd) run(cmd *cobra.Command, args []string) error {
 		},
 		{
 			ID:          &notAvailable,
+			Name:        &chinaEast3Name,
+			DisplayName: &chinaEast3DisplayName,
+			Latitude:    &notAvailable,
+			Longitude:   &notAvailable,
+		},
+		{
+			ID:          &notAvailable,
 			Name:        &chinaNorthName,
 			DisplayName: &chinaNorthDisplayName,
 			Latitude:    &notAvailable,
@@ -152,6 +163,13 @@ func (glc *LocationsCmd) run(cmd *cobra.Command, args []string) error {
 			ID:          &notAvailable,
 			Name:        &chinaNorth2Name,
 			DisplayName: &chinaNorth2DisplayName,
+			Latitude:    &notAvailable,
+			Longitude:   &notAvailable,
+		},
+		{
+			ID:          &notAvailable,
+			Name:        &chinaNorth3Name,
+			DisplayName: &chinaNorth3DisplayName,
 			Latitude:    &notAvailable,
 			Longitude:   &notAvailable,
 		},
