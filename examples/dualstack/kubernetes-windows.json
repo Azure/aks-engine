@@ -5,17 +5,7 @@
             "enableIPv6DualStack": true
         },
         "orchestratorProfile": {
-            "orchestratorRelease": "1.19",
             "kubernetesConfig": {
-                "apiServerConfig": {
-                    "--feature-gates": "IPv6DualStack=true"
-                },
-                "kubeletConfig": {
-                    "--feature-gates": "IPv6DualStack=true"
-                },
-                "controllerManagerConfig": {
-                    "--feature-gates": "IPv6DualStack=true"
-                },
                 "kubeProxyMode": "ipvs",
                 "networkPlugin": "azure",
                 "networkMode": "bridge",

@@ -87,6 +87,13 @@
     },
     {
       "id": "N/A",
+      "name": "chinaeast3",
+      "displayName": "China East 3",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
       "name": "chinanorth",
       "displayName": "China North",
       "latitude": "N/A",
@@ -96,6 +103,13 @@
       "id": "N/A",
       "name": "chinanorth2",
       "displayName": "China North 2",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "chinanorth3",
+      "displayName": "China North 3",
       "latitude": "N/A",
       "longitude": "N/A"
     },
