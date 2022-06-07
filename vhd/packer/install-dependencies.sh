@@ -82,7 +82,7 @@ installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
 MOBY_VERSION="20.10.11"
-CONTAINERD_VERSION="1.4.11"
+CONTAINERD_VERSION="1.5.11"
 installMoby
 installRunc
 systemctl_restart 100 5 30 docker || exit 1
@@ -219,12 +219,10 @@ loadContainerImage "mcr.microsoft.com/oss/busybox/busybox:1.33.1"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.24.0
+1.24.1
 1.23.6
 1.22.9
 1.21.12
-1.20.15
-1.19.16
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
@@ -242,8 +240,6 @@ CLOUD_MANAGER_VERSIONS="
 1.23.11
 1.1.14
 1.0.18
-0.7.21
-0.6.0
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do

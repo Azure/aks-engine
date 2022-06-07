@@ -57,9 +57,9 @@ const (
 
 const (
 	// KubernetesDefaultRelease is the default Kubernetes release
-	KubernetesDefaultRelease string = "1.19"
+	KubernetesDefaultRelease string = "1.23"
 	// KubernetesDefaultReleaseWindows is the default Kubernetes release for Windows
-	KubernetesDefaultReleaseWindows string = "1.19"
+	KubernetesDefaultReleaseWindows string = "1.23"
 	// KubernetesDefaultReleaseAzureStack is the default Kubernetes release on Azure Stack
 	KubernetesDefaultReleaseAzureStack string = "1.21"
 	// KubernetesDefaultReleaseWindowsAzureStack is the default Kubernetes release for Windows on Azure Stack

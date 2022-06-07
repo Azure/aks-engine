@@ -78,15 +78,19 @@ func (az *AzureClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, r
 	AzureChinaLocationToOmsRegionCodeMap := map[string]string{
 		"chinaeast":   "EAST2",
 		"chinaeast2":  "EAST2",
+		"chinaeast3":  "EAST2",
 		"chinanorth":  "EAST2",
 		"chinanorth2": "EAST2",
+		"chinanorth3": "EAST2",
 	}
 
 	AzureChinaRegionToOmsRegionMap := map[string]string{
 		"chinaeast":   "chinaeast2",
 		"chinaeast2":  "chinaeast2",
+		"chinaeast3":  "chinaeast2",
 		"chinanorth":  "chinaeast2",
 		"chinanorth2": "chinaeast2",
+		"chinanorth3": "chinaeast2",
 	}
 
 	AzureFairfaxLocationToOmsRegionCodeMap := map[string]string{

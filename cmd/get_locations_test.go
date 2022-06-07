@@ -101,8 +101,10 @@ func ExampleLocationsCmd_run_humanOutput() {
 	// centraluseuap     Central US EUAP (Canary)  N/A       N/A
 	// chinaeast         China East                N/A       N/A
 	// chinaeast2        China East 2              N/A       N/A
+	// chinaeast3        China East 3              N/A       N/A
 	// chinanorth        China North               N/A       N/A
 	// chinanorth2       China North 2             N/A       N/A
+	// chinanorth3       China North 3             N/A       N/A
 	// eastus2euap       East US 2 EUAP (Canary)   N/A       N/A
 	// germanycentral    Germany Central           N/A       N/A
 	// germanynortheast  Germany Northeast         N/A       N/A
@@ -170,6 +172,13 @@ func ExampleLocationsCmd_run_jsonOutput() {
 	//   },
 	//   {
 	//     "id": "N/A",
+	//     "name": "chinaeast3",
+	//     "displayName": "China East 3",
+	//     "latitude": "N/A",
+	//     "longitude": "N/A"
+	//   },
+	//   {
+	//     "id": "N/A",
 	//     "name": "chinanorth",
 	//     "displayName": "China North",
 	//     "latitude": "N/A",
@@ -179,6 +188,13 @@ func ExampleLocationsCmd_run_jsonOutput() {
 	//     "id": "N/A",
 	//     "name": "chinanorth2",
 	//     "displayName": "China North 2",
+	//     "latitude": "N/A",
+	//     "longitude": "N/A"
+	//   },
+	//   {
+	//     "id": "N/A",
+	//     "name": "chinanorth3",
+	//     "displayName": "China North 3",
 	//     "latitude": "N/A",
 	//     "longitude": "N/A"
 	//   },
@@ -296,8 +312,10 @@ func ExampleLocationsCmd_run_codeOutput() {
 	// 		"centraluseuap",
 	// 		"chinaeast",
 	// 		"chinaeast2",
+	// 		"chinaeast3",
 	// 		"chinanorth",
 	// 		"chinanorth2",
+	// 		"chinanorth3",
 	// 		"eastus2euap",
 	// 		"germanycentral",
 	// 		"germanynortheast",
