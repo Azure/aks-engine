@@ -15,7 +15,9 @@ func main() {
 	log.SetFormatter(&log.TextFormatter{ForceColors: true})
 	log.SetOutput(colorable.NewColorableStderr())
 	msg := `
-aks-engine is deprecated for Azure public cloud customers.
+aks-engine is deprecated for Azure public cloud customers. Learn more at:
+    https://github.com/Azure/aks-engine#project-status
+
 Please consider using Azure Kubernetes Service (AKS) for managed Kubernetes:
     https://azure.microsoft.com/en-us/services/kubernetes-service/#overview
 or Cluster API Provider Azure (CAPZ) for self-managed Kubernetes:
