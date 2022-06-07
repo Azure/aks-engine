@@ -19,7 +19,7 @@ aks-engine is deprecated for Azure public cloud customers. Learn more at:
     https://github.com/Azure/aks-engine#project-status
 
 Please consider using Azure Kubernetes Service (AKS) for managed Kubernetes:
-    https://azure.microsoft.com/en-us/services/kubernetes-service/#overview
+    https://azure.microsoft.com/services/kubernetes-service/
 or Cluster API Provider Azure (CAPZ) for self-managed Kubernetes:
     https://capz.sigs.k8s.io/
 `
