@@ -59,6 +59,12 @@ collectDaemonLogs() {
     fi
 }
 
+collectContainerLogs() {
+    local DIR=${OUTDIR}/containers
+    mkdir -p ${DIR}
+    find /var/log/containers -name "${1}*" -exec cp {} ${DIR} \;
+}
+
 compressLogsDirectory() {
     sync
     ZIP="/tmp/logs.zip"
@@ -216,6 +222,11 @@ collectDirLogs /var/log/azure
 collectDirLogs /var/log/kubeaudit
 collectDir /etc/kubernetes/manifests
 collectDir /etc/kubernetes/addons
+collectContainerLogs cloud-controller-manager
+collectContainerLogs kube-addon-manager
+collectContainerLogs kube-apiserver
+collectContainerLogs kube-controller-manager
+collectContainerLogs kube-scheduler
 collectDaemonLogs kubelet.service
 collectDaemonLogs etcd.service
 collectDaemonLogs docker.service
