@@ -6,6 +6,8 @@ package api
 import (
 	"strconv"
 	"strings"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 func (cs *ContainerService) setCloudControllerManagerConfig() {
@@ -61,6 +63,13 @@ func (cs *ContainerService) setCloudControllerManagerConfig() {
 	for key, val := range staticCloudControllerManagerConfig {
 		o.KubernetesConfig.CloudControllerManagerConfig[key] = val
 	}
+
+	invalidFeatureGates := []string{}
+	// Remove --feature-gate VolumeSnapshotDataSource starting with 1.22
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0-alpha.1") {
+		invalidFeatureGates = append(invalidFeatureGates, "VolumeSnapshotDataSource")
+	}
+	removeInvalidFeatureGates(o.KubernetesConfig.CloudControllerManagerConfig, invalidFeatureGates)
 
 	// TODO add RBAC support
 	/*if *o.KubernetesConfig.EnableRbac {

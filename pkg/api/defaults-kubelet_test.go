@@ -947,8 +947,8 @@ func TestKubeletRotateCertificates(t *testing.T) {
 			"false", k["--rotate-certificates"])
 	}
 }
-func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
-	// test 1.16
+func TestKubeletConfigFeatureGates(t *testing.T) {
+	// test 1.18
 	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.18", "", false, false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
@@ -966,12 +966,41 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
+	// test 1.22
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.22", "", false, false, false), 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--feature-gates"] != "ExecProbeTimeout=true,RotateKubeletServerCertificate=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
 	// test user-overrides
 	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	k["--feature-gates"] = "DynamicKubeletConfig=true,ExecProbeTimeout=false"
 	cs.setKubeletConfig(false)
 	if k["--feature-gates"] != "DynamicKubeletConfig=true,ExecProbeTimeout=false,RotateKubeletServerCertificate=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test user-overrides, removal of VolumeSnapshotDataSource for k8s versions >= 1.22
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.22", "", false, false, false), 3, 2, false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	k["--feature-gates"] = "VolumeSnapshotDataSource=true"
+	cs.setKubeletConfig(false)
+	if k["--feature-gates"] != "ExecProbeTimeout=true,RotateKubeletServerCertificate=true" {
+		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
+			k["--feature-gates"])
+	}
+
+	// test user-overrides, removal of VolumeSnapshotDataSource for k8s versions < 1.22
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	k["--feature-gates"] = "VolumeSnapshotDataSource=true"
+	cs.setKubeletConfig(false)
+	if k["--feature-gates"] != "ExecProbeTimeout=true,RotateKubeletServerCertificate=true,VolumeSnapshotDataSource=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}

@@ -179,6 +179,13 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	removeKubeletFlags(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 
+	invalidFeatureGates := []string{}
+	// Remove --feature-gate VolumeSnapshotDataSource starting with 1.22
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0-alpha.1") {
+		invalidFeatureGates = append(invalidFeatureGates, "VolumeSnapshotDataSource")
+	}
+	removeInvalidFeatureGates(o.KubernetesConfig.KubeletConfig, invalidFeatureGates)
+
 	// Master-specific kubelet config changes go here
 	if cs.Properties.MasterProfile != nil {
 		if cs.Properties.MasterProfile.KubernetesConfig == nil {
@@ -223,6 +230,14 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
+
+		invalidFeatureGates := []string{}
+		// Remove --feature-gate VolumeSnapshotDataSource starting with 1.22
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0-alpha.1") {
+			invalidFeatureGates = append(invalidFeatureGates, "VolumeSnapshotDataSource")
+		}
+		removeInvalidFeatureGates(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, invalidFeatureGates)
+
 		if cs.Properties.AnyAgentIsLinux() {
 			if val, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"]; !ok {
 				cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = common.MasterNodeTaint

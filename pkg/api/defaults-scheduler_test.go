@@ -82,3 +82,58 @@ func TestSchedulerConfigEnableProfiling(t *testing.T) {
 			s["--profiling"])
 	}
 }
+
+func TestSchedulerFeatureGates(t *testing.T) {
+	// test defaultTestClusterVer
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setSchedulerConfig()
+	s := cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig
+	if s["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' Scheduler config value for k8s v%s: %s",
+			defaultTestClusterVer, s["--feature-gates"])
+	}
+
+	// test 1.19.0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.19.0"
+	cs.setSchedulerConfig()
+	s = cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig
+	if s["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' Scheduler config value for k8s v%s: %s",
+			"1.19.0", s["--feature-gates"])
+	}
+
+	// test 1.22.0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.22.0"
+	cs.setSchedulerConfig()
+	s = cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig
+	if s["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' Scheduler config value for k8s v%s: %s",
+			"1.22.0", s["--feature-gates"])
+	}
+
+	// test user-overrides, removal of VolumeSnapshotDataSource for k8s versions >= 1.22
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.22.0"
+	cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig = make(map[string]string)
+	s = cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig
+	s["--feature-gates"] = "VolumeSnapshotDataSource=true"
+	cs.setSchedulerConfig()
+	if s["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' Scheduler config value for \"--feature-gates\": \"VolumeSnapshotDataSource=true\": %s for k8s v%s",
+			s["--feature-gates"], "1.22.0")
+	}
+
+	// test user-overrides, no removal of VolumeSnapshotDataSource for k8s versions < 1.22
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.19.0"
+	cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig = make(map[string]string)
+	s = cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig
+	s["--feature-gates"] = "VolumeSnapshotDataSource=true"
+	cs.setSchedulerConfig()
+	if s["--feature-gates"] != "VolumeSnapshotDataSource=true" {
+		t.Fatalf("got unexpected '--feature-gates' API server config value for \"--feature-gates\": \"VolumeSnapshotDataSource=true\": %s for k8s v%s",
+			s["--feature-gates"], "1.19.0")
+	}
+}
