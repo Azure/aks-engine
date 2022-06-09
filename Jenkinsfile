@@ -6,8 +6,8 @@ defaultEnv = [
 	VALIDATE_CPU_LOAD: false,
 	] + params
 
-def k8sVersions = ["1.19", "1.20", "1.21", "1.22", "1.23", "1.24"]
-def latestReleasedVersion = "1.23"
+def k8sVersions = ["1.21", "1.22", "1.23", "1.24"]
+def latestReleasedVersion = "1.24"
 def tasks = [:]
 def testConfigs = []
 

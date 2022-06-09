@@ -3661,12 +3661,12 @@ func TestCloudProviderBackoff(t *testing.T) {
 			},
 		},
 		{
-			name: "Kubernetes 1.19.15",
+			name: "Kubernetes 1.23.5",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.19.15",
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false),
 					},
 					MasterProfile: &MasterProfile{},
 				},
@@ -6116,9 +6116,9 @@ func ExampleContainerService_setOrchestratorDefaults() {
 
 	// Output:
 	// level=warning msg="Moby will be upgraded to version 20.10.11\n"
-	// level=warning msg="containerd will be upgraded to version 1.4.11\n"
+	// level=warning msg="containerd will be upgraded to version 1.5.11\n"
 	// level=warning msg="Any new nodes will have Moby version 20.10.11\n"
-	// level=warning msg="Any new nodes will have containerd version 1.4.11\n"
+	// level=warning msg="Any new nodes will have containerd version 1.5.11\n"
 }
 
 func TestCombineValues(t *testing.T) {

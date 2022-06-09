@@ -12835,8 +12835,6 @@ spec:
       port: 25227
       targetPort: in-rs-tcp
 ---
-# this is for versions >=1.19, for versions <1.19 we continue to use v1beta1
-{{- if IsKubernetesVersionGe "1.19.0"}}
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -12858,23 +12856,6 @@ spec:
   names:
     plural: healthstates
     kind: HealthState
-{{- else }}
-apiVersion: {{GetCRDAPIVersion}}
-kind: CustomResourceDefinition
-metadata:
-  name: healthstates.azmon.container.insights
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: azmon.container.insights
-  version: v1
-  scope: Namespaced
-  names:
-    plural: healthstates
-    kind: HealthState
-{{end}}
 `)
 
 func k8sAddonsContainerMonitoringYamlBytes() ([]byte, error) {
@@ -14508,7 +14489,7 @@ spec:
       - emptyDir: {}
         name: tmp-dir
 ---
-apiVersion: apiregistration.k8s.io/v1{{- if not (IsKubernetesVersionGe "1.19.0")}}beta1{{end}}
+apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
   labels:
@@ -17640,8 +17621,8 @@ mobyPkgVersion() {
 installRunc() {
   local v
   v=$(runc --version | head -n 1 | cut -d" " -f3)
-  if [[ $v != "1.0.2" ]]; then
-    apt_get_install 20 30 120 moby-runc=1.0.2* --allow-downgrades || exit 27
+  if [[ $v != "1.0.3" ]]; then
+    apt_get_install 20 30 120 moby-runc=1.0.3* --allow-downgrades || exit 27
   fi
 }
 installMoby() {
@@ -21091,7 +21072,7 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.4.11",
+      "defaultValue": "1.5.11",
       "metadata": {
         "description": "The Azure containerd build version"
       },
@@ -21109,7 +21090,8 @@ var _k8sKubernetesparamsT = []byte(`    "etcdServerCertificate": {
          "1.4.7",
          "1.4.8",
          "1.4.9",
-         "1.4.11"
+         "1.4.11",
+         "1.5.11"
        ],
       "type": "string"
     },
@@ -22959,7 +22941,15 @@ Set-AzureCNIConfig
     if ($IsAzureStack) {
         Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
     }
-    
+
+    if ($global:KubeproxyFeatureGates.Contains("WinDSR=true")) {
+        Write-Log "Setting enableLoopbackDSR in Azure CNI conflist for WinDSR"
+        $jsonContent = [PSCustomObject]@{
+            'enableLoopbackDSR' = $True
+        }
+        $configJson.plugins[0]|Add-Member -Name "windowsSettings" -Value $jsonContent -MemberType NoteProperty
+    }
+
     $aclRule1 = [PSCustomObject]@{
         Type = 'ACL'
         Protocols = '6'

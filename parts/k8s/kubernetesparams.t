@@ -238,7 +238,7 @@
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.4.11",
+      "defaultValue": "1.5.11",
       "metadata": {
         "description": "The Azure containerd build version"
       },
@@ -256,7 +256,8 @@
          "1.4.7",
          "1.4.8",
          "1.4.9",
-         "1.4.11"
+         "1.4.11",
+         "1.5.11"
        ],
       "type": "string"
     },

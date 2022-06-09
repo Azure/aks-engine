@@ -153,7 +153,7 @@ func CreateSaveSSH(username, outputDirectory string, s *i18n.Translator) (privat
 func GetCloudTargetEnv(location string) string {
 	loc := strings.ToLower(strings.Join(strings.Fields(location), ""))
 	switch {
-	case loc == "chinaeast" || loc == "chinanorth" || loc == "chinaeast2" || loc == "chinanorth2":
+	case loc == "chinaeast" || loc == "chinanorth" || loc == "chinaeast2" || loc == "chinaeast3" || loc == "chinanorth2" || loc == "chinanorth3":
 		return "AzureChinaCloud"
 	case loc == "germanynortheast" || loc == "germanycentral":
 		return "AzureGermanCloud"
