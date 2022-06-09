@@ -1129,9 +1129,9 @@ func combineValues(inputs ...string) string {
 	return mapToString(valueMap)
 }
 
-// remove specified outdated --feature-gates
-func removeOutdatedFeatureGates(m map[string]string, outdatedFeatureGates []string) {
-	m["--feature-gates"] = removeKeys(m["--feature-gates"], outdatedFeatureGates)
+// removeInvalidFeatureGates removes specified invalid --feature-gates
+func removeInvalidFeatureGates(m map[string]string, invalidFeatureGates []string) {
+	m["--feature-gates"] = removeKeys(m["--feature-gates"], invalidFeatureGates)
 }
 
 // removeKeys takes a input of strings matching a pattern []string{"foo=bar","key=val"}

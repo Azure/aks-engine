@@ -165,12 +165,12 @@ func (cs *ContainerService) setAPIServerConfig() {
 		o.KubernetesConfig.APIServerConfig["--service-account-issuer"] = "https://kubernetes.default.svc.cluster.local"
 	}
 
-	outdatedFeatureGates := []string{}
+	invalidFeatureGates := []string{}
 	// Remove --feature-gate VolumeSnapshotDataSource starting with 1.22
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0-alpha.1") {
-		outdatedFeatureGates = append(outdatedFeatureGates, "VolumeSnapshotDataSource")
+		invalidFeatureGates = append(invalidFeatureGates, "VolumeSnapshotDataSource")
 	}
-	removeOutdatedFeatureGates(o.KubernetesConfig.APIServerConfig, outdatedFeatureGates)
+	removeInvalidFeatureGates(o.KubernetesConfig.APIServerConfig, invalidFeatureGates)
 }
 
 func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
