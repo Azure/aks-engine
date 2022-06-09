@@ -167,6 +167,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 
 	invalidFeatureGates := []string{}
 	// Remove --feature-gate VolumeSnapshotDataSource starting with 1.22
+	// Reference: https://github.com/kubernetes/kubernetes/pull/101531
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0-alpha.1") {
 		invalidFeatureGates = append(invalidFeatureGates, "VolumeSnapshotDataSource")
 	}
