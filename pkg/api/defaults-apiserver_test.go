@@ -502,7 +502,7 @@ func TestAPIServerFeatureGates(t *testing.T) {
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--feature-gates"] != "" {
 		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
-			defaultTestClusterVer, a["--feature-gates"])
+			"1.19.0", a["--feature-gates"])
 	}
 
 	// test 1.22.0
@@ -512,7 +512,7 @@ func TestAPIServerFeatureGates(t *testing.T) {
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--feature-gates"] != "" {
 		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
-			defaultTestClusterVer, a["--feature-gates"])
+			"1.22.0", a["--feature-gates"])
 	}
 
 	// test user-overrides, removal of VolumeSnapshotDataSource for k8s versions >= 1.22
@@ -536,7 +536,7 @@ func TestAPIServerFeatureGates(t *testing.T) {
 	cs.setAPIServerConfig()
 	if a["--feature-gates"] != "VolumeSnapshotDataSource=true" {
 		t.Fatalf("got unexpected '--feature-gates' API server config value for \"--feature-gates\": \"VolumeSnapshotDataSource=true\": %s for k8s v%s",
-			a["--feature-gates"], defaultTestClusterVer)
+			a["--feature-gates"], "1.19.0")
 	}
 }
 
