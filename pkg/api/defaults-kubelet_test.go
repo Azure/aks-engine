@@ -977,8 +977,8 @@ func TestKubeletConfigFeatureGates(t *testing.T) {
 	}
 
 	// test user-overrides
-	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
-	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	cs = CreateMockContainerService("testcluster", "", 3, 2, false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	k["--feature-gates"] = "DynamicKubeletConfig=true,ExecProbeTimeout=false"
 	cs.setKubeletConfig(false)
 	if k["--feature-gates"] != "DynamicKubeletConfig=true,ExecProbeTimeout=false,RotateKubeletServerCertificate=true" {
