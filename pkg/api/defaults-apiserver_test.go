@@ -486,9 +486,30 @@ func TestAPIServerCosmosEtcd(t *testing.T) {
 }
 
 func TestAPIServerFeatureGates(t *testing.T) {
+	// test defaultTestClusterVer
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
+			defaultTestClusterVer, a["--feature-gates"])
+	}
+
+	// test 1.19.0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.19.0"
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
+			defaultTestClusterVer, a["--feature-gates"])
+	}
+
+	// test 1.22.0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.22.0"
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--feature-gates"] != "" {
 		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
 			defaultTestClusterVer, a["--feature-gates"])
