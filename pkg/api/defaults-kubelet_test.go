@@ -975,7 +975,7 @@ func TestKubeletConfigFeatureGates(t *testing.T) {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
-  
+
 	// test user-overrides
 	cs := CreateMockContainerService("testcluster", "", 3, 2, false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
