@@ -949,19 +949,10 @@ func TestKubeletRotateCertificates(t *testing.T) {
 }
 
 func TestKubeletConfigFeatureGates(t *testing.T) {
-	// test 1.18
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.18", "", false, false, false), 3, 2, false)
+	// test 1.20
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "RotateKubeletServerCertificate=true" {
-		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
-			k["--feature-gates"])
-	}
-
-	// test 1.20
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.20", "", false, false, false), 3, 2, false)
-	cs.setKubeletConfig(false)
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "ExecProbeTimeout=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
