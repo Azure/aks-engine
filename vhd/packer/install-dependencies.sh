@@ -221,7 +221,7 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 K8S_VERSIONS="
 1.24.1
 1.23.7
-1.22.10
+1.22.11
 1.21.13
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
