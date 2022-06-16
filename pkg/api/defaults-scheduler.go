@@ -3,6 +3,8 @@
 
 package api
 
+import "github.com/Azure/aks-engine/pkg/api/common"
+
 // staticSchedulerConfig is not user-overridable
 var staticSchedulerConfig = map[string]string{
 	"--kubeconfig":   "/var/lib/kubelet/kubeconfig",
@@ -36,4 +38,11 @@ func (cs *ContainerService) setSchedulerConfig() {
 	for key, val := range staticSchedulerConfig {
 		o.KubernetesConfig.SchedulerConfig[key] = val
 	}
+
+	invalidFeatureGates := []string{}
+	// Remove --feature-gate VolumeSnapshotDataSource starting with 1.22
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0-alpha.1") {
+		invalidFeatureGates = append(invalidFeatureGates, "VolumeSnapshotDataSource")
+	}
+	removeInvalidFeatureGates(o.KubernetesConfig.SchedulerConfig, invalidFeatureGates)
 }

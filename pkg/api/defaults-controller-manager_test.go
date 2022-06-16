@@ -79,7 +79,7 @@ func TestControllerManagerConfigEnableProfiling(t *testing.T) {
 	}
 }
 
-func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
+func TestControllerManagerConfigFeatureGates(t *testing.T) {
 	// test defaultTestClusterVer
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.setControllerManagerConfig()
@@ -99,13 +99,13 @@ func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
 			cm["--feature-gates"])
 	}
 
-	// test user-overrides
+	// test 1.22.0
 	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
-	cm["--feature-gates"] = "TaintBasedEvictions=true"
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.22.0"
 	cs.setControllerManagerConfig()
-	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true,TaintBasedEvictions=true" {
-		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true,TaintBasedEvictions=true\": %s",
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true\": %s",
 			cm["--feature-gates"])
 	}
 
@@ -116,6 +116,38 @@ func TestControllerManagerConfigDefaultFeatureGates(t *testing.T) {
 	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
 	if cm["--feature-gates"] != "LegacyServiceAccountTokenNoAutoGeneration=false,LocalStorageCapacityIsolation=true" {
 		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LegacyServiceAccountTokenNoAutoGeneration=false,LocalStorageCapacityIsolation=true\": %s",
+			cm["--feature-gates"])
+	}
+
+	// test user-overrides
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	cm["--feature-gates"] = "TaintBasedEvictions=true"
+	cs.setControllerManagerConfig()
+	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true,TaintBasedEvictions=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true,TaintBasedEvictions=true\": %s",
+			cm["--feature-gates"])
+	}
+
+	// test user-overrides, removal of VolumeSnapshotDataSource for k8s versions >= 1.22
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.22.0"
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	cm["--feature-gates"] = "VolumeSnapshotDataSource=true"
+	cs.setControllerManagerConfig()
+	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true\": %s",
+			cm["--feature-gates"])
+	}
+
+	// test user-overrides, no removal of VolumeSnapshotDataSource for k8s versions < 1.22
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.19.0"
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	cm["--feature-gates"] = "VolumeSnapshotDataSource=true"
+	cs.setControllerManagerConfig()
+	if cm["--feature-gates"] != "LocalStorageCapacityIsolation=true,VolumeSnapshotDataSource=true" {
+		t.Fatalf("got unexpected '--feature-gates' Controller Manager config value for \"--feature-gates\": \"LocalStorageCapacityIsolation=true,VolumeSnapshotDataSource=true\": %s",
 			cm["--feature-gates"])
 	}
 }

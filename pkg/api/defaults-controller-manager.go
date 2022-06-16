@@ -102,4 +102,11 @@ func (cs *ContainerService) setControllerManagerConfig() {
 	if o.KubernetesConfig.IsRBACEnabled() {
 		o.KubernetesConfig.ControllerManagerConfig["--use-service-account-credentials"] = "true"
 	}
+
+	invalidFeatureGates := []string{}
+	// Remove --feature-gate VolumeSnapshotDataSource starting with 1.22
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.22.0-alpha.1") {
+		invalidFeatureGates = append(invalidFeatureGates, "VolumeSnapshotDataSource")
+	}
+	removeInvalidFeatureGates(o.KubernetesConfig.ControllerManagerConfig, invalidFeatureGates)
 }
