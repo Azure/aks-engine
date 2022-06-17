@@ -17,7 +17,7 @@ jobs:
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
-      -e AZURE_LOCATION=${AZURE_LOCATION} \
+      -e AZURE_LOCATION=eastus2 \
       -e AZURE_VM_SIZE=${PACKER_VM_SIZE} \
       -e GIT_BRANCH=$(Build.SourceBranchName) \
       -e GIT_REPO=$(Build.Repository.Uri) \
@@ -45,7 +45,7 @@ jobs:
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
-      -e LOCATION=${AZURE_LOCATION} \
+      -e LOCATION=eastus2 \
       -e ORCHESTRATOR_RELEASE="1.20" \
       -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \  
       -e TENANT_ID=${TENANT_ID} \

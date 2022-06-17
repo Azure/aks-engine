@@ -3,5 +3,5 @@
     "image_offer": "WindowsServer",
     "image_sku": "2022-datacenter-core-smalldisk",
     "image_version": "latest",
-    "windows_server_version": "2004"
+    "windows_server_version": "2022"
 }
