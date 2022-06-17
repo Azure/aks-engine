@@ -1,6 +1,8 @@
 variables:
   CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.32.3'
 
+pool:
+  vmImage: 'Ubuntu 18.04'
 jobs:
 - job: build_vhd_windows_2004_docker
   timeoutInMinutes: 210
