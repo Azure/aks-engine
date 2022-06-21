@@ -57,8 +57,8 @@ function Get-ContainerImages {
         }
         '2004' {
             $imagesToPull = @(
-                "mcr.microsoft.com/windows/servercore:2022",
-                "mcr.microsoft.com/windows/nanoserver:2022",
+                "mcr.microsoft.com/windows/servercore:ltsc2022",
+                "mcr.microsoft.com/windows/nanoserver:ltsc2022",
                 "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
                 "mcr.microsoft.com/oss/kubernetes/pause:3.4.1")
         }
