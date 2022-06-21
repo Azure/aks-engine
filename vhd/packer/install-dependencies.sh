@@ -220,9 +220,9 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.24.2
-1.23.7
-1.22.10
-1.21.13
+1.23.8
+1.22.11
+1.21.14
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
