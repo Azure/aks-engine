@@ -19,7 +19,7 @@ jobs:
       -e TENANT_ID=${TENANT_ID} \
       -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
       -e AZURE_LOCATION=${AZURE_LOCATION} \
-      -e AZURE_VM_SIZE="Standard_DS2_V2" \
+      -e AZURE_VM_SIZE="Standard_D1_v2" \
       -e GIT_BRANCH=$(Build.SourceBranchName) \
       -e GIT_REPO=$(Build.Repository.Uri) \
       -e GIT_VERSION=$(Build.SourceVersion) \
