@@ -121,26 +121,14 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.2.2/binaries/csi-proxy-v0.2.2.tar.gz"
         );
         "c:\akse-cache\win-k8s\"      = @(
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.13/windowszip/v1.21.13-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.10/windowszip/v1.22.10-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.7/windowszip/v1.23.7-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.24.1/windowszip/v1.24.1-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.17-azs/windowszip/v1.17.17-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.15-azs/windowszip/v1.18.15-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.18-azs/windowszip/v1.18.18-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.10-azs/windowszip/v1.19.10-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.6-azs/windowszip/v1.20.6-azs-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.17/windowszip/v1.17.17-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.8/windowszip/v1.18.8-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.17/windowszip/v1.18.17-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.15-azs/windowszip/v1.19.15-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.11-azs/windowszip/v1.20.11-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.20/windowszip/v1.18.20-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.9/windowszip/v1.19.9-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.14/windowszip/v1.19.14-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.5/windowszip/v1.20.5-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.10/windowszip/v1.20.10-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.0/windowszip/v1.21.0-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.4/windowszip/v1.21.4-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.1/windowszip/v1.22.1-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.15/windowszip/v1.19.15-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.11/windowszip/v1.20.11-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.5/windowszip/v1.21.5-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.2/windowszip/v1.22.2-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.0-alpha.2/windowszip/v1.23.0-alpha.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.13/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.13.zip",
@@ -148,6 +136,9 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.16/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.16.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.2/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.2.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.7/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.7.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.12/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.12.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.0/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.0.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.9/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.9.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.12/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.12.zip"
         )
     }
@@ -193,7 +184,7 @@ function Install-ContainerD {
 }
 
 function Install-Docker {
-    $defaultDockerVersion = "19.03.14"
+    $defaultDockerVersion = "20.10.6"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
