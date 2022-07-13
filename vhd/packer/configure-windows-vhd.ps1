@@ -126,7 +126,7 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.11/windowszip/v1.22.11-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.6/windowszip/v1.23.6-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.8/windowszip/v1.23.8-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.24.2/windowszip/v1.24.2-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.24.3/windowszip/v1.24.3-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.13/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.13.zip",
