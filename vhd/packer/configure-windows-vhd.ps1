@@ -59,8 +59,7 @@ function Get-ContainerImages {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:ltsc2022",
                 "mcr.microsoft.com/windows/nanoserver:ltsc2022",
-                "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
-                "mcr.microsoft.com/oss/kubernetes/pause:3.4.1")
+                "mcr.microsoft.com/oss/kubernetes/pause:3.6-windows-ltsc2022-amd64")
         }
         default {
             $imagesToPull = @()
