@@ -46,7 +46,7 @@ var (
 	germanyCentralName          = "germanycentral"
 	germanyNortheastDisplayName = "Germany Northeast"
 	germanyNortheastName        = "germanynortheast"
-	qatarCentralDisplayName     = "Qatar Central"
+	qatarCentralDisplayName     = "(Middle East) Qatar Central"
 	qatarCentralName            = "qatarcentral"
 	usDodCentralDisplayName     = "US DoD Central"
 	usDodCentralName            = "usdodcentral"
