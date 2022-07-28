@@ -221,6 +221,13 @@ func ExampleLocationsCmd_run_jsonOutput() {
 	//   },
 	//   {
 	//     "id": "N/A",
+	//     "name": "qatarcentral",
+	//     "displayName": "Qatar Central",
+	//     "latitude": "N/A",
+	//     "longitude": "N/A"
+	//   },
+	//   {
+	//     "id": "N/A",
 	//     "name": "usdodcentral",
 	//     "displayName": "US DoD Central",
 	//     "latitude": "N/A",
