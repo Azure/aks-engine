@@ -47,7 +47,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
+          LOCATION: "westus3"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
@@ -63,7 +63,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
+          LOCATION: "westus3"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
@@ -79,7 +79,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
+          LOCATION: "westus3"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
@@ -95,7 +95,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
+          LOCATION: "westus3"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
@@ -129,7 +129,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
+          LOCATION: "westus3"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
@@ -147,7 +147,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "westus2"
+          LOCATION: "westus3"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
