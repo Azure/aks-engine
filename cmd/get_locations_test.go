@@ -108,6 +108,7 @@ func ExampleLocationsCmd_run_humanOutput() {
 	// eastus2euap       East US 2 EUAP (Canary)   N/A       N/A
 	// germanycentral    Germany Central           N/A       N/A
 	// germanynortheast  Germany Northeast         N/A       N/A
+	// qatarcentral      Qatar Central             N/A       N/A
 	// usdodcentral      US DoD Central            N/A       N/A
 	// usdodeast         US Dod East               N/A       N/A
 	// usgovarizona      US Gov Arizona            N/A       N/A
