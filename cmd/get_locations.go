@@ -46,8 +46,6 @@ var (
 	germanyCentralName          = "germanycentral"
 	germanyNortheastDisplayName = "Germany Northeast"
 	germanyNortheastName        = "germanynortheast"
-	qatarCentralDisplayName     = "(Middle East) Qatar Central"
-	qatarCentralName            = "qatarcentral"
 	usDodCentralDisplayName     = "US DoD Central"
 	usDodCentralName            = "usdodcentral"
 	usDodEastDisplayName        = "US Dod East"
@@ -246,14 +244,6 @@ func (glc *LocationsCmd) run(cmd *cobra.Command, args []string) error {
 			ID:          &notAvailable,
 			Name:        &germanyNortheastName,
 			DisplayName: &germanyNortheastDisplayName,
-			Latitude:    &notAvailable,
-			Longitude:   &notAvailable,
-		},
-		// Pre-release locations
-		{
-			ID:          &notAvailable,
-			Name:        &qatarCentralName,
-			DisplayName: &qatarCentralDisplayName,
 			Latitude:    &notAvailable,
 			Longitude:   &notAvailable,
 		},
