@@ -97,24 +97,23 @@ func ExampleLocationsCmd_run_humanOutput() {
 	}
 
 	// Output:
-	// Location          Name                         Latitude  Longitude
-	// centraluseuap     Central US EUAP (Canary)     N/A       N/A
-	// chinaeast         China East                   N/A       N/A
-	// chinaeast2        China East 2                 N/A       N/A
-	// chinaeast3        China East 3                 N/A       N/A
-	// chinanorth        China North                  N/A       N/A
-	// chinanorth2       China North 2                N/A       N/A
-	// chinanorth3       China North 3                N/A       N/A
-	// eastus2euap       East US 2 EUAP (Canary)      N/A       N/A
-	// germanycentral    Germany Central              N/A       N/A
-	// germanynortheast  Germany Northeast            N/A       N/A
-	// qatarcentral      (Middle East) Qatar Central  N/A       N/A
-	// usdodcentral      US DoD Central               N/A       N/A
-	// usdodeast         US Dod East                  N/A       N/A
-	// usgovarizona      US Gov Arizona               N/A       N/A
-	// usgoviowa         US Gov Iowa                  N/A       N/A
-	// usgovtexas        US Gov Texas                 N/A       N/A
-	// usgovvirginia     US Gov Virginia              N/A       N/A
+	// Location          Name                      Latitude  Longitude
+	// centraluseuap     Central US EUAP (Canary)  N/A       N/A
+	// chinaeast         China East                N/A       N/A
+	// chinaeast2        China East 2              N/A       N/A
+	// chinaeast3        China East 3              N/A       N/A
+	// chinanorth        China North               N/A       N/A
+	// chinanorth2       China North 2             N/A       N/A
+	// chinanorth3       China North 3             N/A       N/A
+	// eastus2euap       East US 2 EUAP (Canary)   N/A       N/A
+	// germanycentral    Germany Central           N/A       N/A
+	// germanynortheast  Germany Northeast         N/A       N/A
+	// usdodcentral      US DoD Central            N/A       N/A
+	// usdodeast         US Dod East               N/A       N/A
+	// usgovarizona      US Gov Arizona            N/A       N/A
+	// usgoviowa         US Gov Iowa               N/A       N/A
+	// usgovtexas        US Gov Texas              N/A       N/A
+	// usgovvirginia     US Gov Virginia           N/A       N/A
 }
 
 func ExampleLocationsCmd_run_jsonOutput() {
@@ -217,13 +216,6 @@ func ExampleLocationsCmd_run_jsonOutput() {
 	//     "id": "N/A",
 	//     "name": "germanynortheast",
 	//     "displayName": "Germany Northeast",
-	//     "latitude": "N/A",
-	//     "longitude": "N/A"
-	//   },
-	//   {
-	//     "id": "N/A",
-	//     "name": "qatarcentral",
-	//     "displayName": "(Middle East) Qatar Central",
 	//     "latitude": "N/A",
 	//     "longitude": "N/A"
 	//   },
