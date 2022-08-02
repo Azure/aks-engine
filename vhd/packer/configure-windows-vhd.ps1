@@ -51,6 +51,7 @@ function Get-ContainerImages {
                 "mcr.microsoft.com/oss/kubernetes/pause:3.4.1",
                 "mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v1.0.8",
                 "mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v1.1.4",
+                "mcr.microsoft.com/oss/kubernetes/azure-cloud-node-manager:v1.23.11",
                 "mcr.microsoft.com/oss/kubernetes-csi/azuredisk-csi:v1.10.0",
                 "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v2.4.0",
                 "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.5.0")
