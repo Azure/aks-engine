@@ -207,7 +207,7 @@
       }
     },
     "mobyVersion": {
-      "defaultValue": "20.10.11",
+      "defaultValue": "20.10.14",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -233,12 +233,13 @@
          "20.10.8",
          "20.10.9",
          "20.10.10",
-         "20.10.11"
+         "20.10.11",
+         "20.10.14"
        ],
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.5.11",
+      "defaultValue": "1.5.13",
       "metadata": {
         "description": "The Azure containerd build version"
       },
@@ -257,7 +258,8 @@
          "1.4.8",
          "1.4.9",
          "1.4.11",
-         "1.5.11"
+         "1.5.11",
+         "1.5.13"
        ],
       "type": "string"
     },

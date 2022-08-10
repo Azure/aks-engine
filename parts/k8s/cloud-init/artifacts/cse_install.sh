@@ -107,8 +107,8 @@ mobyPkgVersion() {
 installRunc() {
   local v
   v=$(runc --version | head -n 1 | cut -d" " -f3)
-  if [[ $v != "1.0.3" ]]; then
-    apt_get_install 20 30 120 moby-runc=1.0.3* --allow-downgrades || exit 27
+  if [[ $v != "1.1.2" ]]; then
+    apt_get_install 20 30 120 moby-runc=1.1.2* --allow-downgrades || exit 27
   fi
 }
 installMoby() {
