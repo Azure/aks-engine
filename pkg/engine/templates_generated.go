@@ -17626,8 +17626,8 @@ installRunc() {
     url=${MS_APT_REPO}/ubuntu/${UBUNTU_RELEASE}/multiarch/prod/pool/main/m/moby-runc/moby-runc_1.1.2%2Bazure-ubuntu${UBUNTU_RELEASE}u1_amd64.deb
     if [[ -n "${url:-}" ]]; then
       DEB="${url##*/}"
-      retrycmd_no_stats 120 5 25 curl -fsSL ${url} >/tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_DOWNLOAD_TIMEOUT"}}
-      dpkg_install 20 30 /tmp/${DEB} || exit {{GetCSEErrorCode "ERR_DEB_PKG_ADD_FAIL"}}
+      retrycmd_no_stats 120 5 25 curl -fsSL ${url} >/tmp/${DEB} || exit 184
+      dpkg_install 20 30 /tmp/${DEB} || exit 184
     fi
   fi
 }
