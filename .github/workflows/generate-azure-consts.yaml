@@ -10,9 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: install go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: '^1.16'
+          go-version-file: 'go.mod'
       - name: create generated constants
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
