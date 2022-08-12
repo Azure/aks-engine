@@ -4,7 +4,7 @@ LOCALBIN		= $(shell pwd)/bin
 all: install
 
 .PHONY: install
-install: $(LOCALBIN)/go-bindata $(LOCALBIN)/gox $(LOCALBIN)/ginkgo $(LOCALBIN)/golangci-lint $(LOCALBIN)/pub $(LOCALBIN)/mockgen
+install: $(LOCALBIN)/go-bindata $(LOCALBIN)/gox $(LOCALBIN)/ginkgo $(LOCALBIN)/golangci-lint $(LOCALBIN)/mockgen
 	@echo > /dev/null
 
 $(LOCALBIN)/go-bindata:
@@ -20,7 +20,7 @@ $(LOCALBIN)/golangci-lint:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.41.1
 
 $(LOCALBIN)/pub:
-	GOBIN=$(LOCALBIN) $(GO) install github.com/devigned/pub@v0.2.6
+	GOBIN=$(LOCALBIN) $(GO) install github.com/devigned/pub@v0.3.2
 
 $(LOCALBIN)/mockgen:
 	GOBIN=$(LOCALBIN) $(GO) install github.com/golang/mock/mockgen@v1.2.0
