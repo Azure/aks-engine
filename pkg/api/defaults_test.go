@@ -1275,7 +1275,7 @@ func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
 
 func TestContainerRuntime(t *testing.T) {
 
-	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10", "19.03.11", "19.03.12", "19.03.13", "19.03.14", "20.10.5", "20.10.7", "20.10.8", "20.10.9", "20.10.10", "20.10.11"} {
+	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10", "19.03.11", "19.03.12", "19.03.13", "19.03.14", "20.10.5", "20.10.7", "20.10.8", "20.10.9", "20.10.10", "20.10.11", "20.10.14"} {
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
 		properties.OrchestratorProfile.KubernetesConfig.MobyVersion = mobyVersion
@@ -6115,10 +6115,10 @@ func ExampleContainerService_setOrchestratorDefaults() {
 	mockCS.setOrchestratorDefaults(false, false)
 
 	// Output:
-	// level=warning msg="Moby will be upgraded to version 20.10.11\n"
-	// level=warning msg="containerd will be upgraded to version 1.5.11\n"
-	// level=warning msg="Any new nodes will have Moby version 20.10.11\n"
-	// level=warning msg="Any new nodes will have containerd version 1.5.11\n"
+	// level=warning msg="Moby will be upgraded to version 20.10.14\n"
+	// level=warning msg="containerd will be upgraded to version 1.5.13\n"
+	// level=warning msg="Any new nodes will have Moby version 20.10.14\n"
+	// level=warning msg="Any new nodes will have containerd version 1.5.13\n"
 }
 
 func TestCombineValues(t *testing.T) {
