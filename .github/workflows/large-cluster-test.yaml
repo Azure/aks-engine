@@ -22,7 +22,7 @@ jobs:
       - name: install go
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.16'
+          go-version: '^1.18'
       - name: Install helm
         run: |
           curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
