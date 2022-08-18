@@ -3,7 +3,7 @@
 
 package api
 
-//AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
+// AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
 type AzureEnvironmentSpecConfig struct {
 	CloudName            string                        `json:"cloudName,omitempty"`
 	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
@@ -11,7 +11,7 @@ type AzureEnvironmentSpecConfig struct {
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
 }
 
-//KubernetesSpecConfig is the kubernetes container images used.
+// KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
 	AzureTelemetryPID string `json:"azureTelemetryPID,omitempty"`
 	// KubernetesImageBase defines a base image URL substring to source images that originate from upstream k8s.gcr.io
@@ -36,12 +36,12 @@ type KubernetesSpecConfig struct {
 	AlwaysPullWindowsPauseImage          bool   `json:"alwaysPullWindowsPauseImage,omitempty"`
 }
 
-//AzureEndpointConfig describes an Azure endpoint
+// AzureEndpointConfig describes an Azure endpoint
 type AzureEndpointConfig struct {
 	ResourceManagerVMDNSSuffix string `json:"resourceManagerVMDNSSuffix,omitempty"`
 }
 
-//AzureOSImageConfig describes an Azure OS image
+// AzureOSImageConfig describes an Azure OS image
 type AzureOSImageConfig struct {
 	ImageOffer     string `json:"imageOffer,omitempty"`
 	ImageSku       string `json:"imageSku,omitempty"`
@@ -132,7 +132,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202112",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2022.04.07",
+		ImageVersion:   "2022.08.12",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
