@@ -1,9 +1,8 @@
 
 <a name="v0.71.0"></a>
 # [v0.71.0] - 2022-09-06
-### Continuous Integration 💜
-- remove 1.24 no-egress requirement ([#4947](https://github.com/Azure/aks-engine/issues/4947))
-- remove 1.20 no-egress requirement ([#4944](https://github.com/Azure/aks-engine/issues/4944))
+
+This release includes a VHD reference running the `5.4.0-1089-azure` version of the Linux kernel on Ubuntu 18.04-LTS. In order to fast-track this release, we have bypassed airgap validation for 1.24 of Kubernetes. FYI!
 
 ### Maintenance 🔧
 - updating Windows VHDs for next aks-engine release ([#4936](https://github.com/Azure/aks-engine/issues/4936))
