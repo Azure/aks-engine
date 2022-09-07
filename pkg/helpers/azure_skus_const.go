@@ -2893,6 +2893,10 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_NCC24ads_A100_v4",
+		AcceleratedNetworking: true,
+	},
+	{
 		Name:                  "Standard_ND12s",
 		AcceleratedNetworking: false,
 	},
