@@ -219,7 +219,7 @@ loadContainerImage "mcr.microsoft.com/oss/busybox/busybox:1.33.1"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.24.3
+1.24.4
 1.23.9
 1.23.6
 1.22.12
