@@ -8,7 +8,7 @@
 
 This project is deprecated for Azure public cloud customers. Please consider using [Azure Kubernetes Service (AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/#overview) for managed Kubernetes or [Cluster API Provider Azure](https://github.com/kubernetes-sigs/cluster-api-provider-azure) for self-managed Kubernetes. There are no new features planned; this project will only be updated for CVEs & similar, with Kubernetes 1.24 as the final version to receive updates.
 
-For use on [Azure Stack Hub product](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-kubernetes-aks-engine-overview) this project is fully supported and will continue to be supported throughout the lifespan of Azure Stack Hub. 
+For use on [Azure Stack Hub product](https://docs.microsoft.com/en-us/azure-stack/user/azure-stack-kubernetes-aks-engine-overview) this project is fully supported and will continue to be supported by the Hub team throughout the lifespan of Azure Stack Hub. 
 
 ## Overview
 
