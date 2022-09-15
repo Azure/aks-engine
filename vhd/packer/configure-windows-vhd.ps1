@@ -124,7 +124,7 @@ function Get-FilesToCacheOnVHD {
         "c:\akse-cache\win-k8s\"      = @(
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.14/windowszip/v1.21.14-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.7/windowszip/v1.22.7-1int.zip",
-            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.13/windowszip/v1.22.13-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.14/windowszip/v1.22.14-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.6/windowszip/v1.23.6-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.10/windowszip/v1.23.10-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.24.4/windowszip/v1.24.4-1int.zip"
