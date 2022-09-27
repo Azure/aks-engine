@@ -314,7 +314,9 @@ installContainerd() {
   if [[ $v != "${CONTAINERD_VERSION}"* ]]; then
     os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
     if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
-      url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
+      url_path="${os_lower}/${UBUNTU_RELEASE}"
+      [[ ${UBUNTU_RELEASE} == "20.04" ]] || url_path+="/multiarch"
+      url_path+="/prod"
     elif [[ ${OS} == "${DEBIAN_OS_NAME}" ]]; then
       url_path="${os_lower}/${UBUNTU_RELEASE}/prod"
     else
@@ -646,7 +648,7 @@ ensureGPUDrivers() {
 {{end}}
 {{- if HasDCSeriesSKU}}
 installSGXDrivers() {
-  [[ $UBUNTU_RELEASE == "18.04" || $UBUNTU_RELEASE == "16.04" ]] || exit 92
+  [[ $UBUNTU_RELEASE == "20.04" || $UBUNTU_RELEASE == "18.04" || $UBUNTU_RELEASE == "16.04" ]] || exit 92
 
   local packages="make gcc dkms" oe_dir="/opt/azure/containers/oe"
   wait_for_apt_locks

@@ -43,7 +43,7 @@ wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEE
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
-if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
   disable1804SystemdResolved
 fi
 
@@ -81,7 +81,7 @@ fi
 {{- if not IsVHDDistroForAllNodes}}
 if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
   time_metric "InstallDeps" installDeps
-  if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
     overrideNetworkConfig
   fi
   {{- if not IsDockerContainerRuntime}}
@@ -90,7 +90,7 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
 fi
 {{end}}
 
-if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
   if apt list --installed | grep 'chrony'; then
     time_metric "ConfigureChrony" configureChrony
     time_metric "EnsureChrony" ensureChrony
@@ -178,15 +178,22 @@ if [[ ${SGX_NODE} == true && ! -e "/dev/sgx" ]]; then
 fi
 {{end}}
 
-{{/* create etcd user if we are configured for etcd */}}
-if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
-  time_metric "ConfigureEtcdUser" configureEtcdUser
-fi
-
 if [[ -n ${MASTER_NODE} ]]; then
+  {{/* create etcd user if we are configured for etcd */}}
+  if [[ -z ${COSMOS_URI} ]]; then
+    time_metric "ConfigureEtcdUser" configureEtcdUser
+  fi
+
   {{/* this step configures all certs */}}
   {{/* both configs etcd/cosmos */}}
   time_metric "ConfigureSecrets" configureSecrets
+
+  {{/* HACK:  in case a master starts with incorrectly defeind cloud-init IPs */}}
+  if grep -q -E '^ +addresses:|^ +- ' /etc/netplan/50-cloud-init.yaml; then
+    x=$(grep -v -E '^ +addresses:|^ +- ' /etc/netplan/50-cloud-init.yaml)
+    echo "$x" >/etc/netplan/50-cloud-init.yaml
+    netplan apply
+  fi
 fi
 
 {{/* configure etcd if we are configured for etcd */}}

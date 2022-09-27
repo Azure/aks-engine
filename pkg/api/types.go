@@ -1358,9 +1358,19 @@ func (m *MasterProfile) IsUbuntu1804() bool {
 	}
 }
 
+// IsUbuntu2004 returns true if the master profile distro is based on Ubuntu 20.04
+func (m *MasterProfile) IsUbuntu2004() bool {
+	switch m.Distro {
+	case Ubuntu2004:
+		return true
+	default:
+		return false
+	}
+}
+
 // IsUbuntu returns true if the master profile distro is any ubuntu distro
 func (m *MasterProfile) IsUbuntu() bool {
-	return m.IsUbuntu1604() || m.IsUbuntu1804()
+	return m.IsUbuntu1604() || m.IsUbuntu1804() || m.IsUbuntu2004()
 }
 
 // IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
@@ -1486,7 +1496,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 	return false
 }
 
-// IsUbuntu1804 returns true if the agent pool profile distro is based on Ubuntu 16.04
+// IsUbuntu1804 returns true if the agent pool profile distro is based on Ubuntu 18.04
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
@@ -1499,9 +1509,22 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	return false
 }
 
+// IsUbuntu2004 returns true if the agent pool profile distro is based on Ubuntu 20.04
+func (a *AgentPoolProfile) IsUbuntu2004() bool {
+	if a.OSType != Windows {
+		switch a.Distro {
+		case Ubuntu2004:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
+}
+
 // IsUbuntu returns true if the master profile distro is any ubuntu distro
 func (a *AgentPoolProfile) IsUbuntu() bool {
-	return a.IsUbuntu1604() || a.IsUbuntu1804()
+	return a.IsUbuntu1604() || a.IsUbuntu1804() || a.IsUbuntu2004()
 }
 
 // IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image

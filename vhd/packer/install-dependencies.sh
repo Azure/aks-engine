@@ -56,7 +56,7 @@ apt packages:
   - xz-utils
   - zip
 EOF
-if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
 {
   echo "  - ntp"
   echo "  - ntpstat"
@@ -66,7 +66,7 @@ fi
 
 chmod a-x /etc/update-motd.d/??-{motd-news,release-upgrade}
 
-if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 

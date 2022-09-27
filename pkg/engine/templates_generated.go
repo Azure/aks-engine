@@ -16570,7 +16570,9 @@ installContainerd() {
   if [[ $v != "${CONTAINERD_VERSION}"* ]]; then
     os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
     if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
-      url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
+      url_path="${os_lower}/${UBUNTU_RELEASE}"
+      [[ ${UBUNTU_RELEASE} == "20.04" ]] || url_path+="/multiarch"
+      url_path+="/prod"
     elif [[ ${OS} == "${DEBIAN_OS_NAME}" ]]; then
       url_path="${os_lower}/${UBUNTU_RELEASE}/prod"
     else
@@ -16902,7 +16904,7 @@ ensureGPUDrivers() {
 {{end}}
 {{- if HasDCSeriesSKU}}
 installSGXDrivers() {
-  [[ $UBUNTU_RELEASE == "18.04" || $UBUNTU_RELEASE == "16.04" ]] || exit 92
+  [[ $UBUNTU_RELEASE == "20.04" || $UBUNTU_RELEASE == "18.04" || $UBUNTU_RELEASE == "16.04" ]] || exit 92
 
   local packages="make gcc dkms" oe_dir="/opt/azure/containers/oe"
   wait_for_apt_locks
@@ -17233,7 +17235,7 @@ if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
   UBUNTU_RELEASE=$(lsb_release -r -s)
 fi
 DOCKER=/usr/bin/docker
-if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+if [[ $UBUNTU_RELEASE == "20.04" || $UBUNTU_RELEASE == "18.04" ]]; then
   export GPU_DV=470.103.01
 else
   export GPU_DV=418.40.04
@@ -17550,7 +17552,10 @@ installEtcd() {
   fi
 }
 installDeps() {
-  packages="apache2-utils apt-transport-https blobfuse=1.1.1 ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+  {{/* We used to pin to 1.1.1 of blobfuse - does not exist in 20.04 and it is questionable */}}
+  packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount net-tools nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+  {{/* ... but if we need to in 18.04, this will pin it - we likely should not */}}
+  [[ $UBUNTU_RELEASE == "18.04" ]] && packages=${packages/ blobfuse / blobfuse=1.1.1 }
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
     retrycmd_no_stats 120 5 25 curl -fsSL ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
@@ -17560,9 +17565,9 @@ installDeps() {
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     aptmarkWALinuxAgent hold
     packages+=" cgroup-lite ceph-common glusterfs-client"
-    if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+    if [[ $UBUNTU_RELEASE == "20.04" || $UBUNTU_RELEASE == "18.04" ]]; then
       disableTimeSyncd
-      packages+=" ntp ntpstat chrony"
+      packages+=" ntp ntpstat chrony net-tools"
     fi
   elif [[ $OS == $DEBIAN_OS_NAME ]]; then
     packages+=" gpg cgroup-bin"
@@ -17623,7 +17628,9 @@ installRunc() {
   local url
   v=$(runc --version | head -n 1 | cut -d" " -f3)
   if [[ $v != "1.1.2" ]]; then
-    url=${MS_APT_REPO}/ubuntu/${UBUNTU_RELEASE}/multiarch/prod/pool/main/m/moby-runc/moby-runc_1.1.2%2Bazure-ubuntu${UBUNTU_RELEASE}u1_amd64.deb
+    url=${MS_APT_REPO}/ubuntu/${UBUNTU_RELEASE}
+    [[ ${UBUNTU_RELEASE} == "20.04" ]] || url=${url}/multiarch
+    url=${url}/prod/pool/main/m/moby-runc/moby-runc_1.1.2%2Bazure-ubuntu${UBUNTU_RELEASE}u1_amd64.deb
     if [[ -n "${url:-}" ]]; then
       DEB="${url##*/}"
       retrycmd_no_stats 120 5 25 curl -fsSL ${url} >/tmp/${DEB} || exit 184
@@ -17835,7 +17842,7 @@ wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEE
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
-if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
   disable1804SystemdResolved
 fi
 
@@ -17873,7 +17880,7 @@ fi
 {{- if not IsVHDDistroForAllNodes}}
 if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
   time_metric "InstallDeps" installDeps
-  if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
     overrideNetworkConfig
   fi
   {{- if not IsDockerContainerRuntime}}
@@ -17882,7 +17889,7 @@ if [[ $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ]] && [ "$FULL_INSTALL_RE
 fi
 {{end}}
 
-if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+if [[ ${UBUNTU_RELEASE} == "20.04" || ${UBUNTU_RELEASE} == "18.04" ]]; then
   if apt list --installed | grep 'chrony'; then
     time_metric "ConfigureChrony" configureChrony
     time_metric "EnsureChrony" ensureChrony
@@ -17970,15 +17977,22 @@ if [[ ${SGX_NODE} == true && ! -e "/dev/sgx" ]]; then
 fi
 {{end}}
 
-{{/* create etcd user if we are configured for etcd */}}
-if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
-  time_metric "ConfigureEtcdUser" configureEtcdUser
-fi
-
 if [[ -n ${MASTER_NODE} ]]; then
+  {{/* create etcd user if we are configured for etcd */}}
+  if [[ -z ${COSMOS_URI} ]]; then
+    time_metric "ConfigureEtcdUser" configureEtcdUser
+  fi
+
   {{/* this step configures all certs */}}
   {{/* both configs etcd/cosmos */}}
   time_metric "ConfigureSecrets" configureSecrets
+
+  {{/* HACK:  in case a master starts with incorrectly defeind cloud-init IPs */}}
+  if grep -q -E '^ +addresses:|^ +- ' /etc/netplan/50-cloud-init.yaml; then
+    x=$(grep -v -E '^ +addresses:|^ +- ' /etc/netplan/50-cloud-init.yaml)
+    echo "$x" >/etc/netplan/50-cloud-init.yaml
+    netplan apply
+  fi
 fi
 
 {{/* configure etcd if we are configured for etcd */}}
@@ -19698,6 +19712,16 @@ write_files:
   {{end}}
 {{end}}
 
+{{- if .MasterProfile.IsUbuntu2004}}
+  {{- if not .MasterProfile.IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
 {{- if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
@@ -20308,6 +20332,16 @@ write_files:
 {{end}}
 
 {{- if .IsUbuntu1804}}
+  {{- if not .IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
+{{- if .IsUbuntu2004}}
   {{- if not .IsVHDDistro}}
 - path: /var/run/reboot-required
   permissions: "0644"
