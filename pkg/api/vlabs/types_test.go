@@ -609,6 +609,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu2004,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: "foo",
 				},
 			},
@@ -667,6 +676,17 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 					{
 						Count:  1,
 						Distro: Ubuntu1804Gen2,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu2004,
 					},
 				},
 			},

@@ -36,7 +36,10 @@ installEtcd() {
   fi
 }
 installDeps() {
-  packages="apache2-utils apt-transport-https blobfuse=1.1.1 ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+  {{/* We used to pin to 1.1.1 of blobfuse - does not exist in 20.04 and it is questionable */}}
+  packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils conntrack cracklib-runtime dbus dkms ebtables ethtool fuse gcc git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools linux-headers-$(uname -r) make mount net-tools nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+  {{/* ... but if we need to in 18.04, this will pin it - we likely should not */}}
+  [[ $UBUNTU_RELEASE == "18.04" ]] && packages=${packages/ blobfuse / blobfuse=1.1.1 }
   if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
     retrycmd_no_stats 120 5 25 curl -fsSL ${MS_APT_REPO}/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb >/tmp/packages-microsoft-prod.deb || exit 42
     retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit 43
@@ -46,9 +49,9 @@ installDeps() {
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     aptmarkWALinuxAgent hold
     packages+=" cgroup-lite ceph-common glusterfs-client"
-    if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+    if [[ $UBUNTU_RELEASE == "20.04" || $UBUNTU_RELEASE == "18.04" ]]; then
       disableTimeSyncd
-      packages+=" ntp ntpstat chrony"
+      packages+=" ntp ntpstat chrony net-tools"
     fi
   elif [[ $OS == $DEBIAN_OS_NAME ]]; then
     packages+=" gpg cgroup-bin"
@@ -109,7 +112,9 @@ installRunc() {
   local url
   v=$(runc --version | head -n 1 | cut -d" " -f3)
   if [[ $v != "1.1.2" ]]; then
-    url=${MS_APT_REPO}/ubuntu/${UBUNTU_RELEASE}/multiarch/prod/pool/main/m/moby-runc/moby-runc_1.1.2%2Bazure-ubuntu${UBUNTU_RELEASE}u1_amd64.deb
+    url=${MS_APT_REPO}/ubuntu/${UBUNTU_RELEASE}
+    [[ ${UBUNTU_RELEASE} == "20.04" ]] || url=${url}/multiarch
+    url=${url}/prod/pool/main/m/moby-runc/moby-runc_1.1.2%2Bazure-ubuntu${UBUNTU_RELEASE}u1_amd64.deb
     if [[ -n "${url:-}" ]]; then
       DEB="${url##*/}"
       retrycmd_no_stats 120 5 25 curl -fsSL ${url} >/tmp/${DEB} || exit 184

@@ -784,7 +784,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			}
 
 		// Validate that --protect-kernel-defaults is not enabled for relevant distros
-		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, ACC1604, Flatcar:
+		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, Ubuntu2004, ACC1604, Flatcar:
 			cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 			if distro == Flatcar {
 				cs.Properties.MasterProfile.Distro = Ubuntu1804
@@ -839,7 +839,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	// Validate that --protect-kernel-defaults is overridable
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804:
+		case Ubuntu, Ubuntu2004, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"

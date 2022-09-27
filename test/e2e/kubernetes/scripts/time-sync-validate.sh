@@ -14,7 +14,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
   if [[ $RELEASE == "16.04" ]]; then
     sudo timedatectl status | grep 'Network time on: yes' || exit 1
     sudo timedatectl status | grep 'NTP synchronized: yes' || exit 1
-  elif [[ $RELEASE == "18.04" ]]; then
+  elif [[ $RELEASE == "20.04" || $RELEASE == "18.04" ]]; then
     if apt list --installed | grep 'chrony'; then
       sudo chronyc sources | grep '#* PHC' || exit 1 # Make sure chrony is running and synced with host-based PTP source clock ('#' means local clock and '*' means synced)
     else
@@ -29,7 +29,7 @@ if [[ $OS == $DEBIAN_OS_NAME ]]; then
 fi
 
 sudo timedatectl status | grep 'RTC in local TZ: no' || exit 1
-if ! { [ $OS = $UBUNTU_OS_NAME ] && [ $RELEASE = "18.04" ]; }; then
+if ! { [ $OS = $UBUNTU_OS_NAME ]; }; then
   sudo systemctl status systemd-timesyncd | grep 'Active: active' || exit 1
   sudo systemctl status systemd-timesyncd | grep 'Status: "Synchronized to time server' || exit 1
 fi

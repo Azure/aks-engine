@@ -20,6 +20,7 @@ PROJECT         := aks-engine
 VERSION         ?= $(shell git rev-parse HEAD)
 VERSION_SHORT   ?= $(shell git rev-parse --short HEAD)
 GITTAG          := $(shell git describe --exact-match --tags $(shell git log -n1 --pretty='%h') 2> /dev/null)
+GOPATH          ?= $(shell $(GO) env GOPATH)
 GOBIN           ?= $(shell $(GO) env GOPATH)/bin
 TOOLSBIN        := $(CURDIR)/hack/tools/bin
 AIKey           ?= c92d8284-b550-4b06-b7ba-e80fd7178faa

@@ -65,6 +65,16 @@ write_files:
   {{end}}
 {{end}}
 
+{{- if .IsUbuntu2004}}
+  {{- if not .IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
 {{- if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
