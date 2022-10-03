@@ -1,7 +1,7 @@
 {
     "image_publisher": "MicrosoftWindowsServer",
     "image_offer": "WindowsServer",
-    "image_sku": "datacenter-core-2004-with-containers-smalldisk",
-    "image_version": "19041.508.2009070256",
+    "image_sku": "2022-datacenter-core-smalldisk",
+    "image_version": "latest",
     "windows_server_version": "2004"
 }
