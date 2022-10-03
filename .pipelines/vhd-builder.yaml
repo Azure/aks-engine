@@ -10,7 +10,7 @@ variables:
   CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.32.3'
 
 pool:
-  vmImage: 'Ubuntu 18.04'
+  vmImage: 'Ubuntu 20.04'
 steps:
 - script: |
     docker run --rm \
@@ -26,7 +26,6 @@ steps:
     -e GIT_VERSION=$(Build.SourceVersion) \
     -e BUILD_ID=$(Build.BuildId) \
     -e BUILD_NUMBER=$(Build.BuildNumber) \
-    -e UBUNTU_SKU=18.04 \
     ${CONTAINER_IMAGE} make run-packer
   displayName: Building VHD
 - task: PublishPipelineArtifact@0
