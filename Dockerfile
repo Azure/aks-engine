@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.2
 
-ARG GO_VERSION=1.16
+ARG GO_VERSION=1.18
 ARG GO_IMAGE=golang:${GO_VERSION}
 
 
@@ -30,4 +30,3 @@ RUN \
 # Alaways last so a simple `docker build` with no `--target` will produce the binary
 FROM scratch AS binary
 COPY --from=build /go/src/github.com/azure/aks-engine/bin/* /
-
