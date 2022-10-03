@@ -46,6 +46,49 @@ if ($global:EnableHostsConfigAgent) {
     Stop-Service hosts-config-agent
 }
 
+function Register-HNSRemediatorScriptTask {
+    if ($global:HNSRemediatorIntervalInMinutes -ne 0) {
+        Write-Log "Creating a scheduled task to run hnsremediator.ps1"
+
+        $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\hnsremediator.ps1`""
+        $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+        $trigger = New-JobTrigger -Once -At (Get-Date).Date -RepeatIndefinitely -RepetitionInterval (New-TimeSpan -Minutes $global:HNSRemediatorIntervalInMinutes)
+        $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "hns-remediator-task"
+        Register-ScheduledTask -TaskName "hns-remediator-task" -InputObject $definition
+    }
+}
+
+function Unregister-HNSRemediatorScriptTask {
+    # We do not check whether $global:HNSRemediatorIntervalInMinutes is not 0 sicne we may need to set it to 0 in the node for test purpose
+    if (Get-ScheduledTask -TaskName "hns-remediator-task" -ErrorAction Ignore) {
+        Write-Log "Deleting the scheduled task hns-remediator-task"
+        Unregister-ScheduledTask -TaskName "hns-remediator-task" -Confirm:$false
+    }
+
+    $hnsPIDFile="C:\k\hns.pid"
+    if (Test-Path $hnsPIDFile) {
+        # Remove this file since PID of HNS service may have been changed after node crashes or is rebooted
+        # It should not always fail since hns-remediator-task is unregistered.
+        # We set the max retry count to 20 to avoid dead loop for unknown issues.
+        $maxRetries=20
+        $retryCount=0
+        while ($retryCount -lt $maxRetries) {
+            Write-Log "Deleting $hnsPIDFile"
+            Remove-Item -Path $hnsPIDFile -Force -Confirm:$false -ErrorAction Ignore
+
+            # The file may not be deleted successfully because hnsremediator.ps1 is still writing the logs
+            if (Test-Path $hnsPIDFile) {
+                # Do not log the failure to reduce log
+                Start-Sleep -Milliseconds 500
+                $retryCount=$retryCount+1
+            } else {
+                Write-Log "$hnsPIDFile is deleted"
+                break
+            }
+        }
+    }
+}
+
 # Due to a bug in hns there is a race where it picks up the incorrect IPv6 address from the node in some cases.
 # Hns service has to be restarted after the node internal IPv6 address is available when dual-stack is enabled.
 # TODO Remove this once the bug is fixed in hns.
