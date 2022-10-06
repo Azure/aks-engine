@@ -49,15 +49,15 @@ if ($global:EnableHostsConfigAgent) {
 }
 
 function Register-HNSRemediatorScriptTask {
-    # if ($global:HNSRemediatorIntervalInMinutes -ne 0) { Hardcoding HNSRemediatorIntervalInMinutes to 1 Minute as making it variable would need custom aks-engine.exe
-        Write-Log "Creating a scheduled task to run hnsremediator.ps1"
+    # Hardcoding RepetitionInterval to 1 Minute
+    # Making it variable would need a new parameter to be added under windowsProfile
+    Write-Log "Creating a scheduled task to run hnsremediator.ps1"
 
-        $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\hnsremediator.ps1`""
-        $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
-        $trigger = New-JobTrigger -Once -At (Get-Date).Date -RepeatIndefinitely -RepetitionInterval (New-TimeSpan -Minutes 1)
-        $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "hns-remediator-task"
-        Register-ScheduledTask -TaskName "hns-remediator-task" -InputObject $definition
-    # }
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\hnsremediator.ps1`""
+    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+    $trigger = New-JobTrigger -Once -At (Get-Date).Date -RepeatIndefinitely -RepetitionInterval (New-TimeSpan -Minutes 1)
+    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "hns-remediator-task"
+    Register-ScheduledTask -TaskName "hns-remediator-task" -InputObject $definition
 }
 
 function Unregister-HNSRemediatorScriptTask {
