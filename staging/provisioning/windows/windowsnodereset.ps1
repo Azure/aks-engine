@@ -61,7 +61,6 @@ function Register-HNSRemediatorScriptTask {
 }
 
 function Unregister-HNSRemediatorScriptTask {
-    # We do not check whether $global:HNSRemediatorIntervalInMinutes is not 0 sicne we may need to set it to 0 in the node for test purpose
     if (Get-ScheduledTask -TaskName "hns-remediator-task" -ErrorAction Ignore) {
         Write-Log "Deleting the scheduled task hns-remediator-task"
         Unregister-ScheduledTask -TaskName "hns-remediator-task" -Confirm:$false
