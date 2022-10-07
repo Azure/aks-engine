@@ -201,10 +201,11 @@ The AzureDisk volume plugin that works with in-tree cloud provider are not suppo
 On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by default, and cluster with v1.21 only support `out-of-tree` cloud provider. Follow the steps below as a guidance of upgrade:
 
 * Uninstall AzureDisk CSI driver on the cluster if previously installed (optional)
-* Backup all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl get sc -o yaml > storage-classes-backup.yaml` (optional)
-* Delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc --all`
 * Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21
-* After upgrade, install AzureDisk CSI driver on the cluster. This will also create storage class resources from provisioner "disk.csi.azure.com"
+* After upgrade, backup all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl get sc -o yaml > storage-classes-backup.yaml` (optional)
+* Delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc --all`
+* Install AzureDisk CSI driver on the cluster. This will also create storage class resources from provisioner "disk.csi.azure.com"
+* Check "disk.csi.azure.com" storage class resources have been created using command `kubectl get sc`
 
 > The commands to install and uninstall AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver)
 
