@@ -1,3 +1,7 @@
+## v0.0.17
+
+- [Feature: Add hnsremediator for hns crash in Windows nodes #4975](https://github.com/Azure/aks-engine/pull/4975)
+
 ## v0.0.16
 
 - [feat: Updating script used to run kubelet to not set docker-specific kubelet args when using containerd #4817](https://github.com/Azure/aks-engine/pull/4817)
