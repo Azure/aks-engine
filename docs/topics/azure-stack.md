@@ -202,7 +202,7 @@ On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by
 
 * Uninstall AzureDisk CSI driver on the cluster if previously installed (optional)
 * Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21
-* After upgrade, delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc $(kubectl get sc | grep "kubernetes.io/azure-disk" | awk '{print $1}')l`. This is a necessary step, these storage class resources must be removed in order to create new "disk.csi.azure.com" storage classes
+* After upgrade, delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc $(kubectl get sc | grep "kubernetes.io/azure-disk" | awk '{print $1}')`. This is a necessary step, these storage class resources must be removed in order to create new "disk.csi.azure.com" storage classes
 * Install AzureDisk CSI driver on the cluster. This will also create storage class resources for provisioner "disk.csi.azure.com"
 * Check "disk.csi.azure.com" storage class resources have been created using command `kubectl get sc`
 
