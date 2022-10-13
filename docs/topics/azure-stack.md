@@ -194,19 +194,40 @@ To use cloud-controller-manager, set `orchestratorProfile.kubernetesConfig.useCl
 
 ### Use the AzureDisk CSI driver with cloud-controller-manager
 
-The AzureDisk volume plugin that works with in-tree cloud provider are not supported with cloud-controller-manager (See [kubernetes/kubernetes#71018](https://github.com/kubernetes/kubernetes/issues/71018) for explanations). Hence to use cloud-controller-manager, AzureDisk CSI driver should **always** be used for persistent volumes. Kubernetes cluster created by AKS Engine will **not** include AzureDisk CSI driver by default, thus users need to manually install AzureDisk CSI driver after cluster creation or cluster upgrade to Kubernetes v1.21.* and above. The steps to install AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver).
+The AzureDisk volume plugin that works with in-tree cloud provider is not supported with cloud-controller-manager (See [kubernetes/kubernetes#71018](https://github.com/kubernetes/kubernetes/issues/71018) for explanations). Hence to use cloud-controller-manager, AzureDisk CSI driver should **always** be used for persistent volumes. Kubernetes cluster created by AKS Engine will **not** include AzureDisk CSI driver by default, thus users need to manually install AzureDisk CSI driver after cluster creation or [cluster upgrade to Kubernetes v1.21.* and above](#upgrade-from-kubernetes-v120-to-v121-on-azure-stack-hub). The steps to install AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#install-azure-disk-csi-driver).
 
 ### Upgrade from Kubernetes v1.20 to v1.21 on Azure Stack Hub
 
-On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by default, and cluster with v1.21 only support `out-of-tree` cloud provider. Follow the steps below as a guidance of upgrade:
+On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by default, and cluster with v1.21 only support `out-of-tree` cloud provider. Due to this change in Kubernetes, additional upgrade steps are specified below. Note that applications which use persistent volumes are expected to have downtime.
 
-* Uninstall AzureDisk CSI driver on the cluster if previously installed (optional)
-* Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21
-* After upgrade, delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc $(kubectl get sc | grep "kubernetes.io/azure-disk" | awk '{print $1}')`. This is a necessary step, these storage class resources must be removed in order to create new "disk.csi.azure.com" storage classes
-* Install AzureDisk CSI driver on the cluster. This will also create storage class resources for provisioner "disk.csi.azure.com"
-* Check "disk.csi.azure.com" storage class resources have been created using command `kubectl get sc`
+Upgrade steps:
 
-> The commands to install and uninstall AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver)
+* Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21.
+* Install AzureDisk CSI driver on the cluster. See [*Install Azure Disk CSI Driver*](#install-azure-disk-csi-driver) for commands.
+* Delete in-tree storage class resources, create out-of-tree storage class resources. See [*Migrate Storage Classes*](#migrate-storage-classes) for commands.
+* Migrate pvc + pv resources provisioned with "kubernetes.io/azure-disk" to "disk.csi.azure.com". This will require them to be recreated.
+
+### Install Azure Disk CSI driver
+
+Use helm to install Azure Disk CSI Driver v1.10.0
+
+``` bash
+helm repo add azuredisk-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/charts
+helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.10.0
+```
+
+### Migrate Storage Classes
+
+```bash
+# Delete all existing "kubernetes.io/azure-disk" storage class resources
+kubectl delete sc $(kubectl get sc | grep "kubernetes.io/azure-disk" | awk '{print $1}')
+# Check "disk.csi.azure.com" storage class resources have been created
+kubectl get sc
+```
+
+After "kubernetes.io/azure-disk" storage classes are deleted, addon manager will automatically create new "disk.csi.azure.com" storage class resources. It may take a few minutes for addon manager to create them.
+
+> Note: The above steps will only migrate the default storage classes. Any storage classes which were created manually with "kubernetes.io/azure-disk" provisioner must be recreated using "disk.csi.azure.com" provisioner at this time.
 
 ## Volume Provisioner: Container Storage Interface Drivers (preview)
 As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are avaiable on Azure Stack Hub. Please find details in the following table.
@@ -232,7 +253,8 @@ As a [replacement of the current in-tree volume provisioner](https://kubernetes.
 - Since the Controller server of CSI Drivers requires 2 replicas, a single node master pool is not recommended.
 - [Helm 3](https://helm.sh/docs/intro/install/)
 
-### Install and Uninstall CSI Drivers
+### CSI Driver Examples
+
 In this section, please follow the example commands to deploy a StatefulSet application consuming CSI Driver.
 
 #### Azure Disk CSI Driver
