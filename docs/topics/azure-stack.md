@@ -205,7 +205,7 @@ Upgrade steps:
 * Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21.
 * Install AzureDisk CSI driver on the cluster. See [*Install Azure Disk CSI Driver*](#install-azure-disk-csi-driver) for commands.
 * Delete in-tree storage class resources, create out-of-tree storage class resources. See [*Migrate Storage Classes*](#migrate-storage-classes) for commands.
-* Migrate pvc + pv resources provisioned with "kubernetes.io/azure-disk" to "disk.csi.azure.com". This will require them to be recreated.
+* Migrate pvc + pv resources provisioned with "kubernetes.io/azure-disk" to "disk.csi.azure.com". This will require them to be recreated. See [*Migrate Persistent Volumes*](#migrate-persistent-volumes) for commands.
 
 ### Install Azure Disk CSI driver
 
@@ -228,6 +228,22 @@ kubectl get sc
 After "kubernetes.io/azure-disk" storage classes are deleted, addon manager will automatically create new "disk.csi.azure.com" storage class resources. It may take a few minutes for addon manager to create them.
 
 > Note: The above steps will only migrate the default storage classes. Any storage classes which were created manually with "kubernetes.io/azure-disk" provisioner must be recreated using "disk.csi.azure.com" provisioner at this time.
+
+### Migrate Persistent Volumes
+
+After migrating to out-of-tree, applications which use persistent volumes will be down. This is because its persistent volumes still reference the in-tree "kubernetes.io/azure-disk" provisioner and therefore cannot be mounted.
+
+[This script](../howto/migratepv.sh) was created to help simplify the migration process for applications which use persistent volumes. It can be used for deployments and statefulsets. The script will migrate all of the deployment/statefulset's associated PersistentVolumeClaims and PersistentVolumes from "kubernetes.io/azure-disk" provisioner to "disk.csi.azure.com" provisioner. Then it will recreate the deployment/statefulset to reference the newly migrated PersistentVolumeClaims and PersistentVolumes.
+
+Input ResourceType, ResourceName, and Namespace.
+
+```bash
+  ./migratepv.sh -t ResourceType -r ResourceName -n Namespace
+  ./migratepv.sh -t StatefulSet -r web -n default
+  ./migratepv.sh -t Deployment -r depa -n dev
+```
+
+After running the script, verify the deployment or statefulset is healthy and its persistent volumes are now provisioned with out-of-tree "disk.csi.azure.com". 
 
 ## Volume Provisioner: Container Storage Interface Drivers (preview)
 As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are avaiable on Azure Stack Hub. Please find details in the following table.
