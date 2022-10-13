@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -1973,169 +1975,169 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 	})
 
-	Describe("with NetworkPolicy enabled", func() {
-		It("should apply various network policies and enforce access to nginx pod", func() {
-			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
-				eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea") {
-				nsDev, nsProd := "development", "production"
-				By("Creating development namespace")
-				namespaceDev, err := namespace.CreateNamespaceDeleteIfExist(nsDev)
-				Expect(err).NotTo(HaveOccurred())
-				By("Creating production namespace")
-				namespaceProd, err := namespace.CreateNamespaceDeleteIfExist(nsProd)
-				Expect(err).NotTo(HaveOccurred())
-				By("Labelling development namespace")
-				err = namespaceDev.Label("purpose=development")
-				Expect(err).NotTo(HaveOccurred())
-				By("Labelling production namespace")
-				err = namespaceProd.Label("purpose=production")
-				Expect(err).NotTo(HaveOccurred())
-				By("Creating frontendProd, backend and network-policy pod deployments")
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				randInt := r.Intn(99999)
-				frontendProdDeploymentName := fmt.Sprintf("frontend-prod-%s-%v", cfg.Name, randInt)
-				frontendProdDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendProdDeploymentName, nsProd, "webapp", "frontend", 3*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				frontendDevDeploymentName := fmt.Sprintf("frontend-dev-%s-%v", cfg.Name, randInt+100000)
-				frontendDevDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendDevDeploymentName, nsDev, "webapp", "frontend", 3*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt+200000)
-				backendDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", backendDeploymentName, nsDev, "webapp", "backend", 3*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+300000)
-				nwpolicyDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", nwpolicyDeploymentName, nsDev, "", "", 3*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
+	// Describe("with NetworkPolicy enabled", func() {
+	// 	It("should apply various network policies and enforce access to nginx pod", func() {
+	// 		if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
+	// 			eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea") {
+	// 			nsDev, nsProd := "development", "production"
+	// 			By("Creating development namespace")
+	// 			namespaceDev, err := namespace.CreateNamespaceDeleteIfExist(nsDev)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			By("Creating production namespace")
+	// 			namespaceProd, err := namespace.CreateNamespaceDeleteIfExist(nsProd)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			By("Labelling development namespace")
+	// 			err = namespaceDev.Label("purpose=development")
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			By("Labelling production namespace")
+	// 			err = namespaceProd.Label("purpose=production")
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			By("Creating frontendProd, backend and network-policy pod deployments")
+	// 			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// 			randInt := r.Intn(99999)
+	// 			frontendProdDeploymentName := fmt.Sprintf("frontend-prod-%s-%v", cfg.Name, randInt)
+	// 			frontendProdDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendProdDeploymentName, nsProd, "webapp", "frontend", 3*time.Second, cfg.Timeout)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			frontendDevDeploymentName := fmt.Sprintf("frontend-dev-%s-%v", cfg.Name, randInt+100000)
+	// 			frontendDevDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", frontendDevDeploymentName, nsDev, "webapp", "frontend", 3*time.Second, cfg.Timeout)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt+200000)
+	// 			backendDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", backendDeploymentName, nsDev, "webapp", "backend", 3*time.Second, cfg.Timeout)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+300000)
+	// 			nwpolicyDeployment, err := deployment.CreateDeploymentFromImageWithRetry("library/nginx:latest", nwpolicyDeploymentName, nsDev, "", "", 3*time.Second, cfg.Timeout)
+	// 			Expect(err).NotTo(HaveOccurred())
 
-				By("Ensure there is a running frontend-prod pod")
-				networkpolicy.EnsureRunningPodExists(frontendProdDeploymentName, nsProd, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+	// 			By("Ensure there is a running frontend-prod pod")
+	// 			networkpolicy.EnsureRunningPodExists(frontendProdDeploymentName, nsProd, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
-				By("Ensure there is a running frontend-dev pod")
-				networkpolicy.EnsureRunningPodExists(frontendDevDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+	// 			By("Ensure there is a running frontend-dev pod")
+	// 			networkpolicy.EnsureRunningPodExists(frontendDevDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
-				By("Ensure there is a running backend pod")
-				networkpolicy.EnsureRunningPodExists(backendDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+	// 			By("Ensure there is a running backend pod")
+	// 			networkpolicy.EnsureRunningPodExists(backendDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
-				By("Ensure there is a running network-policy pod")
-				networkpolicy.EnsureRunningPodExists(nwpolicyDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+	// 			By("Ensure there is a running network-policy pod")
+	// 			networkpolicy.EnsureRunningPodExists(nwpolicyDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
-				By("Ensuring we have outbound internet access from the frontend-prod pods")
-				frontendProdPods := networkpolicy.GetRunningPodsFromDeployment(frontendProdDeployment)
-				networkpolicy.EnsureOutboundInternetAccess(frontendProdPods, cfg)
+	// 			By("Ensuring we have outbound internet access from the frontend-prod pods")
+	// 			frontendProdPods := networkpolicy.GetRunningPodsFromDeployment(frontendProdDeployment)
+	// 			networkpolicy.EnsureOutboundInternetAccess(frontendProdPods, cfg)
 
-				By("Ensuring we have outbound internet access from the frontend-dev pods")
-				frontendDevPods := networkpolicy.GetRunningPodsFromDeployment(frontendDevDeployment)
-				networkpolicy.EnsureOutboundInternetAccess(frontendDevPods, cfg)
+	// 			By("Ensuring we have outbound internet access from the frontend-dev pods")
+	// 			frontendDevPods := networkpolicy.GetRunningPodsFromDeployment(frontendDevDeployment)
+	// 			networkpolicy.EnsureOutboundInternetAccess(frontendDevPods, cfg)
 
-				By("Ensuring we have outbound internet access from the backend pods")
-				backendPods := networkpolicy.GetRunningPodsFromDeployment(backendDeployment)
-				networkpolicy.EnsureOutboundInternetAccess(backendPods, cfg)
+	// 			By("Ensuring we have outbound internet access from the backend pods")
+	// 			backendPods := networkpolicy.GetRunningPodsFromDeployment(backendDeployment)
+	// 			networkpolicy.EnsureOutboundInternetAccess(backendPods, cfg)
 
-				By("Ensuring we have outbound internet access from the network-policy pods")
-				nwpolicyPods := networkpolicy.GetRunningPodsFromDeployment(nwpolicyDeployment)
-				networkpolicy.EnsureOutboundInternetAccess(nwpolicyPods, cfg)
+	// 			By("Ensuring we have outbound internet access from the network-policy pods")
+	// 			nwpolicyPods := networkpolicy.GetRunningPodsFromDeployment(nwpolicyDeployment)
+	// 			networkpolicy.EnsureOutboundInternetAccess(nwpolicyPods, cfg)
 
-				By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, frontendProdPods, validateNetworkPolicyTimeout, true)
+	// 			By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
+	// 			networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, frontendProdPods, validateNetworkPolicyTimeout, true)
 
-				By("Ensuring we have connectivity from network-policy pods to backend pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, true)
+	// 			By("Ensuring we have connectivity from network-policy pods to backend pods")
+	// 			networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, true)
 
-				By("Applying a network policy to deny ingress access to app: webapp, role: backend pods in development namespace")
-				nwpolicyName, namespace, nwpolicyFileName := "backend-deny-ingress", nsDev, "backend-policy-deny-ingress.yaml"
-				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+	// 			By("Applying a network policy to deny ingress access to app: webapp, role: backend pods in development namespace")
+	// 			nwpolicyName, namespace, nwpolicyFileName := "backend-deny-ingress", nsDev, "backend-policy-deny-ingress.yaml"
+	// 			networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
-				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
+	// 			By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
+	// 			networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
 
-				By("Cleaning up after ourselves")
-				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+	// 			By("Cleaning up after ourselves")
+	// 			networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-				By("Applying a network policy to deny egress access in development namespace")
-				nwpolicyName, namespace, nwpolicyFileName = "backend-deny-egress", nsDev, "backend-policy-deny-egress.yaml"
-				networkpolicy.ApplyNetworkPolicy(nwpolicyName, nsDev, nwpolicyFileName, PolicyDir)
+	// 			By("Applying a network policy to deny egress access in development namespace")
+	// 			nwpolicyName, namespace, nwpolicyFileName = "backend-deny-egress", nsDev, "backend-policy-deny-egress.yaml"
+	// 			networkpolicy.ApplyNetworkPolicy(nwpolicyName, nsDev, nwpolicyFileName, PolicyDir)
 
-				By("Ensuring we no longer have egress access from the network-policy pods to backend pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
-				networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, false)
+	// 			By("Ensuring we no longer have egress access from the network-policy pods to backend pods")
+	// 			networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
+	// 			networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, false)
 
-				By("Cleaning up after ourselves")
-				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+	// 			By("Cleaning up after ourselves")
+	// 			networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.11.0") {
+	// 			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.11.0") {
 
-					By("Applying a network policy to allow egress access to app: webapp, role: frontend pods in any namespace from pods with app: webapp, role: backend labels in development namespace")
-					nwpolicyName, namespace, nwpolicyFileName := "backend-allow-egress-pod-label", nsDev, "backend-policy-allow-egress-pod-label.yaml"
-					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+	// 				By("Applying a network policy to allow egress access to app: webapp, role: frontend pods in any namespace from pods with app: webapp, role: backend labels in development namespace")
+	// 				nwpolicyName, namespace, nwpolicyFileName := "backend-allow-egress-pod-label", nsDev, "backend-policy-allow-egress-pod-label.yaml"
+	// 				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
-					By("Ensuring we have egress access from pods with matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, true)
+	// 				By("Ensuring we have egress access from pods with matching labels")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, true)
 
-					By("Ensuring we don't have ingress access from pods without matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
+	// 				By("Ensuring we don't have ingress access from pods without matching labels")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
 
-					By("Cleaning up after ourselves")
-					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+	// 				By("Cleaning up after ourselves")
+	// 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-					By("Applying a network policy to allow egress access to app: webapp, role: frontend pods from pods with app: webapp, role: backend labels in same development namespace")
-					nwpolicyName, namespace, nwpolicyFileName = "backend-allow-egress-pod-namespace-label", nsDev, "backend-policy-allow-egress-pod-namespace-label.yaml"
-					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+	// 				By("Applying a network policy to allow egress access to app: webapp, role: frontend pods from pods with app: webapp, role: backend labels in same development namespace")
+	// 				nwpolicyName, namespace, nwpolicyFileName = "backend-allow-egress-pod-namespace-label", nsDev, "backend-policy-allow-egress-pod-namespace-label.yaml"
+	// 				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
-					By("Ensuring we have egress access from pods with matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
+	// 				By("Ensuring we have egress access from pods with matching labels")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
 
-					By("Ensuring we don't have ingress access from pods without matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, false)
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
+	// 				By("Ensuring we don't have ingress access from pods without matching labels")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, false)
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
 
-					By("Cleaning up after ourselves")
-					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+	// 				By("Cleaning up after ourselves")
+	// 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-					By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
-					nwpolicyName, namespace, nwpolicyFileName = "backend-allow-ingress-pod-label", nsDev, "backend-policy-allow-ingress-pod-label.yaml"
-					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+	// 				By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
+	// 				nwpolicyName, namespace, nwpolicyFileName = "backend-allow-ingress-pod-label", nsDev, "backend-policy-allow-ingress-pod-label.yaml"
+	// 				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
-					By("Ensuring we have ingress access from pods with matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, backendPods, validateNetworkPolicyTimeout, true)
+	// 				By("Ensuring we have ingress access from pods with matching labels")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, backendPods, validateNetworkPolicyTimeout, true)
 
-					By("Ensuring we don't have ingress access from pods without matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
+	// 				By("Ensuring we don't have ingress access from pods without matching labels")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
 
-					By("Cleaning up after ourselves")
-					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+	// 				By("Cleaning up after ourselves")
+	// 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
-					By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
-					nwpolicyName, namespace, nwpolicyFileName = "backend-policy-allow-ingress-pod-namespace-label", nsDev, "backend-policy-allow-ingress-pod-namespace-label.yaml"
-					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+	// 				By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
+	// 				nwpolicyName, namespace, nwpolicyFileName = "backend-policy-allow-ingress-pod-namespace-label", nsDev, "backend-policy-allow-ingress-pod-namespace-label.yaml"
+	// 				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
-					By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
-					networkpolicy.EnsureConnectivityResultBetweenPods(frontendProdPods, backendPods, validateNetworkPolicyTimeout, false)
+	// 				By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(frontendProdPods, backendPods, validateNetworkPolicyTimeout, false)
 
-					By("Ensuring we have ingress access from role:frontend pods in development namespace")
-					networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, true)
+	// 				By("Ensuring we have ingress access from role:frontend pods in development namespace")
+	// 				networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, true)
 
-					By("Cleaning up after ourselves")
-					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
-				}
+	// 				By("Cleaning up after ourselves")
+	// 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+	// 			}
 
-				By("Cleaning up after ourselves")
-				err = frontendProdDeployment.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = frontendDevDeployment.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = backendDeployment.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = nwpolicyDeployment.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-				err = namespaceDev.Delete()
-				Expect(err).NotTo(HaveOccurred())
-				err = namespaceProd.Delete()
-				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("Calico or Azure or Cilium or Antrea network policy was not provisioned for this Cluster Definition")
-			}
-		})
-	})
+	// 			By("Cleaning up after ourselves")
+	// 			err = frontendProdDeployment.Delete(util.DefaultDeleteRetries)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			err = frontendDevDeployment.Delete(util.DefaultDeleteRetries)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			err = backendDeployment.Delete(util.DefaultDeleteRetries)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			err = nwpolicyDeployment.Delete(util.DefaultDeleteRetries)
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			err = namespaceDev.Delete()
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 			err = namespaceProd.Delete()
+	// 			Expect(err).NotTo(HaveOccurred())
+	// 		} else {
+	// 			Skip("Calico or Azure or Cilium or Antrea network policy was not provisioned for this Cluster Definition")
+	// 		}
+	// 	})
+	// })
 
 	Describe("with a windows agent pool", func() {
 		It("should be able to deploy and scale an iis webserver", func() {
