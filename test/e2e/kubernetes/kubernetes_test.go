@@ -40,8 +40,9 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/event"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/job"
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/namespace"
-	"github.com/Azure/aks-engine/test/e2e/kubernetes/networkpolicy"
+	// npm related import, no need for now
+	//"github.com/Azure/aks-engine/test/e2e/kubernetes/namespace"
+	//"github.com/Azure/aks-engine/test/e2e/kubernetes/networkpolicy"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/node"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/persistentvolume"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/persistentvolumeclaims"
