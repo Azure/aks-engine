@@ -169,7 +169,7 @@ The [Cloud Provider for Azure](https://github.com/kubernetes-sigs/cloud-provider
 
 On Azure Stack Hub, starting from Kubernetes v1.21, AKS Engine-based clusters will exclusively use `cloud-controller-manager`. Hence, to deploy a Kubernetes v1.21+ cluster, it is required to set `orchestratorProfile.kubernetesConfig.useCloudControllerManager` to `true` in the API Model ([example](/examples/azure-stack/kubernetes-azurestack.json)). AKS Engine's upgrade process will automatically update the `useCloudControllerManager` flag.
 
-> **Upgrade considerations:** the process of upgrading a Kubernetes cluster from v1.20 (or lower version) to v1.21 (or greater version) will cause downtime to workloads relying on the `kubernetes.io/azure-disk` in-tree volume provisioner. It is recommended to perform a full backup of the application data before upgrading to Kubernetes v1.21+. Learn how to migrate to the Azure Disk CSI driver [here](#migrate-persistent-storage-to-the-azure-disk-csi-driver).
+> **Upgrade considerations:** the process of upgrading a Kubernetes cluster from v1.20 (or lower version) to v1.21 (or greater version) will cause downtime to workloads relying on the `kubernetes.io/azure-disk` in-tree volume provisioner. Before upgrading to Kubernetes v1.21+, it is **highly recommended** to perform a full backup of the application data and validate in a **pre-production environment** that the cluster storage resources (PV and PVC) can be migrated to the a new volume provisioner. Learn how to migrate to the Azure Disk CSI driver [here](#migrate-persistent-storage-to-the-azure-disk-csi-driver).
 
 ### Volume Provisioners
 
@@ -183,9 +183,9 @@ The process of upgrading an AKS Engine-based cluster from v1.20 (or lower versio
 
 If the data persisted in the underlying Azure disks should be preserved, then the following extra steps are required once the cluster upgrade process is completed:
 
-1. Install the Azure Disk CSI driver ([example](#1-install-azure-disk-csi-driver-manually)).
-1. Remove the deprecated in-tree storage classes ([example](#2-recreate-storage-classes)).
-1. **TODO** Recreate Migrate pvc + pv resources provisioned with "kubernetes.io/azure-disk" to "disk.csi.azure.com". This will require them to be recreated.
+1. [Install the Azure Disk CSI driver](#1-install-azure-disk-csi-driver-manually).
+1. [Remove the deprecated in-tree storage classes](#2-recreate-storage-classes).
+1. [Recreate the persistent volumes and claims](#3-recreate-persistent-volumes).
 
 #### 1. Install Azure Disk CSI driver manually
 
@@ -206,9 +206,7 @@ helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver \
 The `kube-addon-manager` will automatically create the Azure Disk CSI driver storage classes (`disk.csi.azure.com`) once the in-tree storage classes (`kubernetes.io/azure-disk`) are manually deleted:
 
 ```bash
-# Get deprecated "kubernetes.io/azure-disk" storage classes
-# Default values are "default", "managed-premium", and "managed-standard"
-IN_TREE_SC=$(kubectl get sc -o json | jq -r '.items[] | select (.provisioner == "kubernetes.io/azure-disk") | .metadata.name' | xargs)
+IN_TREE_SC="default managed-premium managed-standard"
 
 # Delete deprecated "kubernetes.io/azure-disk" storage classes
 kubectl delete storageclasses ${IN_TREE_SC}
@@ -216,6 +214,20 @@ kubectl delete storageclasses ${IN_TREE_SC}
 # Wait for addon manager to create the "disk.csi.azure.com" storage class resources
 kubectl get --watch storageclasses
 ```
+
+#### 3. Recreate Persistent Volumes
+
+Once the Azure Disk CSI Driver is installed and the storage classes replaced, the next step is to recreate the persistent volumes (PV) and persistent volumes claims (PVC) using the Azure Disk CSI driver (or alternative CSI solution).
+
+This is a multi-step process that can be different depending on how these resources were initially deployed. The high level steps are:
+
+* Delete the deployment or statefulset that references the PV + PVC pairs to migrate (backup resource definition if necessary).
+* Ensure the PVs' `persistentVolumeReclaimPolicy` property is set to value `Retain` ([example](https://learn.microsoft.com/en-us/azure/aks/csi-storage-drivers#migrate-in-tree-persistent-volumes)).
+* Delete the PV + PVC pairs to migrate (backup resource definitions if necessary).
+* Update the PV resource definition/s to migrate by removing the `azureDisk` object and adding the `csi` object ([example](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/driver-parameters.md#static-provisioning-bring-your-own-azure-disk))
+* Recreate, in the following order, the PV resource/s, PVC resource/s (if necessary), and finally the deployment or statefulset.
+
+The following migration [script] is provided as a template.
 
 ## Volume Provisioner: Container Storage Interface Drivers (preview)
 
