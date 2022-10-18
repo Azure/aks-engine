@@ -157,7 +157,7 @@ Make sure `linuxProfile.runUnattendedUpgradesOnBootstrap` is set to `"false"` wh
 | [v0.70.0](https://github.com/Azure/aks-engine/releases/tag/v0.70.0)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2022 Q2 (2022.04.07)](https://github.com/Azure/aks-engine/blob/v0.70.0/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202112_2022.04.07.txt), [AKS Base Windows Image (17763.2565.220408)](https://github.com/Azure/aks-engine/blob/v0.70.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.2565.220408.txt)  | 1.21.10*, 1.22.7* | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/v0.71.0/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/v0.71.0/examples/azure-stack/kubernetes-windows.json)) |
 | [v0.71.0](https://github.com/Azure/aks-engine/releases/tag/v0.71.0)   | [AKS Base Ubuntu 18.04-LTS Image Distro, 2022 Q3 (2022.08.12)](https://github.com/Azure/aks-engine/blob/v0.71.0/vhd/release-notes/aks-engine-ubuntu-1804/aks-engine-ubuntu-1804-202112_2022.08.12.txt), [AKS Base Windows Image (17763.3232.220805)](https://github.com/Azure/aks-engine/blob/v0.71.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.3232.220805.txt)  | 1.22.7*, 1.23.6* | API Model Samples ([Linux](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-azurestack.json), [Windows](https://github.com/Azure/aks-engine/blob/master/examples/azure-stack/kubernetes-windows.json)) |
 
->\* Starting from Kubernetes v1.21, **ONLY** the `out-of-tree` cloud provider for Azure is supported on Azure Stack Hub. Please refer to the section [*Cloud Provider for Azure*](#cloud-provider-for-azure) for more details.
+>\* Starting from Kubernetes v1.21, **only** [Cloud Provider for Azure](#cloud-provider-for-azure) is supported on Azure Stack Hub.
 
 ## Azure Monitor for containers
 
@@ -165,51 +165,75 @@ Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Az
 
 ## Cloud Provider for Azure
 
-Cloud Provider for Azure is the Azure implementation of Kubernetes cloud provider [interface](https://github.com/kubernetes/cloud-provider). Since the in-tree cloud provider has been deprecated in Kubernetes and only the bug fixes were allowed in the [Kubernetes repository directory](https://github.com/kubernetes/kubernetes/tree/master/staging/src/k8s.io/legacy-cloud-providers/azure). 
+The [Cloud Provider for Azure](https://github.com/kubernetes-sigs/cloud-provider-azure) project (aka `cloud-controller-manager`, out-of-tree cloud provider or external cloud provider) implements the [Kubernetes cloud provider interface](https://github.com/kubernetes/cloud-provider) for Azure clouds. The out-of-tree implementation is the replacement for the deprecated [in-tree implementation](https://github.com/kubernetes/kubernetes/tree/master/staging/src/k8s.io/legacy-cloud-providers/azure).
 
-On Azure Stack Hub, in-tree cloud provider for Azure is **no longer** supported for Kubernetes v1.21+, and users should **always** use the cloud-controller-manager implementation of the Azure cloud provider.
+On Azure Stack Hub, starting from Kubernetes v1.21, AKS Engine-based clusters will exclusively use `cloud-controller-manager`. Hence, to deploy a Kubernetes v1.21+ cluster, it is required to set `orchestratorProfile.kubernetesConfig.useCloudControllerManager` to `true` in the API Model ([example](/examples/azure-stack/kubernetes-azurestack.json)). AKS Engine's upgrade process will automatically update the `useCloudControllerManager` flag.
 
-### Use the cloud-controller-manager implementation of the Azure cloud provider
+> **Upgrade considerations:** the process of upgrading a Kubernetes cluster from v1.20 (or lower version) to v1.21 (or greater version) will cause downtime to workloads relying on the `kubernetes.io/azure-disk` in-tree volume provisioner. Before upgrading to Kubernetes v1.21+, it is **highly recommended** to perform a full backup of the application data and validate in a **pre-production environment** that the cluster storage resources (PV and PVC) can be migrated to the a new volume provisioner. Learn how to migrate to the Azure Disk CSI driver [here](#migrate-persistent-storage-to-the-azure-disk-csi-driver).
 
-Also referred to as `out-of-tree`, cloud-provider-azure code development is carried out in its own [code repository](https://github.com/kubernetes-sigs/cloud-provider-azure/releases), according to a separate release velocity than upstream Kubernetes. The cloud-controller-manager implementation of cloud-provider-azure produces many runtime optimizations that optimize cluster behavior for running at scale.
+### Volume Provisioners
 
-To use cloud-controller-manager, set `orchestratorProfile.kubernetesConfig.useCloudControllerManager` to `true` in the API Model:
+The [in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/) is only compatible with the in-tree cloud provider. Therefore, a v1.21+ cluster has to include a Container Storage Interface (CSI) Driver if user workloads rely on persistent storage. A few solutions available on Azure Stack Hub are listed [below](#volume-provisioner-container-storage-interface-drivers-preview).
 
-```json
-{
-  "apiVersion": "vlabs",
-  "properties": {
-    "orchestratorProfile": {
-      "kubernetesConfig": {
-        "useCloudControllerManager": true,
-        ....
-      }
-      ...
-    },
-    ...
-  }
-  ...
-}
+AKS Engine will **not** enable any CSI driver by default on Azure Stack Hub. For workloads that require a CSI driver, it is possible to either explicitly enable the `azuredisk-csi-driver` [addon](../topics/clusterdefinitions.md#addons) (Linux-only clusters) or use `Helm` to [install the `azuredisk-csi-driver` chart](#1-install-azure-disk-csi-driver-manually) (Linux and/or Windows clusters).
+
+### Migrate Persistent Storage to the Azure Disk CSI driver
+
+The process of upgrading an AKS Engine-based cluster from v1.20 (or lower version) to v1.21 (or greater version) will cause downtime to workloads relying on the `kubernetes.io/azure-disk` in-tree volume provisioner as this provisioner is not part of the [Cloud Provider for Azure](#cloud-provider-for-azure).
+
+If the data persisted in the underlying Azure disks should be preserved, then the following extra steps are required once the cluster upgrade process is completed:
+
+1. [Install the Azure Disk CSI driver](#1-install-azure-disk-csi-driver-manually).
+1. [Remove the deprecated in-tree storage classes](#2-replace-storage-classes).
+1. [Recreate the persistent volumes and claims](#3-recreate-persistent-volumes).
+
+#### 1. Install Azure Disk CSI driver manually
+
+The following script uses `Helm` to install the Azure Disk CSI Driver:
+
+```bash
+DRIVER_VERSION=v1.10.0
+helm repo add azuredisk-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/charts
+helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver \
+  --namespace kube-system \
+  --set cloud=AzureStackCloud \
+  --set controller.runOnMaster=true \
+  --version ${DRIVER_VERSION}
 ```
 
-### Use the AzureDisk CSI driver with cloud-controller-manager
+#### 2. Replace Storage Classes
 
-The AzureDisk volume plugin that works with in-tree cloud provider are not supported with cloud-controller-manager (See [kubernetes/kubernetes#71018](https://github.com/kubernetes/kubernetes/issues/71018) for explanations). Hence to use cloud-controller-manager, AzureDisk CSI driver should **always** be used for persistent volumes. Kubernetes cluster created by AKS Engine will **not** include AzureDisk CSI driver by default, thus users need to manually install AzureDisk CSI driver after cluster creation. The steps to install AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver).
+The `kube-addon-manager` will automatically create the Azure Disk CSI driver storage classes (`disk.csi.azure.com`) once the in-tree storage classes (`kubernetes.io/azure-disk`) are manually deleted:
 
-### Upgrade from Kubernetes v1.20 to v1.21 on Azure Stack Hub
+```bash
+IN_TREE_SC="default managed-premium managed-standard"
 
-On Azure Stack Hub, Kubernetes cluster with v1.20 uses in-tree cloud provider by default, and cluster with v1.21 only support `out-of-tree` cloud provider. Follow the steps below as a guidance of upgrade:
+# Delete deprecated "kubernetes.io/azure-disk" storage classes
+kubectl delete storageclasses ${IN_TREE_SC}
 
-* Uninstall AzureDisk CSI driver on the cluster if previously installed (optional)
-* Backup all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl get sc -o yaml > storage-classes-backup.yaml` (optional)
-* Delete all existing storage class resources from provisioner "kubernetes.io/azure-disk" using command `kubectl delete sc --all`
-* Run the `aks-engine upgrade` command to upgrade Kubernetes cluster from v1.20 to v1.21
-* After upgrade, install AzureDisk CSI driver on the cluster. This will also create storage class resources from provisioner "disk.csi.azure.com"
+# Wait for addon manager to create the "disk.csi.azure.com" storage class resources
+kubectl get --watch storageclasses
+```
 
-> The commands to install and uninstall AzureDisk CSI driver can be found in the section [*Azure Disk CSI Driver*](#azure-disk-csi-driver)
+#### 3. Recreate Persistent Volumes
+
+Once the Azure Disk CSI Driver is installed and the storage classes replaced, the next step is to recreate the persistent volumes (PV) and persistent volumes claims (PVC) using the Azure Disk CSI driver (or alternative CSI solution).
+
+This is a multi-step process that can be different depending on how these resources were initially deployed. The high level steps are:
+
+* Delete the deployment or statefulset that references the PV + PVC pairs to migrate (backup resource definition if necessary).
+* Ensure the PVs' `persistentVolumeReclaimPolicy` property is set to value `Retain` ([example](https://learn.microsoft.com/en-us/azure/aks/csi-storage-drivers#migrate-in-tree-persistent-volumes)).
+* Delete the PV + PVC pairs to migrate (backup resource definitions if necessary).
+* To migrate, update the PVs' resource definition by removing the `azureDisk` object and adding a `csi` object with reference to the original AzureDisk ([example](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/driver-parameters.md#static-provisioning-bring-your-own-azure-disk)).
+* Recreate, in the following order, the PV resource/s, PVC resource/s (if necessary), and finally the deployment or statefulset.
+
+The following migration [script](../../examples/azure-stack/migratepv.sh) is provided as a template.
+
+> After running the migration script, if the pod is stuck with error "Unable to attach or mount volumes", make sure [Azure Disk CSI Driver was installed](#1-install-azure-disk-csi-driver-manually) and [storage classes were recreated](#2-replace-storage-classes).
 
 ## Volume Provisioner: Container Storage Interface Drivers (preview)
-As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are avaiable on Azure Stack Hub. Please find details in the following table.
+
+As a [replacement of the current in-tree volume provisioner](https://kubernetes.io/blog/2019/12/09/kubernetes-1-17-feature-csi-migration-beta/), three Container Storage Interface (CSI) Drivers are available on Azure Stack Hub. Please find details in the following table.
 
 |                       | Azure Disk CSI Driver                                                                                                        | Azure Blob CSI Driver                                                                                                   | NFS CSI Driver                                                           |
 |-----------------------|------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
@@ -226,18 +250,19 @@ As a [replacement of the current in-tree volume provisioner](https://kubernetes.
 
 ### Requirements
 
-- Azure Stack build 2011 and later.
-- AKS Engine version v0.60.1 and later.
-- Kubernetes version 1.18 and later.
-- Since the Controller server of CSI Drivers requires 2 replicas, a single node master pool is not recommended.
-- [Helm 3](https://helm.sh/docs/intro/install/)
+* Azure Stack build 2011 and later.
+* AKS Engine version v0.60.1 and later.
+* Kubernetes version 1.18 and later.
+* Since the Controller server of CSI Drivers requires 2 replicas, a single node master pool is not recommended.
+* [Helm 3](https://helm.sh/docs/intro/install/)
 
-### Install and Uninstall CSI Drivers
+### CSI Driver Examples
+
 In this section, please follow the example commands to deploy a StatefulSet application consuming CSI Driver.
 
 #### Azure Disk CSI Driver
 
-``` powershell
+```bash
 # Install CSI Driver
 helm repo add azuredisk-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/master/charts
 helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.10.0
@@ -266,7 +291,7 @@ helm repo remove azuredisk-csi-driver
 
 #### Azure Blob CSI Driver
 
-``` powershell
+```bash
 # Install CSI Driver
 helm repo add blob-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/charts
 helm install blob-csi-driver blob-csi-driver/blob-csi-driver --namespace kube-system --set cloud=AzureStackCloud --set controller.runOnMaster=true --version v1.0.0
@@ -295,7 +320,7 @@ helm repo remove blob-csi-driver
 
 #### NFS CSI Driver
 
-``` powershell
+```bash
 # Install CSI Driver
 helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
 helm install csi-driver-nfs csi-driver-nfs/csi-driver-nfs --namespace kube-system --set controller.runOnMaster=true --version v3.0.0
@@ -406,7 +431,7 @@ To deploy a cluster that includes the latests OS security patches right from the
 
 To apply the latest OS security patches to an existing cluster, you can either do it manually or use the `aks-engine upgrade` command. A manual upgrade can be done by executing `apt-get update && apt-get upgrade` and rebooting the node if necessary. If you use the `aks-engine upgrade` command, set `linuxProfile.runUnattendedUpgradesOnBootstrap` to `"true"` in the generated `apimodel.json` and execute `aks-engine upgrade` (a forced upgrade to the current Kubernetes version also works).
 
-### Troubleshoting
+### Troubleshooting
 
 This [how-to guide](/docs/howto/troubleshooting.md) has a good high-level explanation of how AKS Engine interacts with the Azure Resource Manager (ARM) and lists a few potential issues that can cause AKS Engine commands to fail.
 
