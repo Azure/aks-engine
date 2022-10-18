@@ -8,11 +8,10 @@ TMP=$(mktemp -d)
 
 mkdir -p ${TMP}/${KIND} ${TMP}/pvc ${TMP}/pv
 
-# Bak kind/name, remove ID
+# Back kind/name, remove ID
 ID_PROPS=".metadata.annotations, .metadata.creationTimestamp, .metadata.generation, .metadata.resourceVersion, .metadata.uid, .metadata.managedFields, .status, .spec.template.metadata.creationTimestamp"
 if [[ "${KIND,,}" == "statefulset" ]]; then 
-else
-    ID_PROPS="${ID_PROPS} .spec.volumeClaimTemplates[].metadata.creationTimestamp, .spec.volumeClaimTemplates[].status)"
+    ID_PROPS="${ID_PROPS}, .spec.volumeClaimTemplates[].metadata.creationTimestamp, .spec.volumeClaimTemplates[].status"
 fi
 
 kubectl get ${KIND}/${NAME} -n ${NS} -o json | \
@@ -29,12 +28,12 @@ do
     PV_DISK_URI=$(kubectl get pv ${PV_NAME} -o jsonpath='{.spec.azureDisk.diskURI}')
     PV_FS_TYPE=$(kubectl get pv ${PV_NAME} -o jsonpath='{.spec.azureDisk.fSType}')
 
-    # Bak PVC, remove ID
+    # Back PVC, remove ID
     kubectl get pvc ${pvc} -n ${NS} -o json | \
         jq 'del(.metadata.annotations, .metadata.creationTimestamp, .metadata.resourceVersion, .metadata.uid, .status)' \
         > ${TMP}/pvc/${NS}-${pvc}.json
 
-    # Bak PV, remove ID, remove spec.azureDisk, add spec.csi
+    # Back PV, remove ID, remove spec.azureDisk, add spec.csi
     cat << EOF > ${TMP}/csi-pv.spec
 {
     "csi": {
