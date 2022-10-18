@@ -184,7 +184,7 @@ The process of upgrading an AKS Engine-based cluster from v1.20 (or lower versio
 If the data persisted in the underlying Azure disks should be preserved, then the following extra steps are required once the cluster upgrade process is completed:
 
 1. [Install the Azure Disk CSI driver](#1-install-azure-disk-csi-driver-manually).
-1. [Remove the deprecated in-tree storage classes](#2-recreate-storage-classes).
+1. [Remove the deprecated in-tree storage classes](#2-replace-storage-classes).
 1. [Recreate the persistent volumes and claims](#3-recreate-persistent-volumes).
 
 #### 1. Install Azure Disk CSI driver manually
@@ -201,7 +201,7 @@ helm install azuredisk-csi-driver azuredisk-csi-driver/azuredisk-csi-driver \
   --version ${DRIVER_VERSION}
 ```
 
-#### 2. Recreate Storage Classes
+#### 2. Replace Storage Classes
 
 The `kube-addon-manager` will automatically create the Azure Disk CSI driver storage classes (`disk.csi.azure.com`) once the in-tree storage classes (`kubernetes.io/azure-disk`) are manually deleted:
 
@@ -224,10 +224,12 @@ This is a multi-step process that can be different depending on how these resour
 * Delete the deployment or statefulset that references the PV + PVC pairs to migrate (backup resource definition if necessary).
 * Ensure the PVs' `persistentVolumeReclaimPolicy` property is set to value `Retain` ([example](https://learn.microsoft.com/en-us/azure/aks/csi-storage-drivers#migrate-in-tree-persistent-volumes)).
 * Delete the PV + PVC pairs to migrate (backup resource definitions if necessary).
-* Update the PV resource definition/s to migrate by removing the `azureDisk` object and adding the `csi` object ([example](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/driver-parameters.md#static-provisioning-bring-your-own-azure-disk))
+* To migrate, update the PVs' resource definition by removing the `azureDisk` object and adding a `csi` object with reference to the original AzureDisk ([example](https://github.com/kubernetes-sigs/azuredisk-csi-driver/blob/master/docs/driver-parameters.md#static-provisioning-bring-your-own-azure-disk)).
 * Recreate, in the following order, the PV resource/s, PVC resource/s (if necessary), and finally the deployment or statefulset.
 
-The following migration [script] is provided as a template.
+The following migration [script](../../examples/azure-stack/migratepv.sh) is provided as a template.
+
+> After running the migration script, if the pod is stuck with error "Unable to attach or mount volumes", make sure [Azure Disk CSI Driver was installed](#1-install-azure-disk-csi-driver-manually) and [storage classes were recreated](#2-replace-storage-classes).
 
 ## Volume Provisioner: Container Storage Interface Drivers (preview)
 
