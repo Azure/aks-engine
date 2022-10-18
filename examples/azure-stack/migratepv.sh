@@ -52,7 +52,7 @@ EOF
 
     # Retain Azure disk on PV deletion
     kubectl patch pv ${PV_NAME} -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
-    
+
     # Delete PVC+PV pair
     kubectl delete -n ${NS} pvc/${pvc}
     kubectl delete pv/${PV_NAME}
