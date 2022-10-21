@@ -175,6 +175,7 @@ func convertLinuxProfileToVLabs(obj *LinuxProfile, vlabsProfile *vlabs.LinuxProf
 		vlabsProfile.CustomNodesDNS.DNSServer = obj.CustomNodesDNS.DNSServer
 	}
 	vlabsProfile.RunUnattendedUpgradesOnBootstrap = obj.RunUnattendedUpgradesOnBootstrap
+	vlabsProfile.EnableUnattendedUpgrades = obj.EnableUnattendedUpgrades
 	vlabsProfile.Eth0MTU = obj.Eth0MTU
 }
 
