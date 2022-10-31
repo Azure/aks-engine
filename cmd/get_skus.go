@@ -73,8 +73,8 @@ func (vmc *SkusCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if !outputFlagValid {
-		return errors.New(fmt.Sprintf("invalid output format: \"%s\". Allowed values: %s.\n",
-			vmc.output, strings.Join(skusOutputFormatOptions, ", ")))
+		return fmt.Errorf("invalid output format: \"%s\". Allowed values: %s",
+			vmc.output, strings.Join(skusOutputFormatOptions, ", "))
 	}
 
 	if err = vmc.getAuthArgs().validateAuthArgs(); err != nil {

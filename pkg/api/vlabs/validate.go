@@ -183,7 +183,7 @@ func handleValidationErrors(e validator.ValidationErrors) error {
 	return common.HandleValidationErrors(e)
 }
 
-//ValidateOrchestratorProfile validates the orchestrator profile and the addons dependent on the version of the orchestrator
+// ValidateOrchestratorProfile validates the orchestrator profile and the addons dependent on the version of the orchestrator
 func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 	o := a.OrchestratorProfile
 	// On updates we only need to make sure there is a supported patch version for the minor version
@@ -412,7 +412,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 
 	if to.Bool(m.AuditDEnabled) {
 		if m.Distro != "" && !m.IsUbuntu() {
-			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+			return errors.Errorf("you have enabled auditd for master vms, but you did not specify an Ubuntu-based distro")
 		}
 	}
 
@@ -1260,7 +1260,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 
 	// enableIPv6DualStack and enableIPv6Only are mutually exclusive feature flags
 	if ipv6DualStackEnabled && isIPv6 {
-		return errors.Errorf("featureFlags.EnableIPv6DualStack and featureFlags.EnableIPv6Only can't be enabled at the same time.")
+		return errors.Errorf("featureFlags.EnableIPv6DualStack and featureFlags.EnableIPv6Only can't be enabled at the same time")
 	}
 
 	sv, err := semver.Make(k8sVersion)
@@ -1278,7 +1278,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 		// ipv6 dual stack feature is currently only supported with kubenet
 		if k.NetworkPlugin != "kubenet" && k.NetworkPlugin != "azure" {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with 'kubenet' and 'azure'.", k.NetworkPlugin)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 dual stack supported only with 'kubenet' and 'azure'", k.NetworkPlugin)
 		}
 
 		if k.NetworkPlugin == "azure" && k.NetworkPolicy != "" {
@@ -1296,7 +1296,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 		// single stack IPv6 feature is currently only supported with kubenet
 		if k.NetworkPlugin != "kubenet" {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 single stack supported only with kubenet.", k.NetworkPlugin)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 single stack supported only with kubenet", k.NetworkPlugin)
 		}
 	}
 
@@ -1306,7 +1306,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet", k.ClusterSubnet)
 		}
 		if ipv6DualStackEnabled && len(clusterSubnets) > 2 {
-			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet. Not more than 2 subnets for ipv6 dual stack.", k.ClusterSubnet)
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ClusterSubnet '%s' is an invalid subnet. Not more than 2 subnets for ipv6 dual stack", k.ClusterSubnet)
 		}
 
 		for _, clusterSubnet := range clusterSubnets {

@@ -573,7 +573,7 @@ func removeVMAS(logger *logrus.Entry, resources []interface{}, resource resource
 	return resources
 }
 
-//RemoveNsgDependency Removes the nsg dependency from the resource
+// RemoveNsgDependency Removes the nsg dependency from the resource
 func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap map[string]interface{}) {
 
 	if resourceName != "" && resourceMap != nil {

@@ -60,7 +60,7 @@ func GetNodes(az armhelpers.AKSEngineClient, logger *log.Entry, apiserverURL, ku
 				}
 			}
 		case <-ctx.Done():
-			return nil, errors.Errorf("GetAllNodes timed out: %s\n", mostRecentGetNodesErr)
+			return nil, errors.Errorf("call to GetNodes timed out: %s", mostRecentGetNodesErr)
 		}
 	}
 }

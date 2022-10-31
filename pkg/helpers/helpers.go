@@ -193,7 +193,7 @@ func EnsureString(val, defaultVal string) string {
 	return defaultVal
 }
 
-//get domain of azure log analytics workspace based on the cloud or azure stack dependenciesLocation
+// GetLogAnalyticsWorkspaceDomain gets log analytics workspace based on the cloud or azure stack dependenciesLocation
 func GetLogAnalyticsWorkspaceDomain(cloudOrDependenciesLocation string) string {
 	var workspaceDomain string
 	switch strings.ToLower(strings.TrimSpace(cloudOrDependenciesLocation)) {

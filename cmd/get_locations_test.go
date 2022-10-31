@@ -264,71 +264,6 @@ func ExampleLocationsCmd_run_jsonOutput() {
 	// ]
 }
 
-func ExampleLocationsCmd_run_codeOutput() {
-	d := &LocationsCmd{
-		client: &armhelpers.MockAKSEngineClient{},
-		authProvider: &mockAuthProvider{
-			authArgs:      &authArgs{},
-			getClientMock: &armhelpers.MockAKSEngineClient{},
-		},
-	}
-
-	r := &cobra.Command{}
-	f := r.Flags()
-
-	addAuthFlags(d.getAuthArgs(), f)
-
-	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
-	fakeSubscriptionID, _ := uuid.Parse(fakeRawSubscriptionID)
-	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
-	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
-
-	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
-	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
-	d.getAuthArgs().rawClientID = fakeClientID
-	d.getAuthArgs().ClientSecret = fakeClientSecret
-
-	args := []string{}
-
-	d.output = "code"
-	if err := d.run(r, args); err != nil {
-		fmt.Printf("error running command: %s\n", err)
-	}
-
-	// Output:
-	// // Copyright (c) Microsoft Corporation. All rights reserved.
-	// // Licensed under the MIT license.
-
-	// package helpers
-
-	// // GetAzureLocations provides all available Azure cloud locations.
-	// //
-	// // Code generated for package helpers by aks-engine DO NOT EDIT. (@generated)
-	// //
-	// // To generate this code, run the command:
-	// //   aks-engine get-locations --output=code
-	// func GetAzureLocations() []string {
-	// 	return []string{
-	// 		"centraluseuap",
-	// 		"chinaeast",
-	// 		"chinaeast2",
-	// 		"chinaeast3",
-	// 		"chinanorth",
-	// 		"chinanorth2",
-	// 		"chinanorth3",
-	// 		"eastus2euap",
-	// 		"germanycentral",
-	// 		"germanynortheast",
-	// 		"usdodcentral",
-	// 		"usdodeast",
-	// 		"usgovarizona",
-	// 		"usgoviowa",
-	// 		"usgovtexas",
-	// 		"usgovvirginia",
-	// 	 }
-	// }
-}
-
 func TestGetLocationsCmd_ShouldErrorIfInvalidOption(t *testing.T) {
 	t.Parallel()
 
@@ -338,5 +273,5 @@ func TestGetLocationsCmd_ShouldErrorIfInvalidOption(t *testing.T) {
 	err := command.run(nil, nil)
 	g := NewGomegaWithT(t)
 	g.Expect(err).To(HaveOccurred())
-	g.Expect(err.Error()).To(Equal("invalid output format: \"yaml\". Allowed values: human, json, code.\n"))
+	g.Expect(err.Error()).To(Equal("invalid output format: \"yaml\". Allowed values: human, json, code"))
 }
