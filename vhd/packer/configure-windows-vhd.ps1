@@ -113,7 +113,8 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.13.zip",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.14.zip",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.15.zip",
-            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.16.zip"
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.16.zip",
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.17.zip"
         );
         "c:\akse-cache\containerd\"   = @(
             $global:containerdPackageUrl
@@ -203,8 +204,7 @@ function Install-WindowsPatches {
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
             # Find a specific patch at https://www.catalog.update.microsoft.com/Search.aspx?q=kb5005625
-            # KBKB5015880 Contains 2022 7C patches for Windows server 2019
-            $patchUrls = @("https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2022/07/windows10.0-kb5015880-x64_1b8eadaa8f12dacd77342353c257e236e167a802.msu")
+            $patchUrls = @()
         }
         '2004' {
             # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932
