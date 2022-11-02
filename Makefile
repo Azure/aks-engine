@@ -28,7 +28,7 @@ ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-DEV_ENV_IMAGE := mcr.microsoft.com/oss/azcu/go-dev:v1.32.3
+DEV_ENV_IMAGE := mcr.microsoft.com/oss/azcu/go-dev:v1.34.7
 DEV_ENV_WORK_DIR := /aks-engine
 DEV_ENV_OPTS := --rm -v $(GOPATH)/pkg/mod:/go/pkg/mod -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
@@ -156,7 +156,7 @@ test: generate
 	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v -tags=fast -ldflags '$(LDFLAGS)' .
 
 .PHONY: test-style
-test-style: validate-go validate-shell validate-copyright-headers
+test-style: validate-go validate-copyright-headers
 
 .PHONY: ensure-generated
 ensure-generated:

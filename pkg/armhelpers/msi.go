@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//CreateUserAssignedID - Creates a user assigned msi.
+// CreateUserAssignedID - Creates a user assigned msi.
 func (az *AzureClient) CreateUserAssignedID(location string, resourceGroup string, userAssignedID string) (id *msi.Identity, err error) {
 	idCreated, err := az.msiClient.CreateOrUpdate(context.Background(), resourceGroup, userAssignedID, msi.Identity{
 		Location: to.StringPtr(location),

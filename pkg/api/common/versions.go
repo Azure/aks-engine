@@ -614,7 +614,7 @@ func GetSupportedVersions(orchType string, isUpdate, hasWindows bool, isAzureSta
 	}
 }
 
-//GetValidPatchVersion gets the current valid patch version for the minor version of the passed in version
+// GetValidPatchVersion gets the current valid patch version for the minor version of the passed in version
 func GetValidPatchVersion(orchType, orchVer string, isUpdate, hasWindows bool, isAzureStackCloud bool) string {
 	if orchVer == "" {
 		return RationalizeReleaseAndVersion(

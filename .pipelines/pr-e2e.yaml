@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: mcr.microsoft.com/oss/azcu/go-dev:v1.32.3
+    image: mcr.microsoft.com/oss/azcu/go-dev:v1.34.7
 
 jobs:
 - job: unit_tests

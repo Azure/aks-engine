@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//VMScalingErrorDetails give the index in the agent pool that failed and the accompanying error
+// VMScalingErrorDetails give the index in the agent pool that failed and the accompanying error
 type VMScalingErrorDetails struct {
 	Name  string
 	Error error

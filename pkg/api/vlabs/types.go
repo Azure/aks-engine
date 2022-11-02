@@ -77,9 +77,11 @@ type ServicePrincipalProfile struct {
 // The format of 'VaultID' value should be
 // "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.KeyVault/vaults/<KV_NAME>"
 // where:
-//    <SUB_ID> is the subscription ID of the keyvault
-//    <RG_NAME> is the resource group of the keyvault
-//    <KV_NAME> is the name of the keyvault
+//
+//	<SUB_ID> is the subscription ID of the keyvault
+//	<RG_NAME> is the resource group of the keyvault
+//	<KV_NAME> is the name of the keyvault
+//
 // The 'SecretName' is the name of the secret in the keyvault
 // The 'SecretVersion' (optional) is the version of the secret (default: the latest version)
 type KeyvaultSecretRef struct {
@@ -93,11 +95,12 @@ type KeyvaultSecretRef struct {
 // In the latter case, the format of the parameter's value should be
 // "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.KeyVault/vaults/<KV_NAME>/secrets/<NAME>[/<VERSION>]"
 // where:
-//    <SUB_ID> is the subscription ID of the keyvault
-//    <RG_NAME> is the resource group of the keyvault
-//    <KV_NAME> is the name of the keyvault
-//    <NAME> is the name of the secret
-//    <VERSION> (optional) is the version of the secret (default: the latest version)
+//
+//	<SUB_ID> is the subscription ID of the keyvault
+//	<RG_NAME> is the resource group of the keyvault
+//	<KV_NAME> is the name of the keyvault
+//	<NAME> is the name of the secret
+//	<VERSION> (optional) is the version of the secret (default: the latest version)
 type CertificateProfile struct {
 	// CaCertificate is the certificate authority certificate.
 	CaCertificate string `json:"caCertificate,omitempty"`
