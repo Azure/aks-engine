@@ -25,6 +25,14 @@ on:
         description: 'Which Azure region to create cluster in (e.g., "westus2")'
         required: false
         default: 'westus2'
+      cleanup_on_exit:
+        description: 'Delete cluster resources after test completes'
+        required: false
+        default: true
+      cleanup_if_fail:
+        description: 'Delete cluster resources if test fails'
+        required: false
+        default: true
       from_branch:
         description: 'Which branch to run tests from? (default: master)'
         required: false
@@ -72,8 +80,8 @@ jobs:
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
           LOCATION: ${{ github.event.inputs.azure_region }}
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: true
+          CLEANUP_ON_EXIT: ${{ github.event.inputs.cleanup_on_exit }}
+          CLEANUP_IF_FAIL: ${{ github.event.inputs.cleanup_if_fail }}
           CONTAINER_RUNTIME: ${{ github.event.inputs.container_runtime }}
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
