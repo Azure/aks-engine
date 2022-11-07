@@ -15,7 +15,7 @@
       {
         "name": "poolgpu",
         "count": 1,
-        "vmSize": "Standard_NC6"
+        "vmSize": "Standard_NV12s_v3"
       }
     ],
     "linuxProfile": {
