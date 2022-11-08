@@ -9,8 +9,6 @@ package helpers
 //
 // To generate this code, run the command:
 //   aks-engine get-locations --output=code
-func GetAzureLocations() []string {
-	return []string{
 		"australiacentral",
 		"australiacentral2",
 		"australiaeast",
