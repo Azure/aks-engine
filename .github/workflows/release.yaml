@@ -162,10 +162,7 @@ jobs:
           git checkout -- .
       - name: Build Artifacts
         run: |
-          docker run --rm \
-          -v ${GITHUB_WORKSPACE}:/go/src/github.com/Azure/aks-engine \
-          -w /go/src/github.com/Azure/aks-engine \
-          mcr.microsoft.com/oss/azcu/go-dev:v1.34.7 make dist
+          make dist
       - name: Remove local tag
         run: git tag -d ${{ env.RELEASE_VERSION }}
       - name: Publish Release
