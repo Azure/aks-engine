@@ -49,9 +49,8 @@ jobs:
       -e ORCHESTRATOR_RELEASE="1.20" \
       -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
 
-    -e CLIENT_ID=${CLIENT_ID} \
-    -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-    -e TENANT_ID=${TENANT_ID} \
+   
+       -e TENANT_ID=${TENANT_ID} \
     
      -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
       -e USE_MANAGED_IDENTITY="false" \
