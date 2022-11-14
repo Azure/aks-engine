@@ -5,7 +5,6 @@ jobs:
   timeoutInMinutes: 210
   strategy:
     maxParallel: 0
-
 steps:
 - script: |
     docker run --rm \
@@ -28,7 +27,6 @@ steps:
     displayName: Building windows VHD
 
 - script: |
-
     docker run --rm \
     -v ${PWD}:/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
