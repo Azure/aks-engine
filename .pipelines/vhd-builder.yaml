@@ -69,9 +69,9 @@ steps:
     -e CLIENT_SECRET="$(CLIENT_SECRET)" \
     -e TENANT_ID=${TENANT_ID} \
     -e CLASSIC_BLOB=${STORAGE_ACCT_BLOB_URL} \
-      -e CLASSIC_SAS_TOKEN="$(STORAGE_ACCT_SAS_TOKEN)" \
-      -e OS_DISK_SAS=${OS_DISK_SAS} \
-      -e VHD_NAME=${VHD_NAME} \
+    -e CLASSIC_SAS_TOKEN="$(STORAGE_ACCT_SAS_TOKEN)" \
+    -e OS_DISK_SAS=${OS_DISK_SAS} \
+    -e VHD_NAME=${VHD_NAME} \
       ${CONTAINER_IMAGE} make az-copy
     displayName: Copying resource to Classic Storage Account
     condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
