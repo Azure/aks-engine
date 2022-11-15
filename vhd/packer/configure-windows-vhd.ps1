@@ -60,7 +60,7 @@ function Get-ContainerImages {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:2004",
                 "mcr.microsoft.com/windows/nanoserver:2004",
-                "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
+                "mcr.microsoft.com/oss/kubernetes/pause:1.4.0",
                 "mcr.microsoft.com/oss/kubernetes/pause:3.4.1")
         }
         default {
@@ -123,14 +123,27 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.2.2/binaries/csi-proxy-v0.2.2.tar.gz"
         );
         "c:\akse-cache\win-k8s\"      = @(
+
+          "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.18-azs/windowszip/v1.18.18-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.10-azs/windowszip/v1.19.10-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.6-azs/windowszip/v1.20.6-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.20/windowszip/v1.18.20-1int.zip",        
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.11/windowszip/v1.19.11-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.5/windowszip/v1.20.5-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.8/windowszip/v1.20.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.0/windowszip/v1.21.0-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.1/windowszip/v1.21.1-1int.zip"
+
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.14/windowszip/v1.21.14-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.7/windowszip/v1.22.7-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.16/windowszip/v1.22.16-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.6/windowszip/v1.23.6-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.13/windowszip/v1.23.13-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.24.8/windowszip/v1.24.8-1int.zip"
+
         );
         "c:\akse-cache\win-vnet-cni\" = @(
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.6/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.1.6.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.13/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.13.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.14/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.14.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.16/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.16.zip"
@@ -178,7 +191,7 @@ function Install-ContainerD {
 }
 
 function Install-Docker {
-    $defaultDockerVersion = "20.10.9"
+    $defaultDockerVersion = "19.03.11"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
