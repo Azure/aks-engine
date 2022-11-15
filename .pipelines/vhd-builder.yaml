@@ -13,9 +13,9 @@ steps:
     -e CLIENT_ID=${CLIENT_ID} \
     -e CLIENT_SECRET="$(CLIENT_SECRET)" \
     -e TENANT_ID=${TENANT_ID} \
+    -e AZURE_VM_SIZE=${PACKER_VM_SIZE} \
     -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
     -e AZURE_LOCATION=${AZURE_LOCATION} \
-    -e AZURE_VM_SIZE=${PACKER_VM_SIZE} \
     -e GIT_BRANCH=$(Build.SourceBranchName) \
     -e GIT_REPO=$(Build.Repository.Uri) \
     -e GIT_VERSION=$(Build.SourceVersion) \
@@ -30,26 +30,27 @@ steps:
     docker run --rm \
     -v ${PWD}:/go/src/github.com/Azure/aks-engine \
     -w /go/src/github.com/Azure/aks-engine \
-      ${CONTAINER_IMAGE} make all
+     ${CONTAINER_IMAGE} make all
     displayName: build aks-engine-test - make all
     condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
   - script: |
-      OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
+        OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
       IMAGE_NAME="$(echo $OS_DISK_URI | cut -d "/" -f 3 | cut -d "." -f 1)" && \
       docker run --rm \
       -v ${PWD}:/go/src/github.com/Azure/aks-engine \
       -w /go/src/github.com/Azure/aks-engine \
       -e CLEANUP_ON_EXIT="true" \
-    -e CLIENT_ID=${CLIENT_ID} \
-    -e CLIENT_SECRET="$(CLIENT_SECRET)" \
-    -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
-    -e LOCATION=${AZURE_LOCATION} \
-    -e ORCHESTRATOR_RELEASE="1.20" \
-    -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
-    -e TENANT_ID=${TENANT_ID} \
-     -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
+      -e LOCATION=${AZURE_LOCATION} \
+      -e ORCHESTRATOR_RELEASE="1.20" \
+      -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
+      -e TENANT_ID=${TENANT_ID} \
+      -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \
       -e USE_MANAGED_IDENTITY="false" \
       -e CONTAINER_RUNTIME=docker \
+      -e AZURE_CORE_ONLY_SHOW_ERRORS="True" \
       ${CONTAINER_IMAGE} make test-kubernetes
     displayName: run e2e tests
     condition: and(succeeded(), eq(variables.COPY_VHD, 'False'))
@@ -59,7 +60,7 @@ steps:
       path: 'release-notes.txt'
 
 - script: |
-    OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
+   OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
       VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
     docker run --rm \
     -v ${PWD}:/go/src/github.com/Azure/aks-engine \
@@ -85,8 +86,8 @@ steps:
     -e CLIENT_SECRET="$(CLIENT_SECRET)" \
     -e TENANT_ID=${TENANT_ID} \
     -e CLASSIC_SA_CONNECTION_STRING="$(CLASSIC_SA_CONNECTION_STRING)" \
-        -e STORAGE_ACCT_BLOB_URL=${STORAGE_ACCT_BLOB_URL} \
-      -e VHD_NAME=${VHD_NAME} \
+    -e STORAGE_ACCT_BLOB_URL=${STORAGE_ACCT_BLOB_URL} \
+    -e VHD_NAME=${VHD_NAME} \
       ${CONTAINER_IMAGE} make windows-vhd-publishing-info
     displayName: Generating publishing info for Windows VHD
     condition: and(succeeded(), eq(variables.COPY_VHD, 'True'))
