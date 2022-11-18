@@ -160,7 +160,7 @@ Make sure `linuxProfile.runUnattendedUpgradesOnBootstrap` is set to `"false"` wh
 
 >\* Starting from Kubernetes v1.21, **only** [Cloud Provider for Azure](#cloud-provider-for-azure) is supported on Azure Stack Hub.
 
->\** There are [reports](https://bugs.launchpad.net/ubuntu/+source/containerd/+bug/1996678) suggesting that upgrading to the Linux kernel version `5.4.0-1094-azure` may cause issues with `containerd`. AKS Engine's base OS images do not include this kernel version. Instructions on how to disable automatic upgrades until a fix is available can be found [here](/docs/howto/troubleshooting.md#prevent-unattended-upgrades).
+>\** There are [reports](https://bugs.launchpad.net/ubuntu/+source/containerd/+bug/1996678) suggesting that upgrading to the Linux kernel version `5.4.0-1095-azure` may cause issues with `containerd`. AKS Engine's base OS images do not include this kernel version. Instructions on how to disable automatic upgrades until a fix is available can be found [here](/docs/howto/troubleshooting.md#prevent-unattended-upgrades).
 
 ## Azure Monitor for containers
 
