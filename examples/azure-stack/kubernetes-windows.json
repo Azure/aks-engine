@@ -73,6 +73,7 @@
                     }
                 ]
             },
+            "enableUnattendedUpgrades": false,
             "runUnattendedUpgradesOnBootstrap": false
         },
         "servicePrincipalProfile": {
