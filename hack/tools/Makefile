@@ -17,10 +17,10 @@ $(LOCALBIN)/ginkgo:
 	GOBIN=$(LOCALBIN) $(GO) install github.com/onsi/ginkgo/ginkgo@v1.15.0
 
 $(LOCALBIN)/golangci-lint:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.41.1
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.50.1
 
 $(LOCALBIN)/pub:
-	GOBIN=$(LOCALBIN) $(GO) install github.com/devigned/pub@v0.2.6
+	GOBIN=$(LOCALBIN) $(GO) install github.com/devigned/pub@v0.3.3
 
 $(LOCALBIN)/mockgen:
 	GOBIN=$(LOCALBIN) $(GO) install github.com/golang/mock/mockgen@v1.2.0

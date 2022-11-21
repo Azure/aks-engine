@@ -315,7 +315,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.22.12":        false,
 	"1.22.13":        false,
 	"1.22.14":        false,
-	"1.22.15":        true,
+	"1.22.15":        false,
+	"1.22.16":        true,
 	"1.23.0-alpha.1": false,
 	"1.23.0-alpha.2": false,
 	"1.23.0-alpha.3": false,
@@ -335,7 +336,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.23.9":         false,
 	"1.23.10":        false,
 	"1.23.11":        false,
-	"1.23.12":        true,
+	"1.23.12":        false,
+	"1.23.13":        true,
 	"1.24.0-alpha.2": false,
 	"1.24.0-alpha.3": false,
 	"1.24.0":         false,
@@ -344,7 +346,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.24.3":         false,
 	"1.24.4":         false,
 	"1.24.5":         false,
-	"1.24.6":         true,
+	"1.24.6":         false,
+	"1.24.7":         false,
+	"1.24.8":         true,
 }
 
 // AllKubernetesSupportedVersionsAzureStack is a hash table of all supported Kubernetes version strings on Azure Stack
@@ -378,8 +382,11 @@ var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.20.6":  false,
 	"1.20.11": false,
 	"1.21.10": false,
-	"1.22.7":  true,
-	"1.23.6":  true,
+	"1.22.7":  false,
+	"1.22.15": true,
+	"1.23.6":  false,
+	"1.23.12": false,
+	"1.23.13": true,
 }
 
 // AllKubernetesWindowsSupportedVersionsAzureStack maintain a set of available k8s Windows versions in aks-engine on Azure Stack
@@ -408,8 +415,11 @@ var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
 	"1.20.6":  false,
 	"1.20.11": false,
 	"1.21.10": false,
-	"1.22.7":  true,
-	"1.23.6":  true,
+	"1.22.7":  false,
+	"1.22.15": true,
+	"1.23.6":  false,
+	"1.23.12": false,
+	"1.23.13": true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release
@@ -610,7 +620,7 @@ func GetSupportedVersions(orchType string, isUpdate, hasWindows bool, isAzureSta
 	}
 }
 
-//GetValidPatchVersion gets the current valid patch version for the minor version of the passed in version
+// GetValidPatchVersion gets the current valid patch version for the minor version of the passed in version
 func GetValidPatchVersion(orchType, orchVer string, isUpdate, hasWindows bool, isAzureStackCloud bool) string {
 	if orchVer == "" {
 		return RationalizeReleaseAndVersion(

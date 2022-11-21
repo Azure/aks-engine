@@ -76,7 +76,9 @@ func (kan *UpgradeAgentNode) DeleteNode(vmName *string, drain bool) error {
 	}
 	// Delete VM in api server
 	if err = client.DeleteNode(nodeName); err != nil {
-		statusErr, ok := err.(*apierrors.StatusError)
+		var statusErr *apierrors.StatusError
+		var ok bool
+		statusErr, ok = err.(*apierrors.StatusError)
 		if ok && statusErr.ErrStatus.Reason != v1.StatusReasonNotFound {
 			kan.logger.Warnf("Node %s got an error while deregistering: %#v", *vmName, err)
 		}

@@ -13,7 +13,7 @@ linters:
     - errcheck
     - goimports
     - gosimple
-    - golint
+    - revive
     - govet
     - ineffassign
     - misspell

@@ -105,5 +105,5 @@ func TestGetSkusCmd_ShouldErrorIfInvalidOption(t *testing.T) {
 	err := command.run(nil, nil)
 	g := NewGomegaWithT(t)
 	g.Expect(err).To(HaveOccurred())
-	g.Expect(err.Error()).To(Equal("invalid output format: \"yaml\". Allowed values: human, json, code.\n"))
+	g.Expect(err.Error()).To(Equal("invalid output format: \"yaml\". Allowed values: human, json, code"))
 }

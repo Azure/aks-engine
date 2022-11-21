@@ -109,8 +109,8 @@ func (glc *LocationsCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if !outputFlagValid {
-		return errors.New(fmt.Sprintf("invalid output format: \"%s\". Allowed values: %s.\n",
-			glc.output, strings.Join(locationsOutputFormatOptions, ", ")))
+		return fmt.Errorf("invalid output format: \"%s\". Allowed values: %s",
+			glc.output, strings.Join(locationsOutputFormatOptions, ", "))
 	}
 
 	if err = glc.getAuthArgs().validateAuthArgs(); err != nil {
@@ -287,8 +287,6 @@ package helpers
 //
 // To generate this code, run the command:
 //   aks-engine get-locations --output=code
-func GetAzureLocations() []string {
-	return []string{
 `)
 		for _, l := range locations {
 			b.WriteString(fmt.Sprintf("\t\t\"%s\",\n", *l.Name))

@@ -11,7 +11,7 @@ import (
 	azcompute "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 )
 
-//VirtualMachineListResultPageClient Virtual Machine List Result Page Client
+// VirtualMachineListResultPageClient Virtual Machine List Result Page Client
 type VirtualMachineListResultPageClient struct {
 	vmlrp compute.VirtualMachineListResultPage
 	err   error

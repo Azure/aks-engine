@@ -1361,7 +1361,7 @@ func (m *MasterProfile) IsUbuntu1804() bool {
 // IsUbuntu2004 returns true if the master profile distro is based on Ubuntu 20.04
 func (m *MasterProfile) IsUbuntu2004() bool {
 	switch m.Distro {
-	case Ubuntu2004:
+	case Ubuntu2004, Ubuntu2004Gen2:
 		return true
 	default:
 		return false
@@ -1513,7 +1513,7 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 func (a *AgentPoolProfile) IsUbuntu2004() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case Ubuntu2004:
+		case Ubuntu2004, Ubuntu2004Gen2:
 			return true
 		default:
 			return false
@@ -2207,8 +2207,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 }
 
 // GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
-//for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
-//if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
+// for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
+// if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	targetEnv := helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 	return AzureCloudSpecEnvMap[targetEnv]

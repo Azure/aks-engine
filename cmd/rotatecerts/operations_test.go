@@ -64,7 +64,7 @@ func TestPauseClusterAutoscaler(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		var replicas int32 = 0
+		var replicas int32
 		deploy := appsv1.Deployment{}
 		deploy.Spec.Replicas = &replicas
 		mock := mock.NewMockKubeClient(mockCtrl)

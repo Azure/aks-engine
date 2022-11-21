@@ -17,7 +17,7 @@ type VlabsContainerService struct {
 	*vlabs.ContainerService
 }
 
-//KubernetesSpecConfig is the kubernetes container images used.
+// KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
 	KubernetesImageBase              string
 	TillerImageBase                  string
@@ -33,12 +33,12 @@ type KubernetesSpecConfig struct {
 	ContainerdDownloadURLBase        string
 }
 
-//AzureEndpointConfig describes an Azure endpoint
+// AzureEndpointConfig describes an Azure endpoint
 type AzureEndpointConfig struct {
 	ResourceManagerVMDNSSuffix string
 }
 
-//AzureOSImageConfig describes an Azure OS image
+// AzureOSImageConfig describes an Azure OS image
 type AzureOSImageConfig struct {
 	ImageOffer     string
 	ImageSku       string

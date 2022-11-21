@@ -27,6 +27,8 @@ Write-Log "Entering windowsnodereset.ps1"
 
 Import-Module $global:HNSModule
 
+Unregister-HNSRemediatorScriptTask
+
 #
 # Stop services
 #
@@ -47,6 +49,7 @@ if ($global:EnableHostsConfigAgent) {
 }
 
 function Register-HNSRemediatorScriptTask {
+<<<<<<< HEAD
     if ($global:HNSRemediatorIntervalInMinutes -ne 0) {
         Write-Log "Creating a scheduled task to run hnsremediator.ps1"
 
@@ -60,6 +63,20 @@ function Register-HNSRemediatorScriptTask {
 
 function Unregister-HNSRemediatorScriptTask {
     # We do not check whether $global:HNSRemediatorIntervalInMinutes is not 0 sicne we may need to set it to 0 in the node for test purpose
+=======
+    # Hardcoding RepetitionInterval to 1 Minute
+    # Making it variable would need a new parameter to be added under windowsProfile
+    Write-Log "Creating a scheduled task to run hnsremediator.ps1"
+
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\hnsremediator.ps1`""
+    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+    $trigger = New-JobTrigger -Once -At (Get-Date).Date -RepeatIndefinitely -RepetitionInterval (New-TimeSpan -Minutes 1)
+    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "hns-remediator-task"
+    Register-ScheduledTask -TaskName "hns-remediator-task" -InputObject $definition
+}
+
+function Unregister-HNSRemediatorScriptTask {
+>>>>>>> master
     if (Get-ScheduledTask -TaskName "hns-remediator-task" -ErrorAction Ignore) {
         Write-Log "Deleting the scheduled task hns-remediator-task"
         Unregister-ScheduledTask -TaskName "hns-remediator-task" -Confirm:$false
@@ -151,5 +168,7 @@ Write-Log "Starting kubelet service"
 Start-Service kubelet
 
 Write-Log "Do not start kubeproxy service since kubelet will restart kubeproxy"
+
+Register-HNSRemediatorScriptTask
 
 Write-Log "Exiting windowsnodereset.ps1"

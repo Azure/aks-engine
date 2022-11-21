@@ -17,6 +17,7 @@ set -euo pipefail
 
 echo
 echo "==> Running Go linter <=="
+go version
 golangci-lint --version
 if [ -f /.dockerenv ]; then
     echo "Running inside container";

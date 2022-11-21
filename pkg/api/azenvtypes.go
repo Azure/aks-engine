@@ -117,6 +117,14 @@ var (
 		ImageVersion:   "latest",
 	}
 
+	//Ubuntu2004Gen2OSImageConfig is Gen2 flavor the Ubunutu 20.04-LTS Linux distribution.
+	Ubuntu2004Gen2OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "0001-com-ubuntu-server-focal",
+		ImageSku:       "20_04-lts-gen2",
+		ImagePublisher: "Canonical",
+		ImageVersion:   "latest",
+	}
+
 	//FlatcarImageConfig is the Flatcar Linux distribution.
 	FlatcarImageConfig = AzureOSImageConfig{
 		ImageOffer:     "flatcar-container-linux-free",
@@ -140,24 +148,24 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202112",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2022.08.12",
+		ImageVersion:   "2022.11.02",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk-2208",
+		ImageSku:       "2019-datacenter-core-smalldisk-2211",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.3232.220805",
+		ImageVersion:   "17763.3532.221102",
 	}
 
 	// AKSWindowsServer2019ContainerDOSImageConfig is the aks-engine image based on Windows Server 2019
 	// configured with containerd
 	AKSWindowsServer2019ContainerDOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-ctrd-2208",
+		ImageSku:       "2019-datacenter-core-ctrd-2211",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.3232.220805",
+		ImageVersion:   "17763.3532.221102",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -191,6 +199,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			Ubuntu2004:        Ubuntu2004OSImageConfig,
+			Ubuntu2004Gen2:    Ubuntu2004Gen2OSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
@@ -212,6 +221,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			Ubuntu2004:        Ubuntu2004OSImageConfig,
+			Ubuntu2004Gen2:    Ubuntu2004Gen2OSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
 			AKS1604Deprecated: Ubuntu1604OSImageConfig, // for back-compat
@@ -232,6 +242,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			Ubuntu2004:        Ubuntu2004OSImageConfig,
+			Ubuntu2004Gen2:    Ubuntu2004Gen2OSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
@@ -273,6 +284,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			Ubuntu2004:        Ubuntu2004OSImageConfig,
+			Ubuntu2004Gen2:    Ubuntu2004Gen2OSImageConfig,
 			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat

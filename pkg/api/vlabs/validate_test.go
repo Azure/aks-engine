@@ -4479,7 +4479,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 			masterProfile.AuditDEnabled = to.BoolPtr(true)
 			switch distro {
 			case Flatcar:
-				expectedMsg := "You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro."
+				expectedMsg := "you have enabled auditd for master vms, but you did not specify an Ubuntu-based distro"
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}

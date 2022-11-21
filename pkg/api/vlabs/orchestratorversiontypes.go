@@ -4,10 +4,11 @@
 package vlabs
 
 // PoolUpgradeProfile contains pool properties:
-//  - orchestrator type and version
-//  - pool name (for agent pool)
-//  - OS type of the VMs in the pool
-//  - list of applicable upgrades
+//
+//   - orchestrator type and version
+//   - pool name (for agent pool)
+//   - OS type of the VMs in the pool
+//   - list of applicable upgrades
 type PoolUpgradeProfile struct {
 	OrchestratorProfile
 	Name     string                 `json:"name,omitempty"`
@@ -16,17 +17,17 @@ type PoolUpgradeProfile struct {
 }
 
 // UpgradeProfile contains cluster properties:
-//  - orchestrator type and version for the cluster
-//  - list of pool profiles, constituting the cluster
+//   - orchestrator type and version for the cluster
+//   - list of pool profiles, constituting the cluster
 type UpgradeProfile struct {
 	ControlPlaneProfile *PoolUpgradeProfile   `json:"controlPlaneProfile"`
 	AgentPoolProfiles   []*PoolUpgradeProfile `json:"agentPoolProfiles"`
 }
 
 // OrchestratorVersionProfile contains information of a supported orchestrator version:
-//  - orchestrator type and version
-//  - whether this orchestrator version is deployed by default if orchestrator release is not specified
-//  - list of available upgrades for this orchestrator version
+//   - orchestrator type and version
+//   - whether this orchestrator version is deployed by default if orchestrator release is not specified
+//   - list of available upgrades for this orchestrator version
 type OrchestratorVersionProfile struct {
 	OrchestratorProfile
 	Default  bool                   `json:"default,omitempty"`

@@ -25,7 +25,7 @@ import (
 )
 
 // DistroValues is a list of currently supported distros
-var DistroValues = []Distro{"", Ubuntu, Ubuntu2004, Ubuntu1804, Flatcar, AKSUbuntu1604, AKSUbuntu1804, Ubuntu1804Gen2, ACC1604}
+var DistroValues = []Distro{"", Ubuntu, Ubuntu2004, Ubuntu2004Gen2, Ubuntu1804, Flatcar, AKSUbuntu1604, AKSUbuntu1804, Ubuntu1804Gen2, ACC1604}
 
 // PropertiesDefaultsParams is the parameters when we set the properties defaults for ContainerService.
 type PropertiesDefaultsParams struct {

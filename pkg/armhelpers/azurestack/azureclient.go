@@ -364,7 +364,7 @@ func parseRsaPrivateKey(path string) (*rsa.PrivateKey, error) {
 	return nil, errors.Errorf("failed to parse private key as Pkcs#1 or Pkcs#8. (%s). (%s)", errPkcs1, errPkcs8)
 }
 
-//AddAcceptLanguages sets the list of languages to accept on this request
+// AddAcceptLanguages sets the list of languages to accept on this request
 func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.acceptLanguages = languages
 	az.authorizationClient.Client.RequestInspector = az.addAcceptLanguages()

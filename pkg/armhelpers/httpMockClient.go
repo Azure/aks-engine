@@ -67,7 +67,7 @@ const (
 	filePathListResourceSkus                   = "httpMockClientData/listResourceSkus.json"
 )
 
-//HTTPMockClient is an wrapper of httpmock
+// HTTPMockClient is an wrapper of httpmock
 type HTTPMockClient struct {
 	SubscriptionID                             string
 	TenantID                                   string
@@ -122,22 +122,22 @@ type HTTPMockClient struct {
 	server                                     *testserver.TestServer
 }
 
-//VirtualMachineScaleSetListValues is an wrapper of virtual machine scale set list response values
+// VirtualMachineScaleSetListValues is an wrapper of virtual machine scale set list response values
 type VirtualMachineScaleSetListValues struct {
 	Value []compute.VirtualMachineScaleSet
 }
 
-//VirtualMachineScaleSetVMValues is an wrapper of virtual machine scale set VM response values
+// VirtualMachineScaleSetVMValues is an wrapper of virtual machine scale set VM response values
 type VirtualMachineScaleSetVMValues struct {
 	Value []compute.VirtualMachineScaleSetVM
 }
 
-//VirtualMachineVMValues is an wrapper of virtual machine VM response values
+// VirtualMachineVMValues is an wrapper of virtual machine VM response values
 type VirtualMachineVMValues struct {
 	Value []compute.VirtualMachine
 }
 
-//NewHTTPMockClient creates HTTPMockClient with default values
+// NewHTTPMockClient creates HTTPMockClient with default values
 func NewHTTPMockClient() (HTTPMockClient, error) {
 
 	client := HTTPMockClient{
@@ -268,7 +268,7 @@ func (mc *HTTPMockClient) Activate() error {
 	return nil
 }
 
-//DeactivateAndReset shuts down the mock environment and removes any registered mocks
+// DeactivateAndReset shuts down the mock environment and removes any registered mocks
 func (mc *HTTPMockClient) DeactivateAndReset() {
 	if mc.server != nil {
 		mc.server.Stop()
@@ -278,7 +278,7 @@ func (mc *HTTPMockClient) DeactivateAndReset() {
 	mc.server = nil
 }
 
-//GetEnvironment return azure.Environment for Azure Stack
+// GetEnvironment return azure.Environment for Azure Stack
 func (mc HTTPMockClient) GetEnvironment() azure.Environment {
 	env, _ := azure.EnvironmentFromName("AZUREPUBLICCLOUD")
 	env.Name = "AzurePublicCloud"

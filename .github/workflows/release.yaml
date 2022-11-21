@@ -50,54 +50,6 @@ jobs:
       - name: print git status after build
         run: |
           git status
-      - name: Validate 1.21 no-egress scenario
-        env:
-          ORCHESTRATOR_RELEASE: "1.21"
-          CLUSTER_DEFINITION: "examples/no_outbound.json"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "eastus"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: true
-          SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-          BLOCK_SSH: true
-        run: make test-kubernetes
-      - name: Validate 1.22 no-egress scenario
-        env:
-          ORCHESTRATOR_RELEASE: "1.22"
-          CLUSTER_DEFINITION: "examples/no_outbound.json"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "eastus"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: true
-          SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-          BLOCK_SSH: true
-        run: make test-kubernetes
-      - name: Validate 1.23 no-egress scenario
-        env:
-          ORCHESTRATOR_RELEASE: "1.23"
-          CLUSTER_DEFINITION: "examples/no_outbound.json"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "eastus"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: true
-          SKIP_LOGS_COLLECTION: true
-          SKIP_TEST: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-          BLOCK_SSH: true
-        run: make test-kubernetes
       - name: Validate gpu + docker scenario
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -107,7 +59,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "eastus"
+          LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
@@ -125,7 +77,7 @@ jobs:
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
           CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "eastus"
+          LOCATION: "westus2"
           TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
           CLEANUP_ON_EXIT: true
           CLEANUP_IF_FAIL: true
@@ -134,7 +86,49 @@ jobs:
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
+      - name: Validate 1.22 + containerd E2E
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.23"
+          CLUSTER_DEFINITION: "examples/e2e-tests/kubernetes/release/default/definition.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "eastus"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CREATE_VNET: true
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          GINKGO_SKIP: ""
+          STABILITY_ITERATIONS: "0"
+          RETAIN_SSH: false
+          CONTAINER_RUNTIME: "containerd"
+          BLOCK_SSH: true
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
       - name: Validate 1.23 + containerd E2E
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          ORCHESTRATOR_RELEASE: "1.23"
+          CLUSTER_DEFINITION: "examples/e2e-tests/kubernetes/release/default/definition.json"
+          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
+          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
+          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
+          LOCATION: "eastus"
+          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
+          CREATE_VNET: true
+          CLEANUP_ON_EXIT: true
+          CLEANUP_IF_FAIL: true
+          GINKGO_SKIP: ""
+          STABILITY_ITERATIONS: "0"
+          RETAIN_SSH: false
+          CONTAINER_RUNTIME: "containerd"
+          BLOCK_SSH: true
+          SKIP_LOGS_COLLECTION: true
+          AZURE_CORE_ONLY_SHOW_ERRORS: True
+        run: make test-kubernetes
+      - name: Validate 1.24 + containerd E2E
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           ORCHESTRATOR_RELEASE: "1.23"
@@ -168,10 +162,7 @@ jobs:
           git checkout -- .
       - name: Build Artifacts
         run: |
-          docker run --rm \
-          -v ${GITHUB_WORKSPACE}:/go/src/github.com/Azure/aks-engine \
-          -w /go/src/github.com/Azure/aks-engine \
-          mcr.microsoft.com/oss/azcu/go-dev:v1.32.3 make dist
+          make dist
       - name: Remove local tag
         run: git tag -d ${{ env.RELEASE_VERSION }}
       - name: Publish Release

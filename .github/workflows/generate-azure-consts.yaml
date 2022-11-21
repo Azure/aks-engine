@@ -1,7 +1,5 @@
 name: Generate Azure Constants
 on:
-  schedule:
-    - cron: '0 8 * * *' # Every day at 8:00 a.m.
   workflow_dispatch:
 jobs:
   generate-azure-consts:

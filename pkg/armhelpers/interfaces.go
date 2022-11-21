@@ -88,7 +88,7 @@ type DiskListPage interface {
 	Values() []compute.Disk
 }
 
-//VMImageFetcher is an extension of AKSEngine client allows us to operate on the virtual machine images in the environment
+// VMImageFetcher is an extension of AKSEngine client allows us to operate on the virtual machine images in the environment
 type VMImageFetcher interface {
 
 	// ListVirtualMachineImages return a list of images

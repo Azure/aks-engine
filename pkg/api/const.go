@@ -21,6 +21,7 @@ const (
 	Ubuntu1804        Distro = "ubuntu-18.04"
 	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	Ubuntu2004        Distro = "ubuntu-20.04"
+	Ubuntu2004Gen2    Distro = "ubuntu-20.04-gen2"
 	Flatcar           Distro = "flatcar"
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
 	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.

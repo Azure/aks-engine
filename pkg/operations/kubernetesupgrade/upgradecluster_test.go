@@ -1113,7 +1113,7 @@ func TestCheckControlPlaneNodesStatus(t *testing.T) {
 	upgradedVMs := func(names ...string) *[]compute.VirtualMachine {
 		vms := make([]compute.VirtualMachine, 0)
 		for _, name := range names {
-			var n string = name
+			var n = name
 			vm := compute.VirtualMachine{}
 			vm.Name = &n
 			vms = append(vms, vm)

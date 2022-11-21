@@ -135,7 +135,7 @@ func addAuthFlags(authArgs *authArgs, f *flag.FlagSet) {
 	f.StringVar(&authArgs.language, "language", "en-us", "language to return error messages in")
 }
 
-//this allows the authArgs to be stubbed behind the authProvider interface, and be its own provider when not in tests.
+// getAuthArgs allows the authArgs to be stubbed behind the authProvider interface, and be its own provider when not in tests.
 func (authArgs *authArgs) getAuthArgs() *authArgs {
 	return authArgs
 }

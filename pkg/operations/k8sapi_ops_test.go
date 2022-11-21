@@ -149,14 +149,14 @@ func TestGetNodes_ShouldRespectTheWaitForNumNodesArg(t *testing.T) {
 	var mostRecentGetNodesErr error
 
 	g.Expect(err).NotTo(BeNil())
-	g.Expect(err.Error()).To(Equal(fmt.Sprintf("GetAllNodes timed out: %s\n", mostRecentGetNodesErr)))
+	g.Expect(err.Error()).To(Equal(fmt.Sprintf("call to GetNodes timed out: %s", mostRecentGetNodesErr)))
 	g.Expect(nodes).To(BeNil())
 
 	// waiting for fewer nodes than the API returns should timeout
 	nodes, err = GetNodes(&mockClient, logger, apiserverURL, kubeconfig, timeout, "", 1)
 
 	g.Expect(err).NotTo(BeNil())
-	g.Expect(err.Error()).To(Equal(fmt.Sprintf("GetAllNodes timed out: %s\n", mostRecentGetNodesErr)))
+	g.Expect(err.Error()).To(Equal(fmt.Sprintf("call to GetNodes timed out: %s", mostRecentGetNodesErr)))
 	g.Expect(nodes).To(BeNil())
 
 	// filtering by pool name and and the waiting for the expected node count
@@ -184,7 +184,7 @@ func TestGetNodes_ShouldReturnAMeaningfulTimeoutErrorWhenK8sAPIFailsToListNodes(
 	mostRecentGetNodesErr := errors.New("ListNodes failed")
 	g := NewGomegaWithT(t)
 	g.Expect(err).NotTo(BeNil())
-	g.Expect(err.Error()).To(Equal(fmt.Sprintf("GetAllNodes timed out: %s\n", mostRecentGetNodesErr)))
+	g.Expect(err.Error()).To(Equal(fmt.Sprintf("call to GetNodes timed out: %s", mostRecentGetNodesErr)))
 	g.Expect(nodes).To(BeNil())
 }
 
@@ -200,7 +200,7 @@ func TestGetNodes_ShouldReturnAVanillaTimeoutErrorIfOccursBeforeASingleRequest(t
 	var mostRecentGetNodesErr error
 	g := NewGomegaWithT(t)
 	g.Expect(err).NotTo(BeNil())
-	g.Expect(err.Error()).To(Equal(fmt.Sprintf("GetAllNodes timed out: %s\n", mostRecentGetNodesErr)))
+	g.Expect(err.Error()).To(Equal(fmt.Sprintf("call to GetNodes timed out: %s", mostRecentGetNodesErr)))
 	g.Expect(nodes).To(BeNil())
 }
 

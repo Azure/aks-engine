@@ -1167,3 +1167,84 @@ func TestConvertComponentsToAPI(t *testing.T) {
 		}
 	}
 }
+
+func TestConvertVLabsLinuxProfile(t *testing.T) {
+	ssh := struct {
+		PublicKeys []PublicKey `json:"publicKeys"`
+	}{
+		PublicKeys: []PublicKey{},
+	}
+
+	cases := []struct {
+		name     string
+		w        vlabs.LinuxProfile
+		expected LinuxProfile
+	}{
+		{
+			name: "unattended upgrades on bootstrap",
+			w: vlabs.LinuxProfile{
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				EnableUnattendedUpgrades:         to.BoolPtr(true),
+			},
+			expected: LinuxProfile{
+				Secrets:                          []KeyVaultSecrets{},
+				SSH:                              ssh,
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				EnableUnattendedUpgrades:         to.BoolPtr(true),
+			},
+		},
+		{
+			name: "unattended upgrades on bootstrap",
+			w: vlabs.LinuxProfile{
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				EnableUnattendedUpgrades:         to.BoolPtr(false),
+			},
+			expected: LinuxProfile{
+				Secrets:                          []KeyVaultSecrets{},
+				SSH:                              ssh,
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				EnableUnattendedUpgrades:         to.BoolPtr(false),
+			},
+		},
+		{
+			name: "unattended upgrades on bootstrap",
+			w: vlabs.LinuxProfile{
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				EnableUnattendedUpgrades:         to.BoolPtr(false),
+			},
+			expected: LinuxProfile{
+				Secrets:                          []KeyVaultSecrets{},
+				SSH:                              ssh,
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(true),
+				EnableUnattendedUpgrades:         to.BoolPtr(false),
+			},
+		},
+		{
+			name: "unattended upgrades on bootstrap",
+			w: vlabs.LinuxProfile{
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				EnableUnattendedUpgrades:         to.BoolPtr(true),
+			},
+			expected: LinuxProfile{
+				Secrets:                          []KeyVaultSecrets{},
+				SSH:                              ssh,
+				RunUnattendedUpgradesOnBootstrap: to.BoolPtr(false),
+				EnableUnattendedUpgrades:         to.BoolPtr(true),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := LinuxProfile{}
+			convertVLabsLinuxProfile(&c.w, &actual)
+
+			diff := cmp.Diff(actual, c.expected)
+			if diff != "" {
+				t.Errorf("unexpected diff testing convertVLabsLinuxProfile: %s", diff)
+			}
+		})
+	}
+}

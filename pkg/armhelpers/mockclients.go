@@ -43,7 +43,7 @@ func init() {
 	defaultK8sVersionForFakeVMs = fmt.Sprintf("Kubernetes:%s", initialVersion)
 }
 
-//MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
+// MockAKSEngineClient is an implementation of AKSEngineClient where all requests error out
 type MockAKSEngineClient struct {
 	FailDeployTemplate                      bool
 	FailDeployTemplateQuota                 bool
@@ -75,13 +75,13 @@ type MockAKSEngineClient struct {
 	FakeListVirtualMachineScaleSetVMsResult func() []compute.VirtualMachineScaleSetVM
 }
 
-//MockStorageClient mock implementation of StorageClient
+// MockStorageClient mock implementation of StorageClient
 type MockStorageClient struct {
 	FailCreateContainer bool
 	FailSaveBlockBlob   bool
 }
 
-//MockKubernetesClient mock implementation of KubernetesClient
+// MockKubernetesClient mock implementation of KubernetesClient
 type MockKubernetesClient struct {
 	FailListPods              bool
 	FailListNodes             bool
@@ -293,7 +293,7 @@ func (page MockRoleAssignmentListResultPage) Values() []authorization.RoleAssign
 	return *page.Ralr.Value
 }
 
-//ListPods returns Pods running on the passed in node
+// ListPods returns Pods running on the passed in node
 func (mkc *MockKubernetesClient) ListPods(node *v1.Node) (*v1.PodList, error) {
 	if mkc.FailListPods {
 		return nil, errors.New("ListPods failed")
@@ -304,7 +304,7 @@ func (mkc *MockKubernetesClient) ListPods(node *v1.Node) (*v1.PodList, error) {
 	return &v1.PodList{}, nil
 }
 
-//ListAllPods returns all Pods running
+// ListAllPods returns all Pods running
 func (mkc *MockKubernetesClient) ListAllPods() (*v1.PodList, error) {
 	if mkc.FailListPods {
 		return nil, errors.New("ListAllPods failed")
@@ -359,7 +359,7 @@ func (mkc *MockKubernetesClient) ListServiceAccounts(namespace string) (*v1.Serv
 	return saList, nil
 }
 
-//GetNode returns details about node with passed in name
+// GetNode returns details about node with passed in name
 func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
 	if mkc.GetNodeFunc != nil {
 		return mkc.GetNodeFunc(name)
@@ -373,7 +373,7 @@ func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
 	return node, nil
 }
 
-//UpdateNode updates the node in the api server with the passed in info
+// UpdateNode updates the node in the api server with the passed in info
 func (mkc *MockKubernetesClient) UpdateNode(node *v1.Node) (*v1.Node, error) {
 	if mkc.UpdateNodeFunc != nil {
 		return mkc.UpdateNodeFunc(node)
@@ -384,7 +384,7 @@ func (mkc *MockKubernetesClient) UpdateNode(node *v1.Node) (*v1.Node, error) {
 	return node, nil
 }
 
-//DeleteNode deregisters node in the api server
+// DeleteNode deregisters node in the api server
 func (mkc *MockKubernetesClient) DeleteNode(name string) error {
 	if mkc.FailDeleteNode {
 		return errors.New("DeleteNode failed")
@@ -400,7 +400,7 @@ func (mkc *MockKubernetesClient) DeleteServiceAccount(sa *v1.ServiceAccount) err
 	return nil
 }
 
-//SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported
+// SupportEviction queries the api server to discover if it supports eviction, and returns supported type if it is supported
 func (mkc *MockKubernetesClient) SupportEviction() (string, error) {
 	if mkc.FailSupportEviction {
 		return "", errors.New("SupportEviction failed")
@@ -411,7 +411,7 @@ func (mkc *MockKubernetesClient) SupportEviction() (string, error) {
 	return "", nil
 }
 
-//DeleteDeployment deletes the passed in daemonset
+// DeleteDeployment deletes the passed in daemonset
 func (mkc *MockKubernetesClient) DeleteClusterRole(role *rbacv1.ClusterRole) error {
 	if mkc.FailDeleteClusterRole {
 		return errors.New("ClusterRole failed")
@@ -419,7 +419,7 @@ func (mkc *MockKubernetesClient) DeleteClusterRole(role *rbacv1.ClusterRole) err
 	return nil
 }
 
-//DeleteDaemonSet deletes the passed in daemonset
+// DeleteDaemonSet deletes the passed in daemonset
 func (mkc *MockKubernetesClient) DeleteDaemonSet(pod *appsv1.DaemonSet) error {
 	if mkc.FailDeleteDaemonSet {
 		return errors.New("DaemonSet failed")
@@ -427,7 +427,7 @@ func (mkc *MockKubernetesClient) DeleteDaemonSet(pod *appsv1.DaemonSet) error {
 	return nil
 }
 
-//DeleteDeployment deletes the passed in daemonset
+// DeleteDeployment deletes the passed in daemonset
 func (mkc *MockKubernetesClient) DeleteDeployment(pod *appsv1.Deployment) error {
 	if mkc.FailDeleteDeployment {
 		return errors.New("Deployment failed")
@@ -435,7 +435,7 @@ func (mkc *MockKubernetesClient) DeleteDeployment(pod *appsv1.Deployment) error 
 	return nil
 }
 
-//DeletePod deletes the passed in pod
+// DeletePod deletes the passed in pod
 func (mkc *MockKubernetesClient) DeletePod(pod *v1.Pod) error {
 	if mkc.FailDeletePod {
 		return errors.New("DeletePod failed")
@@ -443,7 +443,7 @@ func (mkc *MockKubernetesClient) DeletePod(pod *v1.Pod) error {
 	return nil
 }
 
-//EvictPod evicts the passed in pod using the passed in api version
+// EvictPod evicts the passed in pod using the passed in api version
 func (mkc *MockKubernetesClient) EvictPod(pod *v1.Pod, policyGroupVersion string) error {
 	if mkc.FailEvictPod {
 		return errors.New("EvictPod failed")
@@ -451,7 +451,7 @@ func (mkc *MockKubernetesClient) EvictPod(pod *v1.Pod, policyGroupVersion string
 	return nil
 }
 
-//WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure
+// WaitForDelete waits until all pods are deleted. Returns all pods not deleted and an error on failure
 func (mkc *MockKubernetesClient) WaitForDelete(logger *log.Entry, pods []v1.Pod, usingEviction bool) ([]v1.Pod, error) {
 	if mkc.FailWaitForDelete {
 		return nil, errors.New("WaitForDelete failed")
@@ -489,12 +489,12 @@ func (mkc *MockKubernetesClient) UpdateDeployment(namespace string, deployment *
 	return &appsv1.Deployment{}, nil
 }
 
-//DeleteBlob mock
+// DeleteBlob mock
 func (msc *MockStorageClient) DeleteBlob(container, blob string, options *azStorage.DeleteBlobOptions) error {
 	return nil
 }
 
-//CreateContainer mock
+// CreateContainer mock
 func (msc *MockStorageClient) CreateContainer(container string, options *azStorage.CreateContainerOptions) (bool, error) {
 	if !msc.FailCreateContainer {
 		return true, nil
@@ -502,7 +502,7 @@ func (msc *MockStorageClient) CreateContainer(container string, options *azStora
 	return false, errors.New("CreateContainer failed")
 }
 
-//SaveBlockBlob mock
+// SaveBlockBlob mock
 func (msc *MockStorageClient) SaveBlockBlob(container, blob string, b []byte, options *azStorage.PutBlobOptions) error {
 	if !msc.FailSaveBlockBlob {
 		return nil
@@ -510,13 +510,13 @@ func (msc *MockStorageClient) SaveBlockBlob(container, blob string, b []byte, op
 	return errors.New("SaveBlockBlob failed")
 }
 
-//AddAcceptLanguages mock
+// AddAcceptLanguages mock
 func (mc *MockAKSEngineClient) AddAcceptLanguages(languages []string) {}
 
 // AddAuxiliaryTokens mock
 func (mc *MockAKSEngineClient) AddAuxiliaryTokens(tokens []string) {}
 
-//DeployTemplate mock
+// DeployTemplate mock
 func (mc *MockAKSEngineClient) DeployTemplate(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}) (de resources.DeploymentExtended, err error) {
 	switch {
 	case mc.FailDeployTemplate:
@@ -596,7 +596,7 @@ func (mc *MockAKSEngineClient) ListLocations(ctx context.Context) (*[]subscripti
 	return &locations, nil
 }
 
-//EnsureResourceGroup mock
+// EnsureResourceGroup mock
 func (mc *MockAKSEngineClient) EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error) {
 	if mc.FailEnsureResourceGroup {
 		return nil, errors.New("EnsureResourceGroup failed")
@@ -610,7 +610,7 @@ func (mc *MockAKSEngineClient) ListResourceSkus(ctx context.Context, filter stri
 	return nil, nil
 }
 
-//ListVirtualMachines mock
+// ListVirtualMachines mock
 func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error) {
 	if mc.FailListVirtualMachines {
 		return &MockVirtualMachineListResultPage{
@@ -641,7 +641,7 @@ func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resource
 	}, nil
 }
 
-//ListVirtualMachineScaleSets mock
+// ListVirtualMachineScaleSets mock
 func (mc *MockAKSEngineClient) ListVirtualMachineScaleSets(ctx context.Context, resourceGroup string) (VirtualMachineScaleSetListResultPage, error) {
 	if mc.FailListVirtualMachineScaleSets {
 		return &MockVirtualMachineScaleSetListResultPage{}, errors.New("ListVirtualMachineScaleSets failed")
@@ -673,7 +673,7 @@ func (mc *MockAKSEngineClient) RestartVirtualMachineScaleSets(ctx context.Contex
 	return nil
 }
 
-//GetVirtualMachine mock
+// GetVirtualMachine mock
 func (mc *MockAKSEngineClient) GetVirtualMachine(ctx context.Context, resourceGroup, name string) (compute.VirtualMachine, error) {
 	if mc.FailGetVirtualMachine {
 		return compute.VirtualMachine{}, errors.New("GetVirtualMachine failed")
@@ -745,7 +745,7 @@ func (mc *MockAKSEngineClient) MakeFakeVirtualMachineScaleSetVMWithGivenName(orc
 	}
 }
 
-//MakeFakeVirtualMachine returns a fake compute.VirtualMachine
+// MakeFakeVirtualMachine returns a fake compute.VirtualMachine
 func (mc *MockAKSEngineClient) MakeFakeVirtualMachine(vmName string, orchestratorVersion string) compute.VirtualMachine {
 	vm1Name := vmName
 
@@ -799,7 +799,7 @@ func (mc *MockAKSEngineClient) MakeFakeVirtualMachine(vmName string, orchestrato
 	}
 }
 
-//DeleteVirtualMachine mock
+// DeleteVirtualMachine mock
 func (mc *MockAKSEngineClient) DeleteVirtualMachine(ctx context.Context, resourceGroup, name string) error {
 	if mc.FailDeleteVirtualMachine {
 		return errors.New("DeleteVirtualMachine failed")
@@ -808,7 +808,7 @@ func (mc *MockAKSEngineClient) DeleteVirtualMachine(ctx context.Context, resourc
 	return nil
 }
 
-//DeleteVirtualMachineScaleSetVM mock
+// DeleteVirtualMachineScaleSetVM mock
 func (mc *MockAKSEngineClient) DeleteVirtualMachineScaleSetVM(ctx context.Context, resourceGroup, virtualMachineScaleSet, instanceID string) error {
 	if mc.FailDeleteVirtualMachineScaleSetVM {
 		return errors.New("DeleteVirtualMachineScaleSetVM failed")
@@ -817,7 +817,7 @@ func (mc *MockAKSEngineClient) DeleteVirtualMachineScaleSetVM(ctx context.Contex
 	return nil
 }
 
-//SetVirtualMachineScaleSetCapacity mock
+// SetVirtualMachineScaleSetCapacity mock
 func (mc *MockAKSEngineClient) SetVirtualMachineScaleSetCapacity(ctx context.Context, resourceGroup, virtualMachineScaleSet string, sku compute.Sku, location string) error {
 	if mc.FailSetVirtualMachineScaleSetCapacity {
 		return errors.New("SetVirtualMachineScaleSetCapacity failed")
@@ -826,7 +826,7 @@ func (mc *MockAKSEngineClient) SetVirtualMachineScaleSetCapacity(ctx context.Con
 	return nil
 }
 
-//ListVirtualMachineScaleSetVMs mock
+// ListVirtualMachineScaleSetVMs mock
 func (mc *MockAKSEngineClient) ListVirtualMachineScaleSetVMs(ctx context.Context, resourceGroup, virtualMachineScaleSet string) (VirtualMachineScaleSetVMListResultPage, error) {
 	if mc.FailDeleteVirtualMachineScaleSetVM {
 		return &compute.VirtualMachineScaleSetVMListResultPage{}, errors.New("DeleteVirtualMachineScaleSetVM failed")
@@ -861,7 +861,7 @@ func (mc *MockAKSEngineClient) GetAvailabilitySetFaultDomainCount(ctx context.Co
 	return 3, nil
 }
 
-//GetStorageClient mock
+// GetStorageClient mock
 func (mc *MockAKSEngineClient) GetStorageClient(ctx context.Context, resourceGroup, accountName string) (AKSStorageClient, error) {
 	if mc.FailGetStorageClient {
 		return nil, errors.New("GetStorageClient failed")
@@ -870,7 +870,7 @@ func (mc *MockAKSEngineClient) GetStorageClient(ctx context.Context, resourceGro
 	return &MockStorageClient{}, nil
 }
 
-//DeleteNetworkInterface mock
+// DeleteNetworkInterface mock
 func (mc *MockAKSEngineClient) DeleteNetworkInterface(ctx context.Context, resourceGroup, nicName string) error {
 	if mc.FailDeleteNetworkInterface {
 		return errors.New("DeleteNetworkInterface failed")
@@ -911,7 +911,7 @@ func (mc *MockAKSEngineClient) DeleteApp(ctx context.Context, appName, applicati
 
 // User Assigned MSI
 
-//CreateUserAssignedID - Creates a user assigned msi.
+// CreateUserAssignedID - Creates a user assigned msi.
 func (mc *MockAKSEngineClient) CreateUserAssignedID(location string, resourceGroup string, userAssignedID string) (*msi.Identity, error) {
 	return &msi.Identity{}, nil
 }
@@ -938,7 +938,7 @@ func (mc *MockAKSEngineClient) ListManagedDisksByResourceGroup(ctx context.Conte
 	return &compute.DiskListPage{}, nil
 }
 
-//GetKubernetesClient mock
+// GetKubernetesClient mock
 func (mc *MockAKSEngineClient) GetKubernetesClient(apiserverURL, kubeConfig string, interval, timeout time.Duration) (kubernetes.Client, error) {
 	if mc.FailGetKubernetesClient {
 		return nil, errors.New("GetKubernetesClient failed")
@@ -1054,7 +1054,7 @@ func (mc *MockAKSEngineClient) ListRoleAssignmentsForPrincipal(ctx context.Conte
 	}, nil
 }
 
-//EnsureDefaultLogAnalyticsWorkspace mock
+// EnsureDefaultLogAnalyticsWorkspace mock
 func (mc *MockAKSEngineClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Context, resourceGroup, location string) (workspaceResourceID string, err error) {
 	if mc.FailEnsureDefaultLogAnalyticsWorkspace {
 		return "", errors.New("EnsureDefaultLogAnalyticsWorkspace failed")
@@ -1063,7 +1063,7 @@ func (mc *MockAKSEngineClient) EnsureDefaultLogAnalyticsWorkspace(ctx context.Co
 	return "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-workspace-rg/providers/Microsoft.OperationalInsights/workspaces/test-workspace", nil
 }
 
-//AddContainerInsightsSolution mock
+// AddContainerInsightsSolution mock
 func (mc *MockAKSEngineClient) AddContainerInsightsSolution(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName, workspaceLocation string) (result bool, err error) {
 	if mc.FailAddContainerInsightsSolution {
 		return false, errors.New("AddContainerInsightsSolution failed")
@@ -1072,7 +1072,7 @@ func (mc *MockAKSEngineClient) AddContainerInsightsSolution(ctx context.Context,
 	return true, nil
 }
 
-//GetLogAnalyticsWorkspaceInfo mock
+// GetLogAnalyticsWorkspaceInfo mock
 func (mc *MockAKSEngineClient) GetLogAnalyticsWorkspaceInfo(ctx context.Context, workspaceSubscriptionID, workspaceResourceGroup, workspaceName string) (workspaceID string, workspaceKey, workspaceLocation string, err error) {
 	if mc.FailGetLogAnalyticsWorkspaceInfo {
 		return "", "", "", errors.New("GetLogAnalyticsWorkspaceInfo failed")

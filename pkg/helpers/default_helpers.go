@@ -1,4 +1,6 @@
-//+build !fast
+//go:build !fast
+// +build !fast
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 

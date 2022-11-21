@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-//CreateUserAssignedID - Creates a user assigned msi.
+// CreateUserAssignedID - Creates a user assigned msi.
 func (az *AzureClient) CreateUserAssignedID(location string, resourceGroup string, userAssignedID string) (id *msi.Identity, err error) {
 	errorMessage := "error azure stack does not support creating user assigned msi"
 	return &msi.Identity{}, errors.New(errorMessage)

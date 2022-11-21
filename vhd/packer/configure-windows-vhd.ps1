@@ -112,7 +112,8 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.13.zip",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.14.zip",
             "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.15.zip",
-            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.16.zip"
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.16.zip",
+            "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.17.zip"
         );
         "c:\akse-cache\containerd\"   = @(
             $global:containerdPackageUrl
@@ -121,6 +122,7 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.2.2/binaries/csi-proxy-v0.2.2.tar.gz"
         );
         "c:\akse-cache\win-k8s\"      = @(
+<<<<<<< HEAD
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.15-azs/windowszip/v1.19.15-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.20.11-azs/windowszip/v1.20.11-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.20/windowszip/v1.18.20-1int.zip",
@@ -129,6 +131,14 @@ function Get-FilesToCacheOnVHD {
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.5/windowszip/v1.21.5-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.2/windowszip/v1.22.2-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.0-alpha.2/windowszip/v1.23.0-alpha.2-1int.zip"
+=======
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.21.14/windowszip/v1.21.14-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.7/windowszip/v1.22.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.22.16/windowszip/v1.22.16-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.6/windowszip/v1.23.6-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.23.13/windowszip/v1.23.13-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.24.8/windowszip/v1.24.8-1int.zip"
+>>>>>>> master
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.13/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.13.zip",
@@ -210,8 +220,7 @@ function Install-WindowsPatches {
             # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
             # Find a specific patch at https://www.catalog.update.microsoft.com/Search.aspx?q=kb5005625
-            # KBKB5015880 Contains 2022 7C patches for Windows server 2019
-            $patchUrls = @("https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/updt/2022/07/windows10.0-kb5015880-x64_1b8eadaa8f12dacd77342353c257e236e167a802.msu")
+            $patchUrls = @()
         }
         '2004' {
             # Windows Server, Version 2004 update history can be found at https://support.microsoft.com/en-us/help/4555932
