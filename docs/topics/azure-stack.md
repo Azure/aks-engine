@@ -375,16 +375,12 @@ The list below includes the addons currently unsupported on Azure Stack Hub:
 ### OSProfile exceeds maximum characters length error
 
 Addons enabled in the API Model are Base64 encoded and included in the VMs ARM template. There is a length limit of 87380 characters for the custom data, thus if too many addons are enabled in the API Model, the `aks-engine` operations could fail with the below error:
-```
+
+```console
 Custom data in OSProfile must be in Base64 encoding and with a maximum length of 87380 characters
 ```
+
 In such cases, try reduce the number of enabled addons or remove all of them in the API Model.
-
-### Limited Number of Frontend Public IPs
-
-The `Basic` load balancer SKU available on Azure Stack Hub limits the number of frontend IPs to 5. That implies that each cluster's agents pool is limited to 5 public IPs.
-
-If you need to expose more than 5 services, then the recommendation is to route traffic to those services using an Ingress controller.
 
 ### get-versions command
 
