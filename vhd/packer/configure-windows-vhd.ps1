@@ -294,10 +294,28 @@ function Update-WindowsFeatures {
 }
 
 function Update-Registry {
-    # if multple LB policies are included for same endpoint then HNS hangs.
-    # this fix forces an error
-    Write-Host "Enable a HNS fix in 2021-2C+"
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value 1 -Type DWORD
+    param (
+        $windowsServerVersion
+    )
+
+    if ($windowsServerVersion -Like '2019') {
+        # Enable HNS fixed gated behind reg keys for Windows Server 2019
+        Write-Log "Enable a HNS fix (0x40) in 2022-11B and another HNS fix (0x10)"
+        $hnsControlFlag=0x50
+        $currentValue=(Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -ErrorAction Ignore)
+        if (![string]::IsNullOrEmpty($currentValue)) {
+            Write-Log "The current value of HNSControlFlag is $currentValue"
+            $hnsControlFlag=([int]$currentValue.HNSControlFlag -bor $hnsControlFlag)
+        }
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\hns\State" -Name HNSControlFlag -Value $hnsControlFlag -Type DWORD
+
+        Write-Log "Enable a WCIFS fix in 2022-10B"
+        $currentValue=(Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\wcifs" -Name WcifsSOPCountDisabled -ErrorAction Ignore)
+        if (![string]::IsNullOrEmpty($currentValue)) {
+            Write-Log "The current value of WcifsSOPCountDisabled is $currentValue"
+        }
+        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\wcifs" -Name WcifsSOPCountDisabled -Value 0 -Type DWORD
+    }
 }
 
 # Disable progress writers for this session to greatly speed up operations such as Invoke-WebRequest
@@ -336,7 +354,7 @@ switch ($env:ProvisioningPhase) {
         } else {
             Install-Docker
         }
-        Update-Registry
+        Update-Registry -WindowsServerVersion $windowsServerVersion
         Get-ContainerImages -containerRuntime $containerRuntime -WindowsServerVersion $windowsServerVersion
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
