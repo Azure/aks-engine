@@ -32,7 +32,7 @@ jobs:
     displayName: Building VHD
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: 'vhd-release-notes'
+      artifactName: 'vhd-release-notes-18-04'
       targetPath: 'release-notes-18.04.txt'
   - script: |
       OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
@@ -101,7 +101,7 @@ jobs:
     displayName: Building VHD
   - task: PublishPipelineArtifact@0
     inputs:
-      artifactName: 'vhd-release-notes'
+      artifactName: 'vhd-release-notes-20-04'
       targetPath: 'release-notes-20.04.txt'
   - script: |
       OS_DISK_SAS="$(cat packer-output-20-04 | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
