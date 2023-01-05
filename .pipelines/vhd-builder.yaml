@@ -7,7 +7,7 @@ trigger: none
 # - POST a new SKU to azure marketplace
 
 jobs:
-- job: create_ubuntu_18.04_vhd
+- job: create_ubuntu_18_04_vhd
   variables:
     CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.34.7'
   pool:
@@ -76,7 +76,7 @@ jobs:
       -e EXPIRY_DATE=${EXPIRY_DATE} \
       ${CONTAINER_IMAGE} make generate-sas
     displayName: Getting Shared Access Signature URI
-- job: create_ubuntu_20.04_vhd
+- job: create_ubuntu_20_04_vhd
   variables:
     CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.34.7'
   pool:
