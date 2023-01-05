@@ -186,7 +186,7 @@
             "type": "file",
             "direction": "download",
             "source": "/opt/azure/vhd-install.complete",
-            "destination": "release-notes.txt"
+            "destination": "release-notes-20.04.txt"
         },
         {
             "type": "shell",
