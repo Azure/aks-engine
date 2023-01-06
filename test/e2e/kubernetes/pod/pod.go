@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -336,29 +338,32 @@ func RunCommandMultipleTimes(podRunnerCmd podRunnerCmd, image, name, command str
 		var p *Pod
 		var err error
 		p, err = podRunnerCmd(image, podName, "default", command, true, sleep, timeout, timeout)
-		if err != nil && exitOnFailure {
+		if err != nil && exitOnFailure && actualAttempts == desiredAttempts && successfulAttempts == 0 {
 			return successfulAttempts, err
 		}
 		succeeded, err := p.WaitOnSucceeded(sleep, timeout)
-		if err != nil {
+		if err != nil && actualAttempts == desiredAttempts && successfulAttempts == 0 {
 			log.Printf("pod %s did not succeed in time\n", podName)
 			if exitOnFailure {
 				return successfulAttempts, err
 			}
 		}
 		terminated, err := p.WaitOnTerminated(podName, sleep, commandTimeout, timeout)
-		if err != nil {
+		if err != nil && actualAttempts == desiredAttempts && successfulAttempts == 0 {
 			log.Printf("pod %s container %s did not reach a terminal exit 0 state in time\n", podName, podName)
 			if exitOnFailure {
 				return successfulAttempts, err
 			}
 		}
 		err = p.Delete(util.DefaultDeleteRetries)
-		if err != nil && exitOnFailure {
+		if err != nil && exitOnFailure && actualAttempts == desiredAttempts && successfulAttempts == 0 {
 			return successfulAttempts, err
 		}
 		if succeeded && terminated {
 			successfulAttempts++
+		}
+		if successfulAttempts > 0 {
+			return successfulAttempts, nil
 		}
 	}
 
@@ -1255,7 +1260,7 @@ func WaitOnSucceeded(name, namespace string, sleep, timeout time.Duration) (bool
 					log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
 				}
 			}
-			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentWaitOnSucceededPodError)
+			return false, errors.Errorf("WaitOnSucceeded timed out: %v\n", mostRecentWaitOnSucceededPodError)
 		}
 	}
 }
@@ -1583,7 +1588,7 @@ func (l *List) CheckOutboundConnection(sleep, timeout time.Duration, osType api.
 	}
 }
 
-//ValidateCurlConnection checks curl connection for a list of Linux pods to a specified uri.
+// ValidateCurlConnection checks curl connection for a list of Linux pods to a specified uri.
 func (l *List) ValidateCurlConnection(uri string, sleep, timeout time.Duration) (bool, error) {
 	type isReady struct {
 		pod   Pod

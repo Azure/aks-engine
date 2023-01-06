@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -371,7 +373,7 @@ func WaitOnSucceeded(jobPrefix, namespace string, sleep, timeout time.Duration) 
 			}
 		case <-ctx.Done():
 			DescribeJobs(jobPrefix, namespace)
-			return false, errors.Errorf("WaitOnSucceeded timed out: %s\n", mostRecentAreAllJobsSucceededError)
+			return false, errors.Errorf("WaitOnSucceeded timed out: %v\n", mostRecentAreAllJobsSucceededError)
 		}
 	}
 }
