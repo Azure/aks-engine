@@ -1,4 +1,5 @@
-//+build test
+//go:build test
+// +build test
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
@@ -37,6 +38,7 @@ type Config struct {
 	CleanUpIfFail                      bool          `envconfig:"CLEANUP_IF_FAIL" default:"false"`
 	RetainSSH                          bool          `envconfig:"RETAIN_SSH" default:"true"`
 	StabilityIterations                int           `envconfig:"STABILITY_ITERATIONS" default:"3"`
+	StabilityIterationsUpdate          int           `envconfig:"STABILITY_ITERATIONS" default:"1"`
 	StabilityIterationsSuccessRate     float32       `envconfig:"STABILITY_ITERATIONS_SUCCESS_RATE" default:"1.0"`
 	SingleCommandTimeoutMinutes        int           `envconfig:"SINGLE_COMMAND_TIMEOUT_MINUTES" default:"1"`
 	StabilityTimeoutSeconds            int           `envconfig:"STABILITY_TIMEOUT_SECONDS" default:"5"`

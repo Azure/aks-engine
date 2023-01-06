@@ -935,7 +935,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			//Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 		})
 
 		It("should be able to create and connect to a hostPort-configured pod", func() {
@@ -1067,7 +1067,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// Ensure responsiveness
 			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			//Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 
 			// Use curl to test responsive DNS lookup + TCP 443 connectivity
 			name = fmt.Sprintf("alpine-%s", cfg.Name)
@@ -1080,7 +1080,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// Ensure responsiveness
 			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 		})
 
 		It("should have stable internal container networking as we recycle a bunch of pods", func() {
@@ -1094,7 +1094,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// Ensure responsiveness
 			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 			Expect(err).NotTo(HaveOccurred())
-			//Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+			Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 		})
 
 		It("should have stable pod-to-pod networking", func() {
@@ -1129,7 +1129,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Ensure responsiveness
 				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "busybox", consumerPodName, commandString, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				//Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 			} else {
 				Skip("Pod-to-pod network tests only valid on Linux clusters")
 			}
@@ -2135,21 +2135,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				command := fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", windowsService.Metadata.Name)
 				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 
 				By("Connecting to Linux from Windows deployment")
 				name = fmt.Sprintf("windows-2-linux-%s", cfg.Name)
 				command = fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", linuxService.Metadata.Name)
 				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 
 				By("Connecting to Windows from Linux deployment")
 				name = fmt.Sprintf("linux-2-windows-%s", cfg.Name)
 				command = fmt.Sprintf("wget %s", windowsService.Metadata.Name)
 				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout, cfg.StabilityIterationsSuccessRate == 1.0)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterations)))
+				Expect(successes).Should(BeNumerically(">=", cfg.StabilityIterationsSuccessRate*float32(cfg.StabilityIterationsUpdate)))
 
 				// By("Cleaning up after ourselves")
 				// err = windowsIISDeployment.Delete(util.DefaultDeleteRetries)
