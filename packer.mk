@@ -1,6 +1,9 @@
 build-packer:
 	@packer build -var-file=vhd/packer/settings.json vhd/packer/vhd-image-builder.json
 
+build-packer-20-04:
+	@packer build -var-file=vhd/packer/settings.json vhd/packer/vhd-image-builder-20.04.json
+
 build-packer-ubuntu-gen2:
 	@packer build -var-file=vhd/packer/settings.json vhd/packer/vhd-image-builder-ubuntu-gen2.json
 
@@ -15,6 +18,9 @@ az-login:
 
 run-packer: az-login
 	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer | tee -a packer-output)
+
+run-packer-20-04: az-login
+	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output-20-04) && ($(MAKE) build-packer-20-04 | tee -a packer-output-20-04)
 
 run-packer-ubuntu-gen2: az-login
 	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer-ubuntu-gen2 | tee -a packer-output)
