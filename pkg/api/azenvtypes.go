@@ -148,7 +148,15 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202112",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2022.12.12",
+		ImageVersion:   "2023.01.10",
+	}
+
+	// AKSUbuntu2004OSImageConfig is the AKS Engine image based on Ubuntu 20.04-LTS.
+	AKSUbuntu2004OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "aks",
+		ImageSku:       "aks-engine-ubuntu-2004-202301",
+		ImagePublisher: "microsoft-aks",
+		ImageVersion:   "2023.01.10",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
@@ -205,6 +213,7 @@ var (
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
+			AKSUbuntu2004:     AKSUbuntu2004OSImageConfig,
 			ACC1604:           ACC1604OSImageConfig,
 		},
 	}
@@ -248,6 +257,7 @@ var (
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
+			AKSUbuntu2004:     AKSUbuntu2004OSImageConfig,
 		},
 	}
 
@@ -290,6 +300,7 @@ var (
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
+			AKSUbuntu2004:     AKSUbuntu2004OSImageConfig,
 		},
 	}
 

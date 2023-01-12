@@ -132,3 +132,14 @@ jobs:
     enableKMSEncryption: false
     containerRuntime: 'containerd'
     runSSHTests: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_24_2004_e2e'
+    k8sRelease: '1.24'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition-no-vnet.json'
+    createVNET: false
+    enableKMSEncryption: false
+    containerRuntime: 'containerd'
+    distro: 'aks-ubuntu-20.04'
+    runSSHTests: true

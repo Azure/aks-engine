@@ -750,7 +750,7 @@ func (m *MasterProfile) IsUbuntu1804() bool {
 // IsUbuntu2004 returns true if the master profile distro is based on Ubuntu 20.04
 func (m *MasterProfile) IsUbuntu2004() bool {
 	switch m.Distro {
-	case Ubuntu2004, Ubuntu2004Gen2:
+	case AKSUbuntu2004, Ubuntu2004, Ubuntu2004Gen2:
 		return true
 	default:
 		return false
@@ -938,7 +938,7 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 func (a *AgentPoolProfile) IsUbuntu2004() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case Ubuntu2004, Ubuntu2004Gen2:
+		case AKSUbuntu2004, Ubuntu2004, Ubuntu2004Gen2:
 			return true
 		default:
 			return false
