@@ -35,6 +35,7 @@ jobs:
     MSI_USER_ASSIGNED_ID: '$(MSI_USER_ASSIGNED_ID_AKS_ENGINE_E2E)'
     CONTAINER_RUNTIME: ${{ parameters.containerRuntime }}
     BLOCK_SSH: ${{ parameters.runSSHTests }}
+    DISTRO: ${{ parameters.distro }}
 
   steps:
     - template: e2e-step-template.yaml

@@ -1286,7 +1286,7 @@ func (m *MasterProfile) IsStorageAccount() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (m *MasterProfile) IsVHDDistro() bool {
-	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
+	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804 || m.Distro == AKSUbuntu2004
 }
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
@@ -1361,7 +1361,7 @@ func (m *MasterProfile) IsUbuntu1804() bool {
 // IsUbuntu2004 returns true if the master profile distro is based on Ubuntu 20.04
 func (m *MasterProfile) IsUbuntu2004() bool {
 	switch m.Distro {
-	case Ubuntu2004, Ubuntu2004Gen2:
+	case AKSUbuntu2004, Ubuntu2004, Ubuntu2004Gen2:
 		return true
 	default:
 		return false
@@ -1430,7 +1430,7 @@ func (a *AgentPoolProfile) IsFlatcar() bool {
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
-	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804
+	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804 || a.Distro == AKSUbuntu2004
 }
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
@@ -1513,7 +1513,7 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 func (a *AgentPoolProfile) IsUbuntu2004() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case Ubuntu2004, Ubuntu2004Gen2:
+		case AKSUbuntu2004, Ubuntu2004, Ubuntu2004Gen2:
 			return true
 		default:
 			return false

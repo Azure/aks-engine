@@ -28,6 +28,7 @@ const (
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
 	AKSUbuntu1604     Distro = "aks-ubuntu-16.04"
 	AKSUbuntu1804     Distro = "aks-ubuntu-18.04"
+	AKSUbuntu2004     Distro = "aks-ubuntu-20.04"
 	ACC1604           Distro = "acc-16.04"
 )
 

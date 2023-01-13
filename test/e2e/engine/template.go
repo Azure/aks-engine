@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -428,7 +430,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	if config.Distro != "" {
 		prop.MasterProfile.Distro = vlabs.Distro(config.Distro)
 		for _, pool := range prop.AgentPoolProfiles {
-			if !pool.IsWindows() {
+			if !pool.IsWindows() && pool.Distro == "" {
 				pool.Distro = vlabs.Distro(config.Distro)
 			}
 		}

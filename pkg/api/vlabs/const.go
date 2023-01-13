@@ -33,6 +33,7 @@ const (
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
 	AKSUbuntu1604     Distro = "aks-ubuntu-16.04"
 	AKSUbuntu1804     Distro = "aks-ubuntu-18.04"
+	AKSUbuntu2004     Distro = "aks-ubuntu-20.04"
 	ACC1604           Distro = "acc-16.04"
 )
 
@@ -100,7 +101,7 @@ var (
 	ContainerRuntimeValues = [...]string{"", Docker, Containerd}
 
 	// DistroValues holds the valid values for OS distros
-	DistroValues = []Distro{"", Ubuntu, Ubuntu2004, Ubuntu2004Gen2, Ubuntu1804, Ubuntu1804Gen2, Flatcar, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
+	DistroValues = []Distro{"", Ubuntu, Ubuntu2004, Ubuntu2004Gen2, Ubuntu1804, Ubuntu1804Gen2, Flatcar, AKSUbuntu1604, AKSUbuntu1804, AKSUbuntu2004, ACC1604}
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureCustomCloudDependenciesLocationPublic, AzureCustomCloudDependenciesLocationChina, AzureCustomCloudDependenciesLocationGerman, AzureCustomCloudDependenciesLocationUSGovernment}
