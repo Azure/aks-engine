@@ -17,7 +17,7 @@ az-login:
 	az login --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET} --tenant ${TENANT_ID}
 
 run-packer: az-login
-	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer | tee -a packer-output)
+	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output) && ($(MAKE) build-packer-windows | tee -a packer-output)
 
 run-packer-20-04: az-login
 	@packer version && set -o pipefail && ($(MAKE) init-packer | tee packer-output-20-04) && ($(MAKE) build-packer-20-04 | tee -a packer-output-20-04)
