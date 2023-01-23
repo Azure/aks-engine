@@ -81,6 +81,13 @@ func IsNvidiaEnabledSKU(vmSize string) bool {
 	   that we have an agreement with NVIDIA for this specific gpu.
 	*/
 	dm := map[string]bool{
+		// A10
+		"Standard_NV6ads_A10_v5":   true,
+		"Standard_NV12ads_A10_v5":  true,
+		"Standard_NV18ads_A10_v5":  true,
+		"Standard_NV36ads_A10_v5":  true,
+		"Standard_NV36adms_A10_v5": true,
+		"Standard_NV72ads_A10_v5":  true,
 		// K80
 		"Standard_NC6":   true,
 		"Standard_NC12":  true,
