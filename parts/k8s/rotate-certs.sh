@@ -30,7 +30,7 @@ cp_certs() {
   cp -p ${NEW_CERTS_DIR}/ca.* /etc/kubernetes/certs/
   cp -p ${NEW_CERTS_DIR}/client.* /etc/kubernetes/certs/
   cp -p ${NEW_CERTS_DIR}/apiserver.* /etc/kubernetes/certs/
-  cp -p ${NEW_CERTS_DIR}/kubeconfig ~/.kube/config
+  cp -p ${NEW_CERTS_DIR}/kubeconfig /home/$(logname)/.kube/config
 
   rm -f /var/lib/kubelet/pki/kubelet-client-current.pem
 }
