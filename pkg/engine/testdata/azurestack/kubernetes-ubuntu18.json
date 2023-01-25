@@ -1,0 +1,104 @@
+{
+    "apiVersion": "vlabs",
+    "location": "local",
+    "properties": {
+        "orchestratorProfile": {
+            "kubernetesConfig": {
+                "kubernetesImageBase": "k8s.gcr.io/",
+                "useInstanceMetadata": false,
+                "useCloudControllerManager":  true,
+                "networkPolicy": "none"
+            }
+        },
+        "customCloudProfile": {
+            "identitySystem": "azure_ad",
+            "authenticationMethod": "client_secret",
+            "portalURL": "https://portal.local.azurestack.external/",
+            "environment":{
+            "name": "AzureStackCloud",
+            "managementPortalURL": "https://portal.local.azurestack.external/",
+            "publishSettingsURL": "",
+            "serviceManagementEndpoint": "https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189",
+            "resourceManagerEndpoint": "https://management.local.azurestack.external/",
+            "activeDirectoryEndpoint": "https://login.windows.net/",
+            "galleryEndpoint": "https://portal.local.azurestack.external:30015/",
+            "keyVaultEndpoint": "https://vault.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189",
+            "graphEndpoint": "https://graph.windows.net/",
+            "storageEndpointSuffix": "local.azurestack.external",
+            "sqlDatabaseDNSSuffix": "",
+            "trafficManagerDNSSuffix": "",
+            "keyVaultDNSSuffix": "vault.local.azurestack.external",
+            "serviceBusEndpointSuffix": "",
+            "serviceManagementVMDNSSuffix": "cloudapp.net",
+            "resourceManagerVMDNSSuffix": "cloudapp.azurestack.external",
+            "containerRegistryDNSSuffix": ""
+            }
+        },
+        "masterProfile": {
+            "dnsPrefix": "k111007",
+            "distro": "aks-ubuntu-18.04",
+            "osDiskSizeGB": 200,
+            "count": 3,
+            "vmSize": "Standard_D2_v2"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "linuxpool",
+                "osDiskSizeGB": 200,
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "distro": "aks-ubuntu-18.04",
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
+            },
+            {
+                "name": "windowspool",
+                "osDiskSizeGB": 128,
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "osType": "Windows",
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": "ssh-rsa publickey azure@linux"
+                    }
+                ]
+            }
+        },
+        "windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "myAdminPassword~1",
+            "sshEnabled": true
+        },
+        "servicePrincipalProfile": {
+            "clientId": "ServicePrincipalClientID",
+            "secret": "myServicePrincipalClientSecret"
+        },
+        "certificateProfile": {
+          "caCertificate": "caCertificate",
+          "caPrivateKey": "caPrivateKey",
+          "apiServerCertificate": "/subscriptions/my-sub/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-kv/secrets/my-secret1/ver1",
+          "apiServerPrivateKey": "apiServerPrivateKey",
+          "clientCertificate": "clientCertificate",
+          "clientPrivateKey": "clientPrivateKey",
+          "kubeConfigCertificate": "kubeConfigCertificate",
+          "kubeConfigPrivateKey": "kubeConfigPrivateKey",
+          "etcdClientCertificate": "etcdClientCertificate",
+          "etcdClientPrivateKey": "etcdClientPrivateKey",
+          "etcdServerCertificate": "etcdServerCertificate",
+          "etcdServerPrivateKey": "etcdServerPrivateKey",
+          "etcdPeerCertificates": [
+            "etcdPeerCertificate0"
+          ],
+          "etcdPeerPrivateKeys": [
+            "etcdPeerPrivateKey0"
+          ]
+        }
+    }
+}

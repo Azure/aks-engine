@@ -210,14 +210,20 @@ func (uc *upgradeCmd) loadCluster() error {
 	// Update the masterProfile and agentPoolProfiles distro for AzureStackCloud to use aks-ubuntu-18.04 instead of aks-ubuntu-16.04
 	if uc.containerService.Properties.IsAzureStackCloud() {
 		if uc.containerService.Properties.MasterProfile.Distro == api.AKSUbuntu1604 {
-			log.Infoln("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting master profile distro to 'aks-ubuntu-18.04'")
-			uc.containerService.Properties.MasterProfile.Distro = api.AKSUbuntu1804
+			log.Infoln("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting master profile distro to 'aks-ubuntu-20.04'")
+			uc.containerService.Properties.MasterProfile.Distro = api.AKSUbuntu2004
+		} else if uc.containerService.Properties.MasterProfile.Distro == api.AKSUbuntu1804 {
+			log.Infoln("Distro 'aks-ubuntu-18.04' is not longer supported on Azure Stack Hub, overwriting master profile distro to 'aks-ubuntu-20.04'")
+			uc.containerService.Properties.MasterProfile.Distro = api.AKSUbuntu2004
 		}
 
 		for _, app := range uc.containerService.Properties.AgentPoolProfiles {
 			if app.Distro == api.AKSUbuntu1604 {
-				log.Infoln(fmt.Sprintf("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting agent pool profile %s distro to 'aks-ubuntu-18.04'", app.Name))
-				app.Distro = api.AKSUbuntu1804
+				log.Infoln(fmt.Sprintf("Distro 'aks-ubuntu-16.04' is not longer supported on Azure Stack Hub, overwriting agent pool profile %s distro to 'aks-ubuntu-20.04'", app.Name))
+				app.Distro = api.AKSUbuntu2004
+			} else if app.Distro == api.AKSUbuntu1804 {
+				log.Infoln(fmt.Sprintf("Distro 'aks-ubuntu-18.04' is not longer supported on Azure Stack Hub, overwriting agent pool profile %s distro to 'aks-ubuntu-20.04'", app.Name))
+				app.Distro = api.AKSUbuntu2004
 			}
 		}
 	}

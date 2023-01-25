@@ -2220,6 +2220,76 @@ func TestDistroDefaults(t *testing.T) {
 	}
 }
 
+// TestDistroDefaultsOnAzureStack covers tests for setMasterProfileDefaults and setAgentProfileDefaults on azure stack
+func TestDistroDefaultsOnAzureStack(t *testing.T) {
+
+	var tests = []struct {
+		name                   string              // test case name
+		orchestratorProfile    OrchestratorProfile // orchestrator to be tested
+		masterProfileDistro    Distro
+		agentPoolProfileDistro Distro
+		expectedAgentDistro    Distro // expected agent result default disto to be used
+		expectedMasterDistro   Distro // expected master result default disto to be used
+		isUpgrade              bool
+		isScale                bool
+	}{
+		{
+			"default_kubernetes",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
+			},
+			"",
+			"",
+			AKSUbuntu2004,
+			AKSUbuntu2004,
+			false,
+			false,
+		},
+	}
+
+	for _, test := range tests {
+		mockAPI := getMockAPIProperties("1.0.0")
+		mockAPI.OrchestratorProfile = &test.orchestratorProfile
+		mockAPI.MasterProfile.Distro = test.masterProfileDistro
+		for _, agent := range mockAPI.AgentPoolProfiles {
+			agent.Distro = test.agentPoolProfileDistro
+		}
+		cs := &ContainerService{
+			Properties: &mockAPI,
+		}
+		cs.Location = "testlocation"
+		cs.Properties.CustomCloudProfile = &CustomCloudProfile{
+			PortalURL: "https://portal.testlocation.contoso.com",
+		}
+
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%smetadata/endpoints?api-version=1.0", fmt.Sprintf("https://management.%s.contoso.com/", cs.Location)),
+			func(req *http.Request) (*http.Response, error) {
+				resp := httpmock.NewStringResponse(200, `{"galleryEndpoint":"https://galleryartifacts.hosting.testlocation.contoso.com/galleryartifacts/","graphEndpoint":"https://graph.testlocation.contoso.com/","portalEndpoint":"https://portal.testlocation.contoso.com/","authentication":{"loginEndpoint":"https://adfs.testlocation.contoso.com/adfs","audiences":["https://management.adfs.azurestack.testlocation/ce080287-be51-42e5-b99e-9de760fecae7"]}}`)
+				return resp, nil
+			},
+		)
+		_, err := cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+			IsScale:    test.isScale,
+			IsUpgrade:  test.isUpgrade,
+			PkiKeySize: helpers.DefaultPkiKeySize,
+		})
+		if err != nil {
+			t.Error(err)
+		}
+		if cs.Properties.MasterProfile.Distro != test.expectedMasterDistro {
+			t.Fatalf("SetPropertiesDefaults() test case %v did not return right masterProfile Distro configurations %v != %v", test.name, cs.Properties.MasterProfile.Distro, test.expectedMasterDistro)
+		}
+		for _, agent := range cs.Properties.AgentPoolProfiles {
+			if agent.Distro != test.expectedAgentDistro {
+				t.Fatalf("SetPropertiesDefaults() test case %v did not return right pool Distro configurations %v != %v", test.name, agent.Distro, test.expectedAgentDistro)
+			}
+		}
+	}
+}
+
 func TestWindowsProfileDefaults(t *testing.T) {
 	trueVar := true
 	falseVar := false
