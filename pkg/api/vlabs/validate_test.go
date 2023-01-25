@@ -4768,6 +4768,28 @@ func TestValidateLocation(t *testing.T) {
 			expectedErr: errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack"),
 		},
 		{
+			name:          "AzureStack ContainerRuntime is docker",
+			location:      "local",
+			propertiesnil: false,
+			cs: &ContainerService{
+				Location: "local",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						PortalURL: "https://portal.local.cotoso.com",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: common.RationalizeReleaseAndVersion(Kubernetes, "1.24", "", false, false, true),
+						KubernetesConfig: &KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(trueVal),
+							ContainerRuntime:          "docker",
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("Docker runtime is no longer supported for v1.24+ clusters, use %s containerRuntime value instead", Containerd),
+		},
+		{
 			name:          "AzureStack EtcdDiskSizeGB is 1024",
 			location:      "local",
 			propertiesnil: false,
