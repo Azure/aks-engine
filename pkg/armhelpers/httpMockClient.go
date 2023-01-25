@@ -703,6 +703,15 @@ func (mc *HTTPMockClient) RegisterVMImageFetcherInterface() {
 		}
 	})
 
+	pattern = fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/locations/%s/publishers/%s/artifacttypes/vmimage/offers/%s/skus/%s/versions/%s", mc.SubscriptionID, mc.Location, api.AKSWindowsServer2019ContainerDOSImageConfig.ImagePublisher, api.AKSWindowsServer2019ContainerDOSImageConfig.ImageOffer, api.AKSWindowsServer2019ContainerDOSImageConfig.ImageSku, api.AKSWindowsServer2019ContainerDOSImageConfig.ImageVersion)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.ComputeAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseGetVirtualMachineImage)
+		}
+	})
+
 	pattern = fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/locations/%s/publishers/%s/artifacttypes/vmimage/offers/%s/skus/%s/versions/%s", mc.SubscriptionID, mc.Location, api.AKSUbuntu1604OSImageConfig.ImagePublisher, api.AKSUbuntu1604OSImageConfig.ImageOffer, api.AKSUbuntu1604OSImageConfig.ImageSku, api.AKSUbuntu1604OSImageConfig.ImageVersion)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.ComputeAPIVersion {
