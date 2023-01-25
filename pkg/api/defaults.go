@@ -539,6 +539,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			if cs.Properties.MasterProfile.ImageRef == nil {
 				if cs.Properties.MasterProfile.Distro == "" {
 					cs.Properties.MasterProfile.Distro = AKSUbuntu1804
+					if cs.Properties.IsAzureStackCloud() {
+						cs.Properties.MasterProfile.Distro = AKSUbuntu2004
+					}
 				} else if isUpgrade || isScale {
 					if cs.Properties.MasterProfile.Distro == AKSDockerEngine || cs.Properties.MasterProfile.Distro == AKS1604Deprecated {
 						cs.Properties.MasterProfile.Distro = AKSUbuntu1604
@@ -549,6 +552,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				// The AKS Distro is not available in Azure German Cloud.
 				if cloudSpecConfig.CloudName == AzureGermanCloud {
 					cs.Properties.MasterProfile.Distro = Ubuntu1804
+					if cs.Properties.IsAzureStackCloud() {
+						cs.Properties.MasterProfile.Distro = Ubuntu2004
+					}
 				}
 			}
 		}
@@ -571,8 +577,14 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					if profile.Distro == "" {
 						if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 							profile.Distro = Ubuntu1804
+							if cs.Properties.IsAzureStackCloud() {
+								profile.Distro = Ubuntu2004
+							}
 						} else {
 							profile.Distro = AKSUbuntu1804
+							if cs.Properties.IsAzureStackCloud() {
+								profile.Distro = AKSUbuntu2004
+							}
 						}
 						// Ensure deprecated distros are overridden
 						// Previous versions of aks-engine required the docker-engine distro for N series vms,
@@ -587,6 +599,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					// The AKS Distro is not available in Azure German Cloud.
 					if cloudSpecConfig.CloudName == AzureGermanCloud {
 						profile.Distro = Ubuntu1804
+						if cs.Properties.IsAzureStackCloud() {
+							profile.Distro = Ubuntu2004
+						}
 					}
 				}
 			}
