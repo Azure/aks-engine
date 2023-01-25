@@ -23,7 +23,7 @@ func ValidateRequiredImages(ctx context.Context, location string, p *api.Propert
 	if fetcher, ok := client.(VMImageFetcher); ok {
 		missingImages := make(map[api.Distro]validationResult)
 		for distro, i := range requiredImages(p) {
-			log.Infoln(fmt.Sprintf("ValidateRequiredImage: %s, %s, %s, %s", i.ImagePublisher, i.ImageOffer, i.ImageSku, i.ImageVersion))
+			log.Debugln(fmt.Sprintf("Validate OS image is available on the target cloud: %s, %s, %s, %s", i.ImagePublisher, i.ImageOffer, i.ImageSku, i.ImageVersion))
 			if i.ImageVersion == "latest" {
 				list, err := fetcher.ListVirtualMachineImages(ctx, location, i.ImagePublisher, i.ImageOffer, i.ImageSku)
 				if err != nil || len(*list.Value) == 0 {
