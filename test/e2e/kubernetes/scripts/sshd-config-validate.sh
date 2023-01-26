@@ -24,8 +24,7 @@ CONFIGS=("ClientAliveInterval 120"
 "X11Forwarding no"
 "MaxAuthTries 4"
 "Banner /etc/issue.net"
-"AcceptEnv LANG"
-"AcceptEnv LC_*"
+"AcceptEnv LANG LC_*"
 "Subsystem sftp /usr/lib/openssh/sftp-server"
 "UsePAM yes"
 "UseDNS no"
@@ -33,7 +32,7 @@ CONFIGS=("ClientAliveInterval 120"
 
 for ((i = 0; i < ${#CONFIGS[@]}; i++))
 do
-    sshd -T | grep -i "${CONFIGS[$i]}" || exit 1
+    grep -i "${CONFIGS[$i]}" /etc/ssh/sshd_config || exit 1
 done
 
 CONFIGS=("RSAAuthentication yes"
