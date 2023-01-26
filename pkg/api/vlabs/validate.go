@@ -304,6 +304,10 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 					return errors.New("useCloudControllerManager should be set to true for Kubernetes v1.21+ clusters on Azure Stack Hub")
 				}
 
+				if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.24.0") && o.KubernetesConfig.ContainerRuntime == Docker {
+					return errors.Errorf("Docker runtime is no longer supported for v1.24+ clusters, use %s containerRuntime value instead", Containerd)
+				}
+
 				if to.Bool(o.KubernetesConfig.UseInstanceMetadata) {
 					return errors.New("useInstanceMetadata shouldn't be set to true as feature not yet supported on Azure Stack")
 				}

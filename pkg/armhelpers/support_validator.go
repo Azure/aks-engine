@@ -5,6 +5,7 @@ package armhelpers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/pkg/errors"
@@ -22,6 +23,7 @@ func ValidateRequiredImages(ctx context.Context, location string, p *api.Propert
 	if fetcher, ok := client.(VMImageFetcher); ok {
 		missingImages := make(map[api.Distro]validationResult)
 		for distro, i := range requiredImages(p) {
+			log.Debugln(fmt.Sprintf("Validate OS image is available on the target cloud: %s, %s, %s, %s", i.ImagePublisher, i.ImageOffer, i.ImageSku, i.ImageVersion))
 			if i.ImageVersion == "latest" {
 				list, err := fetcher.ListVirtualMachineImages(ctx, location, i.ImagePublisher, i.ImageOffer, i.ImageSku)
 				if err != nil || len(*list.Value) == 0 {
@@ -100,7 +102,7 @@ func toImageConfig(distro api.Distro) api.AzureOSImageConfig {
 }
 
 func toImageConfigWindows(profile *api.WindowsProfile) api.AzureOSImageConfig {
-	if profile != nil && profile.WindowsPublisher != api.AKSWindowsServer2019OSImageConfig.ImagePublisher {
+	if profile != nil {
 		return api.AzureOSImageConfig{
 			ImageOffer:     profile.WindowsOffer,
 			ImageSku:       profile.WindowsSku,
@@ -108,5 +110,5 @@ func toImageConfigWindows(profile *api.WindowsProfile) api.AzureOSImageConfig {
 			ImageVersion:   profile.ImageVersion,
 		}
 	}
-	return api.AKSWindowsServer2019OSImageConfig
+	return api.AKSWindowsServer2019ContainerDOSImageConfig
 }

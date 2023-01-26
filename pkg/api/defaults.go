@@ -206,6 +206,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 		if o.KubernetesConfig.ContainerRuntime == "" {
 			o.KubernetesConfig.ContainerRuntime = DefaultContainerRuntime
+			if a.IsAzureStackCloud() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.24.0") {
+				log.Warnf("The docker runtime is no longer supported for v1.24+ clusters, setting ContainerRuntime to 'containerd'")
+				o.KubernetesConfig.ContainerRuntime = Containerd
+			}
 		}
 		switch o.KubernetesConfig.ContainerRuntime {
 		case Docker:

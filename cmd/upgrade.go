@@ -234,6 +234,12 @@ func (uc *upgradeCmd) loadCluster() error {
 		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
 	}
 
+	// Only containerd runtime is allowed for Kubernetes 1.24+ on Azure Stack cloud
+	if uc.containerService.Properties.IsAzureStackCloud() && strings.EqualFold(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, "docker") && common.IsKubernetesVersionGe(uc.upgradeVersion, "1.24.0") {
+		log.Infoln("The docker runtime is no longer supported for v1.24+ clusters, overwriting ContainerRuntime to 'containerd'")
+		uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "containerd"
+	}
+
 	// The cluster-init component is a cluster create-only feature, temporarily disable if enabled
 	if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
 		if uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].IsEnabled() {
