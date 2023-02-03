@@ -11,10 +11,11 @@ import (
 
 func TestURLForAzureChinaCloud(t *testing.T) {
 	var azureChinaCloudMirror = "azk8s.cn"
+	var publicCloudMCR = "mcr.microsoft.com"
 	g := NewGomegaWithT(t)
 
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.KubernetesImageBase).To(ContainSubstring(azureChinaCloudMirror))
-	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.NVIDIAImageBase).To(ContainSubstring(azureChinaCloudMirror))
+	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.NVIDIAImageBase).To(ContainSubstring(publicCloudMCR))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.AzureCNIImageBase).To(ContainSubstring(azureChinaCloudMirror))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.CalicoImageBase).To(ContainSubstring(azureChinaCloudMirror))
 	g.Expect(AzureChinaCloudSpec.KubernetesSpecConfig.CNIPluginsDownloadURL).To(ContainSubstring(azureChinaCloudMirror))
