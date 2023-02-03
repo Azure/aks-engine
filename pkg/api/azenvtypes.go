@@ -268,7 +268,7 @@ var (
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:    "gcr.azk8s.cn/google_containers/",
 			TillerImageBase:        "mcr.microsoft.com/",
-			NVIDIAImageBase:        "dockerhub.azk8s.cn/nvidia/",
+			NVIDIAImageBase:        "mcr.microsoft.com/",
 			AzureCNIImageBase:      "mcr.azk8s.cn/containernetworking/",
 			MCRKubernetesImageBase: "mcr.microsoft.com/",
 			CalicoImageBase:        "dockerhub.azk8s.cn/calico/",
