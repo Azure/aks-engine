@@ -60,8 +60,7 @@ function Get-ContainerImages {
             $imagesToPull = @(
                 "mcr.microsoft.com/windows/servercore:2004",
                 "mcr.microsoft.com/windows/nanoserver:2004",
-                "mcr.microsoft.com/oss/kubernetes/pause:1.4.1",
-                "mcr.microsoft.com/oss/kubernetes/pause:3.4.1")
+                "mcr.microsoft.com/oss/kubernetes/pause:3.6-windows-ltsc2022-amd64")
         }
         default {
             $imagesToPull = @()
@@ -131,7 +130,13 @@ function Get-FilesToCacheOnVHD {
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.13/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.13.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.14/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.14.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.16/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.16.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.16/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.16.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.2/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.2.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.2.7/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.2.7.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.12/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.12.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.0/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.0.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.9/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.9.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.4.12/binaries/azure-vnet-cni-singletenancy-windows-amd64-v1.4.12.zip"
         )
     }
 
@@ -176,7 +181,7 @@ function Install-ContainerD {
 }
 
 function Install-Docker {
-    $defaultDockerVersion = "20.10.9"
+    $defaultDockerVersion = "20.10.6"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-Null
