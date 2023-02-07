@@ -11,7 +11,7 @@ jobs:
   variables:
     CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.34.7'
   pool:
-    vmImage: 'Ubuntu 18.04'
+    vmImage: 'Ubuntu 20.04'
   steps:
   - script: |
       docker run --rm \
