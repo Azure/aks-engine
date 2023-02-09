@@ -76,7 +76,7 @@ github.com/davecgh/go-spew/spew
 github.com/dimchansky/utfbom
 # github.com/dnaeon/go-vcr v1.0.1
 ## explicit
-# github.com/emicklei/go-restful v2.9.5+incompatible
+# github.com/emicklei/go-restful v2.16.0+incompatible
 ## explicit
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
