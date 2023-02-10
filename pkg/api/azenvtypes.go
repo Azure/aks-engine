@@ -162,18 +162,18 @@ var (
 	// AKSWindowsServer2019OSImageConfig is the aks-engine image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk-2301",
+		ImageSku:       "2019-datacenter-core-smalldisk-2302",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.3887.230110",
+		ImageVersion:   "17763.3887.230209",
 	}
 
 	// AKSWindowsServer2019ContainerDOSImageConfig is the aks-engine image based on Windows Server 2019
 	// configured with containerd
 	AKSWindowsServer2019ContainerDOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-ctrd-2301",
+		ImageSku:       "2019-datacenter-core-ctrd-2302",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.3887.230110",
+		ImageVersion:   "17763.3887.230209",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
