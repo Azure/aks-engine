@@ -5,7 +5,7 @@
 The existing AKS Engine Kubernetes component container image configuration surface area presents obstacles in the way of:
 
 1. quickly testing/validating specific container images across the set of Kubernetes components in a working cluster; and
-2. using Azure Container Compute Upstream-curated MCR container images instead of Kubernetes SIG-Release-curated k8s.gcr.io container images.
+2. using Azure Container Compute Upstream-curated MCR container images instead of Kubernetes SIG-Release-curated registry.k8s.io container images.
 
 ## Proximate Problem Statements
 
@@ -14,15 +14,15 @@ The existing AKS Engine Kubernetes component container image configuration surfa
     - https://github.com/Azure/aks-engine/issues/2378
 2. At present, the "blessed" component configuration image URIs are maintained via a concatenation of two properties:
   - A "base URI" property (`KubernetesImageBase` is the property that has the widest impact across the set of component images)
-    - e.g., `"k8s.gcr.io/"`
+    - e.g., `"registry.k8s.io/"`
   - A hardcoded string that represents the right-most concatenation substring of the fully qualified image reference URI
     - e.g., `"kube-proxy:v1.16.1"`
 
-In summary, in order to render `"k8s.gcr.io/kube-proxy:v1.16.1"` as the desired container image reference to derive the kube-proxy runtime, we set the KubernetesImageBase property to `"k8s.gcr.io/"`, and rely upon AKS Engine to append `"kube-proxy:v1.16.1"` by way of its hardcoded authority in the codebase for the particular version of Kubernetes in the cluster configuration (1.16.1 in this example).
+In summary, in order to render `"registry.k8s.io/kube-proxy:v1.16.1"` as the desired container image reference to derive the kube-proxy runtime, we set the KubernetesImageBase property to `"registry.k8s.io/"`, and rely upon AKS Engine to append `"kube-proxy:v1.16.1"` by way of its hardcoded authority in the codebase for the particular version of Kubernetes in the cluster configuration (1.16.1 in this example).
 
 In practice, this means that the `KubernetesImageBase` property is effectively a "Kubernetes component image registry mirror base URI" property, and in fact this is exactly how that property is leveraged, to redirect container image references to proximate origin URIs when building clusters in non-public cloud environments (e.g., China Cloud, Azure Stack).
 
-To conclude with a concrete problem statement, it is this: the current accommodations that AKS Engine provides for redirecting Kubernetes component container images to another origin assume a k8s.gcr.io container registry mirror. This presents a problem w/ respect to migrating container image configuration to an entirely different container registry URI reference specification, which is what the MCR container image migration effort effectively does.
+To conclude with a concrete problem statement, it is this: the current accommodations that AKS Engine provides for redirecting Kubernetes component container images to another origin assume a registry.k8s.io container registry mirror. This presents a problem w/ respect to migrating container image configuration to an entirely different container registry URI reference specification, which is what the MCR container image migration effort effectively does.
 
 # A Proposed Solution
 
@@ -98,9 +98,9 @@ In summary, we will introduce a new "components" configuration interface (a sibl
 
 ~
 
-Now we have addressed the problem of "how to quickly test and validate specific container images across the set of Kubernetes components in a working cluster", which is a critical requirement for the Azure Container Compute Upstream effort to maintain and curate Kubernetes component container images for AKS and AKS Engine. Next we have to address the problem of "how to re-use existing AKS Engine code to introduce a novel mirror specification (MCR) while maintaining backwards compatibility with existing clusters running images from gcr; and without breaking any existing users who are not able to convert to MCR (or don’t want to), and must rely upon the k8s.gcr.io container registry origin, or a mirror that follows its specification".
+Now we have addressed the problem of "how to quickly test and validate specific container images across the set of Kubernetes components in a working cluster", which is a critical requirement for the Azure Container Compute Upstream effort to maintain and curate Kubernetes component container images for AKS and AKS Engine. Next we have to address the problem of "how to re-use existing AKS Engine code to introduce a novel mirror specification (MCR) while maintaining backwards compatibility with existing clusters running images from gcr; and without breaking any existing users who are not able to convert to MCR (or don’t want to), and must rely upon the registry.k8s.io container registry origin, or a mirror that follows its specification".
 
-As stated above, the main point of friction is that the configuration vector currently available to "redirect" the base URI of the origin for sourcing Kubernetes component images assumes, in practice, a "k8s.gcr.io mirror". The MCR container registry origin that is being bootstrapped by the Azure Container Compute Upstream team right now does not match that assumption, and thus we can’t simply re-use the existing configurable space to "migrate to MCR images" (e.g., we cannot simply change the value of `KubernetesImageBase` to `"mcr.microsoft.com/oss/kubernetes/"`, because "mcr.microsoft.com/oss/kubernetes/" is not a mirror of k8s.gcr.io.
+As stated above, the main point of friction is that the configuration vector currently available to "redirect" the base URI of the origin for sourcing Kubernetes component images assumes, in practice, a "registry.k8s.io mirror". The MCR container registry origin that is being bootstrapped by the Azure Container Compute Upstream team right now does not match that assumption, and thus we can’t simply re-use the existing configurable space to "migrate to MCR images" (e.g., we cannot simply change the value of `KubernetesImageBase` to `"mcr.microsoft.com/oss/kubernetes/"`, because "mcr.microsoft.com/oss/kubernetes/" is not a mirror of registry.k8s.io.
 
 What we can do is add a "mirror type" (or "mirror flavor", if you prefer) configuration context to the existing `KubernetesImageBase` property, allowing us to maintain easy backwards-compatibility (by keeping that property valid), and then adapt the underlying hardcoded "image URI substring" values to be sensitive to that context.
 
@@ -111,12 +111,12 @@ Concretely, we could add a new sibling (of KubernetesImageBase) configuration pr
 
 The value of that property tells the template generation code flows to generate container image reference URI strings according to one of the known specifications supported by AKS Engine:
 
-- k8s.gcr.io
-  - e.g., `"k8s.gcr.io/kube-addon-manager-amd64:v9.0.2"`
+- registry.k8s.io
+  - e.g., `"registry.k8s.io/kube-addon-manager-amd64:v9.0.2"`
 - mcr.microsoft.com/oss/kubernetes
   - e.g., `"mcr.microsoft.com/oss/kubernetes/kube-addon-manager:v9.0.2"`
 
-The above solution would support a per-environment migration from the current, known-working k8s.gcr.io mirrors (including the origin) to the newly created MCR mirror specification (including unlocking the creation of new MCR mirrors, e.g., in China Cloud, usgov cloud, etc). This refactor phase we’ll call **Enable MCR as an Additive Kubernetes Container Image Registry Mirror**.
+The above solution would support a per-environment migration from the current, known-working registry.k8s.io mirrors (including the origin) to the newly created MCR mirror specification (including unlocking the creation of new MCR mirrors, e.g., in China Cloud, usgov cloud, etc). This refactor phase we’ll call **Enable MCR as an Additive Kubernetes Container Image Registry Mirror**.
 
 # A Proposed Implementation
 

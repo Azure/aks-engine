@@ -4,7 +4,7 @@ metadata:
   name: nginx
 spec:
   containers:
-  - image: k8s.gcr.io/e2e-test-images/nginx:1.14-1
+  - image: registry.k8s.io/e2e-test-images/nginx:1.14-1
     name: nginx
     volumeMounts:
     - mountPath: /var/run/secrets/tokens

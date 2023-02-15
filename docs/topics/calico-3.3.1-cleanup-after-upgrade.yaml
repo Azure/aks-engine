@@ -337,7 +337,7 @@ spec:
         supplementalGroups: [ 65534 ]
         fsGroup: 65534
       containers:
-      - image: k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.2-r2
+      - image: registry.k8s.io/cluster-proportional-autoscaler-amd64:1.1.2-r2
         name: autoscaler
         command:
           - /cluster-proportional-autoscaler

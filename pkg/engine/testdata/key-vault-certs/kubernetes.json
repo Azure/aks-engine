@@ -3,7 +3,7 @@
   "properties": {
     "orchestratorProfile": {
       "kubernetesConfig": {
-        "kubernetesImageBase": "k8s.gcr.io/",
+        "kubernetesImageBase": "registry.k8s.io/",
         "clusterSubnet": "10.240.0.0/12",
         "dnsServiceIP": "10.0.0.10",
         "serviceCidr": "10.0.0.0/16",
@@ -46,7 +46,7 @@
             "containers": [
               {
                 "name": "cluster-autoscaler",
-                "image": "k8s.gcr.io/cluster-autoscaler:v1.3.7",
+                "image": "registry.k8s.io/cluster-autoscaler:v1.3.7",
                 "cpuRequests": "100m",
                 "memoryRequests": "300Mi",
                 "cpuLimits": "100m",
@@ -107,7 +107,7 @@
             "containers": [
               {
                 "name": "metrics-server",
-                "image": "k8s.gcr.io/metrics-server-amd64:v0.2.1"
+                "image": "registry.k8s.io/metrics-server-amd64:v0.2.1"
               }
             ]
           },
@@ -176,7 +176,7 @@
             "containers": [
               {
                 "name": "ip-masq-agent",
-                "image": "k8s.gcr.io/ip-masq-agent-amd64:v2.3.0",
+                "image": "registry.k8s.io/ip-masq-agent-amd64:v2.3.0",
                 "cpuRequests": "50m",
                 "memoryRequests": "50Mi",
                 "cpuLimits": "50m",
@@ -215,7 +215,7 @@
           "--network-plugin": "cni",
           "--node-status-update-frequency": "10s",
           "--non-masquerade-cidr": "0.0.0.0/0",
-          "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
+          "--pod-infra-container-image": "registry.k8s.io/pause-amd64:3.1",
           "--pod-manifest-path": "/etc/kubernetes/manifests",
           "--pod-max-pids": "-1"
         },
@@ -354,7 +354,7 @@
           "--network-plugin": "cni",
           "--node-status-update-frequency": "10s",
           "--non-masquerade-cidr": "0.0.0.0/0",
-          "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
+          "--pod-infra-container-image": "registry.k8s.io/pause-amd64:3.1",
           "--pod-manifest-path": "/etc/kubernetes/manifests",
           "--pod-max-pids": "-1"
         }
@@ -398,7 +398,7 @@
             "--network-plugin": "cni",
             "--node-status-update-frequency": "10s",
             "--non-masquerade-cidr": "0.0.0.0/0",
-            "--pod-infra-container-image": "k8s.gcr.io/pause-amd64:3.1",
+            "--pod-infra-container-image": "registry.k8s.io/pause-amd64:3.1",
             "--pod-manifest-path": "/etc/kubernetes/manifests",
             "--pod-max-pids": "-1"
           }

@@ -6,7 +6,7 @@
         "details": [
             {
                 "code": "Conflict",
-                "message": "{\r\n  \"status\": \"Failed\",\r\n  \"error\": {\r\n    \"code\": \"ResourceDeploymentFailure\",\r\n    \"message\": \"The resource operation completed with terminal provisioning state 'Failed'.\",\r\n    \"details\": [\r\n      {\r\n        \"code\": \"VMExtensionProvisioningError\",\r\n        \"message\": \"VM has reported a failure when processing extension 'cse-master-0'. Error message: \\\"Enable failed: failed to execute command: command terminated with exit status=30\\n[stdout]\\n\\n[stderr]\\nConnection to k8s.gcr.io 443 port [tcp/https] succeeded!\\nConnection to gcr.io 443 port [tcp/https] succeeded!\\nConnection to docker.io 443 port [tcp/https] succeeded!\\n\\\".\"\r\n      }\r\n    ]\r\n  }\r\n}"
+                "message": "{\r\n  \"status\": \"Failed\",\r\n  \"error\": {\r\n    \"code\": \"ResourceDeploymentFailure\",\r\n    \"message\": \"The resource operation completed with terminal provisioning state 'Failed'.\",\r\n    \"details\": [\r\n      {\r\n        \"code\": \"VMExtensionProvisioningError\",\r\n        \"message\": \"VM has reported a failure when processing extension 'cse-master-0'. Error message: \\\"Enable failed: failed to execute command: command terminated with exit status=30\\n[stdout]\\n\\n[stderr]\\nConnection to registry.k8s.io 443 port [tcp/https] succeeded!\\nConnection to gcr.io 443 port [tcp/https] succeeded!\\nConnection to docker.io 443 port [tcp/https] succeeded!\\n\\\".\"\r\n      }\r\n    ]\r\n  }\r\n}"
             }
         ]
     }

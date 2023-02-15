@@ -1742,7 +1742,7 @@ func (o *OrchestratorProfile) IsHostsConfigAgentEnabled() bool {
 	return o.KubernetesConfig != nil && o.KubernetesConfig.PrivateCluster != nil && to.Bool(o.KubernetesConfig.PrivateCluster.EnableHostsConfigAgent)
 }
 
-// GetPodInfraContainerSpec returns the sandbox image as a string (ex: k8s.gcr.io/pause-amd64:3.1)
+// GetPodInfraContainerSpec returns the sandbox image as a string (ex: registry.k8s.io/pause-amd64:3.1)
 func (o *OrchestratorProfile) GetPodInfraContainerSpec() string {
 	return o.KubernetesConfig.MCRKubernetesImageBase + GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion][common.PauseComponentName]
 }
@@ -2207,7 +2207,7 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 }
 
 // GetCloudSpecConfig returns the Kubernetes container images URL configurations based on the deploy target environment.
-// for example: if the target is the public azure, then the default container image url should be k8s.gcr.io/...
+// for example: if the target is the public azure, then the default container image url should be registry.k8s.io/...
 // if the target is azure china, then the default container image should be mirror.azure.cn:5000/google_container/...
 func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 	targetEnv := helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())

@@ -4,7 +4,7 @@
     "properties": {
         "orchestratorProfile": {
             "kubernetesConfig": {
-                "kubernetesImageBase": "k8s.gcr.io/",
+                "kubernetesImageBase": "registry.k8s.io/",
                 "useInstanceMetadata": false,
                 "networkPolicy": "none"
             }
