@@ -152,7 +152,7 @@
             },
             "kubernetesAddonManagerSpec": {
                 "type": "String",
-                "value": "k8s.gcr.io/kube-addon-manager-amd64:v8.6"
+                "value": "registry.k8s.io/kube-addon-manager-amd64:v8.6"
             },
             "kubernetesCcmImageSpec": {
                 "type": "String",
@@ -160,19 +160,19 @@
             },
             "kubernetesDNSMasqSpec": {
                 "type": "String",
-                "value": "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.15.0"
+                "value": "registry.k8s.io/k8s-dns-dnsmasq-nanny-amd64:1.15.0"
             },
             "kubernetesDNSSidecarSpec": {
                 "type": "String",
-                "value": "k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.10"
+                "value": "registry.k8s.io/k8s-dns-sidecar-amd64:1.14.10"
             },
             "kubernetesHyperkubeSpec": {
                 "type": "String",
-                "value": "k8s.gcr.io/hyperkube-amd64:v1.11.9"
+                "value": "registry.k8s.io/hyperkube-amd64:v1.11.9"
             },
             "kubernetesKubeDNSSpec": {
                 "type": "String",
-                "value": "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.0"
+                "value": "registry.k8s.io/k8s-dns-kube-dns-amd64:1.15.0"
             },
             "kubernetesKubeletClusterDomain": {
                 "type": "String",
@@ -180,7 +180,7 @@
             },
             "kubernetesPodInfraContainerSpec": {
                 "type": "String",
-                "value": "k8s.gcr.io/pause-amd64:3.1"
+                "value": "registry.k8s.io/pause-amd64:3.1"
             },
             "kuberneteselbsvcname": {
                 "type": "String",

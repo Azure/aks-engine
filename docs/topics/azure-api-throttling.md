@@ -110,7 +110,7 @@ So, assuming we've waited 30 minutes or so, let's update the controller-manager 
 
 ```
 azureuser@k8s-master-31453872-0:~$ grep 1.15.7 /opt/azure/kube-controller-manager.yaml
-      image: k8s.gcr.io/hyperkube-amd64:v1.15.7
+      image: registry.k8s.io/hyperkube-amd64:v1.15.7
 ```
 
 Let's update the spec on all control plane VMs:
@@ -124,7 +124,7 @@ Authorized uses only. All activity may be monitored and reported.
 
 Authorized uses only. All activity may be monitored and reported.
 azureuser@k8s-master-31453872-0:~$ grep 1.15.12 /opt/azure/kube-controller-manager.yaml
-      image: k8s.gcr.io/hyperkube-amd64:v1.15.12
+      image: registry.k8s.io/hyperkube-amd64:v1.15.12
 ```
 
 (Again, if you're using `cloud-controller-manager`, substitute the correct `cloud-controller-manager.yaml` file name.)
@@ -135,7 +135,7 @@ Now, if we're running the `cluster-autoscaler` addon on this cluster let's make 
 
 ```
 azureuser@k8s-master-31453872-0:~$ grep 'cluster-autoscaler:v' /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
-      - image: k8s.gcr.io/cluster-autoscaler:v1.15.3
+      - image: registry.k8s.io/cluster-autoscaler:v1.15.3
 azureuser@k8s-master-31453872-0:~$ for control_plane_vm in $(kubectl get nodes | grep k8s-master | awk '{print $1}'); do ssh $control_plane_vm "sudo sed -i 's|v1.15.3|v1.15.6|g' /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml"; done
 
 Authorized uses only. All activity may be monitored and reported.
@@ -144,7 +144,7 @@ Authorized uses only. All activity may be monitored and reported.
 
 Authorized uses only. All activity may be monitored and reported.
 azureuser@k8s-master-31453872-0:~$ grep 'cluster-autoscaler:v' /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
-      - image: k8s.gcr.io/cluster-autoscaler:v1.15.6
+      - image: registry.k8s.io/cluster-autoscaler:v1.15.6
 ```
 
 The above validated that we *weren't* using the latest `cluster-autoscaler`, and so we changed the addon spec on each control plane VM in the `/etc/kubernetes/addons/` directory so that we would load 1.15.6 instead.

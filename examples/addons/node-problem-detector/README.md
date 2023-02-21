@@ -69,7 +69,7 @@ To test node-problem-detector in a running cluster, you can inject messages into
 | Name           | Required | Description                       | Default Value                             |
 | -------------- | -------- | --------------------------------- | ----------------------------------------- |
 | name           | no       | container name                    | "node-problem-detector"                   |
-| image          | no       | image                             | "k8s.gcr.io/node-problem-detector:v0.8.1" |
+| image          | no       | image                             | "registry.k8s.io/node-problem-detector:v0.8.1" |
 | cpuRequests    | no       | cpu requests for the container    | "20m"                                     |
 | memoryRequests | no       | memory requests for the container | "20Mi"                                    |
 | cpuLimits      | no       | cpu limits for the container      | "200m"                                    |

@@ -1198,7 +1198,7 @@ func TestKubernetesImageBase(t *testing.T) {
 	mockCS.Location = "westus2"
 	cloudSpecConfig = mockCS.GetCloudSpecConfig()
 	properties = mockCS.Properties
-	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "registry.k8s.io/"
 	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = ""
 	mockCS.setOrchestratorDefaults(true, false)
 	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {

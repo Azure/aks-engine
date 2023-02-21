@@ -4173,10 +4173,10 @@ func TestGetKubernetesVersion(t *testing.T) {
 
 func TestGetKubernetesHyperkubeSpec(t *testing.T) {
 	mock1dot13dot11 := getMockAPIProperties("1.13.11")
-	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "registry.k8s.io/"
 	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
 	mock1dot16dot3 := getMockAPIProperties("1.16.0")
-	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "registry.k8s.io/"
 	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
 	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true)
 	mock1dot15dot4azs.OrchestratorProfile = &OrchestratorProfile{
@@ -4188,7 +4188,7 @@ func TestGetKubernetesHyperkubeSpec(t *testing.T) {
 		},
 	}
 	mockcustomproperties := getMockAPIProperties("1.16.0")
-	mockcustomproperties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mockcustomproperties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "registry.k8s.io/"
 	mockcustomproperties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "mcr.io/my-custom-image"
 
 	tests := []struct {
@@ -4199,12 +4199,12 @@ func TestGetKubernetesHyperkubeSpec(t *testing.T) {
 		{
 			name:                  "1.13.11 Azure public cloud",
 			properties:            &mock1dot13dot11,
-			expectedHyperkubeSpec: "k8s.gcr.io/hyperkube-amd64:v1.13.11",
+			expectedHyperkubeSpec: "registry.k8s.io/hyperkube-amd64:v1.13.11",
 		},
 		{
 			name:                  "1.16.0 Azure public cloud",
 			properties:            &mock1dot16dot3,
-			expectedHyperkubeSpec: "k8s.gcr.io/hyperkube-amd64:v1.16.0",
+			expectedHyperkubeSpec: "registry.k8s.io/hyperkube-amd64:v1.16.0",
 		},
 		{
 			name:                  "1.15.4 Azure Stack",

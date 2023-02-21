@@ -14,7 +14,7 @@ type AzureEnvironmentSpecConfig struct {
 // KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
 	AzureTelemetryPID string `json:"azureTelemetryPID,omitempty"`
-	// KubernetesImageBase defines a base image URL substring to source images that originate from upstream k8s.gcr.io
+	// KubernetesImageBase defines a base image URL substring to source images that originate from upstream registry.k8s.io
 	KubernetesImageBase   string `json:"kubernetesImageBase,omitempty"`
 	TillerImageBase       string `json:"tillerImageBase,omitempty"`
 	ACIConnectorImageBase string `json:"aciConnectorImageBase,omitempty"` // Deprecated
@@ -66,7 +66,7 @@ const (
 var (
 	// DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
-		KubernetesImageBase:                  "k8s.gcr.io/",
+		KubernetesImageBase:                  "registry.k8s.io/",
 		TillerImageBase:                      "mcr.microsoft.com/",
 		NVIDIAImageBase:                      "mcr.microsoft.com/",
 		CalicoImageBase:                      "mcr.microsoft.com/oss/calico/",
