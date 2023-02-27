@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -8,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -149,7 +150,7 @@ spec:
 func CreateLinuxDeploy(image, name, namespace, app, role string) (*Deployment, error) {
 	var commandTimeout time.Duration
 
-	tmpFile, err := ioutil.TempFile("", "e2e-linux-deployment-*.yaml")
+	tmpFile, err := os.CreateTemp("", "e2e-linux-deployment-*.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +278,7 @@ spec:
 func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Deployment, error) {
 	var commandTimeout time.Duration
 
-	tmpFile, err := ioutil.TempFile("", "e2e-linux-deployment-*.yaml")
+	tmpFile, err := os.CreateTemp("", "e2e-linux-deployment-*.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +470,7 @@ func CreateWindowsDeploy(image, name, namespace, app, role string) (*Deployment,
 	var commandTimeout time.Duration
 	var cmd *exec.Cmd
 
-	tmpFile, err := ioutil.TempFile("", "e2e-windows-deployment-*.yaml")
+	tmpFile, err := os.CreateTemp("", "e2e-windows-deployment-*.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +531,7 @@ spec:
 func CreateWindowsDeployWithHostport(image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	var commandTimeout time.Duration
 
-	tmpFile, err := ioutil.TempFile("", "e2e-windows-deployment-*.yaml")
+	tmpFile, err := os.CreateTemp("", "e2e-windows-deployment-*.yaml")
 	if err != nil {
 		return nil, err
 	}

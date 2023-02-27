@@ -1132,9 +1132,7 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 	}
 	// For pools-specific configuration, we only take the defaults if we have zero user-provided pools configuration
 	if len(addon.Pools) == 0 {
-		for i := range defaults.Pools {
-			addon.Pools = append(addon.Pools, defaults.Pools[i])
-		}
+		addon.Pools = append(addon.Pools, defaults.Pools...)
 	}
 	for key, val := range defaults.Config {
 		if addon.Config == nil {

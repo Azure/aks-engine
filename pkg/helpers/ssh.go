@@ -5,7 +5,7 @@ package helpers
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -39,7 +39,7 @@ func SSHClientConfig(user string, auth ssh.AuthMethod) *ssh.ClientConfig {
 }
 
 func PublicKeyAuth(sshPrivateKeyPath string) (ssh.AuthMethod, error) {
-	b, err := ioutil.ReadFile(sshPrivateKeyPath)
+	b, err := os.ReadFile(sshPrivateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading ssh private key file")
 	}

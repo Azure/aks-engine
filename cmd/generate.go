@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -168,10 +167,10 @@ func (gc *generateCmd) loadAPIModel() error {
 		return errors.New("--ca-certificate-path and --ca-private-key-path must be specified together")
 	}
 	if gc.caCertificatePath != "" {
-		if caCertificateBytes, err = ioutil.ReadFile(gc.caCertificatePath); err != nil {
+		if caCertificateBytes, err = os.ReadFile(gc.caCertificatePath); err != nil {
 			return errors.Wrap(err, "failed to read CA certificate file")
 		}
-		if caKeyBytes, err = ioutil.ReadFile(gc.caPrivateKeyPath); err != nil {
+		if caKeyBytes, err = os.ReadFile(gc.caPrivateKeyPath); err != nil {
 			return errors.Wrap(err, "failed to read CA private key file")
 		}
 

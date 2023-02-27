@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -1207,7 +1206,7 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 }
 
 func makeTmpFile(t *testing.T, name string) (string, func()) {
-	tmpF, err := ioutil.TempFile(os.TempDir(), name)
+	tmpF, err := os.CreateTemp(os.TempDir(), name)
 	if err != nil {
 		t.Fatalf("unable to create file: %s", err.Error())
 	}

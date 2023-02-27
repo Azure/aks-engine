@@ -9,8 +9,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -319,7 +319,7 @@ func (az *AzureClient) EnsureProvidersRegistered(subscriptionID string) error {
 }
 
 func parseCertificate(certificatePath string) (*x509.Certificate, error) {
-	certificateData, err := ioutil.ReadFile(certificatePath)
+	certificateData, err := os.ReadFile(certificatePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to read certificate")
 	}
@@ -337,7 +337,7 @@ func parseCertificate(certificatePath string) (*x509.Certificate, error) {
 }
 
 func parseRsaPrivateKey(path string) (*rsa.PrivateKey, error) {
-	privateKeyData, err := ioutil.ReadFile(path)
+	privateKeyData, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

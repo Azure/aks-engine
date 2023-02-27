@@ -1,4 +1,4 @@
-$DEV_ENV_IMAGE = "mcr.microsoft.com/oss/azcu/go-dev:v1.34.7"
+$DEV_ENV_IMAGE = "mcr.microsoft.com/oss/azcu/go-dev:v1.36.1"
 $DEV_ENV_WORK_DIR = "/aks-engine"
 
 # Ensure docker is configured for linux containers

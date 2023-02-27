@@ -6,7 +6,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -379,7 +378,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return errors.Wrap(err, "reading --kubeconfig")
 		}
-		content, err = ioutil.ReadFile(path)
+		content, err = os.ReadFile(path)
 		if err != nil {
 			return errors.Wrap(err, "reading --kubeconfig")
 		}

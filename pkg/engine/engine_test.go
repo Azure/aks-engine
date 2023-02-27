@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -229,7 +229,7 @@ type APIModelTestFile struct {
 // WriteArmTemplateErrFilename writes out an error file to sit parallel for comparison
 func (a *APIModelTestFile) WriteArmTemplateErrFilename(contents []byte) (string, error) {
 	filename := fmt.Sprintf("%s_expected.err", a.APIModelFilename)
-	if err := ioutil.WriteFile(filename, contents, 0600); err != nil {
+	if err := os.WriteFile(filename, contents, 0600); err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%s written for diff", filename), nil
@@ -238,7 +238,7 @@ func (a *APIModelTestFile) WriteArmTemplateErrFilename(contents []byte) (string,
 // WriteArmTemplateParamsErrFilename writes out an error file to sit parallel for comparison
 func (a *APIModelTestFile) WriteArmTemplateParamsErrFilename(contents []byte) (string, error) {
 	filename := fmt.Sprintf("%s_expected_params.err", a.APIModelFilename)
-	if err := ioutil.WriteFile(filename, contents, 0600); err != nil {
+	if err := os.WriteFile(filename, contents, 0600); err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%s written for diff", filename), nil
@@ -246,7 +246,7 @@ func (a *APIModelTestFile) WriteArmTemplateParamsErrFilename(contents []byte) (s
 
 // IterateTestFilesDirectory iterates the test data directory adding api model files to the test file slice.
 func IterateTestFilesDirectory(directory string, apiModelTestFiles *[]APIModelTestFile) error {
-	files, err := ioutil.ReadDir(directory)
+	files, err := os.ReadDir(directory)
 	if err != nil {
 		return err
 	}

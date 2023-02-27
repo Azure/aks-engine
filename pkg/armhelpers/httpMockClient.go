@@ -5,8 +5,8 @@ package armhelpers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers/testserver"
@@ -732,7 +732,7 @@ func (mc *HTTPMockClient) RegisterVMImageFetcherInterface() {
 }
 
 func readFromFile(filePath string) (string, error) {
-	bytes, err := ioutil.ReadFile(filePath)
+	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", fmt.Errorf("Fail to read file %q , err -  %q", filePath, err)
 	}

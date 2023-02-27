@@ -5,7 +5,7 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"reflect"
 
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
@@ -31,7 +31,7 @@ type Apiloader struct {
 
 // LoadContainerServiceFromFile loads an AKS Cluster API Model from a JSON file
 func (a *Apiloader) LoadContainerServiceFromFile(jsonFile string, validate, isUpdate bool, existingContainerService *ContainerService) (*ContainerService, string, error) {
-	contents, e := ioutil.ReadFile(jsonFile)
+	contents, e := os.ReadFile(jsonFile)
 	if e != nil {
 		return nil, "", a.Translator.Errorf("error reading file %s: %s", jsonFile, e.Error())
 	}
@@ -146,7 +146,7 @@ func (a *Apiloader) SerializeContainerService(containerService *ContainerService
 
 // LoadAgentpoolProfileFromFile loads an an AgentPoolProfile object from a JSON file
 func (a *Apiloader) LoadAgentpoolProfileFromFile(jsonFile string) (*AgentPoolProfile, error) {
-	contents, e := ioutil.ReadFile(jsonFile)
+	contents, e := os.ReadFile(jsonFile)
 	if e != nil {
 		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, e.Error())
 	}
@@ -167,7 +167,7 @@ func (a *Apiloader) LoadAgentPoolProfile(contents []byte) (*AgentPoolProfile, er
 
 // LoadCertificateProfileFromFile loads a CertificateProfile object from a JSON file
 func (a *Apiloader) LoadCertificateProfileFromFile(jsonFile string) (*CertificateProfile, error) {
-	content, err := ioutil.ReadFile(jsonFile)
+	content, err := os.ReadFile(jsonFile)
 	if err != nil {
 		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, err.Error())
 	}

@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -8,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os/exec"
@@ -323,7 +325,7 @@ func (s *Service) Validate(bodyResponseTextMatch string) error {
 	if err != nil {
 		return errors.Errorf("Unable to call service at URL %s: %s", url, err)
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Errorf("Unable to parse response body: %s", err)
 	}

@@ -6,7 +6,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,6 +23,8 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -171,7 +172,7 @@ func (rcc *rotateCertsCmd) validateArgs() (err error) {
 			return errors.Errorf("error creating output directory (%s)", rcc.outputDirectory)
 		}
 	}
-	if _, err := ioutil.ReadDir(rcc.outputDirectory); err != nil {
+	if _, err := os.ReadDir(rcc.outputDirectory); err != nil {
 		return errors.Wrapf(err, "reading output directory %s", rcc.outputDirectory)
 	}
 	return nil
@@ -346,7 +347,8 @@ func (rcc *rotateCertsCmd) getAgentNodes() (nodeMap, error) {
 			Port:    22,
 			Jumpbox: rcc.jumpbox,
 		}
-		switch api.OSType(strings.Title(nli.Status.NodeInfo.OperatingSystem)) {
+		caser := cases.Title(language.English)
+		switch api.OSType(caser.String(nli.Status.NodeInfo.OperatingSystem)) {
 		case api.Linux:
 			node.OperatingSystem = api.Linux
 			node.AuthConfig = rcc.linuxAuthConfig
@@ -650,7 +652,7 @@ func (rcc *rotateCertsCmd) getKubeClient() (*kubernetes.CompositeClientSet, erro
 	configPathSuffix := path.Join("kubeconfig", fmt.Sprintf("kubeconfig.%s.json", rcc.location))
 
 	oldConfigPath := path.Join(rcc.backupDirectory, configPathSuffix)
-	oldConfig, err := ioutil.ReadFile(oldConfigPath)
+	oldConfig, err := os.ReadFile(oldConfigPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "reading %s", oldConfigPath)
 	}
@@ -660,7 +662,7 @@ func (rcc *rotateCertsCmd) getKubeClient() (*kubernetes.CompositeClientSet, erro
 	}
 
 	newConfigPath := path.Join(rcc.outputDirectory, configPathSuffix)
-	newConfig, err := ioutil.ReadFile(newConfigPath)
+	newConfig, err := os.ReadFile(newConfigPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "reading %s", newConfigPath)
 	}

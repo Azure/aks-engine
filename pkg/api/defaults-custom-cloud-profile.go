@@ -6,7 +6,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -83,7 +83,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 				return fmt.Errorf("%s . apimodel invalid: failed to retrieve custom endpoints from metadataURL %s", err, metadataURL)
 			}
 
-			body, err := ioutil.ReadAll(endpointsresp.Body)
+			body, err := io.ReadAll(endpointsresp.Body)
 			if err != nil {
 				return fmt.Errorf("%s . apimodel invalid: failed to read the response from metadataURL %s", err, metadataURL)
 			}

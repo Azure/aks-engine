@@ -5,7 +5,6 @@ package i18n
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -56,7 +55,7 @@ func LoadTranslations() (*gotext.Locale, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = ioutil.WriteFile(file, data, 0600)
+			err = os.WriteFile(file, data, 0600)
 			if err != nil {
 				return nil, err
 			}

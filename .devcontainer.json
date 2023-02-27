@@ -1,6 +1,6 @@
 {
 	"name": "Go for aks-engine",
-	"image": "mcr.microsoft.com/oss/azcu/go-dev:v1.34.7",
+	"image": "mcr.microsoft.com/oss/azcu/go-dev:v1.36.1",
 	"extensions": [
 		"ms-vscode.go"
 	],
