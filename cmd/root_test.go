@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -126,6 +125,7 @@ func TestGetSelectedCloudFromAzConfig(t *testing.T) {
 		`), "myCloud"},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			f, err := ini.Load(test.data)
@@ -208,7 +208,7 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 		t.Fatalf("failed to write custom cloud profile: file %s does not exist", environmentFilePath)
 	}
 
-	azurestackenvironment, err := ioutil.ReadFile(environmentFilePath)
+	azurestackenvironment, err := os.ReadFile(environmentFilePath)
 	if err != nil {
 		t.Fatalf("failed to write custom cloud profile: can not read file %s ", environmentFilePath)
 	}
@@ -600,7 +600,7 @@ func TestWriteArtifacts(t *testing.T) {
 }
 
 func makeTmpDir(t *testing.T) (string, func()) {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "_tmp_dir")
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "_tmp_dir")
 	if err != nil {
 		t.Fatalf("unable to create dir: %s", err.Error())
 	}

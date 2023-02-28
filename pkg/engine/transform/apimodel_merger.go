@@ -5,7 +5,6 @@ package transform
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -71,7 +70,7 @@ func MapValues(m map[string]APIModelValue, setFlagValues []string) {
 // MergeValuesWithAPIModel takes the path to an ApiModel JSON file, loads it and merges it with the values in the map to another temp file
 func MergeValuesWithAPIModel(apiModelPath string, m map[string]APIModelValue) (string, error) {
 	// load the apiModel file from path
-	fileContent, err := ioutil.ReadFile(apiModelPath)
+	fileContent, err := os.ReadFile(apiModelPath)
 	if err != nil {
 		return "", err
 	}
@@ -114,13 +113,13 @@ func MergeValuesWithAPIModel(apiModelPath string, m map[string]APIModelValue) (s
 	}
 
 	// generate a new file
-	tmpFile, err := ioutil.TempFile("", "mergedApiModel")
+	tmpFile, err := os.CreateTemp("", "mergedApiModel")
 	if err != nil {
 		return "", err
 	}
 
 	tmpFileName := tmpFile.Name()
-	err = ioutil.WriteFile(tmpFileName, []byte(jsonObj.String()), os.ModeAppend)
+	err = os.WriteFile(tmpFileName, []byte(jsonObj.String()), os.ModeAppend)
 	if err != nil {
 		return "", err
 	}

@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -231,7 +230,7 @@ func NewAzureClientWithClientSecretExternalTenant(env azure.Environment, subscri
 
 // NewAzureClientWithClientCertificateFile returns an AzureClient via client_id and jwt certificate assertion
 func NewAzureClientWithClientCertificateFile(env azure.Environment, subscriptionID, clientID, certificatePath, privateKeyPath string) (*AzureClient, error) {
-	certificateData, err := ioutil.ReadFile(certificatePath)
+	certificateData, err := os.ReadFile(certificatePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to read certificate")
 	}
@@ -468,7 +467,7 @@ func (az *AzureClient) EnsureProvidersRegistered(subscriptionID string) error {
 }
 
 func parseRsaPrivateKey(path string) (*rsa.PrivateKey, error) {
-	privateKeyData, err := ioutil.ReadFile(path)
+	privateKeyData, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

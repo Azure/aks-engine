@@ -9,8 +9,8 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -551,7 +551,7 @@ func (e *Engine) Write() error {
 		log.Printf("Error while trying to serialize Container Service object to json:%s\n%+v\n", err, e.ClusterDefinition)
 		return err
 	}
-	err = ioutil.WriteFile(e.Config.ClusterDefinitionTemplate, json, 0777)
+	err = os.WriteFile(e.Config.ClusterDefinitionTemplate, json, 0777)
 	if err != nil {
 		log.Printf("Error while trying to write container service definition to file (%s):%s\n%s\n", e.Config.ClusterDefinitionTemplate, err, string(json))
 	}
@@ -561,7 +561,7 @@ func (e *Engine) Write() error {
 
 // ParseInput takes a template path and will parse that into a api.VlabsARMContainerService
 func ParseInput(path string) (*api.VlabsARMContainerService, error) {
-	contents, err := ioutil.ReadFile(path)
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		log.Printf("Error while trying to read cluster definition at (%s):%s\n", path, err)
 		return nil, err

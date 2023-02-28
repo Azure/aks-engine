@@ -1,4 +1,5 @@
-//+build test
+//go:build test
+// +build test
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
@@ -9,7 +10,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -165,7 +165,7 @@ func (c *Config) UpdateCustomCloudClusterDefinition(ccc *CustomCloudConfig) erro
 	if err != nil {
 		return fmt.Errorf("Error fail to marshal containerService object %p", err)
 	}
-	err = ioutil.WriteFile(clusterDefinitionFullPath, csBytes, 644)
+	err = os.WriteFile(clusterDefinitionFullPath, csBytes, 644)
 	if err != nil {
 		return fmt.Errorf("Error fail to write file object %p", err)
 	}
@@ -174,7 +174,7 @@ func (c *Config) UpdateCustomCloudClusterDefinition(ccc *CustomCloudConfig) erro
 
 func parseVlabsContainerSerice(clusterDefinitionFullPath string) api.VlabsARMContainerService {
 
-	bytes, err := ioutil.ReadFile(clusterDefinitionFullPath)
+	bytes, err := os.ReadFile(clusterDefinitionFullPath)
 	if err != nil {
 		log.Fatalf("Error while trying to read cluster definition at (%s):%s\n", clusterDefinitionFullPath, err)
 	}
@@ -305,7 +305,7 @@ func (c *Config) SetEnvVars() error {
 // ReadPublicSSHKey will read the contents of the public ssh key on disk into a string
 func (c *Config) ReadPublicSSHKey() (string, error) {
 	file := c.GetSSHKeyPath() + ".pub"
-	contents, err := ioutil.ReadFile(file)
+	contents, err := os.ReadFile(file)
 	if err != nil {
 		log.Printf("Error while trying to read public ssh key at (%s):%s\n", file, err)
 		return "", err

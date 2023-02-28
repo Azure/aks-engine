@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -7,7 +9,6 @@ package remote
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -64,7 +65,7 @@ func NewConnection(host, port, user, keyPath string) (*Connection, error) {
 	defer conn.Close()
 	ag := agent.NewClient(conn)
 
-	privateKeyBytes, err := ioutil.ReadFile(keyPath)
+	privateKeyBytes, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
 	}

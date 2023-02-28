@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -11,7 +13,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"math"
 	"math/rand"
@@ -203,7 +204,7 @@ var _ = AfterSuite(func() {
 		if err := vmssHealthCommand.Process.Kill(); err != nil {
 			log.Fatal(fmt.Sprintf("failed to kill process ID %d: ", vmssHealthCommand.Process.Pid), err)
 		}
-		stdout, err := ioutil.ReadFile(vmssHealthCommandStdOut)
+		stdout, err := os.ReadFile(vmssHealthCommandStdOut)
 		if err != nil {
 			fmt.Printf("Unable to read file %s", vmssHealthCommandStdOut)
 		}

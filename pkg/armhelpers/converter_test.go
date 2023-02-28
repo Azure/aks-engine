@@ -5,8 +5,8 @@ package armhelpers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/cmplx"
+	"os"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
@@ -231,7 +231,7 @@ func TestDeepCopySampleStruct(t *testing.T) {
 }
 
 func unmarshalFromFile(filePath string, v interface{}) error {
-	bytes, err := ioutil.ReadFile(filePath)
+	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("Fail to read file %q , err -  %q", filePath, err)
 	}

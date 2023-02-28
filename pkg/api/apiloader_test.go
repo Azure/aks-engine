@@ -8,7 +8,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -108,14 +107,14 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 		}
 	}`
 
-	tmpFile, err := ioutil.TempFile("", "containerService-nolocation")
+	tmpFile, err := os.CreateTemp("", "containerService-nolocation")
 	if err != nil {
 		t.Error(err)
 	}
 	fileName := tmpFile.Name()
 	defer os.Remove(fileName)
 
-	err = ioutil.WriteFile(fileName, []byte(jsonWithoutlocationcustomcloud), os.ModeAppend)
+	err = os.WriteFile(fileName, []byte(jsonWithoutlocationcustomcloud), os.ModeAppend)
 	if err != nil {
 		t.Error(err)
 	}
@@ -176,14 +175,14 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 		}
 	}`
 
-	tmpFilewithoutlocationpubliccloud, err := ioutil.TempFile("", "containerService-nolocationpubliccloud")
+	tmpFilewithoutlocationpubliccloud, err := os.CreateTemp("", "containerService-nolocationpubliccloud")
 	if err != nil {
 		t.Error(err)
 	}
 	fileNamewithoutlocationpubliccloud := tmpFilewithoutlocationpubliccloud.Name()
 	defer os.Remove(fileNamewithoutlocationpubliccloud)
 
-	err = ioutil.WriteFile(fileNamewithoutlocationpubliccloud, []byte(jsonWithoutlocationpubliccloud), os.ModeAppend)
+	err = os.WriteFile(fileNamewithoutlocationpubliccloud, []byte(jsonWithoutlocationpubliccloud), os.ModeAppend)
 	if err != nil {
 		t.Error(err)
 	}

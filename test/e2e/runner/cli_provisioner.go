@@ -1,4 +1,6 @@
-//+build test
+//go:build test
+// +build test
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -6,7 +8,6 @@ package runner
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -108,14 +109,14 @@ func createSaveSSH(outputPath string, privateKeyName string, existingPrivateKeyP
 	}
 
 	if existingPrivateKeyPath != "" {
-		err = ioutil.WriteFile(keyPath+".pub", out, 0644)
+		err = os.WriteFile(keyPath+".pub", out, 0644)
 		if err != nil {
 			return "", errors.Wrapf(err, "Error while trying to write public ssh key")
 		}
 	}
 
 	os.Chmod(keyPath, 0600)
-	publicSSHKeyBytes, err := ioutil.ReadFile(keyPath + ".pub")
+	publicSSHKeyBytes, err := os.ReadFile(keyPath + ".pub")
 	if err != nil {
 		return "", errors.Wrap(err, "Error while trying to read public ssh key")
 	}
@@ -444,7 +445,7 @@ func (cli *CLIProvisioner) FetchActivityLog(acct *azure.Account, logPath string)
 			return errors.Wrapf(err, "cannot fetch activity log for resource group %s", rg)
 		}
 		path := filepath.Join(logPath, fmt.Sprintf("activity-log-%s", rg))
-		if err := ioutil.WriteFile(path, []byte(log), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(log), 0644); err != nil {
 			return errors.Wrap(err, "cannot write activity log in file")
 		}
 	}

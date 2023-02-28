@@ -8,7 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -538,7 +538,7 @@ func (mc *MockAKSEngineClient) DeployTemplate(ctx context.Context, resourceGroup
 					Response: &http.Response{
 						Status:     "400 Bad Request",
 						StatusCode: 400,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte(resp))),
+						Body:       io.NopCloser(bytes.NewReader([]byte(resp))),
 					}}},
 			errors.New(errmsg)
 
@@ -558,7 +558,7 @@ func (mc *MockAKSEngineClient) DeployTemplate(ctx context.Context, resourceGroup
 					Response: &http.Response{
 						Status:     "200 OK",
 						StatusCode: 200,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte(resp))),
+						Body:       io.NopCloser(bytes.NewReader([]byte(resp))),
 					}}},
 			errors.New(errmsg)
 
@@ -579,7 +579,7 @@ func (mc *MockAKSEngineClient) DeployTemplate(ctx context.Context, resourceGroup
 					Response: &http.Response{
 						Status:     "200 OK",
 						StatusCode: 200,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte(resp))),
+						Body:       io.NopCloser(bytes.NewReader([]byte(resp))),
 					}},
 				Properties: &resources.DeploymentPropertiesExtended{
 					ProvisioningState: &provisioningState,
@@ -984,7 +984,7 @@ func (mc *MockAKSEngineClient) ListDeploymentOperations(ctx context.Context, res
 						Response: &http.Response{
 							Status:     "200 OK",
 							StatusCode: 200,
-							Body:       ioutil.NopCloser(bytes.NewReader([]byte(resp))),
+							Body:       io.NopCloser(bytes.NewReader([]byte(resp))),
 						},
 					},
 					Value: &[]resources.DeploymentOperation{
@@ -1005,7 +1005,7 @@ func (mc *MockAKSEngineClient) ListDeploymentOperations(ctx context.Context, res
 				Response: &http.Response{
 					Status:     "200 OK",
 					StatusCode: 200,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(resp))),
+					Body:       io.NopCloser(bytes.NewReader([]byte(resp))),
 				},
 			},
 			Value: &[]resources.DeploymentOperation{

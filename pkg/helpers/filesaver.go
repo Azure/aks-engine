@@ -4,7 +4,6 @@
 package helpers
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -34,7 +33,7 @@ func (f *FileSaver) SaveFile(dir string, file string, data []byte) error {
 	}
 
 	path := path.Join(dir, file)
-	if err := ioutil.WriteFile(path, data, 0600); err != nil {
+	if err := os.WriteFile(path, data, 0600); err != nil {
 		return err
 	}
 

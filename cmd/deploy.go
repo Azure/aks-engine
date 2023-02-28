@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"os"
 	"path"
@@ -146,7 +146,7 @@ func (dc *deployCmd) mergeAPIModel() error {
 	if dc.apimodelPath == "" {
 		log.Infoln("no --api-model was specified, using default model")
 		var f *os.File
-		f, err = ioutil.TempFile("", fmt.Sprintf("%s-default-api-model_%s-%s_", filepath.Base(os.Args[0]), BuildSHA, GitTreeState))
+		f, err = os.CreateTemp("", fmt.Sprintf("%s-default-api-model_%s-%s_", filepath.Base(os.Args[0]), BuildSHA, GitTreeState))
 		if err != nil {
 			return errors.Wrap(err, "error creating temp file for default API model")
 		}
@@ -203,10 +203,10 @@ func (dc *deployCmd) loadAPIModel() error {
 	}
 
 	if dc.caCertificatePath != "" {
-		if caCertificateBytes, err = ioutil.ReadFile(dc.caCertificatePath); err != nil {
+		if caCertificateBytes, err = os.ReadFile(dc.caCertificatePath); err != nil {
 			return errors.Wrap(err, "failed to read CA certificate file")
 		}
-		if caKeyBytes, err = ioutil.ReadFile(dc.caPrivateKeyPath); err != nil {
+		if caKeyBytes, err = os.ReadFile(dc.caPrivateKeyPath); err != nil {
 			return errors.Wrap(err, "failed to read CA private key file")
 		}
 
@@ -478,7 +478,7 @@ func (dc *deployCmd) run() error {
 	); err != nil {
 		if res.Response.Response != nil && res.Body != nil {
 			defer res.Body.Close()
-			body, _ := ioutil.ReadAll(res.Body)
+			body, _ := io.ReadAll(res.Body)
 			log.Errorf(string(body))
 		}
 		return err

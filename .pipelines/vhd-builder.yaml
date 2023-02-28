@@ -9,7 +9,7 @@ trigger: none
 jobs:
 - job: create_ubuntu_18_04_vhd
   variables:
-    CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.34.7'
+    CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.36.1'
   pool:
     vmImage: 'Ubuntu 20.04'
   steps:
@@ -78,7 +78,7 @@ jobs:
     displayName: Getting Shared Access Signature URI
 - job: create_ubuntu_20_04_vhd
   variables:
-    CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.34.7'
+    CONTAINER_IMAGE:  'mcr.microsoft.com/oss/azcu/go-dev:v1.36.1'
   pool:
     vmImage: 'Ubuntu 20.04'
   steps:

@@ -4,7 +4,7 @@
 package transform
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/Jeffail/gabs"
@@ -54,7 +54,7 @@ func TestMergeValuesWithAPIModel(t *testing.T) {
 	MapValues(m, values)
 	tmpFile, _ := MergeValuesWithAPIModel("../testdata/simple/kubernetes.json", m)
 
-	jsonFileContent, err := ioutil.ReadFile(tmpFile)
+	jsonFileContent, err := os.ReadFile(tmpFile)
 	Expect(err).To(BeNil())
 
 	jsonAPIModel, err := gabs.ParseJSON(jsonFileContent)

@@ -6,7 +6,7 @@ package ssh
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -38,7 +38,7 @@ func ExecuteRemote(ctx context.Context, host *RemoteHost, script string) (combin
 
 // PublicKeyAuth returns an AuthMethod that uses a ssh key pair
 func PublicKeyAuth(sshPrivateKeyPath string) (ssh.AuthMethod, error) {
-	b, err := ioutil.ReadFile(sshPrivateKeyPath)
+	b, err := os.ReadFile(sshPrivateKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading ssh private key file")
 	}
