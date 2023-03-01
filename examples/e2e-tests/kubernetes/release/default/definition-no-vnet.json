@@ -20,7 +20,7 @@
         "masterProfile": {
             "count": 3,
             "dnsPrefix": "",
-            "vmSize": "Standard_D2_v3",
+            "vmSize": "Standard_B2s",
             "OSDiskSizeGB": 200,
             "availabilityZones": [
                 "1",
@@ -31,7 +31,7 @@
             {
                 "name": "poollinux",
                 "count": 1,
-                "vmSize": "Standard_D2_v3",
+                "vmSize": "Standard_B2s",
                 "OSDiskSizeGB": 200,
                 "storageProfile": "ManagedDisks",
                 "diskSizesGB": [
@@ -60,7 +60,7 @@
             {
                 "name": "pool1804",
                 "count": 1,
-                "vmSize": "Standard_D2_v3",
+                "vmSize": "Standard_B2s",
                 "distro": "ubuntu-18.04",
                 "availabilityProfile": "VirtualMachineScaleSets",
                 "availabilityZones": [
