@@ -4,13 +4,13 @@
     "masterProfile": {
       "count": 1,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v3"
+      "vmSize": "Standard_B2s"
     },
     "agentPoolProfiles": [
       {
         "name": "pool1",
         "count": 1,
-        "vmSize": "Standard_D2_v3"
+        "vmSize": "Standard_B2s"
       },
       {
         "name": "poolgpu",

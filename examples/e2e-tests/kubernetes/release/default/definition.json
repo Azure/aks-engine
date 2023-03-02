@@ -21,7 +21,7 @@
     "masterProfile": {
       "count": 3,
       "dnsPrefix": "",
-      "vmSize": "Standard_D2_v3",
+      "vmSize": "Standard_B2s",
       "OSDiskSizeGB": 200,
       "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
       "firstConsecutiveStaticIP": "10.239.255.239",
@@ -35,7 +35,7 @@
       {
         "name": "poollinux",
         "count": 1,
-        "vmSize": "Standard_D2_v3",
+        "vmSize": "Standard_B2s",
         "OSDiskSizeGB": 200,
         "storageProfile": "ManagedDisks",
         "diskSizesGB": [
@@ -66,7 +66,7 @@
       {
         "name": "pool1804",
         "count": 1,
-        "vmSize": "Standard_D2_v3",
+        "vmSize": "Standard_B2s",
         "distro": "ubuntu-18.04",
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
