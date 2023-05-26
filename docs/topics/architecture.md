@@ -132,20 +132,6 @@ Once the input is validated, the template generator is invoked which will conver
           },
 {{end}}
           {
-            "name": "allow_ssh",
-            "properties": {
-              "access": "Allow",
-              "description": "Allow SSH traffic to master",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "22-22",
-              "direction": "Inbound",
-              "priority": 101,
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*"
-            }
-          },
-          {
             "name": "allow_kube_tls",
             "properties": {
               "access": "Allow",

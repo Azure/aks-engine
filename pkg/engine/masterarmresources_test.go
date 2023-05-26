@@ -407,20 +407,6 @@ func TestCreateKubernetesMasterResourcesPrivateCluster(t *testing.T) {
 			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
 				SecurityRules: &[]network.SecurityRule{
 					{
-						Name: to.StringPtr("allow_ssh"),
-						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
-							Access:                   network.SecurityRuleAccessAllow,
-							Description:              to.StringPtr("Allow SSH traffic to master"),
-							DestinationAddressPrefix: to.StringPtr("*"),
-							DestinationPortRange:     to.StringPtr("22-22"),
-							Direction:                network.SecurityRuleDirectionInbound,
-							Priority:                 to.Int32Ptr(101),
-							Protocol:                 network.SecurityRuleProtocolTCP,
-							SourceAddressPrefix:      to.StringPtr("*"),
-							SourcePortRange:          to.StringPtr("*"),
-						},
-					},
-					{
 						Name: to.StringPtr("allow_kube_tls"),
 						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
 							Access:                   network.SecurityRuleAccessAllow,
@@ -762,20 +748,6 @@ func TestCreateKubernetesMasterResourcesVMSS(t *testing.T) {
 		SecurityGroup: network.SecurityGroup{
 			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
 				SecurityRules: &[]network.SecurityRule{
-					{
-						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
-							Description:              to.StringPtr("Allow SSH traffic to master"),
-							Protocol:                 network.SecurityRuleProtocol("Tcp"),
-							SourcePortRange:          to.StringPtr("*"),
-							DestinationPortRange:     to.StringPtr("22-22"),
-							SourceAddressPrefix:      to.StringPtr("*"),
-							DestinationAddressPrefix: to.StringPtr("*"),
-							Access:                   network.SecurityRuleAccess("Allow"),
-							Priority:                 to.Int32Ptr(101),
-							Direction:                network.SecurityRuleDirection("Inbound"),
-						},
-						Name: to.StringPtr("allow_ssh"),
-					},
 					{
 						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
 							Description:              to.StringPtr("Allow kube-apiserver (tls) traffic to master"),

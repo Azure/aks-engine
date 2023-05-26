@@ -48,20 +48,6 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 			SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
 				SecurityRules: &[]network.SecurityRule{
 					{
-						Name: to.StringPtr("allow_ssh"),
-						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
-							Access:                   network.SecurityRuleAccessAllow,
-							Description:              to.StringPtr("Allow SSH traffic to master"),
-							DestinationAddressPrefix: to.StringPtr("*"),
-							DestinationPortRange:     to.StringPtr("22-22"),
-							Direction:                network.SecurityRuleDirectionInbound,
-							Priority:                 to.Int32Ptr(101),
-							Protocol:                 network.SecurityRuleProtocolTCP,
-							SourceAddressPrefix:      to.StringPtr("*"),
-							SourcePortRange:          to.StringPtr("*"),
-						},
-					},
-					{
 						Name: to.StringPtr("allow_kube_tls"),
 						SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
 							Access:                   network.SecurityRuleAccessAllow,
