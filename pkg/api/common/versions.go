@@ -357,7 +357,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.24.9":         false,
 	"1.24.10":        false,
 	"1.24.11":        false,
-	"1.24.13":        true,
+	"1.24.13":        false,
+	"1.24.16":        false,
+	"1.24.17":        true,
 }
 
 // AllKubernetesSupportedVersionsAzureStack is a hash table of all supported Kubernetes version strings on Azure Stack
