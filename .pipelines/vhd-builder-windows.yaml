@@ -24,11 +24,3 @@ stages:
         containerRuntime: containerd
         windowsServerVersion: 2019
 
-  - stage: build_2019_docker
-    dependsOn: []
-    jobs:
-    - template: vhd-builder-windows-template.yaml
-      parameters:
-        containerRuntime: docker
-        windowsServerVersion: 2019
-
