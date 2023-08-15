@@ -1798,13 +1798,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					for _, pv := range pvList.PersistentVolumes {
 						By("Ensuring that we get zones for the pv")
 						// zone is chosen by round-robin across all zones
-						pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						pvZone = pv.Metadata.Labels["topology.kubernetes.io/zone"]
 						fmt.Printf("pvZone: %s\n", pvZone)
 						contains := strings.Contains(pvZone, "-")
 						Expect(contains).To(Equal(true))
 						// VolumeScheduling feature gate is set to true by default starting v1.10+
 						for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
-							if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
+							if expression.Key == "topology.kubernetes.io/zone" {
 								By("Ensuring that we get nodeAffinity for each pv")
 								value := expression.Values[0]
 								fmt.Printf("NodeAffinity value: %s\n", value)
@@ -1818,7 +1818,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					nodeName := testPod.Spec.NodeName
 					nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
-					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+					nodeZone := nodeList[0].Metadata.Labels["topology.kubernetes.io/zone"]
 					fmt.Printf("pvZone: %s\n", pvZone)
 					fmt.Printf("nodeZone: %s\n", nodeZone)
 					Expect(nodeZone == pvZone).To(Equal(true))
@@ -1938,7 +1938,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
-						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						zones := n.Metadata.Labels["topology.kubernetes.io/zone"]
 						contains := strings.Contains(zones, "-")
 						Expect(contains).To(Equal(true))
 					}
@@ -1963,7 +1963,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
-						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						zones := n.Metadata.Labels["topology.kubernetes.io/zone"]
 						contains := strings.Contains(zones, "-")
 						Expect(contains).To(Equal(true))
 					}
@@ -2813,10 +2813,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Check node labels applied by cloud-node-manager
 				if hasAddon, _ := eng.HasAddon(common.CloudNodeManagerAddonName); hasAddon {
 					// Can't extract zone from API model, so just ensure that zone-related labels exist
-					Expect(labels).To(HaveKey("failure-domain.beta.kubernetes.io/zone"))
 					Expect(labels).To(HaveKey("topology.kubernetes.io/zone"))
 					region := eng.ExpandedDefinition.Location
-					Expect(labels).To(HaveKeyWithValue("failure-domain.beta.kubernetes.io/region", region))
 					Expect(labels).To(HaveKeyWithValue("topology.kubernetes.io/region", region))
 					var instanceType string
 					switch role {
