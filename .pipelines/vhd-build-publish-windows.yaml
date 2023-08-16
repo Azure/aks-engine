@@ -11,14 +11,6 @@ stages:
         containerRuntime: containerd
         windowsServerVersion: 2019
 
-  - stage: build_2019_docker
-    dependsOn: []
-    jobs:
-    - template: vhd-builder-windows-template.yaml
-      parameters:
-        containerRuntime: docker
-        windowsServerVersion: 2019
-
   - stage: publish_2019_containerd
     dependsOn: build_2019_containerd
     jobs:
@@ -26,13 +18,4 @@ stages:
       parameters:
         containerRuntime: containerd
         skuPrefix: '2019-datacenter-core-ctrd'
-        windowsServerVersion: 2019
-
-  - stage: publish_2019_docker
-    dependsOn: build_2019_docker
-    jobs:
-    - template: vhd-publish-template.yaml
-      parameters:
-        containerRuntime: docker
-        skuPrefix: '2019-datacenter-core-smalldisk'
         windowsServerVersion: 2019
