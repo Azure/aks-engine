@@ -21,7 +21,7 @@ jobs:
     GOBIN:  '$(GOPATH)/bin' # Go binaries path
     GOROOT: '/usr/local/go' # Go installation path
     GOPATH: '$(Agent.TempDirectory)/go' # Go workspace path
-    TIMEOUT: 30m
+    TIMEOUT: 5m
     CLUSTER_DEFINITION: ${{ parameters.apimodel }}
     ORCHESTRATOR_RELEASE: ${{ parameters.k8sRelease }}
     CREATE_VNET: ${{ parameters.createVNET }}

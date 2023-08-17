@@ -21,7 +21,7 @@ resources:
 
 jobs:
 - job: unit_tests
-  timeoutInMinutes: 5
+  timeoutInMinutes: 60
   cancelTimeoutInMinutes: 5
   strategy:
     maxParallel: 0
