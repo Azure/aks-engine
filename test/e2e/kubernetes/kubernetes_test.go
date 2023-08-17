@@ -1951,6 +1951,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with all zoned agent pools", func() {
 		It("should be labeled with zones for each node", func() {
+			cmd := exec.Command("k", "get", "deployments,pods,daemonsets", "--all-namespaces", "-o", "wide")
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			if err != nil {
+				log.Printf("Error: Unable to print all cluster resources\n")
+			}
 			if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
