@@ -46,6 +46,12 @@ var (
 	germanyCentralName          = "germanycentral"
 	germanyNortheastDisplayName = "Germany Northeast"
 	germanyNortheastName        = "germanynortheast"
+	israelCentralDisplayName    = "Israel Central"
+	israelCentralName           = "israelcentral"
+	italyNorthDisplayName       = "Italy North"
+	italyNorthName              = "italynorth"
+	spainCentralDisplayName     = "Spain Central"
+	spainCentralName            = "spaincentral"
 	usDodCentralDisplayName     = "US DoD Central"
 	usDodCentralName            = "usdodcentral"
 	usDodEastDisplayName        = "US Dod East"
@@ -244,6 +250,28 @@ func (glc *LocationsCmd) run(cmd *cobra.Command, args []string) error {
 			ID:          &notAvailable,
 			Name:        &germanyNortheastName,
 			DisplayName: &germanyNortheastDisplayName,
+			Latitude:    &notAvailable,
+			Longitude:   &notAvailable,
+		},
+		// Coming soon regions
+		{
+			ID:          &notAvailable,
+			Name:        &israelCentralName,
+			DisplayName: &israelCentralDisplayName,
+			Latitude:    &notAvailable,
+			Longitude:   &notAvailable,
+		},
+		{
+			ID:          &notAvailable,
+			Name:        &italyNorthName,
+			DisplayName: &italyNorthDisplayName,
+			Latitude:    &notAvailable,
+			Longitude:   &notAvailable,
+		},
+		{
+			ID:          &notAvailable,
+			Name:        &spainCentralName,
+			DisplayName: &spainCentralDisplayName,
 			Latitude:    &notAvailable,
 			Longitude:   &notAvailable,
 		},
