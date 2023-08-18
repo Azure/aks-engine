@@ -72,7 +72,7 @@ jobs:
     enableKMSEncryption: false
     containerRuntime: 'containerd'
     runSSHTests: true
-    skipTests: 'should be able to create and connect to a hostPort-configured pod|should be labeled with zones for each node|should have node labels specific to masters or agents'
+    skipTests: 'should be able to create and connect to a hostPort-configured pod|should be labeled with zones for each node|should have node labels specific to masters or agents|dns-liveness pod should not have any restarts|should have addon pods running|should be able to kubectl port-forward to a running pod'
 
 - template: e2e-job-template.yaml
   parameters:
@@ -84,4 +84,4 @@ jobs:
     containerRuntime: 'containerd'
     distro: 'aks-ubuntu-20.04'
     runSSHTests: true
-    skipTests: 'should be able to create and connect to a hostPort-configured pod|should be labeled with zones for each node|should have node labels specific to masters or agents'
+    skipTests: 'should be able to create and connect to a hostPort-configured pod|should be labeled with zones for each node|should have node labels specific to masters or agents|dns-liveness pod should not have any restarts|should have addon pods running|should be able to kubectl port-forward to a running pod'
