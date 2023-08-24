@@ -56,28 +56,6 @@
                     "1",
                     "2"
                 ]
-            },
-            {
-                "name": "pool1804",
-                "count": 1,
-                "vmSize": "Standard_B2s",
-                "distro": "ubuntu-18.04",
-                "availabilityProfile": "VirtualMachineScaleSets",
-                "availabilityZones": [
-                    "1",
-                    "2"
-                ]
-            },
-            {
-                "name": "pool1804gen2",
-                "count": 1,
-                "vmSize": "Standard_D2s_v3",
-                "distro": "ubuntu-18.04-gen2",
-                "availabilityProfile": "VirtualMachineScaleSets",
-                "availabilityZones": [
-                    "1",
-                    "2"
-                ]
             }
         ],
         "linuxProfile": {
