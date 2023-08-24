@@ -108,6 +108,9 @@ func ExampleLocationsCmd_run_humanOutput() {
 	// eastus2euap       East US 2 EUAP (Canary)   N/A       N/A
 	// germanycentral    Germany Central           N/A       N/A
 	// germanynortheast  Germany Northeast         N/A       N/A
+	// israelcentral     Israel Central            N/A       N/A
+	// italynorth        Italy North               N/A       N/A
+	// spaincentral      Spain Central             N/A       N/A
 	// usdodcentral      US DoD Central            N/A       N/A
 	// usdodeast         US Dod East               N/A       N/A
 	// usgovarizona      US Gov Arizona            N/A       N/A
@@ -216,6 +219,27 @@ func ExampleLocationsCmd_run_jsonOutput() {
 	//     "id": "N/A",
 	//     "name": "germanynortheast",
 	//     "displayName": "Germany Northeast",
+	//     "latitude": "N/A",
+	//     "longitude": "N/A"
+	//   },
+	//   {
+	//     "id": "N/A",
+	//     "name": "israelcentral",
+	//     "displayName": "Israel Central",
+	//     "latitude": "N/A",
+	//     "longitude": "N/A"
+	//   },
+	//   {
+	//     "id": "N/A",
+	//     "name": "italynorth",
+	//     "displayName": "Italy North",
+	//     "latitude": "N/A",
+	//     "longitude": "N/A"
+	//   },
+	//   {
+	//     "id": "N/A",
+	//     "name": "spaincentral",
+	//     "displayName": "Spain Central",
 	//     "latitude": "N/A",
 	//     "longitude": "N/A"
 	//   },
