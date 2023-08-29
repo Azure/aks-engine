@@ -171,9 +171,9 @@ var (
 	// configured with containerd
 	AKSWindowsServer2019ContainerDOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-ctrd-2304",
+		ImageSku:       "2019-datacenter-core-ctrd-2308",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.4252.230414",
+		ImageVersion:   "17763.4252.230828",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
