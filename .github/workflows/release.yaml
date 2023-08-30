@@ -53,7 +53,7 @@ jobs:
       - name: Validate gpu + docker scenario
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          ORCHESTRATOR_RELEASE: "1.23"
+          ORCHESTRATOR_RELEASE: "1.24"
           CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
           GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
@@ -71,7 +71,7 @@ jobs:
       - name: Validate gpu + containerd scenario
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          ORCHESTRATOR_RELEASE: "1.23"
+          ORCHESTRATOR_RELEASE: "1.24"
           CLUSTER_DEFINITION: "examples/kubernetes-gpu/kubernetes.json"
           GINKGO_FOCUS: "should be able to run a nvidia-gpu job"
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
@@ -86,52 +86,10 @@ jobs:
           SKIP_LOGS_COLLECTION: true
           AZURE_CORE_ONLY_SHOW_ERRORS: True
         run: make test-kubernetes
-      - name: Validate 1.22 + containerd E2E
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          ORCHESTRATOR_RELEASE: "1.23"
-          CLUSTER_DEFINITION: "examples/e2e-tests/kubernetes/release/default/definition.json"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "eastus"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CREATE_VNET: true
-          CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: true
-          GINKGO_SKIP: ""
-          STABILITY_ITERATIONS: "0"
-          RETAIN_SSH: false
-          CONTAINER_RUNTIME: "containerd"
-          BLOCK_SSH: true
-          SKIP_LOGS_COLLECTION: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-        run: make test-kubernetes
-      - name: Validate 1.23 + containerd E2E
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          ORCHESTRATOR_RELEASE: "1.23"
-          CLUSTER_DEFINITION: "examples/e2e-tests/kubernetes/release/default/definition.json"
-          SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
-          CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
-          CLIENT_SECRET: ${{ secrets.TEST_AZURE_SP_PW }}
-          LOCATION: "eastus"
-          TENANT_ID: ${{ secrets.TEST_AZURE_TENANT_ID }}
-          CREATE_VNET: true
-          CLEANUP_ON_EXIT: true
-          CLEANUP_IF_FAIL: true
-          GINKGO_SKIP: ""
-          STABILITY_ITERATIONS: "0"
-          RETAIN_SSH: false
-          CONTAINER_RUNTIME: "containerd"
-          BLOCK_SSH: true
-          SKIP_LOGS_COLLECTION: true
-          AZURE_CORE_ONLY_SHOW_ERRORS: True
-        run: make test-kubernetes
       - name: Validate 1.24 + containerd E2E
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-          ORCHESTRATOR_RELEASE: "1.23"
+          ORCHESTRATOR_RELEASE: "1.24"
           CLUSTER_DEFINITION: "examples/e2e-tests/kubernetes/release/default/definition.json"
           SUBSCRIPTION_ID: ${{ secrets.TEST_AZURE_SUB_ID }}
           CLIENT_ID: ${{ secrets.TEST_AZURE_SP_ID }}
