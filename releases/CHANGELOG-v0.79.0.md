@@ -1,6 +1,10 @@
 
 <a name="v0.79.0"></a>
 # [v0.79.0] - 2023-08-29
+
+## End of Life
+
+Please note that this will be the final release of AKS Engine.
 ### Features 🌈
 - add support for Kubernetes v1.24.17 ([#5112](https://github.com/Azure/aks-engine/issues/5112))
 - add "coming soon" regions to allow list ([#5107](https://github.com/Azure/aks-engine/issues/5107))
