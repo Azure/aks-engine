@@ -5,6 +5,11 @@
 ## End of Life
 
 Please note that this will be the final release of AKS Engine.
+
+## You're the Real Heroes
+
+We want to thank the community for all the contributions and support over the years. We couldn't have done it without you!
+
 ### Features 🌈
 - add support for Kubernetes v1.24.17 ([#5112](https://github.com/Azure/aks-engine/issues/5112))
 - add "coming soon" regions to allow list ([#5107](https://github.com/Azure/aks-engine/issues/5107))
